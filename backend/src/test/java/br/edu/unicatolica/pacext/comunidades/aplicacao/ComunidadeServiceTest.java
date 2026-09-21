@@ -7,6 +7,7 @@ import br.edu.unicatolica.pacext.comunidades.dominio.ComunidadeRepository;
 import br.edu.unicatolica.pacext.comunidades.dominio.PapelMembro;
 import br.edu.unicatolica.pacext.comunidades.dominio.TipoComunidade;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -93,7 +94,7 @@ class ComunidadeServiceTest {
     @Test
     void ingressaEmComunidadeAbertaComSucesso() {
         Comunidade comunidade = comunidadeAberta();
-        when(comunidadeRepository.findByIdOptional(1L)).thenReturn(Optional.of(comunidade));
+        when(comunidadeRepository.buscarAtivaPorId(1L)).thenReturn(Optional.of(comunidade));
         when(comunidadeMembroRepository.existeAssociacao(comunidade, USUARIO_ID)).thenReturn(false);
 
         service.ingressar(USUARIO_ID, 1L);
@@ -106,7 +107,7 @@ class ComunidadeServiceTest {
     @Test
     void rejeitaIngressoDuplicado() {
         Comunidade comunidade = comunidadeAberta();
-        when(comunidadeRepository.findByIdOptional(1L)).thenReturn(Optional.of(comunidade));
+        when(comunidadeRepository.buscarAtivaPorId(1L)).thenReturn(Optional.of(comunidade));
         when(comunidadeMembroRepository.existeAssociacao(comunidade, USUARIO_ID)).thenReturn(true);
 
         ApiException erro = assertThrows(ApiException.class, () -> service.ingressar(USUARIO_ID, 1L));
@@ -118,7 +119,7 @@ class ComunidadeServiceTest {
     void rejeitaIngressoEmComunidadeDeCurso() {
         Comunidade comunidade = comunidadeAberta();
         comunidade.tipo = TipoComunidade.CURSO;
-        when(comunidadeRepository.findByIdOptional(1L)).thenReturn(Optional.of(comunidade));
+        when(comunidadeRepository.buscarAtivaPorId(1L)).thenReturn(Optional.of(comunidade));
 
         ApiException erro = assertThrows(ApiException.class, () -> service.ingressar(USUARIO_ID, 1L));
 
@@ -127,7 +128,7 @@ class ComunidadeServiceTest {
 
     @Test
     void rejeitaIngressoEmComunidadeInexistente() {
-        when(comunidadeRepository.findByIdOptional(99L)).thenReturn(Optional.empty());
+        when(comunidadeRepository.buscarAtivaPorId(99L)).thenReturn(Optional.empty());
 
         ApiException erro = assertThrows(ApiException.class, () -> service.ingressar(USUARIO_ID, 99L));
 
@@ -137,7 +138,7 @@ class ComunidadeServiceTest {
     @Test
     void sairRemoveAssociacao() {
         Comunidade comunidade = comunidadeAberta();
-        when(comunidadeRepository.findByIdOptional(1L)).thenReturn(Optional.of(comunidade));
+        when(comunidadeRepository.buscarAtivaPorId(1L)).thenReturn(Optional.of(comunidade));
 
         service.sair(USUARIO_ID, 1L);
 
@@ -177,6 +178,123 @@ class ComunidadeServiceTest {
 
         assertEquals(1, resultado.size());
         assertEquals(comunidade, resultado.get(0));
+    }
+
+    @Test
+    void administradorEditaNomeEDescricaoSemAlterarOTipo() {
+        Comunidade comunidade = comunidadeAberta();
+        when(comunidadeRepository.buscarAtivaPorId(1L)).thenReturn(Optional.of(comunidade));
+        when(comunidadeMembroRepository.ehAdministrador(comunidade, USUARIO_ID)).thenReturn(true);
+
+        Comunidade editada = service.editar(USUARIO_ID, 1L, " Xadrez Clube ", "Nova descrição");
+
+        assertEquals("Xadrez Clube", editada.nome);
+        assertEquals("Nova descrição", editada.descricao);
+        assertEquals(TipoComunidade.ABERTA, editada.tipo);
+    }
+
+    @Test
+    void naoAdministradorNaoEditaComunidade() {
+        Comunidade comunidade = comunidadeAberta();
+        when(comunidadeRepository.buscarAtivaPorId(1L)).thenReturn(Optional.of(comunidade));
+        when(comunidadeMembroRepository.ehAdministrador(comunidade, USUARIO_ID)).thenReturn(false);
+
+        ApiException erro = assertThrows(ApiException.class, () -> service.editar(USUARIO_ID, 1L, "Novo", null));
+
+        assertEquals("SEM_PERMISSAO_ADMINISTRAR", erro.getCode());
+        assertEquals("Xadrez", comunidade.nome);
+    }
+
+    @Test
+    void edicaoRejeitaNomeVazio() {
+        Comunidade comunidade = comunidadeAberta();
+        when(comunidadeRepository.buscarAtivaPorId(1L)).thenReturn(Optional.of(comunidade));
+        when(comunidadeMembroRepository.ehAdministrador(comunidade, USUARIO_ID)).thenReturn(true);
+
+        ApiException erro = assertThrows(ApiException.class, () -> service.editar(USUARIO_ID, 1L, " ", null));
+
+        assertEquals("CAMPO_OBRIGATORIO", erro.getCode());
+    }
+
+    @Test
+    void edicaoRejeitaNomeUsadoPorOutraComunidade() {
+        Comunidade comunidade = comunidadeAberta();
+        when(comunidadeRepository.buscarAtivaPorId(1L)).thenReturn(Optional.of(comunidade));
+        when(comunidadeMembroRepository.ehAdministrador(comunidade, USUARIO_ID)).thenReturn(true);
+        when(comunidadeRepository.existePorNomeEDiferente("Damas", 1L)).thenReturn(true);
+
+        ApiException erro = assertThrows(ApiException.class, () -> service.editar(USUARIO_ID, 1L, "Damas", null));
+
+        assertEquals("COMUNIDADE_NOME_EM_USO", erro.getCode());
+        assertEquals("Xadrez", comunidade.nome);
+    }
+
+    @Test
+    void administradorExcluiComunidadeLogicamente() {
+        Comunidade comunidade = comunidadeAberta();
+        when(comunidadeRepository.buscarAtivaPorId(1L)).thenReturn(Optional.of(comunidade));
+        when(comunidadeMembroRepository.ehAdministrador(comunidade, USUARIO_ID)).thenReturn(true);
+
+        service.excluir(USUARIO_ID, 1L);
+
+        assertFalse(comunidade.ativa);
+    }
+
+    @Test
+    void naoAdministradorNaoExcluiComunidade() {
+        Comunidade comunidade = comunidadeAberta();
+        when(comunidadeRepository.buscarAtivaPorId(1L)).thenReturn(Optional.of(comunidade));
+        when(comunidadeMembroRepository.ehAdministrador(comunidade, USUARIO_ID)).thenReturn(false);
+
+        ApiException erro = assertThrows(ApiException.class, () -> service.excluir(USUARIO_ID, 1L));
+
+        assertEquals("SEM_PERMISSAO_ADMINISTRAR", erro.getCode());
+        assertTrue(comunidade.ativa);
+    }
+
+    @Test
+    void comunidadeExcluidaNaoEEncontradaNemAceitaInteracoes() {
+        when(comunidadeRepository.buscarAtivaPorId(1L)).thenReturn(Optional.empty());
+
+        ApiException erro = assertThrows(ApiException.class, () -> service.ingressar(USUARIO_ID, 1L));
+
+        assertEquals("COMUNIDADE_NAO_ENCONTRADA", erro.getCode());
+    }
+
+    @Test
+    void administradorRemoveMembro() {
+        Comunidade comunidade = comunidadeAberta();
+        when(comunidadeRepository.buscarAtivaPorId(1L)).thenReturn(Optional.of(comunidade));
+        when(comunidadeMembroRepository.ehAdministrador(comunidade, USUARIO_ID)).thenReturn(true);
+        when(comunidadeMembroRepository.existeAssociacao(comunidade, 7L)).thenReturn(true);
+
+        service.removerMembro(USUARIO_ID, 1L, 7L);
+
+        verify(comunidadeMembroRepository).removerAssociacao(comunidade, 7L);
+    }
+
+    @Test
+    void naoAdministradorNaoRemoveMembro() {
+        Comunidade comunidade = comunidadeAberta();
+        when(comunidadeRepository.buscarAtivaPorId(1L)).thenReturn(Optional.of(comunidade));
+        when(comunidadeMembroRepository.ehAdministrador(comunidade, USUARIO_ID)).thenReturn(false);
+
+        ApiException erro = assertThrows(ApiException.class, () -> service.removerMembro(USUARIO_ID, 1L, 7L));
+
+        assertEquals("SEM_PERMISSAO_ADMINISTRAR", erro.getCode());
+        verify(comunidadeMembroRepository, never()).removerAssociacao(any(), any());
+    }
+
+    @Test
+    void remocaoRejeitaUsuarioQueNaoEMembro() {
+        Comunidade comunidade = comunidadeAberta();
+        when(comunidadeRepository.buscarAtivaPorId(1L)).thenReturn(Optional.of(comunidade));
+        when(comunidadeMembroRepository.ehAdministrador(comunidade, USUARIO_ID)).thenReturn(true);
+        when(comunidadeMembroRepository.existeAssociacao(comunidade, 7L)).thenReturn(false);
+
+        ApiException erro = assertThrows(ApiException.class, () -> service.removerMembro(USUARIO_ID, 1L, 7L));
+
+        assertEquals("MEMBRO_NAO_ENCONTRADO", erro.getCode());
     }
 
     private Comunidade comunidadeAberta() {

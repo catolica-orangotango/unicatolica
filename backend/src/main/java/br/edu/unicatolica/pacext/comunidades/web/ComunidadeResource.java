@@ -11,6 +11,7 @@ import java.util.List;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.GET;
+import jakarta.ws.rs.PATCH;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
@@ -84,6 +85,33 @@ public class ComunidadeResource {
         Comunidade comunidade = comunidadeService.buscarOuFalhar(id);
         boolean souMembro = comunidadeService.souMembro(comunidade, usuarioAutenticado.id());
         return ComunidadeResponse.de(comunidade, souMembro);
+    }
+
+    /** Story 2.6 — edita nome/descrição; o corpo não tem "tipo" de propósito (RF30, imutável). */
+    @PATCH
+    @Path("/{id}")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public ComunidadeResponse editar(@PathParam("id") Long id, ComunidadeRequest request) {
+        Comunidade comunidade = comunidadeService.editar(usuarioAutenticado.id(), id, request.nome(),
+                request.descricao());
+        return ComunidadeResponse.de(comunidade, true);
+    }
+
+    /** Story 2.6 — exclusão lógica da comunidade (RF31). */
+    @DELETE
+    @Path("/{id}")
+    public Response excluir(@PathParam("id") Long id) {
+        comunidadeService.excluir(usuarioAutenticado.id(), id);
+        return Response.noContent().build();
+    }
+
+    /** Story 2.6 — administrador remove um membro (RF29). */
+    @DELETE
+    @Path("/{id}/membros/{usuarioId}")
+    public Response removerMembro(@PathParam("id") Long id, @PathParam("usuarioId") Long usuarioId) {
+        comunidadeService.removerMembro(usuarioAutenticado.id(), id, usuarioId);
+        return Response.noContent().build();
     }
 
     /** Story 2.4 — entrar numa comunidade aberta (RF24, RF25). */

@@ -19,6 +19,16 @@ public class ComunidadeRepository implements PanacheRepository<Comunidade> {
         return count("lower(nome) = ?1", nome.trim().toLowerCase()) > 0;
     }
 
+    /** Story 2.6 (RF30) — evita conflito de nome consigo mesma ao editar sem trocar o nome. */
+    public boolean existePorNomeEDiferente(String nome, Long idAtual) {
+        return count("lower(nome) = ?1 and id <> ?2", nome.trim().toLowerCase(), idAtual) > 0;
+    }
+
+    /** Story 2.6 (RF31) — comunidade excluída logicamente não é encontrada. */
+    public Optional<Comunidade> buscarAtivaPorId(Long id) {
+        return find("id = ?1 and ativa = true", id).firstResultOptional();
+    }
+
     /**
      * Listagem/filtro (Story 2.5, RF27/RF28) — {@code tipo}/{@code nome} nulos significam
      * "sem filtro por esse campo". Protótipo desta fatia: filtro simples por igualdade de
@@ -39,14 +49,14 @@ public class ComunidadeRepository implements PanacheRepository<Comunidade> {
         String nomeFiltro = temNome ? "%" + nome.trim().toLowerCase() + "%" : null;
 
         if (temTipo && temNome) {
-            return find("tipo = ?1 and lower(nome) like ?2 order by nome", tipo, nomeFiltro);
+            return find("ativa = true and tipo = ?1 and lower(nome) like ?2 order by nome", tipo, nomeFiltro);
         }
         if (temTipo) {
-            return find("tipo = ?1 order by nome", tipo);
+            return find("ativa = true and tipo = ?1 order by nome", tipo);
         }
         if (temNome) {
-            return find("lower(nome) like ?1 order by nome", nomeFiltro);
+            return find("ativa = true and lower(nome) like ?1 order by nome", nomeFiltro);
         }
-        return findAll(io.quarkus.panache.common.Sort.by("nome"));
+        return find("ativa = true order by nome");
     }
 }
