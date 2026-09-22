@@ -1,0 +1,117 @@
+// Tokens --uc-* (Story 14.1). Faixa bordô no topo do cartão = identidade do admin.
+:host {
+  display: block;
+  min-height: 100vh;
+  min-height: 100dvh;
+  background: var(--uc-color-bg);
+  color: var(--uc-color-ink);
+  font-family: var(--uc-font-family-base);
+  font-size: var(--uc-font-size-body);
+  line-height: var(--uc-line-height-body);
+}
+
+.admin-login {
+  min-height: inherit;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--uc-space-page-margin);
+  box-sizing: border-box;
+}
+
+.admin-login__card {
+  width: 100%;
+  max-width: 400px;
+  padding: calc(var(--uc-space-unit) * 8);
+  background: var(--uc-color-surface);
+  border: 1px solid var(--uc-color-border);
+  border-top: calc(var(--uc-space-unit)) solid var(--uc-color-maroon);
+  border-radius: var(--uc-radius-md);
+  box-sizing: border-box;
+}
+
+.admin-login__marca {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--uc-space-unit) * 2);
+  margin-bottom: calc(var(--uc-space-unit) * 6);
+}
+
+.admin-login__marca-icone {
+  width: calc(var(--uc-space-unit) * 6);
+  height: calc(var(--uc-space-unit) * 6);
+  border-radius: var(--uc-radius-sm);
+  background: var(--uc-color-maroon);
+}
+
+.admin-login__marca-nome {
+  font-weight: var(--uc-font-weight-semibold);
+}
+
+.admin-login__selo {
+  padding: calc(var(--uc-space-unit) / 2) calc(var(--uc-space-unit) * 2);
+  border: 1px solid var(--uc-color-maroon);
+  border-radius: var(--uc-radius-full);
+  color: var(--uc-color-maroon);
+  font-size: var(--uc-font-size-label-caps);
+  font-weight: var(--uc-font-weight-caps);
+  letter-spacing: var(--uc-letter-spacing-label-caps);
+  text-transform: uppercase;
+}
+
+h1 {
+  margin: 0 0 calc(var(--uc-space-unit));
+  font-size: var(--uc-font-size-greeting);
+  font-weight: var(--uc-font-weight-semibold);
+  letter-spacing: var(--uc-letter-spacing-greeting);
+}
+
+.admin-login__subtitulo {
+  margin: 0 0 calc(var(--uc-space-unit) * 6);
+  color: var(--uc-color-ink-soft);
+  font-size: var(--uc-font-size-meta);
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--uc-space-unit));
+}
+
+label {
+  margin-top: calc(var(--uc-space-unit) * 2);
+  font-size: var(--uc-font-size-meta);
+  font-weight: var(--uc-font-weight-semibold);
+}
+
+input {
+  padding: calc(var(--uc-space-unit) * 2) calc(var(--uc-space-unit) * 3);
+  border: 1px solid var(--uc-color-border);
+  border-radius: var(--uc-radius-default);
+  font: inherit;
+}
+
+input:focus-visible {
+  outline: 2px solid var(--uc-color-maroon);
+  outline-offset: 1px;
+}
+
+.admin-login__campo-erro {
+  color: var(--uc-color-maroon);
+  font-size: var(--uc-font-size-meta);
+}
+
+.admin-login__erro {
+  margin: calc(var(--uc-space-unit) * 2) 0 0;
+  padding: calc(var(--uc-space-unit) * 2) calc(var(--uc-space-unit) * 3);
+  border: 1px solid var(--uc-color-maroon);
+  border-radius: var(--uc-radius-default);
+  color: var(--uc-color-maroon);
+  font-size: var(--uc-font-size-meta);
+}
+
+button[uc-button] {
+  margin-top: calc(var(--uc-space-unit) * 4);
+  padding-top: calc(var(--uc-space-unit) * 2.5);
+  padding-bottom: calc(var(--uc-space-unit) * 2.5);
+}

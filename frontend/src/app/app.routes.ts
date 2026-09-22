@@ -1,4 +1,5 @@
 import { Routes } from '@angular/router';
+import { adminGuard } from './core/auth/admin.guard';
 import { authGuard } from './core/auth/auth.guard';
 
 export const routes: Routes = [
@@ -14,6 +15,34 @@ export const routes: Routes = [
   {
     path: 'confirmar-email',
     loadComponent: () => import('./confirmar-email/confirmar-email').then((m) => m.ConfirmarEmail),
+  },
+  {
+    // Login do administrador — tela própria, fora do Shell do aluno e sem guard.
+    path: 'admin/login',
+    loadComponent: () => import('./features/admin/login/admin-login').then((m) => m.AdminLogin),
+  },
+  {
+    // Área administrativa (Story 2.1): casca e home próprias, separadas do Shell do
+    // aluno. `adminGuard` exige token com perfil ADMINISTRADOR.
+    path: 'admin',
+    loadComponent: () => import('./layout/admin-shell/admin-shell').then((m) => m.AdminShell),
+    canActivate: [adminGuard],
+    children: [
+      {
+        path: '',
+        loadComponent: () => import('./features/admin/home/admin-home').then((m) => m.AdminHome),
+      },
+      {
+        path: 'relatorios',
+        loadComponent: () =>
+          import('./features/admin/relatorios/admin-relatorios').then((m) => m.AdminRelatorios),
+      },
+      {
+        path: 'moderacao',
+        loadComponent: () =>
+          import('./features/admin/moderacao/admin-moderacao').then((m) => m.AdminModeracao),
+      },
+    ],
   },
   {
     // Casca de navegação global: layout de rota-filha sob um parent `path: ''`.

@@ -1,0 +1,74 @@
+<div class="admin-home">
+  <header class="admin-home__topo">
+    <div>
+      <h1>Dashboard geral</h1>
+      <p class="admin-home__saudacao">
+        @if (nome(); as nome) {
+          Olá, {{ nome }}.
+        }
+        Visão geral da plataforma UniCatólica.
+      </p>
+    </div>
+    <time class="admin-home__data" [attr.datetime]="agora.toISOString()">
+      {{ agora.toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' }) }}
+    </time>
+  </header>
+
+  <section class="admin-home__indicadores" aria-label="Indicadores">
+    <uc-card class="admin-home__indicador">
+      <span class="admin-home__icone" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M16 11a4 4 0 1 0-4-4 4 4 0 0 0 4 4Zm-8 0a3 3 0 1 0-3-3 3 3 0 0 0 3 3Zm8 2c-2.7 0-8 1.3-8 4v2h16v-2c0-2.7-5.3-4-8-4ZM8 13c-.3 0-.6 0-1 .1C5.2 13.5 2 14.6 2 17v2h5v-2c0-1.5.8-2.7 2-3.6A9 9 0 0 0 8 13Z"/></svg>
+      </span>
+      <span class="admin-home__rotulo">Usuários cadastrados</span>
+      <span class="admin-home__valor">—</span>
+      <span class="admin-home__nota">
+        <span class="admin-home__em-breve">Em breve</span>
+      </span>
+    </uc-card>
+
+    <uc-card class="admin-home__indicador">
+      <span class="admin-home__icone" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="m12 2 10 5-10 5L2 7l10-5Zm0 12.5L4.5 10.8 2 12l10 5 10-5-2.5-1.2L12 14.5Zm0 5L4.5 15.8 2 17l10 5 10-5-2.5-1.2L12 19.5Z"/></svg>
+      </span>
+      <span class="admin-home__rotulo">Comunidades existentes</span>
+      <span class="admin-home__valor" data-testid="total-comunidades">{{ totalComunidades() ?? '—' }}</span>
+      <span class="admin-home__nota">
+        @if (totalComunidadesCurso() !== null && totalComunidadesAbertas() !== null) {
+          {{ totalComunidadesCurso() }} de curso · {{ totalComunidadesAbertas() }} abertas
+        }
+      </span>
+    </uc-card>
+
+    <uc-card class="admin-home__indicador">
+      <span class="admin-home__icone" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M4 4h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H9l-5 4v-4H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z"/></svg>
+      </span>
+      <span class="admin-home__rotulo">Posts criados por dia</span>
+      <span class="admin-home__valor">—</span>
+      <span class="admin-home__nota">
+        <span class="admin-home__em-breve">Em breve</span>
+      </span>
+    </uc-card>
+
+    <uc-card class="admin-home__indicador">
+      <span class="admin-home__icone" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M12 2 1 21h22L12 2Zm1 15h-2v-2h2v2Zm0-4h-2V9h2v4Z"/></svg>
+      </span>
+      <span class="admin-home__rotulo">Denúncias dos usuários</span>
+      <span class="admin-home__valor">—</span>
+      <span class="admin-home__nota">
+        <span class="admin-home__em-breve">Em breve</span>
+      </span>
+    </uc-card>
+  </section>
+
+  <section class="admin-home__atividade" aria-labelledby="admin-atividade-titulo">
+    <header class="admin-home__atividade-topo">
+      <h2 id="admin-atividade-titulo">Atividade recente</h2>
+      <a class="admin-home__ver-logs" routerLink="/admin/relatorios">Ver logs completos →</a>
+    </header>
+    <p class="admin-home__vazio">
+      O registro de atividades da plataforma ainda não está disponível aqui.
+    </p>
+  </section>
+</div>

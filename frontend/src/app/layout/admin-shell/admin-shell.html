@@ -1,0 +1,33 @@
+<nav class="admin-shell__sidebar" aria-label="Navegação da administração">
+  <div class="admin-shell__brand">
+    <span class="admin-shell__brand-mark" aria-hidden="true"></span>
+    <span class="admin-shell__brand-name">UniCatólica</span>
+  </div>
+  <span class="admin-shell__selo">Administração</span>
+
+  @for (secao of secoes; track secao.titulo) {
+    <p class="admin-shell__secao">{{ secao.titulo }}</p>
+    <ul class="admin-shell__nav-list">
+      @for (item of secao.itens; track item.path) {
+        <li>
+          <a
+            class="admin-shell__nav-item"
+            [routerLink]="item.path"
+            routerLinkActive="admin-shell__nav-item--active"
+            [routerLinkActiveOptions]="{ exact: true }"
+            #rla="routerLinkActive"
+            [attr.aria-current]="rla.isActive ? 'page' : null"
+            >{{ item.label }}</a
+          >
+        </li>
+      }
+    </ul>
+  }
+
+  <p class="admin-shell__secao">Conta</p>
+  <button type="button" class="admin-shell__nav-item admin-shell__sair" (click)="sair()">Sair</button>
+</nav>
+
+<main class="admin-shell__main">
+  <router-outlet />
+</main>

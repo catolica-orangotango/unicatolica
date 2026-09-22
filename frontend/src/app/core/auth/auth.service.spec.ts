@@ -2,7 +2,7 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { provideHttpClient } from '@angular/common/http';
 import { TestBed } from '@angular/core/testing';
 import { vi } from 'vitest';
-import { AuthService, JWT_ROLES_CLAIM } from './auth.service';
+import { AcessoNegadoPorPerfilError, AuthService, JWT_ROLES_CLAIM } from './auth.service';
 
 /** Base64url de uma string UTF-8 (sem padding), como um JWT real. */
 function base64url(texto: string): string {
@@ -169,6 +169,44 @@ describe('AuthService', () => {
       );
 
       expect(service.perfis()).toEqual([]);
+    });
+  });
+
+  describe('loginAdmin', () => {
+    it('perfil ADMINISTRADOR: guarda o token e devolve a resposta', () => {
+      const token = jwtComPayload({ sub: '1', [JWT_ROLES_CLAIM]: ['ADMINISTRADOR'] });
+      let devolvido: string | undefined;
+
+      service.loginAdmin('admin@catolicasc.edu.br', 'Senha123!').subscribe((r) => (devolvido = r.token));
+      const req = httpMock.expectOne('http://localhost:8080/auth/login');
+      expect(req.request.body).toEqual({ email: 'admin@catolicasc.edu.br', senha: 'Senha123!' });
+      req.flush({ token });
+
+      expect(devolvido).toBe(token);
+      expect(service.obterToken()).toBe(token);
+      expect(service.possuiPerfil('ADMINISTRADOR')).toBe(true);
+    });
+
+    it('perfil ALUNO: falha com AcessoNegadoPorPerfilError e NAO guarda o token', () => {
+      let erro: unknown;
+
+      service.loginAdmin('aluno@catolicasc.edu.br', 'Senha123!').subscribe({ error: (e) => (erro = e) });
+      httpMock
+        .expectOne('http://localhost:8080/auth/login')
+        .flush({ token: jwtComPayload({ sub: '2', [JWT_ROLES_CLAIM]: ['ALUNO'] }) });
+
+      expect(erro).toBeInstanceOf(AcessoNegadoPorPerfilError);
+      expect(service.obterToken()).toBeNull();
+    });
+
+    it('token sem claim de perfil: recusa (nunca assume admin)', () => {
+      let erro: unknown;
+
+      service.loginAdmin('x@catolicasc.edu.br', 'Senha123!').subscribe({ error: (e) => (erro = e) });
+      httpMock.expectOne('http://localhost:8080/auth/login').flush({ token: jwtComPayload({ sub: '3' }) });
+
+      expect(erro).toBeInstanceOf(AcessoNegadoPorPerfilError);
+      expect(service.obterToken()).toBeNull();
     });
   });
 });

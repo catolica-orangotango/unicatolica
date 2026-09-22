@@ -1,0 +1,50 @@
+// Tokens --uc-* (Story 14.1).
+:host {
+  display: block;
+}
+
+.admin-pagina {
+  max-width: 880px;
+}
+
+h1 {
+  margin: 0;
+  font-size: var(--uc-font-size-greeting);
+  font-weight: var(--uc-font-weight-semibold);
+  letter-spacing: var(--uc-letter-spacing-greeting);
+}
+
+header p {
+  margin: var(--uc-space-unit) 0 var(--uc-space-section-gap);
+  color: var(--uc-color-ink-soft);
+}
+
+.admin-pagina__grade {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: calc(var(--uc-space-unit) * 3);
+}
+
+.admin-pagina__bloco {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: calc(var(--uc-space-unit) * 2);
+}
+
+.admin-pagina__bloco p {
+  margin: 0;
+  color: var(--uc-color-ink-soft);
+  font-size: var(--uc-font-size-meta);
+}
+
+.admin-pagina__em-breve {
+  padding: calc(var(--uc-space-unit) / 2) calc(var(--uc-space-unit) * 2);
+  border-radius: var(--uc-radius-full);
+  background: var(--uc-color-orange-tint);
+  color: var(--uc-color-orange);
+  font-size: var(--uc-font-size-label-caps);
+  font-weight: var(--uc-font-weight-caps);
+  letter-spacing: var(--uc-letter-spacing-label-caps);
+  text-transform: uppercase;
+}

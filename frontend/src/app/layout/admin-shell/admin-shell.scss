@@ -1,0 +1,129 @@
+// Casca da área administrativa — mesmos tokens --uc-* do resto do app (Story 14.1).
+// Sidebar escura com item ativo bordô, como no protótipo inicial do painel: distingue de
+// relance a área do admin do app do aluno (sidebar clara).
+:host {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  min-height: 100vh;
+  min-height: 100dvh;
+  background: var(--uc-color-bg);
+  color: var(--uc-color-ink);
+  font-family: var(--uc-font-family-base);
+  font-size: var(--uc-font-size-body);
+  line-height: var(--uc-line-height-body);
+}
+
+.admin-shell__sidebar {
+  position: sticky;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+  align-self: start;
+  height: 100vh;
+  height: 100dvh;
+  overflow-y: auto;
+  padding: var(--uc-space-section-gap) calc(var(--uc-space-unit) * 3);
+  background: var(--uc-color-ink);
+  color: var(--uc-color-surface);
+}
+
+.admin-shell__brand {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--uc-space-unit) * 2);
+  padding: 0 calc(var(--uc-space-unit) * 2);
+}
+
+.admin-shell__brand-mark {
+  width: calc(var(--uc-space-unit) * 6);
+  height: calc(var(--uc-space-unit) * 6);
+  border-radius: var(--uc-radius-sm);
+  background: var(--uc-color-surface);
+}
+
+.admin-shell__brand-name {
+  font-weight: var(--uc-font-weight-semibold);
+}
+
+.admin-shell__selo {
+  align-self: flex-start;
+  margin: calc(var(--uc-space-unit) * 3) calc(var(--uc-space-unit) * 2) calc(var(--uc-space-unit) * 2);
+  padding: calc(var(--uc-space-unit) / 2) calc(var(--uc-space-unit) * 2);
+  border: 1px solid var(--uc-color-ink-faint);
+  border-radius: var(--uc-radius-full);
+  color: var(--uc-color-ink-faint);
+  font-size: var(--uc-font-size-label-caps);
+  font-weight: var(--uc-font-weight-caps);
+  letter-spacing: var(--uc-letter-spacing-label-caps);
+  text-transform: uppercase;
+}
+
+.admin-shell__secao {
+  margin: calc(var(--uc-space-unit) * 5) calc(var(--uc-space-unit) * 2) calc(var(--uc-space-unit) * 2);
+  color: var(--uc-color-ink-faint);
+  font-size: var(--uc-font-size-label-caps);
+  font-weight: var(--uc-font-weight-caps);
+  letter-spacing: var(--uc-letter-spacing-label-caps);
+  text-transform: uppercase;
+}
+
+.admin-shell__nav-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.admin-shell__nav-item {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: calc(var(--uc-space-unit) * 2) calc(var(--uc-space-unit) * 2.5);
+  margin-bottom: calc(var(--uc-space-unit) / 2);
+  border: 0;
+  border-radius: var(--uc-radius-default);
+  background: transparent;
+  color: var(--uc-color-surface);
+  font: inherit;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+  opacity: 0.8;
+}
+
+.admin-shell__nav-item:hover {
+  background: color-mix(in srgb, var(--uc-color-surface) 10%, transparent);
+  opacity: 1;
+}
+
+.admin-shell__nav-item--active {
+  background: var(--uc-color-maroon);
+  font-weight: var(--uc-font-weight-semibold);
+  opacity: 1;
+}
+
+.admin-shell__nav-item--active:hover {
+  background: var(--uc-color-maroon);
+}
+
+.admin-shell__nav-item:focus-visible {
+  outline: 2px solid var(--uc-color-surface);
+  outline-offset: 2px;
+}
+
+.admin-shell__main {
+  min-width: 0;
+  padding: calc(var(--uc-space-unit) * 7) var(--uc-space-page-margin);
+}
+
+// Telas estreitas: a sidebar vira uma faixa no topo, acima do conteúdo.
+@media (max-width: 768px) {
+  :host {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-shell__sidebar {
+    position: static;
+    height: auto;
+    align-self: stretch;
+  }
+}

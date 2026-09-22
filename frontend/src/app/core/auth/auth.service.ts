@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Observable, tap } from 'rxjs';
+import { Observable, map, tap } from 'rxjs';
 import { API_BASE_URL } from '../config/api.config';
 
 export interface LoginRequest {
@@ -24,6 +24,21 @@ const TOKEN_STORAGE_KEY = 'pacext.token';
  */
 export const JWT_ROLES_CLAIM = 'roles';
 
+/** Perfil global exigido pela área administrativa (Story 2.1, RF21.2). */
+export const PERFIL_ADMINISTRADOR = 'ADMINISTRADOR';
+
+/**
+ * Credenciais válidas, mas sem o perfil exigido pela tela — ver
+ * {@link AuthService.loginAdmin}. Não é falha de rede nem de credencial: a tela
+ * de administração usa isto pra dizer "acesso restrito" em vez de "senha inválida".
+ */
+export class AcessoNegadoPorPerfilError extends Error {
+  constructor(readonly perfilExigido: string) {
+    super(`Perfil ${perfilExigido} necessário.`);
+    this.name = 'AcessoNegadoPorPerfilError';
+  }
+}
+
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   constructor(private readonly http: HttpClient) {}
@@ -32,6 +47,28 @@ export class AuthService {
     return this.http
       .post<LoginResponse>(`${API_BASE_URL}/auth/login`, { email, senha } satisfies LoginRequest)
       .pipe(tap((resposta) => this.armazenarToken(resposta.token)));
+  }
+
+  /**
+   * Login da área administrativa. Usa o mesmo `POST /auth/login` do aluno (não existe
+   * endpoint separado — contrato é fonte de verdade, AD-4) e só guarda o token se ele
+   * carregar o perfil {@link PERFIL_ADMINISTRADOR}; caso contrário falha com
+   * {@link AcessoNegadoPorPerfilError} sem persistir nada, pra um aluno que tente
+   * entrar por aqui não ficar com sessão aberta. Isto é só UX: quem barra de verdade
+   * uma rota administrativa é o backend (RF13).
+   */
+  loginAdmin(email: string, senha: string): Observable<LoginResponse> {
+    return this.http
+      .post<LoginResponse>(`${API_BASE_URL}/auth/login`, { email, senha } satisfies LoginRequest)
+      .pipe(
+        map((resposta) => {
+          if (!this.perfisDoToken(resposta.token).includes(PERFIL_ADMINISTRADOR)) {
+            throw new AcessoNegadoPorPerfilError(PERFIL_ADMINISTRADOR);
+          }
+          return resposta;
+        }),
+        tap((resposta) => this.armazenarToken(resposta.token)),
+      );
   }
 
   private armazenarToken(token: string): void {
@@ -76,7 +113,11 @@ export class AuthService {
    * token adulterado só consegue esconder itens privilegiados, nunca revelá-los.
    */
   perfis(): string[] {
-    const payload = this.decodificarPayloadJwt();
+    return this.perfisDoToken(this.obterToken());
+  }
+
+  private perfisDoToken(token: string | null): string[] {
+    const payload = this.decodificarPayloadJwt(token);
     const claim = payload?.[JWT_ROLES_CLAIM];
     if (typeof claim === 'string') {
       return [claim];
@@ -91,13 +132,12 @@ export class AuthService {
   }
 
   /**
-   * Decodifica só o segmento de payload do JWT armazenado. Base64url -> base64,
+   * Decodifica só o segmento de payload do JWT informado. Base64url -> base64,
    * decodificação UTF-8-safe (para claims com caracteres multibyte não quebrarem
    * o `JSON.parse`) e parse. Retorna `null` em qualquer erro.
    */
-  private decodificarPayloadJwt(): Record<string, unknown> | null {
+  private decodificarPayloadJwt(token: string | null): Record<string, unknown> | null {
     try {
-      const token = this.obterToken();
       if (!token) {
         return null;
       }
