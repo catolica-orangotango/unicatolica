@@ -15,7 +15,7 @@ Rede social acadêmica do Campus Joinville da CatólicaSC — projeto de PAC Ext
 
 ## Where things are
 
-- Backend: `backend/src/main/java/br/edu/unicatolica/pacext/<modulo>/`. Layout de referência é `identidade/`: `web/` (`*Resource`, `*Request`/`*Response`), `aplicacao/` (`*Service`), `dominio/` (entidade, `*Repository`, exceções que estendem `ApiException`). `comunidades/` ainda está plano (só `web/` separado) — módulo novo segue `identidade/`.
+- Backend: `backend/src/main/java/br/edu/unicatolica/pacext/<modulo>/`. Todo módulo segue o layout de `identidade/` e `comunidades/`: raiz só com a API pública (interfaces, records, eventos), `web/` (`*Resource`, `*Request`/`*Response`), `aplicacao/` (`*Service`, implementações da raiz, observers), `dominio/` (entidade, `*Repository`, exceções que estendem `ApiException`).
 - Transversal do backend: `compartilhado/` — `seguranca/` (`JwtSecurityFilter`, `SessaoInvalidadaFilter`, `UsuarioAutenticado`), `erro/` (`ApiException`, todos os mappers, `ErroResponse`, `RespostasErro` para os filtros), `paginacao/` (`PageResponse`), `auditoria/`, `email/`.
 - Migrations: `backend/src/main/resources/db/changelog/modulos/<modulo>/<modulo>-NNN-descricao.xml`, incluídas pelo `db.changelog-master.xml` (não editar o mestre por PR). Exceção: a pasta `modulos/infraestrutura/` (log_auditoria) mantém o nome antigo — renomear muda o caminho que o Liquibase grava e quebra o banco de produção.
 - Frontend: `frontend/src/app/` — `core/` (auth service/guard, serviços HTTP por módulo, `config/api.config.ts`), `features/<modulo>/<tela>/`, `layout/` (`shell`, `auth-shell`), `ui/` (design system, exportado por `ui/index.ts`). E2E em `frontend/e2e/`.

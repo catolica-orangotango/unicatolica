@@ -1,6 +1,6 @@
 package br.edu.unicatolica.pacext.comunidades.web;
 
-import br.edu.unicatolica.pacext.comunidades.Comunidade;
+import br.edu.unicatolica.pacext.comunidades.dominio.Comunidade;
 import java.time.Instant;
 
 /**

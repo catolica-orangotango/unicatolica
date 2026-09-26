@@ -1,4 +1,4 @@
-package br.edu.unicatolica.pacext.comunidades;
+package br.edu.unicatolica.pacext.comunidades.dominio;
 
 /**
  * Tipo de comunidade (RF21.1) — definido na criação e imutável depois (aplicado no

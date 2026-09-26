@@ -1,5 +1,9 @@
 package br.edu.unicatolica.pacext.comunidades;
 
+import br.edu.unicatolica.pacext.comunidades.dominio.Comunidade;
+import br.edu.unicatolica.pacext.comunidades.dominio.ComunidadeMembroRepository;
+import br.edu.unicatolica.pacext.comunidades.dominio.ComunidadeRepository;
+import br.edu.unicatolica.pacext.comunidades.dominio.TipoComunidade;
 import static io.restassured.RestAssured.given;
 import static io.restassured.http.ContentType.JSON;
 import static org.junit.jupiter.api.Assertions.assertTrue;

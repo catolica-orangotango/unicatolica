@@ -1,5 +1,6 @@
-package br.edu.unicatolica.pacext.comunidades;
+package br.edu.unicatolica.pacext.comunidades.aplicacao;
 
+import br.edu.unicatolica.pacext.comunidades.AutoJoinCursoService;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 

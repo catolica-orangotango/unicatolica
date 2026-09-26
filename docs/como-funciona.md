@@ -65,17 +65,17 @@ A migration de `log_auditoria` continua em `db/changelog/modulos/infraestrutura/
 
 ### Dentro de um módulo
 
-Todo módulo segue o mesmo formato (**Alvo**; hoje só `identidade/` está perto dele):
+Todo módulo segue o mesmo formato (`identidade/` e `comunidades/` já estão nele):
 
 ```
 <modulo>/
-  <Interface>.java   raiz: SÓ interfaces que outros módulos podem usar
+  <Interface>.java   raiz: SÓ o que outros módulos podem usar (interfaces, records, eventos)
   web/               *Resource, *Request, *Response
-  aplicacao/         *Service (+ implementação das interfaces da raiz)
+  aplicacao/         *Service (+ implementação das interfaces da raiz, observers de eventos)
   dominio/           entidades, enums, *Repository, exceções (subclasses de ApiException)
 ```
 
-- **Hoje, `comunidades/`** deixa entidades, Services e Repositories na raiz e só separa `web/`.
+Implementação de interface da raiz e observer de evento de outro módulo ficam em `aplicacao/`, sem `public` (ex.: `comunidades.aplicacao.AutoJoinCursoServiceImpl`, `AutoJoinNoCadastro`), para que só a interface seja alcançável.
 
 ### Estado dos módulos
 

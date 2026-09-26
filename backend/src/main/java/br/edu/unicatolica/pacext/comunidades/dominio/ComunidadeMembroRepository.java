@@ -1,4 +1,4 @@
-package br.edu.unicatolica.pacext.comunidades;
+package br.edu.unicatolica.pacext.comunidades.dominio;
 
 import io.quarkus.hibernate.orm.panache.PanacheRepository;
 import jakarta.enterprise.context.ApplicationScoped;

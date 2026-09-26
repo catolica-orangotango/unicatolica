@@ -1,5 +1,12 @@
-package br.edu.unicatolica.pacext.comunidades;
+package br.edu.unicatolica.pacext.comunidades.aplicacao;
 
+import br.edu.unicatolica.pacext.comunidades.AutoJoinCursoService;
+import br.edu.unicatolica.pacext.comunidades.dominio.Comunidade;
+import br.edu.unicatolica.pacext.comunidades.dominio.ComunidadeMembro;
+import br.edu.unicatolica.pacext.comunidades.dominio.ComunidadeMembroRepository;
+import br.edu.unicatolica.pacext.comunidades.dominio.ComunidadeRepository;
+import br.edu.unicatolica.pacext.comunidades.dominio.PapelMembro;
+import br.edu.unicatolica.pacext.comunidades.dominio.TipoComunidade;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;

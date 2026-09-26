@@ -1,4 +1,4 @@
-package br.edu.unicatolica.pacext.comunidades;
+package br.edu.unicatolica.pacext.comunidades.dominio;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

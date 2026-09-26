@@ -1,8 +1,8 @@
 package br.edu.unicatolica.pacext.comunidades.web;
 
-import br.edu.unicatolica.pacext.comunidades.Comunidade;
-import br.edu.unicatolica.pacext.comunidades.ComunidadeService;
-import br.edu.unicatolica.pacext.comunidades.TipoComunidade;
+import br.edu.unicatolica.pacext.comunidades.dominio.Comunidade;
+import br.edu.unicatolica.pacext.comunidades.aplicacao.ComunidadeService;
+import br.edu.unicatolica.pacext.comunidades.dominio.TipoComunidade;
 import br.edu.unicatolica.pacext.compartilhado.seguranca.UsuarioAutenticado;
 import br.edu.unicatolica.pacext.compartilhado.erro.ApiException;
 import br.edu.unicatolica.pacext.compartilhado.paginacao.PageResponse;

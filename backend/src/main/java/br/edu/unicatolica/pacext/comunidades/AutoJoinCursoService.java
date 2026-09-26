@@ -4,7 +4,7 @@ package br.edu.unicatolica.pacext.comunidades;
  * Interface pública do módulo Comunidades (AD-3) para o auto-join de curso (RF24.1,
  * Story 2.3). É o único ponto por onde outro módulo (Identidade, e futuramente Perfil
  * Acadêmico/Epic 4) pode disparar uma escrita em {@code comunidade_membro} — nenhum
- * módulo externo injeta {@link ComunidadeMembroRepository} diretamente.
+ * módulo externo injeta {@code dominio.ComunidadeMembroRepository} diretamente.
  */
 public interface AutoJoinCursoService {
 

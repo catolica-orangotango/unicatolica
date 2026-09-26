@@ -1,5 +1,6 @@
-package br.edu.unicatolica.pacext.comunidades;
+package br.edu.unicatolica.pacext.comunidades.aplicacao;
 
+import br.edu.unicatolica.pacext.comunidades.AutoJoinCursoService;
 import br.edu.unicatolica.pacext.identidade.UsuarioCadastrado;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.Observes;
