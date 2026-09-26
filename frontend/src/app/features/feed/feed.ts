@@ -1,8 +1,8 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { forkJoin } from 'rxjs';
-import { Comunidade, ComunidadesService } from '../../core/comunidades/comunidades.service';
-import { Usuario, UsuarioService } from '../../core/usuario/usuario.service';
+import { Comunidade, ComunidadesService } from '../comunidades/comunidades.service';
+import { Usuario, UsuarioService } from '../identidade/usuario.service';
 import { ToastService, UcBadge, UcButton, UcCard } from '../../ui';
 
 /** Prefixo da chave de localStorage que marca "já mostrei o toast de auto-join desta comunidade". */

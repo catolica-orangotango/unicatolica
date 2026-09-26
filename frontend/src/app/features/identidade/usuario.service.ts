@@ -1,8 +1,8 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
-import { AuthService } from '../auth/auth.service';
-import { API_BASE_URL } from '../config/api.config';
+import { AuthService } from '../../core/auth/auth.service';
+import { API_BASE_URL } from '../../core/config/api.config';
 
 /** Espelha `UsuarioResponse` do backend (RF12/RF13) — usado na saudação da Home. */
 export interface Usuario {

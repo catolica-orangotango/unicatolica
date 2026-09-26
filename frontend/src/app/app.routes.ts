@@ -9,11 +9,11 @@ export const routes: Routes = [
   },
   {
     path: 'cadastro',
-    loadComponent: () => import('./cadastro/cadastro').then((m) => m.Cadastro),
+    loadComponent: () => import('./features/identidade/cadastro/cadastro').then((m) => m.Cadastro),
   },
   {
     path: 'confirmar-email',
-    loadComponent: () => import('./confirmar-email/confirmar-email').then((m) => m.ConfirmarEmail),
+    loadComponent: () => import('./features/identidade/confirmar-email/confirmar-email').then((m) => m.ConfirmarEmail),
   },
   {
     // Casca de navegação global: layout de rota-filha sob um parent `path: ''`.

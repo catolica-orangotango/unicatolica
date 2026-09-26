@@ -2,7 +2,7 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
-import { Comunidade } from '../../core/comunidades/comunidades.service';
+import { Comunidade } from '../comunidades/comunidades.service';
 import { API_BASE_URL } from '../../core/config/api.config';
 import { ToastService } from '../../ui';
 import { Feed } from './feed';

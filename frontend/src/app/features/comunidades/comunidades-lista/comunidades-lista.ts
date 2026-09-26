@@ -1,7 +1,7 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
-import { Comunidade, ComunidadesService, Pagina } from '../../../core/comunidades/comunidades.service';
+import { Comunidade, ComunidadesService, Pagina } from '../comunidades.service';
 import { UcBadge, UcButton, UcCard, UcMemberIndicator } from '../../../ui';
 
 const TAMANHO_PAGINA = 12;
