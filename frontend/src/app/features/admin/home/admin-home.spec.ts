@@ -73,6 +73,14 @@ describe('AdminHome (Dashboard geral)', () => {
     expect(link?.getAttribute('href')).toBe('/admin/relatorios');
   });
 
+  it('tem um atalho pra pré-criar comunidade de curso (Story 2.1)', () => {
+    responderTudo();
+    const link = (fixture.nativeElement as HTMLElement).querySelector('.admin-home__acao');
+
+    expect(link?.getAttribute('href')).toBe('/admin/comunidades/nova');
+    expect(link?.textContent).toContain('Nova comunidade de curso');
+  });
+
   it('se as chamadas falharem, o dashboard continua renderizando (sem travar)', () => {
     httpMock.expectOne(`${API_BASE_URL}/usuarios/me`).flush(null, { status: 500, statusText: 'Erro' });
     httpMock.expectOne(listagem(null)).flush(null, { status: 500, statusText: 'Erro' });

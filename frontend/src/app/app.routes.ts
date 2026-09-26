@@ -33,6 +33,13 @@ export const routes: Routes = [
         loadComponent: () => import('./features/admin/home/admin-home').then((m) => m.AdminHome),
       },
       {
+        path: 'comunidades/nova',
+        loadComponent: () =>
+          import('./features/admin/comunidades-curso/admin-comunidade-curso-nova').then(
+            (m) => m.AdminComunidadeCursoNova,
+          ),
+      },
+      {
         path: 'relatorios',
         loadComponent: () =>
           import('./features/admin/relatorios/admin-relatorios').then((m) => m.AdminRelatorios),
@@ -70,6 +77,18 @@ export const routes: Routes = [
         path: 'comunidades/:id',
         loadComponent: () =>
           import('./features/comunidades/comunidade-detalhe/comunidade-detalhe').then((m) => m.ComunidadeDetalhe),
+      },
+      {
+        // Épico 4 — próprio perfil, editável (Stories 4.1/4.2). Vem antes de 'perfil/:id'
+        // por clareza; não há ambiguidade real (segmentos diferentes).
+        path: 'perfil',
+        loadComponent: () => import('./features/perfil/perfil').then((m) => m.Perfil),
+      },
+      {
+        // Perfil de outro usuário, sempre só leitura (Story 4.4, RF20.2) — mesmo
+        // componente do próprio perfil, ver o comentário em perfil.ts.
+        path: 'perfil/:id',
+        loadComponent: () => import('./features/perfil/perfil').then((m) => m.Perfil),
       },
     ],
   },

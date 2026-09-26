@@ -24,10 +24,17 @@ export interface Pagina<T> {
   totalPages: number;
 }
 
+/** Corpo de `POST /comunidades/curso` (Story 2.1). */
+export interface ComunidadeRequest {
+  nome: string;
+  descricao?: string | null;
+}
+
 /**
  * Fala com o módulo Comunidades do Epic 2 (protótipo, ver
- * docs/decisoes/2026-08-modelo-epico-2-comunidades.md) — listar/filtrar, "minhas comunidades" e
- * entrar/sair. Criação de comunidade aberta (Story 2.2) fica pra quando a tela de
+ * docs/decisoes/2026-08-modelo-epico-2-comunidades.md) — listar/filtrar, "minhas
+ * comunidades", entrar/sair e a pré-criação de comunidade de curso pelo administrador
+ * (Story 2.1). Criação de comunidade aberta (Story 2.2) fica pra quando a tela de
  * criação existir.
  *
  * `minhasComunidades` é uma cache compartilhada (signal): o `Shell` (sidebar,
@@ -97,6 +104,22 @@ export class ComunidadesService {
         tap(() => this.toastService.mostrar(`Você entrou em ${nome}`)),
         map(() => undefined),
       );
+  }
+
+  /**
+   * `POST /comunidades/curso` (Story 2.1, RF21.1/RF21.2) — só ADMINISTRADOR de
+   * plataforma; o backend recusa com 403 caso contrário. Não passa por
+   * {@link carregarMinhas}: o administrador não vira membro da comunidade de curso
+   * que cria — comunidade de curso não tem botão "participar" (RF21.1).
+   */
+  criarComunidadeCurso(nome: string, descricao: string | null): Observable<Comunidade> {
+    return this.http
+      .post<Comunidade>(
+        `${API_BASE_URL}/comunidades/curso`,
+        { nome, descricao } satisfies ComunidadeRequest,
+        { headers: this.authService.obterCabecalhoAutorizacao() },
+      )
+      .pipe(tap((comunidade) => this.toastService.mostrar(`Comunidade de curso "${comunidade.nome}" criada.`)));
   }
 
   /** `DELETE /comunidades/{id}/membros/me` (Story 2.4, RF26) — mesma recarga da cache. */

@@ -85,6 +85,36 @@ class ComunidadeServiceTest {
     }
 
     @Test
+    void criaComunidadeCursoSemAssociarOAdministradorComoMembro() {
+        Comunidade comunidade = service.criarComunidadeCurso(USUARIO_ID, "Fisioterapia", "Comunidade do curso");
+
+        assertEquals("Fisioterapia", comunidade.nome);
+        assertEquals(TipoComunidade.CURSO, comunidade.tipo);
+        assertEquals(USUARIO_ID, comunidade.criadoPorUsuarioId);
+        verify(comunidadeMembroRepository, never()).persist(any(ComunidadeMembro.class));
+    }
+
+    @Test
+    void rejeitaCriacaoDeComunidadeDeCursoSemNome() {
+        ApiException erro = assertThrows(ApiException.class,
+                () -> service.criarComunidadeCurso(USUARIO_ID, " ", null));
+
+        assertEquals("CAMPO_OBRIGATORIO", erro.getCode());
+        verify(comunidadeRepository, never()).persist(any(Comunidade.class));
+    }
+
+    @Test
+    void rejeitaCriacaoDeComunidadeDeCursoComNomeJaExistente() {
+        when(comunidadeRepository.existePorNome("Fisioterapia")).thenReturn(true);
+
+        ApiException erro = assertThrows(ApiException.class,
+                () -> service.criarComunidadeCurso(USUARIO_ID, "Fisioterapia", null));
+
+        assertEquals("COMUNIDADE_NOME_EM_USO", erro.getCode());
+        verify(comunidadeRepository, never()).persist(any(Comunidade.class));
+    }
+
+    @Test
     void ingressaEmComunidadeAbertaComSucesso() {
         Comunidade comunidade = comunidadeAberta();
         when(comunidadeRepository.findByIdOptional(1L)).thenReturn(Optional.of(comunidade));

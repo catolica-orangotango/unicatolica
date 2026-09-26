@@ -257,31 +257,38 @@ describe('Shell', () => {
     expect(document.activeElement).toBe(avatarBtn(f));
   });
 
-  it('ativar um item inerte (Perfil) fecha o dropdown e devolve o foco ao avatar', async () => {
+  it('ativar um item inerte (Configurações) fecha o dropdown e devolve o foco ao avatar', async () => {
     const f = await montar(tokenComPerfis(['ALUNO']));
     abrirMenu(f);
 
-    const perfil = itensDoMenu(f).find((b) => (b.textContent ?? '').trim() === 'Perfil')!;
-    perfil.click();
+    const configuracoes = itensDoMenu(f).find((b) => (b.textContent ?? '').trim() === 'Configurações')!;
+    configuracoes.click();
     f.detectChanges();
 
     expect(avatarBtn(f).getAttribute('aria-expanded')).toBe('false');
     expect(document.activeElement).toBe(avatarBtn(f));
   });
 
-  it('Perfil e Configurações são aria-disabled e não alteram a rota ao serem ativados', async () => {
+  it('Configurações é aria-disabled e não altera a rota ao ser ativado', async () => {
     const f = await montar(tokenComPerfis(['ALUNO']));
     const router = TestBed.inject(Router);
     const urlAntes = router.url;
 
-    for (const label of ['Perfil', 'Configurações']) {
-      abrirMenu(f);
-      const item = itensDoMenu(f).find((b) => (b.textContent ?? '').trim() === label)!;
-      expect(item.getAttribute('aria-disabled')).toBe('true');
-      item.click();
-      f.detectChanges();
-      expect(router.url).toBe(urlAntes);
-    }
+    abrirMenu(f);
+    const item = itensDoMenu(f).find((b) => (b.textContent ?? '').trim() === 'Configurações')!;
+    expect(item.getAttribute('aria-disabled')).toBe('true');
+    item.click();
+    f.detectChanges();
+    expect(router.url).toBe(urlAntes);
+  });
+
+  it('Perfil é um link de verdade para /perfil (não é mais inerte)', async () => {
+    const f = await montar(tokenComPerfis(['ALUNO']));
+    abrirMenu(f);
+
+    const perfil = itensDoMenu(f).find((b) => (b.textContent ?? '').trim() === 'Perfil')!;
+    expect(perfil.getAttribute('aria-disabled')).toBeNull();
+    expect(perfil.getAttribute('href')).toBe('/perfil');
   });
 
   it('o dropdown expõe id + aria-label e o avatar aponta para ele via aria-controls', async () => {

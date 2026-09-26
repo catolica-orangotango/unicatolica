@@ -1,10 +1,15 @@
-// Casca da área administrativa — mesmos tokens --uc-* do resto do app (Story 14.1).
-// Sidebar escura com item ativo bordô, como no protótipo inicial do painel: distingue de
-// relance a área do admin do app do aluno (sidebar clara).
+// Casca da área administrativa — CSS predefinido do Design System "Campus Clean"
+// (DESIGN.md + Story 14.7), o mesmo já usado pelo `Shell` do aluno (layout/shell/shell.scss):
+// sidebar clara, `maroon` só como traço de marca e cor de texto do selo "Administração" —
+// nunca como fundo de bloco maior que um ícone (DESIGN.md "Nunca como fundo dominante de
+// tela" / "Do's and Don'ts"). O item ativo usa o mesmo par orange-tint/orange do Shell do
+// aluno, não uma cor própria — é o único padrão de "seleção" que o sistema define.
 :host {
   display: grid;
-  grid-template-columns: 240px 1fr;
+  grid-template-columns: 240px 1fr; // layout-literal: mesma ordem de grandeza da sidebar do Shell do aluno (~220px, DESIGN.md deferido)
+  // layout-literal: fallback de viewport para navegadores sem dvh
   min-height: 100vh;
+  // layout-literal: altura de viewport dinamica, nao e um espacamento de design
   min-height: 100dvh;
   background: var(--uc-color-bg);
   color: var(--uc-color-ink);
@@ -19,39 +24,38 @@
   display: flex;
   flex-direction: column;
   align-self: start;
+  // layout-literal: fallback de viewport para navegadores sem dvh
   height: 100vh;
+  // layout-literal: altura de viewport dinamica, nao e um espacamento de design
   height: 100dvh;
   overflow-y: auto;
-  padding: var(--uc-space-section-gap) calc(var(--uc-space-unit) * 3);
-  background: var(--uc-color-ink);
-  color: var(--uc-color-surface);
+  padding: var(--uc-space-section-gap) var(--uc-space-card-padding);
+  background: var(--uc-color-bg);
+  border-right: 1px solid var(--uc-color-border);
 }
 
 .admin-shell__brand {
   display: flex;
   align-items: center;
   gap: calc(var(--uc-space-unit) * 2);
-  padding: 0 calc(var(--uc-space-unit) * 2);
 }
 
 .admin-shell__brand-mark {
   width: calc(var(--uc-space-unit) * 6);
   height: calc(var(--uc-space-unit) * 6);
   border-radius: var(--uc-radius-sm);
-  background: var(--uc-color-surface);
+  background: var(--uc-color-maroon);
 }
 
 .admin-shell__brand-name {
+  font-size: var(--uc-font-size-body);
   font-weight: var(--uc-font-weight-semibold);
 }
 
 .admin-shell__selo {
   align-self: flex-start;
-  margin: calc(var(--uc-space-unit) * 3) calc(var(--uc-space-unit) * 2) calc(var(--uc-space-unit) * 2);
-  padding: calc(var(--uc-space-unit) / 2) calc(var(--uc-space-unit) * 2);
-  border: 1px solid var(--uc-color-ink-faint);
-  border-radius: var(--uc-radius-full);
-  color: var(--uc-color-ink-faint);
+  margin: calc(var(--uc-space-unit) * 3) 0 calc(var(--uc-space-unit) * 2);
+  color: var(--uc-color-maroon);
   font-size: var(--uc-font-size-label-caps);
   font-weight: var(--uc-font-weight-caps);
   letter-spacing: var(--uc-letter-spacing-label-caps);
@@ -59,7 +63,7 @@
 }
 
 .admin-shell__secao {
-  margin: calc(var(--uc-space-unit) * 5) calc(var(--uc-space-unit) * 2) calc(var(--uc-space-unit) * 2);
+  margin: calc(var(--uc-space-unit) * 5) calc(var(--uc-space-unit) * 2.5) calc(var(--uc-space-unit) * 2);
   color: var(--uc-color-ink-faint);
   font-size: var(--uc-font-size-label-caps);
   font-weight: var(--uc-font-weight-caps);
@@ -73,46 +77,51 @@
   list-style: none;
 }
 
+// Mesmo idioma de `.shell__nav-item` (layout/shell/shell.scss) — ink-soft/regular em
+// repouso, orange-tint+orange+semibold ativo. Reaproveitado aqui pro botão "Sair"
+// também (que não é rota, mas visualmente é mais um item da lista).
 .admin-shell__nav-item {
   display: flex;
   align-items: center;
+  // layout-literal: ocupa a largura da sidebar, nao e uma dimensao de design
   width: 100%;
   padding: calc(var(--uc-space-unit) * 2) calc(var(--uc-space-unit) * 2.5);
   margin-bottom: calc(var(--uc-space-unit) / 2);
   border: 0;
   border-radius: var(--uc-radius-default);
   background: transparent;
-  color: var(--uc-color-surface);
+  color: var(--uc-color-ink-soft);
   font: inherit;
+  font-size: var(--uc-font-size-body);
+  font-weight: var(--uc-font-weight-regular);
   text-align: left;
   text-decoration: none;
   cursor: pointer;
-  opacity: 0.8;
 }
 
 .admin-shell__nav-item:hover {
-  background: color-mix(in srgb, var(--uc-color-surface) 10%, transparent);
-  opacity: 1;
+  background: var(--uc-color-orange-tint);
 }
 
 .admin-shell__nav-item--active {
-  background: var(--uc-color-maroon);
+  background: var(--uc-color-orange-tint);
+  color: var(--uc-color-orange);
   font-weight: var(--uc-font-weight-semibold);
-  opacity: 1;
-}
-
-.admin-shell__nav-item--active:hover {
-  background: var(--uc-color-maroon);
 }
 
 .admin-shell__nav-item:focus-visible {
-  outline: 2px solid var(--uc-color-surface);
+  outline: 2px solid var(--uc-color-maroon);
   outline-offset: 2px;
+}
+
+.admin-shell__sair {
+  margin-top: auto;
 }
 
 .admin-shell__main {
   min-width: 0;
   padding: calc(var(--uc-space-unit) * 7) var(--uc-space-page-margin);
+  background: var(--uc-color-bg);
 }
 
 // Telas estreitas: a sidebar vira uma faixa no topo, acima do conteúdo.

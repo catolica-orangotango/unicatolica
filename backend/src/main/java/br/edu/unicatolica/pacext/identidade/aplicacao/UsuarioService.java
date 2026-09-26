@@ -3,6 +3,7 @@ package br.edu.unicatolica.pacext.identidade.aplicacao;
 import br.edu.unicatolica.pacext.compartilhado.erro.ApiException;
 import br.edu.unicatolica.pacext.compartilhado.seguranca.SessaoConsulta;
 import br.edu.unicatolica.pacext.compartilhado.seguranca.UsuarioAutenticado;
+import br.edu.unicatolica.pacext.identidade.UsuarioAtualizacao;
 import br.edu.unicatolica.pacext.identidade.UsuarioConsulta;
 import br.edu.unicatolica.pacext.identidade.UsuarioResumo;
 import br.edu.unicatolica.pacext.identidade.dominio.AcessoNegadoException;
@@ -10,6 +11,7 @@ import br.edu.unicatolica.pacext.identidade.dominio.Usuario;
 import br.edu.unicatolica.pacext.identidade.dominio.UsuarioRepository;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import jakarta.transaction.Transactional;
 import java.time.Instant;
 import java.util.Collection;
 import java.util.Map;
@@ -20,10 +22,11 @@ import java.util.stream.Collectors;
 /**
  * Leitura de usuários (Story 1.5, RF12/RF13): atende o {@code UsuarioResource} e é a
  * implementação das duas interfaces que expõem {@code usuario} para fora do módulo —
- * {@link UsuarioConsulta} (outros módulos) e {@link SessaoConsulta} (filtro de logout).
+ * {@link UsuarioConsulta} (outros módulos), {@link SessaoConsulta} (filtro de logout) e
+ * {@link UsuarioAtualizacao} (escrita de nome/curso por outro módulo, Epic 4).
  */
 @ApplicationScoped
-public class UsuarioService implements UsuarioConsulta, SessaoConsulta {
+public class UsuarioService implements UsuarioConsulta, SessaoConsulta, UsuarioAtualizacao {
 
     @Inject
     UsuarioRepository usuarioRepository;
@@ -56,6 +59,16 @@ public class UsuarioService implements UsuarioConsulta, SessaoConsulta {
         return usuarioRepository.buscarPorIds(ids).stream()
                 .map(u -> new UsuarioResumo(u.id, u.nome, u.curso))
                 .collect(Collectors.toMap(UsuarioResumo::id, Function.identity()));
+    }
+
+    /** RF15/RF16 — chamado pelo módulo Perfil Acadêmico via {@link UsuarioAtualizacao}. */
+    @Override
+    @Transactional
+    public void atualizarNomeECurso(Long usuarioId, String nome, String curso) {
+        Usuario usuario = buscar(usuarioId);
+        usuario.nome = nome;
+        usuario.curso = curso;
+        usuario.atualizadoEm = Instant.now();
     }
 
     @Override

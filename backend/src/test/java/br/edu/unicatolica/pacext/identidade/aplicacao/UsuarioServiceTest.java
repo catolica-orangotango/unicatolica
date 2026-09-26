@@ -82,6 +82,26 @@ class UsuarioServiceTest {
     }
 
     @Test
+    void atualizarNomeECursoGravaNoUsuarioEncontrado() {
+        Usuario ana = usuario(1L, "Ana", "Direito");
+        when(usuarioRepository.findById(1L)).thenReturn(ana);
+
+        service.atualizarNomeECurso(1L, "Ana Paula", "Engenharia de Software");
+
+        assertEquals("Ana Paula", ana.nome);
+        assertEquals("Engenharia de Software", ana.curso);
+    }
+
+    @Test
+    void atualizarNomeECursoDeUsuarioInexistenteLanca404() {
+        when(usuarioRepository.findById(404L)).thenReturn(null);
+
+        ApiException erro = assertThrows(ApiException.class,
+                () -> service.atualizarNomeECurso(404L, "X", null));
+        assertEquals("RECURSO_NAO_ENCONTRADO", erro.getCode());
+    }
+
+    @Test
     void buscarResumosIndexaPorId() {
         when(usuarioRepository.buscarPorIds(Set.of(1L, 2L, 3L)))
                 .thenReturn(List.of(usuario(1L, "Ana", "Direito"), usuario(2L, "Beto", null)));

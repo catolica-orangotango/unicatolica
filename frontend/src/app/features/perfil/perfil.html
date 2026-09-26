@@ -1,0 +1,97 @@
+<div class="perfil">
+  @if (carregando()) {
+    <p class="perfil__estado">Carregando…</p>
+  } @else if (erroCarregar(); as mensagem) {
+    <p class="perfil__estado" role="alert">{{ mensagem }}</p>
+  } @else if (perfil(); as dados) {
+    <header class="perfil__topo">
+      <h1>{{ somenteLeitura ? dados.nome : 'Meu perfil acadêmico' }}</h1>
+      @if (somenteLeitura) {
+        <p class="perfil__subtitulo">Perfil acadêmico — somente leitura.</p>
+      }
+    </header>
+
+    @if (somenteLeitura) {
+      <uc-card class="perfil__card">
+        <dl class="perfil__lista">
+          <dt>Curso</dt>
+          <dd>{{ dados.curso ?? 'Não informado' }}</dd>
+          <dt>Período</dt>
+          <dd>{{ dados.periodo ?? 'Não informado' }}</dd>
+          <dt>Interesses</dt>
+          <dd>
+            @if (interesses().length === 0) {
+              Nenhum interesse cadastrado.
+            } @else {
+              <ul class="perfil__interesses" aria-label="Interesses">
+                @for (interesse of interesses(); track interesse) {
+                  <li class="perfil__interesse">{{ interesse }}</li>
+                }
+              </ul>
+            }
+          </dd>
+        </dl>
+      </uc-card>
+    } @else {
+      <uc-card class="perfil__card">
+        <form class="perfil__form" [formGroup]="form" (ngSubmit)="salvar()" novalidate>
+          <label for="perfil-nome">Nome</label>
+          <input id="perfil-nome" type="text" formControlName="nome" />
+          @if (form.controls.nome.touched && form.controls.nome.invalid) {
+            <span class="perfil__campo-erro">Informe seu nome.</span>
+          }
+
+          <label for="perfil-curso">Curso</label>
+          <input id="perfil-curso" type="text" formControlName="curso" />
+
+          <label for="perfil-periodo">Período</label>
+          <input id="perfil-periodo" type="number" min="1" formControlName="periodo" />
+
+          <span class="perfil__label">Interesses</span>
+          <div class="perfil__interesses-editor">
+            @if (interesses().length > 0) {
+              <ul class="perfil__interesses" aria-label="Seus interesses">
+                @for (interesse of interesses(); track interesse) {
+                  <li class="perfil__interesse">
+                    {{ interesse }}
+                    <button
+                      type="button"
+                      class="perfil__interesse-remover"
+                      [attr.aria-label]="'Remover ' + interesse"
+                      (click)="removerInteresse(interesse)"
+                    >
+                      ×
+                    </button>
+                  </li>
+                }
+              </ul>
+            } @else {
+              <p class="perfil__interesses-vazio">
+                Nenhum interesse ainda — adicione abaixo pra aparecer mais nas buscas.
+              </p>
+            }
+            <div class="perfil__interesse-novo">
+              <input
+                type="text"
+                [value]="novoInteresse()"
+                (input)="novoInteresse.set($any($event.target).value)"
+                (keydown.enter)="$event.preventDefault(); adicionarInteresse()"
+                placeholder="Ex.: Inteligência Artificial"
+                aria-label="Novo interesse"
+              />
+              <button type="button" uc-button (click)="adicionarInteresse()">Adicionar</button>
+            </div>
+          </div>
+
+          @if (erroSalvar(); as mensagem) {
+            <p class="perfil__erro" role="alert">{{ mensagem }}</p>
+          }
+
+          <button type="submit" uc-button class="perfil__salvar" [disabled]="salvando()">
+            {{ salvando() ? 'Salvando…' : 'Salvar' }}
+          </button>
+        </form>
+      </uc-card>
+    }
+  }
+</div>

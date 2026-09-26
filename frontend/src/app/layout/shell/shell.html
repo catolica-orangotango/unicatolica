@@ -80,15 +80,14 @@
         (click)="$event.stopPropagation()"
         (focusout)="aoSairFoco($event)"
       >
-        <button
-          type="button"
+        <a
           class="shell__menu-item"
           role="menuitem"
-          aria-disabled="true"
+          routerLink="/perfil"
           (click)="fecharMenu()"
         >
           Perfil
-        </button>
+        </a>
         <button
           type="button"
           class="shell__menu-item"

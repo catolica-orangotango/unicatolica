@@ -1,0 +1,87 @@
+// Tokens --uc-* (Story 14.1). Mesmo padrão de campo/erro de login.scss (Story 14.7):
+// erro é texto com borda de 1px sobre `surface`, nunca um bloco preenchido.
+:host {
+  display: block;
+}
+
+.admin-curso {
+  max-width: calc(var(--uc-space-unit) * 140); // layout-literal: coluna de leitura de formulário, DESIGN.md nao fixa
+}
+
+.admin-curso__voltar {
+  display: inline-block;
+  margin-bottom: calc(var(--uc-space-unit) * 4);
+  color: var(--uc-color-ink-soft);
+  font-size: var(--uc-font-size-meta);
+  text-decoration: none;
+}
+
+.admin-curso__voltar:hover {
+  text-decoration: underline;
+}
+
+h1 {
+  margin: 0;
+  font-size: var(--uc-font-size-greeting);
+  font-weight: var(--uc-font-weight-semibold);
+  letter-spacing: var(--uc-letter-spacing-greeting);
+}
+
+.admin-curso__subtitulo {
+  margin: var(--uc-space-unit) 0 var(--uc-space-section-gap);
+  color: var(--uc-color-ink-soft);
+}
+
+.admin-curso__sucesso {
+  margin: 0 0 calc(var(--uc-space-unit) * 4);
+  padding: calc(var(--uc-space-unit) * 2.5) calc(var(--uc-space-unit) * 3);
+  border: 1px solid var(--uc-color-green-ok);
+  border-radius: var(--uc-radius-default);
+  background: var(--uc-color-surface);
+  color: var(--uc-color-green-ok);
+  font-size: var(--uc-font-size-meta);
+}
+
+.admin-curso__erro {
+  margin: 0 0 calc(var(--uc-space-unit) * 4);
+  padding: calc(var(--uc-space-unit) * 2.5) calc(var(--uc-space-unit) * 3);
+  border: 1px solid var(--uc-color-error);
+  border-radius: var(--uc-radius-default);
+  background: var(--uc-color-surface);
+  color: var(--uc-color-error);
+  font-size: var(--uc-font-size-meta);
+}
+
+.admin-curso__form {
+  display: flex;
+  flex-direction: column;
+}
+
+label {
+  margin-bottom: calc(var(--uc-space-unit) / 2);
+  font-size: var(--uc-font-size-meta);
+  font-weight: var(--uc-font-weight-semibold);
+  color: var(--uc-color-ink);
+}
+
+input,
+textarea {
+  margin-bottom: calc(var(--uc-space-unit) * 4);
+  padding: calc(var(--uc-space-unit) * 2) calc(var(--uc-space-unit) * 2.5);
+  border: 1px solid var(--uc-color-border);
+  border-radius: var(--uc-radius-default);
+  background: var(--uc-color-surface);
+  color: var(--uc-color-ink);
+  font-size: var(--uc-font-size-body);
+  resize: vertical;
+}
+
+.admin-curso__campo-erro {
+  margin: calc(var(--uc-space-unit) * -3) 0 calc(var(--uc-space-unit) * 4);
+  color: var(--uc-color-error);
+  font-size: var(--uc-font-size-meta);
+}
+
+button[uc-button] {
+  align-self: flex-start;
+}

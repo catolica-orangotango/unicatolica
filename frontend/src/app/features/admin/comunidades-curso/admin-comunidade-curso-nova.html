@@ -1,0 +1,34 @@
+<div class="admin-curso">
+  <a class="admin-curso__voltar" routerLink="/admin">← Voltar ao dashboard</a>
+
+  <h1>Comunidades de curso</h1>
+  <p class="admin-curso__subtitulo">
+    Pré-crie a comunidade de um curso novo da instituição (RF21.2). Ela nasce sem botão
+    "participar" — os alunos entram automaticamente no cadastro.
+  </p>
+
+  @if (ultimaCriada(); as criada) {
+    <div class="admin-curso__sucesso" role="status">
+      Comunidade de curso <strong>{{ criada.nome }}</strong> criada.
+    </div>
+  }
+
+  @if (erro(); as mensagem) {
+    <p class="admin-curso__erro" role="alert">{{ mensagem }}</p>
+  }
+
+  <form class="admin-curso__form" [formGroup]="form" (ngSubmit)="enviar()" novalidate>
+    <label for="curso-nome">Nome do curso</label>
+    <input id="curso-nome" type="text" formControlName="nome" autocomplete="off" />
+    @if (form.controls.nome.touched && form.controls.nome.invalid) {
+      <span class="admin-curso__campo-erro">Informe o nome do curso.</span>
+    }
+
+    <label for="curso-descricao">Descrição (opcional)</label>
+    <textarea id="curso-descricao" formControlName="descricao" rows="3"></textarea>
+
+    <button type="submit" uc-button [disabled]="enviando()">
+      {{ enviando() ? 'Criando…' : 'Criar comunidade de curso' }}
+    </button>
+  </form>
+</div>

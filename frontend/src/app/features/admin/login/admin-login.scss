@@ -1,57 +1,18 @@
-// Tokens --uc-* (Story 14.1). Faixa bordô no topo do cartão = identidade do admin.
+// Tela de login do administrador (Story 2.1), no CSS predefinido do Design System
+// "Campus Clean" (Story 14.7): o enquadramento (landmark, marca, card) vem do
+// <uc-auth-shell>, o mesmo usado pelo login do aluno — aqui só os elementos do próprio
+// template. Todo valor é um token --uc-* (Story 14.1); erro é texto com borda de 1px
+// sobre `surface`, nunca um bloco preenchido (DESIGN.md "Do's and Don'ts", mesmo padrão
+// de login.scss). Maroon nunca vira fundo de bloco — aqui é só o traço da marca (dentro
+// do próprio <uc-auth-shell>) e a cor do texto do selo "Administração", nunca um
+// preenchimento.
 :host {
   display: block;
-  min-height: 100vh;
-  min-height: 100dvh;
-  background: var(--uc-color-bg);
-  color: var(--uc-color-ink);
-  font-family: var(--uc-font-family-base);
-  font-size: var(--uc-font-size-body);
-  line-height: var(--uc-line-height-body);
-}
-
-.admin-login {
-  min-height: inherit;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: var(--uc-space-page-margin);
-  box-sizing: border-box;
-}
-
-.admin-login__card {
-  width: 100%;
-  max-width: 400px;
-  padding: calc(var(--uc-space-unit) * 8);
-  background: var(--uc-color-surface);
-  border: 1px solid var(--uc-color-border);
-  border-top: calc(var(--uc-space-unit)) solid var(--uc-color-maroon);
-  border-radius: var(--uc-radius-md);
-  box-sizing: border-box;
-}
-
-.admin-login__marca {
-  display: flex;
-  align-items: center;
-  gap: calc(var(--uc-space-unit) * 2);
-  margin-bottom: calc(var(--uc-space-unit) * 6);
-}
-
-.admin-login__marca-icone {
-  width: calc(var(--uc-space-unit) * 6);
-  height: calc(var(--uc-space-unit) * 6);
-  border-radius: var(--uc-radius-sm);
-  background: var(--uc-color-maroon);
-}
-
-.admin-login__marca-nome {
-  font-weight: var(--uc-font-weight-semibold);
 }
 
 .admin-login__selo {
-  padding: calc(var(--uc-space-unit) / 2) calc(var(--uc-space-unit) * 2);
-  border: 1px solid var(--uc-color-maroon);
-  border-radius: var(--uc-radius-full);
+  display: block;
+  margin-bottom: calc(var(--uc-space-unit) * 2);
   color: var(--uc-color-maroon);
   font-size: var(--uc-font-size-label-caps);
   font-weight: var(--uc-font-weight-caps);
@@ -59,59 +20,65 @@
   text-transform: uppercase;
 }
 
-h1 {
-  margin: 0 0 calc(var(--uc-space-unit));
+.admin-login__titulo {
+  margin: 0 0 calc(var(--uc-space-unit) / 2);
   font-size: var(--uc-font-size-greeting);
   font-weight: var(--uc-font-weight-semibold);
   letter-spacing: var(--uc-letter-spacing-greeting);
+  color: var(--uc-color-ink);
 }
 
 .admin-login__subtitulo {
   margin: 0 0 calc(var(--uc-space-unit) * 6);
-  color: var(--uc-color-ink-soft);
   font-size: var(--uc-font-size-meta);
+  color: var(--uc-color-ink-soft);
 }
 
-form {
+.admin-login__form {
   display: flex;
   flex-direction: column;
-  gap: calc(var(--uc-space-unit));
 }
 
-label {
-  margin-top: calc(var(--uc-space-unit) * 2);
+.admin-login__label {
+  margin-bottom: calc(var(--uc-space-unit) / 2);
   font-size: var(--uc-font-size-meta);
   font-weight: var(--uc-font-weight-semibold);
+  color: var(--uc-color-ink);
 }
 
-input {
-  padding: calc(var(--uc-space-unit) * 2) calc(var(--uc-space-unit) * 3);
+.admin-login__campo {
+  margin-bottom: calc(var(--uc-space-unit) * 4);
+  padding: calc(var(--uc-space-unit) * 2) calc(var(--uc-space-unit) * 2.5);
   border: 1px solid var(--uc-color-border);
   border-radius: var(--uc-radius-default);
-  font: inherit;
+  background: var(--uc-color-surface);
+  color: var(--uc-color-ink);
+  font-size: var(--uc-font-size-body);
 }
 
-input:focus-visible {
-  outline: 2px solid var(--uc-color-maroon);
-  outline-offset: 1px;
+// Ver login.scss: `ink-faint` fica abaixo do piso AA de 4,5:1 sobre `surface`.
+.admin-login__campo::placeholder {
+  color: var(--uc-color-ink-soft);
 }
 
 .admin-login__campo-erro {
-  color: var(--uc-color-maroon);
+  display: block;
+  margin: calc(var(--uc-space-unit) * -3) 0 calc(var(--uc-space-unit) * 4);
+  color: var(--uc-color-error);
   font-size: var(--uc-font-size-meta);
+}
+
+.admin-login__enviar {
+  align-self: flex-start;
+  margin-top: calc(var(--uc-space-unit) * 2);
 }
 
 .admin-login__erro {
-  margin: calc(var(--uc-space-unit) * 2) 0 0;
-  padding: calc(var(--uc-space-unit) * 2) calc(var(--uc-space-unit) * 3);
-  border: 1px solid var(--uc-color-maroon);
+  margin: calc(var(--uc-space-unit) * 4) 0 0;
+  padding: calc(var(--uc-space-unit) * 2.5) calc(var(--uc-space-unit) * 3);
+  border: 1px solid var(--uc-color-error);
   border-radius: var(--uc-radius-default);
-  color: var(--uc-color-maroon);
+  background: var(--uc-color-surface);
+  color: var(--uc-color-error);
   font-size: var(--uc-font-size-meta);
-}
-
-button[uc-button] {
-  margin-top: calc(var(--uc-space-unit) * 4);
-  padding-top: calc(var(--uc-space-unit) * 2.5);
-  padding-bottom: calc(var(--uc-space-unit) * 2.5);
 }

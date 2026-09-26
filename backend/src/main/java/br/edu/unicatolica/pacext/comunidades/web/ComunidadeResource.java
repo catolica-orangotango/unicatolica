@@ -20,9 +20,9 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
 /**
- * Endpoints do Epic 2 (Stories 2.2, 2.4, 2.5) — entrada rápida desta fatia (ver
- * docs/decisoes/2026-08-modelo-epico-2-comunidades.md); Stories 2.1 (endpoint de admin) e 2.6
- * (administração) ficam de fora, bloqueadas pelo papel ADMINISTRADOR de plataforma.
+ * Endpoints do Epic 2 (Stories 2.1, 2.2, 2.4, 2.5) — entrada rápida desta fatia (ver
+ * docs/decisoes/2026-08-modelo-epico-2-comunidades.md). Story 2.6 (administração de
+ * comunidade) fica de fora desta fatia.
  */
 @Path("/comunidades")
 public class ComunidadeResource {
@@ -42,6 +42,26 @@ public class ComunidadeResource {
                 request.descricao());
         return Response.status(Response.Status.CREATED)
                 .entity(ComunidadeResponse.de(comunidade, true))
+                .build();
+    }
+
+    /**
+     * Story 2.1 — só ADMINISTRADOR de plataforma pode pré-criar comunidade de curso
+     * (RF21.1, RF21.2). Checagem de perfil aqui, não no {@code Service} — mesmo padrão
+     * de {@code UsuarioResource#porId} (RF13): quem decide autorização HTTP é o Resource.
+     */
+    @POST
+    @Path("/curso")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response criarCurso(ComunidadeRequest request) {
+        if (!usuarioAutenticado.possuiPerfil("ADMINISTRADOR")) {
+            throw ApiException.semPermissao("ACESSO_NEGADO", "Você não tem permissão para executar esta ação.", null);
+        }
+        Comunidade comunidade = comunidadeService.criarComunidadeCurso(usuarioAutenticado.id(), request.nome(),
+                request.descricao());
+        return Response.status(Response.Status.CREATED)
+                .entity(ComunidadeResponse.de(comunidade, false))
                 .build();
     }
 

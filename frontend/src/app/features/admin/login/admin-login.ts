@@ -7,6 +7,7 @@ import {
   AuthService,
   PERFIL_ADMINISTRADOR,
 } from '../../../core/auth/auth.service';
+import { UcAuthShell } from '../../../layout/auth-shell/auth-shell';
 import { UcButton } from '../../../ui';
 
 /**
@@ -16,7 +17,7 @@ import { UcButton } from '../../../ui';
  */
 @Component({
   selector: 'app-admin-login',
-  imports: [ReactiveFormsModule, UcButton],
+  imports: [ReactiveFormsModule, UcAuthShell, UcButton],
   templateUrl: './admin-login.html',
   styleUrl: './admin-login.scss',
 })

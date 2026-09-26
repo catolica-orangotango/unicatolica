@@ -1,0 +1,152 @@
+// Épico 4 — Perfil Acadêmico. Tokens --uc-* (Story 14.1); erro como texto com borda
+// (--uc-color-error), nunca bloco preenchido, mesmo padrão de login.scss/cadastro.scss.
+:host {
+  display: block;
+}
+
+.perfil {
+  max-width: calc(var(--uc-space-unit) * 140); // layout-literal: coluna de leitura de formulário, DESIGN.md nao fixa
+}
+
+.perfil__estado {
+  color: var(--uc-color-ink-soft);
+}
+
+.perfil__topo {
+  margin-bottom: var(--uc-space-section-gap);
+}
+
+h1 {
+  margin: 0;
+  font-size: var(--uc-font-size-greeting);
+  font-weight: var(--uc-font-weight-semibold);
+  letter-spacing: var(--uc-letter-spacing-greeting);
+}
+
+.perfil__subtitulo {
+  margin: var(--uc-space-unit) 0 0;
+  color: var(--uc-color-ink-soft);
+  font-size: var(--uc-font-size-meta);
+}
+
+.perfil__card {
+  display: block;
+}
+
+.perfil__lista {
+  margin: 0;
+}
+
+.perfil__lista dt {
+  margin-top: calc(var(--uc-space-unit) * 4);
+  color: var(--uc-color-ink-faint);
+  font-size: var(--uc-font-size-label-caps);
+  font-weight: var(--uc-font-weight-caps);
+  letter-spacing: var(--uc-letter-spacing-label-caps);
+  text-transform: uppercase;
+}
+
+.perfil__lista dt:first-child {
+  margin-top: 0;
+}
+
+.perfil__lista dd {
+  margin: calc(var(--uc-space-unit) / 2) 0 0;
+  color: var(--uc-color-ink);
+}
+
+.perfil__form {
+  display: flex;
+  flex-direction: column;
+}
+
+.perfil__form label,
+.perfil__label {
+  margin-bottom: calc(var(--uc-space-unit) / 2);
+  font-size: var(--uc-font-size-meta);
+  font-weight: var(--uc-font-weight-semibold);
+  color: var(--uc-color-ink);
+}
+
+.perfil__form label:not(:first-child),
+.perfil__label {
+  margin-top: calc(var(--uc-space-unit) * 4);
+}
+
+.perfil__form input {
+  padding: calc(var(--uc-space-unit) * 2) calc(var(--uc-space-unit) * 2.5);
+  border: 1px solid var(--uc-color-border);
+  border-radius: var(--uc-radius-default);
+  background: var(--uc-color-surface);
+  color: var(--uc-color-ink);
+  font-size: var(--uc-font-size-body);
+}
+
+.perfil__campo-erro {
+  margin-top: calc(var(--uc-space-unit) / 2);
+  color: var(--uc-color-error);
+  font-size: var(--uc-font-size-meta);
+}
+
+.perfil__interesses {
+  display: flex;
+  flex-wrap: wrap;
+  gap: calc(var(--uc-space-unit) * 2);
+  margin: 0 0 calc(var(--uc-space-unit) * 3);
+  padding: 0;
+  list-style: none;
+}
+
+.perfil__interesse {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--uc-space-unit));
+  padding: calc(var(--uc-space-unit)) calc(var(--uc-space-unit) * 3);
+  border-radius: var(--uc-radius-full);
+  background: var(--uc-color-orange-tint);
+  color: var(--uc-color-ink);
+  font-size: var(--uc-font-size-meta);
+}
+
+.perfil__interesse-remover {
+  border: 0;
+  background: transparent;
+  color: var(--uc-color-ink-soft);
+  font: inherit;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.perfil__interesses-vazio {
+  margin: 0 0 calc(var(--uc-space-unit) * 3);
+  color: var(--uc-color-ink-faint);
+  font-size: var(--uc-font-size-meta);
+}
+
+.perfil__interesse-novo {
+  display: flex;
+  gap: calc(var(--uc-space-unit) * 2);
+}
+
+.perfil__interesse-novo input {
+  flex: 1;
+  padding: calc(var(--uc-space-unit) * 2) calc(var(--uc-space-unit) * 2.5);
+  border: 1px solid var(--uc-color-border);
+  border-radius: var(--uc-radius-default);
+  font-size: var(--uc-font-size-body);
+}
+
+.perfil__erro {
+  margin: calc(var(--uc-space-unit) * 4) 0 0;
+  padding: calc(var(--uc-space-unit) * 2.5) calc(var(--uc-space-unit) * 3);
+  border: 1px solid var(--uc-color-error);
+  border-radius: var(--uc-radius-default);
+  background: var(--uc-color-surface);
+  color: var(--uc-color-error);
+  font-size: var(--uc-font-size-meta);
+}
+
+.perfil__salvar {
+  align-self: flex-start;
+  margin-top: calc(var(--uc-space-unit) * 6);
+}

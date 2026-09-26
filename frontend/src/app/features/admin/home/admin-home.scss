@@ -4,6 +4,7 @@
 }
 
 .admin-home {
+  // layout-literal: coluna de leitura do dashboard, DESIGN.md nao fixa
   max-width: 1080px;
 }
 
@@ -87,6 +88,26 @@ h1 {
   font-weight: var(--uc-font-weight-caps);
   letter-spacing: var(--uc-letter-spacing-label-caps);
   text-transform: uppercase;
+}
+
+.admin-home__acoes {
+  margin-bottom: var(--uc-space-section-gap);
+}
+
+.admin-home__acao {
+  display: inline-block;
+  padding: calc(var(--uc-space-unit) * 2) calc(var(--uc-space-unit) * 4);
+  border: 1px solid var(--uc-color-border);
+  border-radius: var(--uc-radius-default);
+  background: var(--uc-color-surface);
+  color: var(--uc-color-ink);
+  font-size: var(--uc-font-size-body);
+  font-weight: var(--uc-font-weight-semibold);
+  text-decoration: none;
+}
+
+.admin-home__acao:hover {
+  background: var(--uc-color-orange-tint);
 }
 
 .admin-home__atividade {

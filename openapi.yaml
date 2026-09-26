@@ -165,6 +165,71 @@ paths:
         '404':
           $ref: '#/components/responses/NaoEncontrado'
 
+  /perfil/me:
+    get:
+      operationId: obterMeuPerfil
+      summary: Retorna o perfil acadêmico do usuário autenticado (Story 4.2, RF20)
+      tags: [Perfil]
+      responses:
+        '200':
+          description: Perfil acadêmico do próprio usuário.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PerfilAcademico'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+    put:
+      operationId: salvarMeuPerfil
+      summary: Cria ou edita o perfil acadêmico do usuário autenticado (Story 4.1, RF14-RF19)
+      tags: [Perfil]
+      description: >
+        Mesma operação para criar (primeira vez) ou editar (chamadas seguintes) — RF14 e
+        RF19. Se o curso mudar, o auto-join de comunidade de curso é ressincronizado na
+        mesma chamada (RF16, Story 2.3).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PerfilRequest'
+      responses:
+        '200':
+          description: Perfil acadêmico salvo.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PerfilAcademico'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        # 422: nome não informado (RF15).
+        '422':
+          $ref: '#/components/responses/ErroValidacao'
+
+  /perfil/{usuarioId}:
+    get:
+      operationId: obterPerfilPublico
+      summary: Retorna o perfil acadêmico público de outro usuário, só leitura (Story 4.4, RF20.2)
+      tags: [Perfil]
+      parameters:
+        - name: usuarioId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Perfil acadêmico do usuário informado — mesmos campos do próprio perfil.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PerfilAcademico'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+
   /comunidades:
     post:
       operationId: criarComunidade
@@ -233,6 +298,40 @@ paths:
                 $ref: '#/components/schemas/ComunidadePageResponse'
         '401':
           $ref: '#/components/responses/NaoAutenticado'
+
+  /comunidades/curso:
+    post:
+      operationId: criarComunidadeCurso
+      summary: Pré-cria a comunidade de um curso (Story 2.1, RF21.1/RF21.2) — só ADMINISTRADOR
+      tags: [Comunidades]
+      description: >
+        Toda comunidade criada por aqui é do tipo CURSO, imutável e sem associação
+        automática do administrador (o curso não tem botão "participar" — a associação do
+        aluno é só via auto-join no cadastro, Story 2.3). Não aceita "tipo" no corpo pelo
+        mesmo motivo de `POST /comunidades`: o tipo é implícito na rota.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ComunidadeRequest'
+      responses:
+        '201':
+          description: Comunidade de curso criada.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ComunidadeResponse'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        # 403: perfil autenticado não é ADMINISTRADOR (RF21.2).
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        # 409: já existe comunidade com esse nome. 422: nome não informado (RF22).
+        '409':
+          $ref: '#/components/responses/Conflito'
+        '422':
+          $ref: '#/components/responses/ErroValidacao'
 
   /comunidades/minhas:
     get:
@@ -425,13 +524,52 @@ components:
           format: email
         perfil:
           type: string
-          enum: [ALUNO, MODERADOR]
-          description: 'Perfil global do usuário (RF13).'
+          enum: [ALUNO, MODERADOR, ADMINISTRADOR]
+          description: 'Perfil global do usuário (RF13). ADMINISTRADOR: gestão da plataforma (Story 2.1).'
           examples:
             - ALUNO
         curso:
           type: [string, 'null']
           description: Curso informado no cadastro (Story 1.2) — usado na saudação da Home.
+
+    PerfilAcademico:
+      type: object
+      description: >
+        Perfil acadêmico (Épico 4) — nome e curso vêm de Identidade (Story 1.2),
+        período e interesses são deste módulo (RF17/RF18). `interesses` vazio não
+        significa erro, é o estado normal de um perfil recém-criado (RF14).
+      required: [usuarioId, nome, curso, periodo, interesses]
+      properties:
+        usuarioId:
+          type: integer
+          format: int64
+        nome:
+          type: string
+        curso:
+          type: [string, 'null']
+        periodo:
+          type: [integer, 'null']
+          description: Período/semestre atual do curso (RF17).
+        interesses:
+          type: array
+          items:
+            type: string
+
+    PerfilRequest:
+      type: object
+      required: [nome]
+      properties:
+        nome:
+          type: string
+        curso:
+          type: [string, 'null']
+        periodo:
+          type: [integer, 'null']
+        interesses:
+          type: array
+          items:
+            type: string
+          default: []
 
     ComunidadeRequest:
       type: object

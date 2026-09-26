@@ -10,11 +10,10 @@ import java.time.Instant;
 import java.util.List;
 
 /**
- * Regras de negócio das Stories 2.2 (criar comunidade aberta), 2.4 (entrar/sair) e 2.5
- * (listar/filtrar/visualizar) do Epic 2. Entrada rápida (protótipo desta fatia, ver
- * docs/decisoes/2026-08-modelo-epico-2-comunidades.md) — Story 2.1 (endpoint de admin criar comunidade de
- * curso) e 2.6 (administração) ficam de fora por dependerem do papel ADMINISTRADOR de
- * plataforma, que ainda não existe em Identidade.
+ * Regras de negócio das Stories 2.1 (admin pré-cria comunidade de curso), 2.2 (criar
+ * comunidade aberta), 2.4 (entrar/sair) e 2.5 (listar/filtrar/visualizar) do Epic 2.
+ * Story 2.6 (administração de comunidade) fica de fora desta fatia, ver
+ * docs/decisoes/2026-08-modelo-epico-2-comunidades.md.
  */
 @ApplicationScoped
 public class ComunidadeService {
@@ -57,6 +56,34 @@ public class ComunidadeService {
         comunidadeMembroRepository.persist(membro);
 
         auditoriaService.registrar(usuarioId, "comunidades", "COMUNIDADE_CRIADA", "Comunidade", comunidade.id, null);
+        return comunidade;
+    }
+
+    /**
+     * Story 2.1 (RF21.1, RF21.2, RF22) — só chamado pelo {@code Resource} depois de
+     * confirmar o perfil ADMINISTRADOR (checagem HTTP, mesmo padrão de
+     * {@code UsuarioResource#porId}). Tipo {@code CURSO} é fixo e imutável; sem
+     * {@code ComunidadeMembro} pro administrador — comunidade de curso não tem botão
+     * "participar" (RF21.1), a associação do aluno é só via auto-join no cadastro
+     * (Story 2.3).
+     */
+    @Transactional
+    public Comunidade criarComunidadeCurso(Long usuarioId, String nome, String descricao) {
+        validarNomeObrigatorio(nome);
+        if (comunidadeRepository.existePorNome(nome)) {
+            throw ApiException.conflito("COMUNIDADE_NOME_EM_USO", "Já existe uma comunidade com esse nome.", null);
+        }
+
+        Comunidade comunidade = new Comunidade();
+        comunidade.nome = nome.trim();
+        comunidade.descricao = descricao;
+        comunidade.tipo = TipoComunidade.CURSO;
+        comunidade.criadoPorUsuarioId = usuarioId;
+        comunidade.criadoEm = Instant.now();
+        comunidadeRepository.persist(comunidade);
+
+        auditoriaService.registrar(usuarioId, "comunidades", "COMUNIDADE_CURSO_CRIADA", "Comunidade", comunidade.id,
+                null);
         return comunidade;
     }
 
