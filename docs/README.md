@@ -10,6 +10,7 @@ Estes documentos são mantidos atualizados junto com o código.
 |---|---|
 | [`como-funciona.md`](como-funciona.md) | Guia de entrada: fluxo de requisição, estrutura de pastas, regras entre módulos, checklist de nova funcionalidade |
 | [`arquitetura.md`](arquitetura.md) | Decisões de arquitetura AD-1 a AD-11, stack, convenções e diagramas (o "architecture spine") |
+| [`dividas-tecnicas.md`](dividas-tecnicas.md) | Problemas conhecidos ainda sem história ou PR |
 | [`decisoes/`](decisoes/) | Uma decisão por arquivo, a partir de agora. Decisões novas ou que alteram uma AD entram aqui |
 | [`../openapi.yaml`](../openapi.yaml) | Contrato REST, fonte de verdade entre frontend e backend |
 | [`../frontend/src/styles/README.md`](../frontend/src/styles/README.md) | Tokens de design Campus Clean e a regra de não fixar valores no SCSS |
