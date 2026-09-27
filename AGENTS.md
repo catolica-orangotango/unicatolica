@@ -46,5 +46,6 @@ Rede social acadêmica do Campus Joinville da CatólicaSC — projeto de PAC Ext
 - Cada módulo do backend documenta em `package-info.java` seus RFs, tabelas próprias e interface publicada — manter atualizado ao mexer no módulo.
 - Frontend: SCSS nunca hardcoda hex/px/fonte/raio — só `var(--uc-*)` e classes `.uc-text-*`; `scss-guard.spec.ts` quebra o build.
 - Frontend segue WCAG 2.2 nível AA (RNF06) — não verificado automaticamente em CI.
+- Teste é parte da entrega, não dívida: Service com unitário por `ApiException`; Resource com `@QuarkusTest` pelo HTTP (caminho feliz, 401, cada código de erro); tela com Vitest + e2e. Adiar só quando estritamente necessário, registrando motivo e prazo em `docs/dividas-tecnicas.md`. Plano das lacunas atuais (T0–T7) em `docs/decisoes/2026-09-27-cobertura-de-testes.md`.
 
 <!-- /bmad:context -->

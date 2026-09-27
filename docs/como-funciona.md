@@ -127,11 +127,12 @@ Tudo de identidade (login, cadastro, confirmação de e-mail) fica em `features/
 1. **Contrato:** adicione o endpoint e os schemas em `openapi.yaml`. Listagem usa `$ref` para `PageResponse`, e erro usa o envelope padrão.
 2. **Migration:** `<modulo>-NNN-descricao.xml` na pasta do módulo.
 3. **Domínio:** entidade e `*Repository` em `<modulo>/dominio/`.
-4. **Regra:** `*Service` em `<modulo>/aplicacao/`, com teste unitário (JUnit + Mockito, sem subir o Quarkus; ver `ComunidadeServiceTest`).
-5. **HTTP:** `*Resource` e DTOs em `<modulo>/web/`, com teste `@QuarkusTest` + rest-assured (ver `AuthResourceTest`).
+4. **Regra:** `*Service` em `<modulo>/aplicacao/`, com teste unitário do caminho feliz e de cada `ApiException` que ele lança (JUnit + Mockito, sem subir o Quarkus; ver `ComunidadeServiceTest`).
+5. **HTTP:** `*Resource` e DTOs em `<modulo>/web/`, com teste `@QuarkusTest` + rest-assured pelo HTTP real: caminho feliz, 401 sem token (rota não pública) e um caso por código de erro (ver `AutenticacaoFluxoTest`).
 6. **Outro módulo precisa disso?** Exponha uma interface na raiz do módulo, nunca o Repository.
-7. **Frontend:** tela em `features/<modulo>/`, usando os componentes de `ui/`, com teste Vitest ao lado (`*.spec.ts`).
-8. **PR:** abra, espere os 3 checks (Frontend, Backend, Contrato) e faça squash merge.
+7. **Frontend:** tela em `features/<modulo>/`, usando os componentes de `ui/`, com teste Vitest ao lado (`*.spec.ts`) e um e2e do caminho principal em `frontend/e2e/`.
+8. **Teste é parte da entrega:** faltou um dos testes acima, a funcionalidade não está pronta. Só adie um teste quando for estritamente necessário (ferramenta ainda inexistente, dependência externa fora do CI) e registre o motivo e o prazo em `dividas-tecnicas.md`. Regra completa em [`decisoes/2026-09-27-cobertura-de-testes.md`](decisoes/2026-09-27-cobertura-de-testes.md).
+9. **PR:** abra, espere os 3 checks (Frontend, Backend, Contrato) e faça squash merge.
 
 ## 8. Rodando localmente
 
