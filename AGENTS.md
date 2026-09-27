@@ -20,7 +20,7 @@ Rede social acadêmica do Campus Joinville da CatólicaSC — projeto de PAC Ext
 - Migrations: `backend/src/main/resources/db/changelog/modulos/<modulo>/<modulo>-NNN-descricao.xml`, incluídas pelo `db.changelog-master.xml` (não editar o mestre por PR). Exceção: a pasta `modulos/infraestrutura/` (log_auditoria) mantém o nome antigo — renomear muda o caminho que o Liquibase grava e quebra o banco de produção.
 - Frontend: `frontend/src/app/` — `core/` (auth service/guard, `config/api.config.ts`), `features/<modulo>/` (telas em `<tela>/` + serviço HTTP `<modulo>.service.ts`), `layout/` (`shell`, `auth-shell`), `ui/` (design system, exportado por `ui/index.ts`). E2E em `frontend/e2e/`.
 - Tokens de design (Campus Clean): `frontend/src/styles/` — ver `frontend/src/styles/README.md`.
-- Documentação viva: `docs/` (índice `docs/README.md`; decisões novas em `docs/decisoes/`). Histórico de planejamento/implementação (só leitura): `_bmad-output/` — specs de story em `_bmad-output/implementation-artifacts/`.
+- Documentação viva: `docs/` (índice `docs/README.md`; decisões novas em `docs/decisoes/`; dívidas técnicas conhecidas em `docs/dividas-tecnicas.md`). Histórico de planejamento/implementação (só leitura): `_bmad-output/` — specs de story em `_bmad-output/implementation-artifacts/`.
 - Contrato REST: `openapi.yaml` na raiz.
 
 ## Running and verifying
