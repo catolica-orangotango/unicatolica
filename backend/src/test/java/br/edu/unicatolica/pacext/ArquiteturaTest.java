@@ -1,6 +1,5 @@
 package br.edu.unicatolica.pacext;
 
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
 import com.tngtech.archunit.core.domain.Dependency;
@@ -8,7 +7,6 @@ import com.tngtech.archunit.core.domain.JavaClass;
 import com.tngtech.archunit.core.domain.JavaClasses;
 import com.tngtech.archunit.core.importer.ClassFileImporter;
 import com.tngtech.archunit.core.importer.ImportOption;
-import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.function.BiPredicate;
@@ -22,10 +20,6 @@ import org.junit.jupiter.api.Test;
  *
  * <p>Nomes são relativos a {@code br.edu.unicatolica.pacext}: o primeiro segmento é o
  * módulo (ou o transversal), o resto é o pacote interno. Ex.: {@code identidade.web.AuthResource}.</p>
- *
- * <p>As violações que já existiam quando as regras entraram estão em {@link #EXCECOES_TEMPORARIAS},
- * cada uma com o PR da reestruturação que a remove. {@link #excecoesTemporariasAindaExistem()}
- * falha quando uma exceção deixa de ser necessária, para que a lista só diminua.</p>
  */
 class ArquiteturaTest {
 
@@ -36,10 +30,6 @@ class ArquiteturaTest {
 
     /** Módulo que só pode depender do transversal (decisão identidade-desacoplada). */
     private static final String FOLHA = "identidade";
-
-    private record Excecao(String regra, String origem, String alvo, String removidaNo) {}
-
-    private static final List<Excecao> EXCECOES_TEMPORARIAS = List.of();
 
     private static JavaClasses classes;
 
@@ -83,26 +73,12 @@ class ArquiteturaTest {
                 && !modulo(alvo).equals(TRANSVERSAL));
     }
 
-    @Test
-    void excecoesTemporariasAindaExistem() {
-        Set<String> existentes = dependencias().stream()
-                .map(d -> d[0] + " -> " + d[1])
-                .collect(Collectors.toSet());
-        List<String> obsoletas = EXCECOES_TEMPORARIAS.stream()
-                .filter(e -> !existentes.contains(e.origem() + " -> " + e.alvo()))
-                .map(e -> e.regra() + ": " + e.origem() + " -> " + e.alvo())
-                .toList();
-        assertTrue(obsoletas.isEmpty(),
-                "Exceção temporária não é mais necessária — remova de EXCECOES_TEMPORARIAS:\n  "
-                        + String.join("\n  ", obsoletas));
-    }
-
     private static void verificar(String regra, BiPredicate<String, String> viola) {
         Set<String> violacoes = new TreeSet<>();
         for (String[] dep : dependencias()) {
             String origem = dep[0];
             String alvo = dep[1];
-            if (viola.test(origem, alvo) && !excecao(regra, origem, alvo)) {
+            if (viola.test(origem, alvo)) {
                 violacoes.add(origem + " -> " + alvo);
             }
         }
@@ -110,11 +86,6 @@ class ArquiteturaTest {
             fail("Regra '" + regra + "' violada (ver docs/como-funciona.md, seção 4):\n  "
                     + String.join("\n  ", violacoes));
         }
-    }
-
-    private static boolean excecao(String regra, String origem, String alvo) {
-        return EXCECOES_TEMPORARIAS.stream().anyMatch(
-                e -> e.regra().equals(regra) && e.origem().equals(origem) && e.alvo().equals(alvo));
     }
 
     /** Pares {origem, alvo} entre classes do projeto, com classes internas reduzidas à de topo. */

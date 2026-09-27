@@ -152,8 +152,8 @@ São 8 PRs mecânicos (mais o PR 0 e o 5b, da decisão [`2026-09-24-identidade-d
 | 5 | `UsuarioService` (Resource sem Repository), a interface `SessaoConsulta` e `UsuarioConsulta` | Baixo | Concluído (#26) |
 | 5b | Evento CDI `UsuarioCadastrado` no lugar da chamada direta a `AutoJoinCursoService`; remove a última exceção de "identidade é folha" | Baixo | Concluído (#27) |
 | 6 | `comunidades/` no formato `web/aplicacao/dominio` | Baixo | Concluído (#28) |
-| 7 | Frontend: `cadastro/` e `confirmar-email/` para `features/identidade`; serviços ao lado das features (sem interceptor, ponto 3) | Baixo | Em andamento |
-| 8 | Remover os `package-info` vazios; conferir que `EXCECOES_TEMPORARIAS` ficou vazia; atualizar o `AGENTS.md` | Nenhum | Pendente |
+| 7 | Frontend: `cadastro/` e `confirmar-email/` para `features/identidade`; serviços ao lado das features (sem interceptor, ponto 3) | Baixo | Concluído (#29) |
+| 8 | Remover os `package-info` vazios; conferir que `EXCECOES_TEMPORARIAS` ficou vazia (ficou, e o mecanismo foi removido do `ArquiteturaTest`); atualizar o `AGENTS.md` | Nenhum | Em andamento |
 
 ## Consequências
 

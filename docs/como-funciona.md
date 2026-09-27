@@ -2,8 +2,6 @@
 
 Guia de entrada para quem vai ler ou escrever código. Explica o caminho de uma requisição, onde cada coisa mora e onde colocar código novo. As decisões e o porquê de cada uma estão em [`arquitetura.md`](arquitetura.md) (AD-1 a AD-11); este documento só descreve como elas aparecem no código.
 
-> **Em transição.** O time decidiu reestruturar o código para que todos os módulos sigam o mesmo formato (ver [`decisoes/2026-09-24-reestruturacao.md`](decisoes/2026-09-24-reestruturacao.md)). Onde o código de hoje ainda difere do alvo, a seção marca **Hoje** e **Alvo**. Código novo já segue o **Alvo**.
-
 ## 1. Visão de 30 segundos
 
 - **Um backend só** (Quarkus, Java 21), dividido em módulos por área de negócio: `identidade`, `comunidades`, `publicacoes`...
@@ -84,7 +82,7 @@ Implementação de interface da raiz e observer de evento de outro módulo ficam
 | `identidade` | Cadastro, confirmação de e-mail, login, logout, `GET /usuarios/me` e `/usuarios/{id}` |
 | `comunidades` | Auto-join por curso, criar comunidade aberta, entrar/sair, listar/filtrar |
 | `publicacoes` | Em desenvolvimento (Story 3.x) |
-| `perfil`, `discussoes`, `filtro`, `materiais`, `enquetes`, `busca`, `notificacoes`, `mensagens`, `moderacao` | Só `package-info.java`; ainda sem código |
+| `perfil`, `discussoes`, `filtro`, `materiais`, `enquetes`, `busca`, `notificacoes`, `mensagens`, `moderacao` | Previstos na AD-3, ainda sem pacote. A primeira história de cada um cria `<modulo>/` no formato acima, com `package-info.java` |
 
 ## 4. As regras que mantêm os módulos separados
 
@@ -97,7 +95,7 @@ Implementação de interface da raiz e observer de evento de outro módulo ficam
 5. **Referência a dado de outro módulo é só pelo id.** Exemplo: `comunidade_membro.usuario_id` é um `Long`, sem relação JPA nem FK para `usuario` (AD-3). Para exibir nome ou curso, use `identidade.UsuarioConsulta.buscarResumos(ids)`, que busca em lote (sem N+1).
 6. **Auditoria só pelo `AuditoriaService`.** Nenhum módulo escreve direto em `log_auditoria` (AD-11).
 
-As regras 1, 2 e 4, e a regra "`identidade` não importa nenhum outro módulo", são verificadas por `ArquiteturaTest` (ArchUnit) no CI. As violações que já existiam ficam em `EXCECOES_TEMPORARIAS`, cada uma com o PR que a remove; o teste também falha quando uma exceção deixa de ser necessária, então a lista só diminui. Nunca adicione uma exceção nova: corrija o código.
+As regras 1, 2 e 4, e a regra "`identidade` não importa nenhum outro módulo", são verificadas por `ArquiteturaTest` (ArchUnit) no CI. O teste não tem lista de exceções: se ele falhar, corrija o código.
 
 ## 5. Banco e migrations
 
