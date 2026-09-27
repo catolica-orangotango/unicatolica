@@ -116,10 +116,9 @@ Raiz: `frontend/src/app/`
 | `core/` | O que o app inteiro usa: `auth/` (service, guard), `config/api.config.ts` |
 | `layout/` | `shell` (casca autenticada com sidebar) e `auth-shell` (telas públicas) |
 | `ui/` | Design system Campus Clean (button, card, badge, toast, member-indicator), exportado por `ui/index.ts` |
-| `features/<modulo>/` | Telas de cada módulo |
+| `features/<modulo>/` | Telas de cada módulo (`<tela>/`) e o serviço HTTP dele (`<modulo>.service.ts`, ex.: `features/comunidades/comunidades.service.ts`, `features/identidade/usuario.service.ts`) |
 
-- **Hoje:** `cadastro/` e `confirmar-email/` estão soltos na raiz de `app/`, e os serviços HTTP de módulo ficam em `core/comunidades/` e `core/usuario/`.
-- **Alvo:** tudo de identidade em `features/identidade/`, e o serviço HTTP de cada módulo ao lado das telas dele.
+Tudo de identidade (login, cadastro, confirmação de e-mail) fica em `features/identidade/`. Serviço HTTP usado por mais de um módulo continua em `features/<modulo-dono>/` e é importado de lá (ex.: `feed` e `layout/shell` usam `ComunidadesService`); só o que é transversal ao app vai para `core/`.
 
 **Estilo:** use só os tokens `var(--uc-*)` e as classes `.uc-text-*`. Um hex, px ou fonte literal quebra o build (`scss-guard.spec.ts`). Veja `frontend/src/styles/README.md`.
 

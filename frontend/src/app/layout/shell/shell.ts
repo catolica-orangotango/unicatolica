@@ -1,7 +1,7 @@
 import { Component, ElementRef, computed, inject, signal, viewChild } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AuthService } from '../../core/auth/auth.service';
-import { ComunidadesService } from '../../core/comunidades/comunidades.service';
+import { ComunidadesService } from '../../features/comunidades/comunidades.service';
 
 /** Um item da navegação global. `path === null` = item ainda sem rota (inerte). */
 interface NavItem {

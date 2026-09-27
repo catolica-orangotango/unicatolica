@@ -1,8 +1,8 @@
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Component, inject, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { API_BASE_URL } from '../core/config/api.config';
-import { UcAuthShell } from '../layout/auth-shell/auth-shell';
+import { API_BASE_URL } from '../../../core/config/api.config';
+import { UcAuthShell } from '../../../layout/auth-shell/auth-shell';
 
 type Estado = 'confirmando' | 'confirmado' | 'erro';
 

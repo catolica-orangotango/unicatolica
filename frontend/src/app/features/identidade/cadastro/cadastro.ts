@@ -1,9 +1,9 @@
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { API_BASE_URL } from '../core/config/api.config';
-import { UcAuthShell } from '../layout/auth-shell/auth-shell';
-import { UcButton } from '../ui/button/button';
+import { API_BASE_URL } from '../../../core/config/api.config';
+import { UcAuthShell } from '../../../layout/auth-shell/auth-shell';
+import { UcButton } from '../../../ui/button/button';
 
 /**
  * Envelope de erro padrão da API (AD-5) — espelha `ErroResponse` do backend.

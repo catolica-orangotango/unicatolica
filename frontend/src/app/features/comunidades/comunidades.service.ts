@@ -2,8 +2,8 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, inject, signal } from '@angular/core';
 import { Observable, map, switchMap, tap } from 'rxjs';
 import { ToastService } from '../../ui';
-import { AuthService } from '../auth/auth.service';
-import { API_BASE_URL } from '../config/api.config';
+import { AuthService } from '../../core/auth/auth.service';
+import { API_BASE_URL } from '../../core/config/api.config';
 
 /** Espelha `ComunidadeResponse` do backend (Stories 2.2/2.4/2.5). */
 export interface Comunidade {
