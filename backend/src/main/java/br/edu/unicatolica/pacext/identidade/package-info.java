@@ -9,11 +9,15 @@
  * domínio) — ver {@code docs/como-funciona.md}.</p>
  *
  * <p><b>API pública</b> (raiz do pacote): {@link br.edu.unicatolica.pacext.identidade.UsuarioConsulta}
- * e {@link br.edu.unicatolica.pacext.identidade.UsuarioResumo}. Também implementa
+ * e {@link br.edu.unicatolica.pacext.identidade.UsuarioResumo} (leitura em lote), e
+ * {@link br.edu.unicatolica.pacext.identidade.UsuarioCadastro} com
+ * {@link br.edu.unicatolica.pacext.identidade.DadosCadastrais} (nome e curso, lidos e
+ * gravados pelo Perfil Acadêmico). Também implementa
  * {@code compartilhado.seguranca.SessaoConsulta}, usada pelo filtro de logout.</p>
  *
  * <p><b>Eventos que dispara</b> (CDI, síncronos, na transação de quem dispara):
- * {@link br.edu.unicatolica.pacext.identidade.UsuarioCadastrado} ao fim do cadastro.</p>
+ * {@link br.edu.unicatolica.pacext.identidade.UsuarioCadastrado} ao fim do cadastro e
+ * {@link br.edu.unicatolica.pacext.identidade.CursoDoUsuarioAlterado} quando o curso muda.</p>
  *
  * <p><b>Dependências:</b> só {@code compartilhado} (módulo folha, verificado por
  * {@code ArquiteturaTest}).</p>

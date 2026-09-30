@@ -5,7 +5,8 @@
  * módulo dentro do monólito): nenhum outro módulo escreve nelas diretamente — o único
  * ponto de escrita externo é a interface publicada {@link AutoJoinCursoService}; leitura
  * (existe? é membro?) por {@link ComunidadeConsulta}, usada por Publicações. Escuta
- * {@code identidade.UsuarioCadastrado} para fazer o auto-join no cadastro. Organizado
+ * {@code identidade.UsuarioCadastrado} para fazer o auto-join no cadastro e
+ * {@code identidade.CursoDoUsuarioAlterado} para trocar de comunidade de curso. Organizado
  * como {@code identidade}: {@code web}, {@code aplicacao}, {@code dominio}. Implementa
  * auto-join (Story 2.3/RF24.1), criação de comunidade aberta (Story 2.2/RF21-23) e
  * entrar/sair/listar/filtrar (Stories 2.4/2.5, RF24-28) — entrada rápida desta fatia, ver
