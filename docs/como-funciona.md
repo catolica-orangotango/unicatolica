@@ -82,7 +82,8 @@ Implementação de interface da raiz e observer de evento de outro módulo ficam
 | `identidade` | Cadastro, confirmação de e-mail, login, logout, `GET /usuarios/me` e `/usuarios/{id}` |
 | `comunidades` | Auto-join por curso, criar comunidade aberta, entrar/sair, listar/filtrar |
 | `publicacoes` | Em desenvolvimento (Story 3.x) |
-| `perfil`, `discussoes`, `filtro`, `materiais`, `enquetes`, `busca`, `notificacoes`, `mensagens`, `moderacao` | Previstos na AD-3, ainda sem pacote. A primeira história de cada um cria `<modulo>/` no formato acima, com `package-info.java` |
+| `moderacao` | Tabelas `denuncia`, `acao_moderacao` e `restricao_usuario` e repositories prontos; endpoints pendentes do contrato |
+| `perfil`, `discussoes`, `filtro`, `materiais`, `enquetes`, `busca`, `notificacoes`, `mensagens` | Previstos na AD-3, ainda sem pacote. A primeira história de cada um cria `<modulo>/` no formato acima, com `package-info.java` |
 
 ## 4. As regras que mantêm os módulos separados
 
