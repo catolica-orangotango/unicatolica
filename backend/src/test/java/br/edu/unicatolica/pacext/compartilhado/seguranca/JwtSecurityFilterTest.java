@@ -107,6 +107,28 @@ class JwtSecurityFilterTest {
     }
 
     @Test
+    void permiteListarCursosSemToken() throws Exception {
+        ContainerRequestContext requestContext = mockContext("/cursos", "GET", null);
+
+        filter.filter(requestContext);
+
+        verify(requestContext, never()).abortWith(any());
+    }
+
+    /** {@code /cursos} é público só para leitura: o cadastro de curso (KAN-44) exige token. */
+    @Test
+    void rejeitaEscritaEmCursosSemToken() throws Exception {
+        ContainerRequestContext post = mockContext("/cursos", "POST", null);
+        ContainerRequestContext subRota = mockContext("/cursos/1", "GET", null);
+
+        filter.filter(post);
+        filter.filter(subRota);
+
+        verify(post).abortWith(any());
+        verify(subRota).abortWith(any());
+    }
+
+    @Test
     void permitePreflightCorsSemToken() throws Exception {
         ContainerRequestContext requestContext = mockContext("/qualquer/rota/protegida", "OPTIONS", null);
 

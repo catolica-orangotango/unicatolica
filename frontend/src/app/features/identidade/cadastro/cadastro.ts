@@ -4,6 +4,7 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { API_BASE_URL } from '../../../core/config/api.config';
 import { UcAuthShell } from '../../../layout/auth-shell/auth-shell';
 import { UcButton } from '../../../ui/button/button';
+import { Curso, CursoService } from '../curso.service';
 
 /**
  * Envelope de erro padrão da API (AD-5) — espelha `ErroResponse` do backend.
@@ -28,7 +29,8 @@ interface CadastroResponse {
 /**
  * Tela de cadastro (Story 1.2), restilizada no Design System "Campus Clean" pela
  * Story 14.7. Cobre os critérios de aceite da história: envia nome, e-mail
- * institucional, senha, curso e data de nascimento para `POST /auth/registro`, e exibe as
+ * institucional, senha, curso (escolhido da lista de `GET /cursos`) e data de nascimento
+ * para `POST /auth/registro`, e exibe as
  * mensagens de rejeição específicas por cenário (e-mail duplicado, domínio externo,
  * validação de campo, idade mínima) — nunca uma mensagem genérica de erro.
  *
@@ -44,6 +46,10 @@ interface CadastroResponse {
 export class Cadastro {
   private readonly http = inject(HttpClient);
   private readonly formBuilder = inject(FormBuilder);
+  private readonly cursoService = inject(CursoService);
+
+  protected readonly cursos = signal<Curso[]>([]);
+  protected readonly erroCursos = signal(false);
 
   protected readonly enviando = signal(false);
   protected readonly erro = signal<string | null>(null);
@@ -55,9 +61,16 @@ export class Cadastro {
     nome: ['', [Validators.required]],
     email: ['', [Validators.required, Validators.email]],
     senha: ['', [Validators.required]],
-    curso: ['', [Validators.required]],
+    cursoId: this.formBuilder.control<number | null>(null, [Validators.required]),
     dataNascimento: ['', [Validators.required]],
   });
+
+  constructor() {
+    this.cursoService.listar().subscribe({
+      next: (cursos) => this.cursos.set(cursos),
+      error: () => this.erroCursos.set(true),
+    });
+  }
 
   protected enviar(): void {
     if (this.form.invalid) {

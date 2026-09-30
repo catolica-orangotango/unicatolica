@@ -30,7 +30,7 @@ flowchart TD
 Passo a passo:
 
 1. **O frontend manda o token** no header `Authorization: Bearer <jwt>`, nunca em cookie (AD-2). O token fica em `localStorage` e é montado por `AuthService.authHeaders()` (`frontend/src/app/core/auth/auth.service.ts`). Ainda não existe `HttpInterceptor` global.
-2. **`JwtSecurityFilter`** (`compartilhado/seguranca/`) roda antes de tudo. Rotas da allowlist passam direto: `/auth/login`, `/auth/registro`, `/auth/confirmacao-email/**`, `/q/health/**`. As demais precisam de um token válido com as claims `sub` (id do usuário) e `roles` (perfil global); sem isso, a resposta é 401.
+2. **`JwtSecurityFilter`** (`compartilhado/seguranca/`) roda antes de tudo. Rotas da allowlist passam direto: `/auth/login`, `/auth/registro`, `/auth/confirmacao-email/**`, `/q/health/**`, e `GET /cursos` (só leitura, só esse método). As demais precisam de um token válido com as claims `sub` (id do usuário) e `roles` (perfil global); sem isso, a resposta é 401.
 3. **`SessaoInvalidadaFilter`** rejeita tokens emitidos antes do último logout do usuário. É um filtro separado só porque consulta o banco, e o primeiro filtro roda numa thread onde isso não é permitido.
 4. **O `Resource`** recebe o HTTP, converte o JSON em `*Request` e chama o `Service`. Não tem regra de negócio.
 5. **O `Service`** aplica a regra de negócio, abre a transação, grava auditoria quando o evento é sensível e lança `ApiException` quando algo é recusado.
@@ -79,7 +79,7 @@ Implementação de interface da raiz e observer de evento de outro módulo ficam
 
 | Módulo | Estado |
 |---|---|
-| `identidade` | Cadastro, confirmação de e-mail, login, logout, `GET /usuarios/me` e `/usuarios/{id}` |
+| `identidade` | Cadastro (curso escolhido de `GET /cursos`), confirmação de e-mail, login, logout, `GET /usuarios/me` e `/usuarios/{id}` |
 | `comunidades` | Auto-join por curso, criar comunidade aberta, entrar/sair, listar/filtrar |
 | `publicacoes` | Criar postagem e feed da comunidade (`POST`/`GET /comunidades/{id}/publicacoes`); tela no feed de `/comunidades/:id` |
 | `perfil` | Tabelas `perfil_academico` e `perfil_interesse` e repository prontos; endpoints das Stories 4.1/4.2/4.4 pendentes do contrato |

@@ -15,6 +15,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import br.edu.unicatolica.pacext.identidade.UsuarioCadastrado;
+import br.edu.unicatolica.pacext.identidade.dominio.Curso;
+import br.edu.unicatolica.pacext.identidade.dominio.CursoRepository;
 import br.edu.unicatolica.pacext.identidade.dominio.GeradorTokenConfirmacao;
 import br.edu.unicatolica.pacext.identidade.dominio.PasswordHasher;
 import br.edu.unicatolica.pacext.identidade.dominio.Usuario;
@@ -25,6 +27,7 @@ import br.edu.unicatolica.pacext.compartilhado.erro.ApiException;
 import jakarta.enterprise.event.Event;
 import jakarta.ws.rs.core.Response;
 import java.time.LocalDate;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -38,6 +41,7 @@ class CadastroServiceTest {
     private static final String EMAIL_INSTITUCIONAL = "aluno@catolicasc.edu.br";
     private static final String SENHA_VALIDA = "senha123";
     private static final LocalDate NASCIMENTO_MAIOR_IDADE = LocalDate.now().minusYears(20);
+    private static final Long CURSO_ID = 14L;
 
     private CadastroService service;
     private UsuarioRepository usuarioRepository;
@@ -54,6 +58,13 @@ class CadastroServiceTest {
         auditoriaService = mock(AuditoriaService.class);
 
         service.usuarioRepository = usuarioRepository;
+        CursoService cursoService = new CursoService();
+        cursoService.cursoRepository = mock(CursoRepository.class);
+        service.cursoService = cursoService;
+        Curso curso = new Curso();
+        curso.id = CURSO_ID;
+        curso.nome = "Engenharia de Software";
+        when(cursoService.cursoRepository.buscarAtivo(CURSO_ID)).thenReturn(Optional.of(curso));
         service.passwordHasher = new PasswordHasher();
         service.geradorTokenConfirmacao = new GeradorTokenConfirmacao();
         service.usuarioCadastrado = usuarioCadastrado;
@@ -74,7 +85,7 @@ class CadastroServiceTest {
 
     @Test
     void cadastraComSucessoQuandoTodosOsDadosSaoValidos() {
-        Usuario usuario = service.cadastrar("Ana Silva", EMAIL_INSTITUCIONAL, SENHA_VALIDA, "Engenharia de Software",
+        Usuario usuario = service.cadastrar("Ana Silva", EMAIL_INSTITUCIONAL, SENHA_VALIDA, CURSO_ID,
                 NASCIMENTO_MAIOR_IDADE);
 
         assertEquals("ana silva", usuario.nome.toLowerCase()); // normalização não altera capitalização, só trim
@@ -82,6 +93,8 @@ class CadastroServiceTest {
         assertFalse(usuario.emailConfirmado); // RF01.2 — nenhuma sessão ativa/confirmação automática
         assertEquals("ALUNO", usuario.perfil);
         assertNotNull(usuario.tokenConfirmacaoEmail);
+        assertEquals(CURSO_ID, usuario.cursoId);
+        assertEquals("Engenharia de Software", usuario.curso); // nome oficial, não o texto digitado
 
         verify(usuarioCadastrado).fire(new UsuarioCadastrado(42L, "Engenharia de Software"));
         verify(emailService).enviarConfirmacaoCadastro(eq(EMAIL_INSTITUCIONAL), anyString(), anyString());
@@ -92,7 +105,7 @@ class CadastroServiceTest {
     @Test
     void rejeitaEmailDeDominioExterno() {
         ApiException erro = assertThrows(ApiException.class, () -> service.cadastrar("Ana Silva",
-                "ana@gmail.com", SENHA_VALIDA, "Engenharia de Software", NASCIMENTO_MAIOR_IDADE));
+                "ana@gmail.com", SENHA_VALIDA, CURSO_ID, NASCIMENTO_MAIOR_IDADE));
 
         assertEquals(422, erro.getStatus());
         assertEquals("EMAIL_DOMINIO_EXTERNO", erro.getCode());
@@ -105,7 +118,7 @@ class CadastroServiceTest {
         when(usuarioRepository.existePorEmail(EMAIL_INSTITUCIONAL)).thenReturn(true);
 
         ApiException erro = assertThrows(ApiException.class, () -> service.cadastrar("Ana Silva",
-                EMAIL_INSTITUCIONAL, SENHA_VALIDA, "Engenharia de Software", NASCIMENTO_MAIOR_IDADE));
+                EMAIL_INSTITUCIONAL, SENHA_VALIDA, CURSO_ID, NASCIMENTO_MAIOR_IDADE));
 
         assertEquals(Response.Status.CONFLICT.getStatusCode(), erro.getStatus());
         assertEquals("EMAIL_JA_CADASTRADO", erro.getCode());
@@ -116,7 +129,7 @@ class CadastroServiceTest {
     @Test
     void rejeitaSenhaForaDaPolitica() {
         ApiException erro = assertThrows(ApiException.class, () -> service.cadastrar("Ana Silva",
-                EMAIL_INSTITUCIONAL, "123", "Engenharia de Software", NASCIMENTO_MAIOR_IDADE));
+                EMAIL_INSTITUCIONAL, "123", CURSO_ID, NASCIMENTO_MAIOR_IDADE));
 
         assertEquals(422, erro.getStatus());
         assertEquals("SENHA_POLITICA_INVALIDA", erro.getCode());
@@ -127,10 +140,21 @@ class CadastroServiceTest {
         LocalDate nascimentoMenorDeIdade = LocalDate.now().minusYears(17);
 
         ApiException erro = assertThrows(ApiException.class, () -> service.cadastrar("Ana Silva",
-                EMAIL_INSTITUCIONAL, SENHA_VALIDA, "Engenharia de Software", nascimentoMenorDeIdade));
+                EMAIL_INSTITUCIONAL, SENHA_VALIDA, CURSO_ID, nascimentoMenorDeIdade));
 
         assertEquals(422, erro.getStatus());
         assertEquals("IDADE_MINIMA_NAO_ATENDIDA", erro.getCode());
+        verify(usuarioRepository, never()).persist(any(Usuario.class));
+    }
+
+    @Test
+    void rejeitaCursoInexistenteOuInativo() {
+        ApiException erro = assertThrows(ApiException.class, () -> service.cadastrar("Ana Silva",
+                EMAIL_INSTITUCIONAL, SENHA_VALIDA, 999L, NASCIMENTO_MAIOR_IDADE));
+
+        assertEquals(422, erro.getStatus());
+        assertEquals("CURSO_INVALIDO", erro.getCode());
+        assertEquals("cursoId", erro.getDetails());
         verify(usuarioRepository, never()).persist(any(Usuario.class));
     }
 

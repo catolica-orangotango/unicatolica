@@ -1,6 +1,7 @@
 package br.edu.unicatolica.pacext.identidade.aplicacao;
 
 import br.edu.unicatolica.pacext.identidade.UsuarioCadastrado;
+import br.edu.unicatolica.pacext.identidade.dominio.Curso;
 import br.edu.unicatolica.pacext.identidade.dominio.GeradorTokenConfirmacao;
 import br.edu.unicatolica.pacext.identidade.dominio.PasswordHasher;
 import br.edu.unicatolica.pacext.identidade.dominio.Usuario;
@@ -35,6 +36,9 @@ public class CadastroService {
     UsuarioRepository usuarioRepository;
 
     @Inject
+    CursoService cursoService;
+
+    @Inject
     PasswordHasher passwordHasher;
 
     @Inject
@@ -67,21 +71,22 @@ public class CadastroService {
     String frontendUrl;
 
     @Transactional
-    public Usuario cadastrar(String nome, String email, String senha, String curso, LocalDate dataNascimento) {
+    public Usuario cadastrar(String nome, String email, String senha, Long cursoId, LocalDate dataNascimento) {
         String emailNormalizado = email.trim().toLowerCase();
-        String cursoNormalizado = curso.trim();
 
         validarDominioInstitucional(emailNormalizado);
         validarEmailDisponivel(emailNormalizado);
         validarPoliticaSenha(senha);
         validarIdadeMinima(dataNascimento);
+        Curso curso = cursoService.buscarAtivoOuFalhar(cursoId);
 
         Usuario usuario = new Usuario();
         usuario.nome = nome.trim();
         usuario.email = emailNormalizado;
         usuario.senhaHash = passwordHasher.gerarHash(senha);
         usuario.dataNascimento = dataNascimento;
-        usuario.curso = cursoNormalizado;
+        usuario.cursoId = curso.id;
+        usuario.curso = curso.nome;
         usuario.emailConfirmado = false;
         usuario.perfil = "ALUNO";
         usuario.criadoEm = Instant.now();

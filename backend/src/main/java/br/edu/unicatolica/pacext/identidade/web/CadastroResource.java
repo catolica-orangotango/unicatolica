@@ -25,7 +25,7 @@ public class CadastroResource {
     @Produces(MediaType.APPLICATION_JSON)
     public Response registrar(@Valid CadastroRequest request) {
         Usuario usuario = cadastroService.cadastrar(request.nome(), request.email(), request.senha(),
-                request.curso(), request.dataNascimento());
+                request.cursoId(), request.dataNascimento());
         return Response.status(Response.Status.CREATED).entity(CadastroResponse.de(usuario)).build();
     }
 }

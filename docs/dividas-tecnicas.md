@@ -6,7 +6,7 @@ Problemas conhecidos que ainda não têm história nem PR. Quando um item virar 
 |---|---|---|
 | DT-1 | Cadastro sem campo de confirmação de senha | Aberta |
 | DT-2 | Cadastro sem validação de senha segura | Aberta |
-| DT-3 | Curso é texto livre, não uma lista mantida pelo administrador | Aberta |
+| DT-3 | Lista de cursos ainda não é mantida pelo administrador | KAN-44 |
 | DT-4 | E-mail de confirmação do cadastro não chega ao usuário | Aberta |
 
 ## DT-1. Cadastro sem campo de confirmação de senha
@@ -23,16 +23,17 @@ Problemas conhecidos que ainda não têm história nem PR. Quando um item virar 
   2. O backend aplica essa política.
   3. O frontend mostra os requisitos e valida antes de enviar, com a mesma regra.
 
-## DT-3. Curso é texto livre, não uma lista mantida pelo administrador
+## DT-3. Lista de cursos ainda não é mantida pelo administrador
 
-- **Hoje:** `curso` é uma `String` digitada livremente (`CadastroRequest`, coluna `usuario.curso`). O auto-join (`comunidades.aplicacao.AutoJoinCursoServiceImpl`) procura a comunidade do tipo `CURSO` pelo nome, sem diferenciar maiúsculas. Se o texto não bater com uma das 26 comunidades de curso criadas pelo seed (`comunidades-002-seed-comunidades-curso.xml`), o cadastro passa, mas o aluno fica sem comunidade. O sistema só registra um `WARN` no log.
-- **Correção esperada:**
-  - Cadastro de cursos pelo administrador (ligado à Story 2.1, pré-criação de comunidade de curso).
-  - Endpoint público que lista os cursos.
-  - `select` no cadastro.
-  - `usuario.curso` passa a guardar o id do curso.
-  - Migração Liquibase dos valores de texto existentes.
-- **Atenção:** a mudança atravessa `identidade` e `comunidades`. Pelas regras do `ArquiteturaTest`, `identidade` não pode importar `comunidades`, então o dono do cadastro de cursos precisa ser decidido antes (em `identidade`, em `comunidades` ou em `compartilhado`).
+- **Hoje:** desde a decisão de 2026-09-30, o curso é a entidade `Curso` do módulo Identidade (migration `identidade-005`). O cadastro usa um `select` carregado de `GET /cursos`, público, e grava `usuario.curso_id`. Falta:
+  - **Cadastro de cursos:** a lista são os 26 cursos do seed, e ninguém cadastra, renomeia nem desativa curso, porque o papel ADMINISTRADOR ainda não existe no backend.
+  - **Coluna antiga:** `usuario.curso` (texto) continua gravada com o nome oficial do curso, para quem só lê o nome (`UsuarioResumo`, Home, auto-join) não mudar. Renomear um curso deixaria essa cópia desatualizada.
+  - **Vínculo com a comunidade:** o auto-join ainda casa curso e comunidade pelo nome, não pelo id.
+- **Correção esperada (KAN-44):**
+  - Papel ADMINISTRADOR e `POST`/`PUT /cursos`.
+  - Evento `CursoCadastrado`, que cria a comunidade de curso (Story 2.1).
+  - Vínculo curso → comunidade pelo id.
+  - Remoção da coluna `usuario.curso`.
 
 ## DT-4. E-mail de confirmação do cadastro não chega ao usuário
 

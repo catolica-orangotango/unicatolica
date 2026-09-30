@@ -171,3 +171,14 @@ export async function mockComunidadeComFeed(
   );
   return publicacoes;
 }
+
+/** Lista de cursos no formato de `Curso` do `openapi.yaml` (o seed real tem 26). */
+export const CURSOS_MOCK = [
+  { id: 1, nome: 'Administração' },
+  { id: 14, nome: 'Engenharia de Software' },
+];
+
+/** `GET /cursos` -> 200. A tela de cadastro busca a lista do select assim que abre. */
+export function mockCursosOk(page: Page): Promise<void> {
+  return rota(page, (url) => ehApi(url) && url.pathname === '/cursos', 200, JSON.stringify(CURSOS_MOCK));
+}

@@ -38,7 +38,7 @@ class ValidacaoBeanExceptionMapperTest {
         CadastroResource resource = new CadastroResource();
         Method metodo = CadastroResource.class.getMethod("registrar", CadastroRequest.class);
         CadastroRequest requestInvalido = new CadastroRequest(
-                "Nome", "email-invalido", "Senha123!", "Curso", LocalDate.of(2000, 1, 1));
+                "Nome", "email-invalido", "Senha123!", 1L, LocalDate.of(2000, 1, 1));
 
         Set<ConstraintViolation<CadastroResource>> violacoes =
                 executableValidator.validateParameters(resource, metodo, new Object[] { requestInvalido });

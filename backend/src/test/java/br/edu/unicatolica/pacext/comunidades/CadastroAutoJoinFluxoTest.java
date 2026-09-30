@@ -24,7 +24,8 @@ import org.junit.jupiter.api.Test;
 @QuarkusTest
 class CadastroAutoJoinFluxoTest {
 
-    private static final String CURSO_QUE_FALHA = "Curso que derruba o auto-join (teste)";
+    /** Curso real da lista (o cadastro só aceita curso de GET /cursos); nenhum outro teste cadastra nele. */
+    private static final String CURSO_QUE_FALHA = "Teologia";
 
     @Inject
     ComunidadeRepository comunidadeRepository;
@@ -63,11 +64,27 @@ class CadastroAutoJoinFluxoTest {
         cadastrar(email, "Administração").then().statusCode(201);
     }
 
-    private static io.restassured.response.Response cadastrar(String email, String curso) {
+    @Test
+    void cursoForaDaListaDa422() {
+        given().contentType(JSON)
+                .body(Map.of("nome", "Aluno Teste", "email", emailUnico(), "senha", "Senha123!",
+                        "cursoId", 999_999, "dataNascimento", "2000-01-01"))
+                .when().post("/auth/registro")
+                .then().statusCode(422)
+                .body("error.code", org.hamcrest.Matchers.equalTo("CURSO_INVALIDO"));
+    }
+
+    private static io.restassured.response.Response cadastrar(String email, String nomeDoCurso) {
         return given().contentType(JSON)
                 .body(Map.of("nome", "Aluno Teste", "email", email, "senha", "Senha123!",
-                        "curso", curso, "dataNascimento", "2000-01-01"))
+                        "cursoId", idDoCurso(nomeDoCurso), "dataNascimento", "2000-01-01"))
                 .when().post("/auth/registro");
+    }
+
+    private static Integer idDoCurso(String nome) {
+        return given().when().get("/cursos")
+                .then().statusCode(200)
+                .extract().path("find { it.nome == '" + nome + "' }.id");
     }
 
     private static String emailUnico() {
