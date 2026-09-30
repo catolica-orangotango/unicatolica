@@ -90,16 +90,6 @@
   outline-offset: 2px;
 }
 
-.detalhe__aviso {
+.detalhe__feed {
   margin: 0 var(--uc-space-page-margin);
-}
-
-.detalhe__aviso p {
-  margin: 0 0 var(--uc-space-unit);
-  font-size: var(--uc-font-size-body);
-  color: var(--uc-color-ink-soft);
-}
-
-.detalhe__aviso p:last-child {
-  margin-bottom: 0;
 }

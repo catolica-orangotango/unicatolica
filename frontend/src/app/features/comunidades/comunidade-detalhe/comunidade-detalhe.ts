@@ -2,18 +2,19 @@ import { DatePipe } from '@angular/common';
 import { Component, inject, signal } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { Comunidade, ComunidadesService } from '../comunidades.service';
-import { UcButton, UcCard, UcMemberIndicator } from '../../../ui';
+import { UcButton, UcMemberIndicator } from '../../../ui';
+import { FeedComunidade } from '../../publicacoes/feed-comunidade/feed-comunidade';
 
 /**
  * "Home" de uma comunidade — mesmo padrão de tela pra qualquer uma (curso ou
  * aberta), rota `/comunidades/:id`. Renderiza dentro do `Shell`, então já tem
- * navegação global. Igual à Home geral: sem Publicações de verdade ainda
- * (Épico separado, sem backend), então o corpo mostra um aviso honesto em vez de
- * posts fabricados — só o cabeçalho (nome, tipo, membros) é dado real.
+ * navegação global. Abaixo do cabeçalho, o feed da comunidade e a caixa de postar
+ * (`FeedComunidade`, Stories 3.1/3.2) — entrar ou sair atualiza `souMembro` e a caixa
+ * aparece ou some sem recarregar o feed.
  */
 @Component({
   selector: 'app-comunidade-detalhe',
-  imports: [DatePipe, UcButton, UcCard, UcMemberIndicator],
+  imports: [DatePipe, FeedComunidade, UcButton, UcMemberIndicator],
   templateUrl: './comunidade-detalhe.html',
   styleUrl: './comunidade-detalhe.scss',
 })

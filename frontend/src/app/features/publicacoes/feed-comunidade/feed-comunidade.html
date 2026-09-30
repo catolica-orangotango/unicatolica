@@ -1,0 +1,84 @@
+@if (souMembro()) {
+  <form class="feed__caixa" (ngSubmit)="publicar()">
+    <label class="feed__rotulo" for="feed-conteudo">Escreva uma postagem</label>
+    <textarea
+      id="feed-conteudo"
+      class="feed__texto"
+      name="conteudo"
+      rows="3"
+      placeholder="Compartilhe uma dúvida, material ou oportunidade com a comunidade"
+      aria-describedby="feed-restantes"
+      [ngModel]="conteudo()"
+      (ngModelChange)="conteudo.set($event)"
+      [disabled]="publicando()"
+    ></textarea>
+    <div class="feed__rodape-caixa">
+      <span
+        id="feed-restantes"
+        class="feed__restantes"
+        [class.feed__restantes--excedido]="restantes() < 0"
+        aria-live="polite"
+      >
+        {{ restantes() < 0 ? 'Passou ' + -restantes() + ' do limite de ' + limite : restantes() + ' caracteres restantes' }}
+      </span>
+      <button type="submit" uc-button [disabled]="!podePublicar()">
+        {{ publicando() ? 'Publicando…' : 'Publicar' }}
+      </button>
+    </div>
+    @if (erroPublicar(); as mensagem) {
+      <p class="feed__erro" role="alert">{{ mensagem }}</p>
+    }
+  </form>
+} @else {
+  <uc-card class="feed__aviso">
+    <p>
+      {{
+        tipo() === 'ABERTA'
+          ? 'Participe da comunidade para publicar. Você já pode ler as postagens abaixo.'
+          : 'Só alunos deste curso publicam aqui. Você pode ler as postagens abaixo.'
+      }}
+    </p>
+  </uc-card>
+}
+
+<section class="feed" aria-labelledby="feed-titulo">
+  <h2 id="feed-titulo" class="feed__titulo">Postagens</h2>
+
+  @if (carregando()) {
+    <p class="feed__estado">Carregando postagens…</p>
+  } @else if (erroFeed(); as mensagem) {
+    <p class="feed__estado feed__estado--erro" role="alert">{{ mensagem }}</p>
+  } @else {
+    <ul class="feed__lista">
+      @for (publicacao of publicacoes(); track publicacao.id) {
+        <li>
+          <uc-card class="feed__post">
+            <div class="feed__cabecalho-post">
+              <span class="feed__avatar" aria-hidden="true">{{ iniciais(publicacao.autor.nome) }}</span>
+              <div class="feed__meta">
+                <span class="feed__autor">{{ publicacao.autor.nome }}</span>
+                <span class="feed__linha-meta">
+                  <uc-badge [variant]="tipo() === 'CURSO' ? 'course' : 'open'">{{ comunidadeNome() }}</uc-badge>
+                  <time class="feed__horario" [attr.datetime]="publicacao.criadoEm">{{
+                    tempoRelativo(publicacao.criadoEm)
+                  }}</time>
+                </span>
+              </div>
+            </div>
+            <p class="feed__conteudo">{{ publicacao.conteudo }}</p>
+          </uc-card>
+        </li>
+      } @empty {
+        <li class="feed__estado">
+          {{ souMembro() ? 'Nenhuma postagem ainda. Que tal começar a conversa?' : 'Nenhuma postagem ainda.' }}
+        </li>
+      }
+    </ul>
+
+    @if (temMais()) {
+      <button type="button" class="feed__mais" [disabled]="carregandoMais()" (click)="carregarMais()">
+        {{ carregandoMais() ? 'Carregando…' : 'Ver postagens anteriores' }}
+      </button>
+    }
+  }
+</section>

@@ -1,0 +1,166 @@
+// Mesmos tokens --uc-* (Story 14.1) das outras telas; o card do post é o uc-card
+// (Story 14.2) e o badge da comunidade é o uc-badge.
+:host {
+  display: block;
+}
+
+.feed__caixa {
+  background: var(--uc-color-surface);
+  border: 1px solid var(--uc-color-border);
+  border-radius: var(--uc-radius-md);
+  padding: var(--uc-space-card-padding);
+  margin-bottom: var(--uc-space-section-gap);
+}
+
+.feed__rotulo {
+  display: block;
+  font-size: var(--uc-font-size-meta);
+  font-weight: var(--uc-font-weight-semibold);
+  color: var(--uc-color-ink-soft);
+  margin-bottom: calc(var(--uc-space-unit) * 2);
+}
+
+.feed__texto {
+  display: block;
+  box-sizing: border-box;
+  // layout-literal: a caixa ocupa a largura do cartão que a contém
+  width: 100%;
+  resize: vertical;
+  border: 1px solid var(--uc-color-border);
+  border-radius: var(--uc-radius-sm);
+  padding: calc(var(--uc-space-unit) * 2.5);
+  font-family: var(--uc-font-family-base);
+  font-size: var(--uc-font-size-body);
+  line-height: var(--uc-line-height-body);
+  color: var(--uc-color-ink);
+  background: var(--uc-color-surface);
+}
+
+.feed__rodape-caixa {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: calc(var(--uc-space-unit) * 3);
+  margin-top: calc(var(--uc-space-unit) * 2.5);
+}
+
+.feed__restantes {
+  font-size: var(--uc-font-size-meta);
+  color: var(--uc-color-ink-faint);
+}
+
+.feed__restantes--excedido,
+.feed__erro,
+.feed__estado--erro {
+  color: var(--uc-color-error);
+}
+
+.feed__erro {
+  margin: calc(var(--uc-space-unit) * 2) 0 0;
+  font-size: var(--uc-font-size-meta);
+}
+
+.feed__aviso {
+  margin-bottom: var(--uc-space-section-gap);
+}
+
+.feed__aviso p {
+  margin: 0;
+  font-size: var(--uc-font-size-body);
+  color: var(--uc-color-ink-soft);
+}
+
+.feed__titulo {
+  font-size: var(--uc-font-size-label-caps);
+  text-transform: uppercase;
+  letter-spacing: var(--uc-letter-spacing-label-caps);
+  color: var(--uc-color-ink-faint);
+  margin: 0 0 calc(var(--uc-space-unit) * 2.5);
+}
+
+.feed__estado {
+  list-style: none;
+  padding: calc(var(--uc-space-unit) * 6) 0;
+  text-align: center;
+  font-size: var(--uc-font-size-meta);
+  color: var(--uc-color-ink-faint);
+}
+
+.feed__lista {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--uc-space-unit) * 3);
+}
+
+.feed__cabecalho-post {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--uc-space-unit) * 2.5);
+  margin-bottom: calc(var(--uc-space-unit) * 2.5);
+}
+
+.feed__avatar {
+  flex-shrink: 0;
+  width: calc(var(--uc-space-unit) * 9);
+  height: calc(var(--uc-space-unit) * 9);
+  border-radius: var(--uc-radius-full);
+  background: linear-gradient(135deg, var(--uc-color-orange), var(--uc-color-maroon));
+  color: var(--uc-color-surface);
+  font-size: var(--uc-font-size-meta);
+  font-weight: var(--uc-font-weight-semibold);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.feed__meta {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--uc-space-unit) / 2);
+}
+
+.feed__autor {
+  font-size: var(--uc-font-size-body);
+  font-weight: var(--uc-font-weight-semibold);
+  color: var(--uc-color-ink);
+}
+
+.feed__linha-meta {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--uc-space-unit) * 2);
+}
+
+.feed__horario {
+  font-size: var(--uc-font-size-meta);
+  color: var(--uc-color-ink-faint);
+}
+
+.feed__conteudo {
+  margin: 0;
+  font-size: var(--uc-font-size-body);
+  line-height: var(--uc-line-height-body);
+  color: var(--uc-color-ink);
+  // Quebras de linha do autor são mantidas; texto sem espaço não estoura o card.
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.feed__mais {
+  display: block;
+  margin: calc(var(--uc-space-unit) * 4) auto 0;
+  border: 1px solid var(--uc-color-border);
+  background: var(--uc-color-surface);
+  color: var(--uc-color-ink-soft);
+  border-radius: var(--uc-radius-full);
+  padding: var(--uc-space-unit) calc(var(--uc-space-unit) * 4);
+  font-size: var(--uc-font-size-meta);
+  cursor: pointer;
+}
+
+.feed__mais:disabled {
+  cursor: not-allowed;
+}

@@ -32,6 +32,13 @@ describe('ComunidadeDetalhe', () => {
     return criado;
   }
 
+  /** A tela embute o `FeedComunidade`, que busca as postagens assim que a comunidade aparece. */
+  function responderFeed(id: number): void {
+    httpMock
+      .expectOne((r) => r.url === `${API_BASE_URL}/comunidades/${id}/publicacoes`)
+      .flush({ content: [], page: 0, size: 20, totalElements: 0, totalPages: 0 });
+  }
+
   afterEach(() => httpMock.verify());
 
   it('mostra o cabeçalho com nome, tipo e botão Participar pra comunidade aberta sem membro', async () => {
@@ -46,11 +53,13 @@ describe('ComunidadeDetalhe', () => {
       criadoEm: '2026-01-01T00:00:00Z',
     });
     f.detectChanges();
+    responderFeed(27);
+    f.detectChanges();
 
     const compiled = f.nativeElement as HTMLElement;
     expect(compiled.querySelector('h1')?.textContent?.trim()).toBe('Clube de Xadrez');
     expect(compiled.textContent).toContain('Comunidade aberta');
-    expect(compiled.querySelector('[uc-button]')?.textContent?.trim()).toBe('Participar');
+    expect(compiled.querySelector('.detalhe__acao [uc-button]')?.textContent?.trim()).toBe('Participar');
   });
 
   it('comunidade de curso com membro: mostra indicador de membro, sem botão de ação', async () => {
@@ -65,11 +74,13 @@ describe('ComunidadeDetalhe', () => {
       criadoEm: '2026-01-01T00:00:00Z',
     });
     f.detectChanges();
+    responderFeed(14);
+    f.detectChanges();
 
     const compiled = f.nativeElement as HTMLElement;
     expect(compiled.textContent).toContain('associação automática');
     expect(compiled.querySelector('uc-member-indicator')).toBeTruthy();
-    expect(compiled.querySelector('[uc-button]')).toBeNull();
+    expect(compiled.querySelector('.detalhe__acao [uc-button]')).toBeNull();
     expect(compiled.querySelector('.detalhe__botao-sair')).toBeNull();
   });
 
@@ -85,6 +96,8 @@ describe('ComunidadeDetalhe', () => {
       criadoEm: '2026-01-01T00:00:00Z',
     });
     f.detectChanges();
+    responderFeed(27);
+    f.detectChanges();
 
     const compiled = f.nativeElement as HTMLElement;
     (compiled.querySelector('.detalhe__botao-sair') as HTMLButtonElement).click();
@@ -93,7 +106,34 @@ describe('ComunidadeDetalhe', () => {
     httpMock.expectOne(`${API_BASE_URL}/comunidades/minhas`).flush([]);
     f.detectChanges();
 
-    expect(compiled.querySelector('[uc-button]')?.textContent?.trim()).toBe('Participar');
+    expect(compiled.querySelector('.detalhe__acao [uc-button]')?.textContent?.trim()).toBe('Participar');
+  });
+
+  it('membro vê a caixa de postar; ao sair, ela vira o aviso sem recarregar o feed', async () => {
+    const f = await montar('27');
+
+    httpMock.expectOne(`${API_BASE_URL}/comunidades/27`).flush({
+      id: 27,
+      nome: 'Clube de Xadrez',
+      descricao: null,
+      tipo: 'ABERTA',
+      souMembro: true,
+      criadoEm: '2026-01-01T00:00:00Z',
+    });
+    f.detectChanges();
+    responderFeed(27);
+    f.detectChanges();
+
+    const compiled = f.nativeElement as HTMLElement;
+    expect(compiled.querySelector('app-feed-comunidade textarea')).toBeTruthy();
+
+    (compiled.querySelector('.detalhe__botao-sair') as HTMLButtonElement).click();
+    httpMock.expectOne(`${API_BASE_URL}/comunidades/27/membros/me`).flush(null);
+    httpMock.expectOne(`${API_BASE_URL}/comunidades/minhas`).flush([]);
+    f.detectChanges();
+
+    expect(compiled.querySelector('app-feed-comunidade textarea')).toBeNull();
+    expect(compiled.textContent).toContain('Participe da comunidade para publicar.');
   });
 
   it('erro ao carregar mostra mensagem amigável', async () => {

@@ -92,3 +92,82 @@ export async function mockFeedOk(page: Page): Promise<void> {
   await rota(page, (url) => url.pathname === '/comunidades/minhas', 200, JSON.stringify([]));
   await rota(page, (url) => url.pathname === '/comunidades', 200, JSON.stringify(paginaVazia));
 }
+
+/**
+ * Só a API (`:8080`). `/comunidades/{id}` também é rota do Angular (`:4200`): sem
+ * isso o mock responderia a própria navegação da página com JSON.
+ */
+function ehApi(url: URL): boolean {
+  return url.port === '8080';
+}
+
+/** Postagem no formato de `PublicacaoResponse` do `openapi.yaml`. */
+export interface PublicacaoMock {
+  id: number;
+  comunidadeId: number;
+  autor: { id: number; nome: string; curso: string | null };
+  conteudo: string;
+  criadoEm: string;
+}
+
+/**
+ * Mocka a "Home da comunidade" `/comunidades/{id}` com o feed de Publicações
+ * (Stories 3.1/3.2): `GET /comunidades/{id}` e `GET`/`POST
+ * /comunidades/{id}/publicacoes`. O `POST` guarda a postagem na lista em
+ * memória (topo), então um `GET` depois já a devolve, como o backend real.
+ * Registrar depois de `mockFeedOk` (a última rota registrada tem prioridade).
+ */
+export async function mockComunidadeComFeed(
+  page: Page,
+  opcoes: { id: number; nome: string; tipo: 'CURSO' | 'ABERTA'; souMembro: boolean; publicacoes?: PublicacaoMock[] },
+): Promise<PublicacaoMock[]> {
+  const publicacoes = [...(opcoes.publicacoes ?? [])];
+  const comunidade = {
+    id: opcoes.id,
+    nome: opcoes.nome,
+    descricao: null,
+    tipo: opcoes.tipo,
+    souMembro: opcoes.souMembro,
+    criadoEm: '2026-08-01T00:00:00Z',
+  };
+
+  await rota(page, (url) => ehApi(url) && url.pathname === `/comunidades/${opcoes.id}`, 200, JSON.stringify(comunidade));
+  await page.route(
+    (url) => ehApi(url) && url.pathname === `/comunidades/${opcoes.id}/publicacoes`,
+    (route) => {
+      const request = route.request();
+      if (request.method() === 'OPTIONS') {
+        return route.fulfill({ status: 204, headers: CORS });
+      }
+      if (request.method() === 'POST') {
+        const { conteudo } = request.postDataJSON() as { conteudo: string };
+        const nova: PublicacaoMock = {
+          id: 1000 + publicacoes.length,
+          comunidadeId: opcoes.id,
+          autor: { id: 1, nome: 'Usuário Teste', curso: null },
+          conteudo: conteudo.trim(),
+          criadoEm: new Date().toISOString(),
+        };
+        publicacoes.unshift(nova);
+        return route.fulfill({
+          status: 201,
+          headers: { ...CORS, 'content-type': 'application/json' },
+          body: JSON.stringify(nova),
+        });
+      }
+      const pagina = {
+        content: publicacoes,
+        page: 0,
+        size: 20,
+        totalElements: publicacoes.length,
+        totalPages: publicacoes.length > 0 ? 1 : 0,
+      };
+      return route.fulfill({
+        status: 200,
+        headers: { ...CORS, 'content-type': 'application/json' },
+        body: JSON.stringify(pagina),
+      });
+    },
+  );
+  return publicacoes;
+}
