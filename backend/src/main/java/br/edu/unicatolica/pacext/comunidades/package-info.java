@@ -3,7 +3,8 @@
  *
  * <p>Dono das tabelas {@code comunidade}/{@code comunidade_membro} (AD-3 — limites de
  * módulo dentro do monólito): nenhum outro módulo escreve nelas diretamente — o único
- * ponto de entrada externo é a interface publicada {@link AutoJoinCursoService}. Escuta
+ * ponto de escrita externo é a interface publicada {@link AutoJoinCursoService}; leitura
+ * (existe? é membro?) por {@link ComunidadeConsulta}, usada por Publicações. Escuta
  * {@code identidade.UsuarioCadastrado} para fazer o auto-join no cadastro. Organizado
  * como {@code identidade}: {@code web}, {@code aplicacao}, {@code dominio}. Implementa
  * auto-join (Story 2.3/RF24.1), criação de comunidade aberta (Story 2.2/RF21-23) e
