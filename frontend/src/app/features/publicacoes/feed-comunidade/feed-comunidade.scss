@@ -126,6 +126,12 @@
   font-size: var(--uc-font-size-body);
   font-weight: var(--uc-font-weight-semibold);
   color: var(--uc-color-ink);
+  text-decoration: none;
+}
+
+// Nome do autor abre o perfil dele (Story 4.4).
+.feed__autor:hover {
+  text-decoration: underline;
 }
 
 .feed__linha-meta {

@@ -1,6 +1,7 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, computed, effect, inject, input, signal, untracked } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { ToastService, UcBadge, UcButton, UcCard } from '../../../ui';
 import { Publicacao, PublicacoesService, TAMANHO_MAXIMO_CONTEUDO } from '../publicacoes.service';
 import { iniciais, tempoRelativo } from '../tempo-relativo';
@@ -14,7 +15,7 @@ const TAMANHO_PAGINA = 20;
  */
 @Component({
   selector: 'app-feed-comunidade',
-  imports: [FormsModule, UcBadge, UcButton, UcCard],
+  imports: [FormsModule, RouterLink, UcBadge, UcButton, UcCard],
   templateUrl: './feed-comunidade.html',
   styleUrl: './feed-comunidade.scss',
 })

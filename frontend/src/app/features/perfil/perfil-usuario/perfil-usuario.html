@@ -1,0 +1,7 @@
+@if (carregando()) {
+  <p class="perfil__estado">Carregando perfil…</p>
+} @else if (erro(); as mensagem) {
+  <div class="perfil__estado perfil__estado--erro" role="alert">{{ mensagem }}</div>
+} @else if (perfil(); as p) {
+  <app-perfil-cartao class="perfil" [perfil]="p" />
+}

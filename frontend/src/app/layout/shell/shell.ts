@@ -108,6 +108,12 @@ export class Shell {
     this.menuAberto.set(false);
   }
 
+  /** Próprio perfil (Stories 4.1/4.2). */
+  protected abrirPerfil(): void {
+    this.fecharMenu();
+    this.router.navigateByUrl('/perfil').catch(() => {});
+  }
+
   protected sair(): void {
     this.fecharMenu();
     this.auth.logout();

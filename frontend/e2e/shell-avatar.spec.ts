@@ -32,13 +32,10 @@ test('clique no avatar abre o menu com Perfil, Configurações e Sair', async ({
   await expect(menu(page).getByRole('menuitem')).toHaveText(['Perfil', 'Configurações', 'Sair']);
 });
 
-test('Perfil e Configurações são menuitems inertes (aria-disabled)', async ({ page }) => {
+test('Configurações é menuitem inerte (aria-disabled); Perfil não', async ({ page }) => {
   await avatar(page).click();
 
-  await expect(menu(page).getByRole('menuitem', { name: 'Perfil' })).toHaveAttribute(
-    'aria-disabled',
-    'true',
-  );
+  await expect(menu(page).getByRole('menuitem', { name: 'Perfil' })).not.toHaveAttribute('aria-disabled');
   await expect(menu(page).getByRole('menuitem', { name: 'Configurações' })).toHaveAttribute(
     'aria-disabled',
     'true',
@@ -70,10 +67,10 @@ test('clique fora fecha o menu', async ({ page }) => {
 
 test('ativar um item fecha o menu e devolve o foco ao avatar', async ({ page }) => {
   await avatar(page).click();
-  // Perfil é inerte (aria-disabled) mas ainda dismissa o menu ao ser ativado;
+  // Configurações é inerte (aria-disabled) mas ainda dismissa o menu ao ser ativado;
   // `force` pula o actionability check do Playwright (que trata aria-disabled
   // como desabilitado), sem deixar de disparar o click real.
-  await menu(page).getByRole('menuitem', { name: 'Perfil' }).click({ force: true });
+  await menu(page).getByRole('menuitem', { name: 'Configurações' }).click({ force: true });
 
   await expect(menu(page)).toHaveCount(0);
   await expect(avatar(page)).toBeFocused();
