@@ -406,6 +406,82 @@ paths:
         '404':
           $ref: '#/components/responses/NaoEncontrado'
 
+  /perfil/me:
+    get:
+      operationId: obterMeuPerfil
+      summary: Perfil acadêmico do usuário autenticado (Story 4.2, RF20)
+      tags: [Perfil]
+      description: >
+        Sempre 200: quem ainda não preencheu o perfil acadêmico (Story 4.1) recebe
+        nome e curso do cadastro, periodo null e interesses vazio — o front usa
+        periodo null para saber que o perfil ainda não foi criado.
+      responses:
+        '200':
+          description: Perfil do usuário autenticado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Perfil'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+    put:
+      operationId: salvarMeuPerfil
+      summary: Cria ou edita o perfil acadêmico do usuário autenticado (Story 4.1, RF14–RF19)
+      tags: [Perfil]
+      description: >
+        Substitui o perfil inteiro (cria na primeira vez, RF14). nome e curso ficam no
+        cadastro do usuário; periodo e interesses, no perfil acadêmico. Trocar o curso
+        dispara o auto-join da comunidade do novo curso (Story 2.3, RF24.1). Interesses
+        repetidos sem diferença de maiúsculas/espaços viram um só.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PerfilRequest'
+      responses:
+        '200':
+          description: Perfil salvo.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Perfil'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        # 422: nome ou curso ausente/em branco, periodo fora de 1–12, mais de 10
+        # interesses ou interesse em branco/acima de 50 caracteres.
+        '422':
+          $ref: '#/components/responses/ErroValidacao'
+
+  /usuarios/{id}/perfil:
+    get:
+      operationId: obterPerfilPublico
+      summary: Perfil acadêmico público de outro usuário, somente leitura (Story 4.4, RF20.2)
+      tags: [Perfil]
+      description: >
+        Qualquer usuário autenticado. Mesmos campos do próprio perfil, sem e-mail nem
+        outro dado sensível (RF20.2). Usuário que ainda não criou o perfil acadêmico
+        aparece com periodo null e interesses vazio, como em GET /perfil/me.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Id do usuário.
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Perfil público do usuário.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Perfil'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+
 components:
   schemas:
     LoginRequest:
@@ -612,6 +688,60 @@ components:
               type: array
               items:
                 $ref: '#/components/schemas/PublicacaoResponse'
+
+    PerfilRequest:
+      type: object
+      required: [nome, curso, periodo, interesses]
+      properties:
+        nome:
+          type: string
+          minLength: 1
+          maxLength: 200
+          description: RF15.
+        curso:
+          type: string
+          minLength: 1
+          maxLength: 150
+          description: RF16 — texto livre, como no cadastro; casa com a comunidade de curso no auto-join.
+        periodo:
+          type: integer
+          format: int32
+          minimum: 1
+          maximum: 12
+          description: Semestre atual (RF17).
+        interesses:
+          type: array
+          maxItems: 10
+          description: RF18 — pode ser vazio (onboarding progressivo, RF20.1).
+          items:
+            type: string
+            minLength: 1
+            maxLength: 50
+
+    Perfil:
+      type: object
+      description: >
+        Perfil acadêmico (RF20) — o mesmo schema serve o próprio perfil e o perfil
+        público de terceiros (RF20.2): não tem e-mail nem outro dado sensível.
+      required: [usuarioId, nome, interesses]
+      properties:
+        usuarioId:
+          type: integer
+          format: int64
+        nome:
+          type: string
+        curso:
+          type: [string, 'null']
+        periodo:
+          type: [integer, 'null']
+          format: int32
+          minimum: 1
+          maximum: 12
+          description: null enquanto o perfil acadêmico não foi criado (Story 4.1).
+        interesses:
+          type: array
+          items:
+            type: string
 
     Erro:
       type: object
