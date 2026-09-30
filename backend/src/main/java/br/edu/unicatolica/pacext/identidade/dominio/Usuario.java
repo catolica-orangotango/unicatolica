@@ -46,6 +46,14 @@ public class Usuario {
      * adicionada em {@code identidade-003-add-cadastro-fields.xml} (a tabela original,
      * identidade-001, não a tinha).
      */
+    /** Id de {@code curso} (mesmo módulo) — fonte de verdade do curso do aluno desde {@code identidade-005}. */
+    @Column(name = "curso_id")
+    public Long cursoId;
+
+    /**
+     * Nome oficial do curso de {@link #cursoId}, mantido junto para quem só lê o nome
+     * ({@code UsuarioResumo}, Home, auto-join por nome). Remoção no KAN-44.
+     */
     @Column(name = "curso", length = 150)
     public String curso;
 

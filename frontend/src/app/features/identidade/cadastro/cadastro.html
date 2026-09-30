@@ -100,22 +100,29 @@
         <span class="campo-erro" id="erro-senha">Informe uma senha.</span>
       }
 
-      <label class="cadastro__label" for="curso">Curso</label>
-      <input
+      <label class="cadastro__label" for="cursoId">Curso</label>
+      <select
         class="cadastro__campo"
-        id="curso"
-        type="text"
-        formControlName="curso"
-        placeholder="Engenharia de Software"
+        id="cursoId"
+        formControlName="cursoId"
         [attr.aria-invalid]="
-          form.controls.curso.touched && form.controls.curso.invalid ? 'true' : null
+          form.controls.cursoId.touched && form.controls.cursoId.invalid ? 'true' : null
         "
         [attr.aria-describedby]="
-          form.controls.curso.touched && form.controls.curso.invalid ? 'erro-curso' : null
+          form.controls.cursoId.touched && form.controls.cursoId.invalid ? 'erro-cursoId' : null
         "
-      />
-      @if (form.controls.curso.touched && form.controls.curso.invalid) {
-        <span class="campo-erro" id="erro-curso">Informe seu curso.</span>
+      >
+        <option [ngValue]="null" disabled>Selecione seu curso</option>
+        @for (curso of cursos(); track curso.id) {
+          <option [ngValue]="curso.id">{{ curso.nome }}</option>
+        }
+      </select>
+      @if (form.controls.cursoId.touched && form.controls.cursoId.invalid) {
+        <span class="campo-erro" id="erro-cursoId">
+          {{ erroCursos() ? 'Não foi possível carregar os cursos. Recarregue a página.' : 'Escolha seu curso.' }}
+        </span>
+      } @else if (erroCursos()) {
+        <span class="campo-erro" role="alert">Não foi possível carregar os cursos. Recarregue a página.</span>
       }
 
       <label class="cadastro__label" for="dataNascimento">Data de nascimento</label>

@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Tabela curso — módulo Identidade (decisão de 2026-09-30: curso deixa de ser texto
+    livre). Lista inicial = os 26 cursos das comunidades de curso do seed
+    (comunidades-002); cadastro/edição pelo administrador fica no KAN-44.
+
+    usuario.curso_id passa a ser a fonte de verdade. A coluna usuario.curso (texto)
+    continua, com o nome oficial do curso escolhido, para quem só lê o nome
+    (UsuarioResumo, Home, auto-join por nome) não mudar; a remoção dela está no KAN-44.
+-->
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="identidade-005-create-curso" author="pacext">
+        <createTable tableName="curso">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="nome" type="VARCHAR(150)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="ativo" type="BOOLEAN" defaultValueBoolean="true">
+                <constraints nullable="false"/>
+            </column>
+            <column name="criado_em" type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <!-- Nome único sem diferença de maiúsculas: o auto-join casa curso e comunidade pelo nome. -->
+        <sql>CREATE UNIQUE INDEX uk_curso_nome ON curso (lower(nome))</sql>
+        <sql>ALTER TABLE curso ADD CONSTRAINT ck_curso_nome CHECK (length(trim(nome)) > 0)</sql>
+        <rollback>
+            <dropTable tableName="curso"/>
+        </rollback>
+    </changeSet>
+
+    <changeSet id="identidade-005-seed-curso" author="pacext">
+        <insert tableName="curso">
+            <column name="nome" value="Administração"/>
+            <column name="criado_em" valueComputed="now()"/>
+        </insert>
+        <insert tableName="curso">
+            <column name="nome" value="Análise e Desenvolvimento de Sistemas"/>
+            <column name="criado_em" valueComputed="now()"/>
+        </insert>
+        <insert tableName="curso">
+            <column name="nome" value="Arquitetura e Urbanismo"/>
+            <column name="criado_em" valueComputed="now()"/>
+        </insert>
+        <insert tableName="curso">
+            <column name="nome" value="Biomedicina"/>
+            <column name="criado_em" valueComputed="now()"/>
+        </insert>
+        <insert tableName="curso">
+            <column name="nome" value="Ciência da Computação"/>
+            <column name="criado_em" valueComputed="now()"/>
+        </insert>
+        <insert tableName="curso">
+            <column name="nome" value="Ciências Contábeis"/>
+            <column name="criado_em" valueComputed="now()"/>
+        </insert>
+        <insert tableName="curso">
+            <column name="nome" value="Ciências Econômicas"/>
+            <column name="criado_em" valueComputed="now()"/>
+        </insert>
+        <insert tableName="curso">
+            <column name="nome" value="Design"/>
+            <column name="criado_em" valueComputed="now()"/>
+        </insert>
+        <insert tableName="curso">
+            <column name="nome" value="Direito"/>
+            <column name="criado_em" valueComputed="now()"/>
+        </insert>
+        <insert tableName="curso">
+            <column name="nome" value="Educação Física"/>
+            <column name="criado_em" valueComputed="now()"/>
+        </insert>
+        <insert tableName="curso">
+            <column name="nome" value="Enfermagem"/>
+            <column name="criado_em" valueComputed="now()"/>
+        </insert>
+        <insert tableName="curso">
+            <column name="nome" value="Engenharia Civil"/>
+            <column name="criado_em" valueComputed="now()"/>
+        </insert>
+        <insert tableName="curso">
+            <column name="nome" value="Engenharia de Produção"/>
+            <column name="criado_em" valueComputed="now()"/>
+        </insert>
+        <insert tableName="curso">
+            <column name="nome" value="Engenharia de Software"/>
+            <column name="criado_em" valueComputed="now()"/>
+        </insert>
+        <insert tableName="curso">
+            <column name="nome" value="Fisioterapia"/>
+            <column name="criado_em" valueComputed="now()"/>
+        </insert>
+        <insert tableName="curso">
+            <column name="nome" value="Gestão da Produção Industrial"/>
+            <column name="criado_em" valueComputed="now()"/>
+        </insert>
+        <insert tableName="curso">
+            <column name="nome" value="Gestão da Tecnologia da Informação"/>
+            <column name="criado_em" valueComputed="now()"/>
+        </insert>
+        <insert tableName="curso">
+            <column name="nome" value="Gestão de Recursos Humanos"/>
+            <column name="criado_em" valueComputed="now()"/>
+        </insert>
+        <insert tableName="curso">
+            <column name="nome" value="Gestão Financeira"/>
+            <column name="criado_em" valueComputed="now()"/>
+        </insert>
+        <insert tableName="curso">
+            <column name="nome" value="Logística"/>
+            <column name="criado_em" valueComputed="now()"/>
+        </insert>
+        <insert tableName="curso">
+            <column name="nome" value="Nutrição"/>
+            <column name="criado_em" valueComputed="now()"/>
+        </insert>
+        <insert tableName="curso">
+            <column name="nome" value="Pedagogia"/>
+            <column name="criado_em" valueComputed="now()"/>
+        </insert>
+        <insert tableName="curso">
+            <column name="nome" value="Processos Gerenciais"/>
+            <column name="criado_em" valueComputed="now()"/>
+        </insert>
+        <insert tableName="curso">
+            <column name="nome" value="Psicologia"/>
+            <column name="criado_em" valueComputed="now()"/>
+        </insert>
+        <insert tableName="curso">
+            <column name="nome" value="Serviço Social"/>
+            <column name="criado_em" valueComputed="now()"/>
+        </insert>
+        <insert tableName="curso">
+            <column name="nome" value="Teologia"/>
+            <column name="criado_em" valueComputed="now()"/>
+        </insert>
+        <rollback>
+            <delete tableName="curso"/>
+        </rollback>
+    </changeSet>
+
+    <changeSet id="identidade-005-add-usuario-curso-id" author="pacext">
+        <addColumn tableName="usuario">
+            <column name="curso_id" type="BIGINT">
+                <!-- Mesmo módulo (identidade): FK normal é permitida (AD-3). -->
+                <constraints foreignKeyName="fk_usuario_curso" references="curso(id)"/>
+            </column>
+        </addColumn>
+        <createIndex indexName="idx_usuario_curso_id" tableName="usuario">
+            <column name="curso_id"/>
+        </createIndex>
+        <!--
+            Liga as contas existentes pelo texto digitado no cadastro antigo, sem diferença
+            de maiúsculas/espaços, e troca esse texto pelo nome oficial. Texto que não casa
+            com nenhum curso fica como está, com curso_id nulo (Perfil.curso = null).
+        -->
+        <sql>
+            UPDATE usuario u
+               SET curso_id = c.id, curso = c.nome
+              FROM curso c
+             WHERE u.curso IS NOT NULL
+               AND lower(trim(u.curso)) = lower(c.nome)
+        </sql>
+        <rollback>
+            <dropColumn tableName="usuario" columnName="curso_id"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

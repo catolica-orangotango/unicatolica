@@ -1,12 +1,12 @@
 import { expect, test } from '@playwright/test';
-import { mockConfirmacaoInvalida, mockConfirmacaoOk } from './support/mocks';
+import { mockConfirmacaoInvalida, mockConfirmacaoOk, mockCursosOk } from './support/mocks';
 import { semToken } from './support/seed';
 
 /**
  * Suíte 1 - telas públicas de auth (Epic 1, restilizadas na Story 14.7).
  * Renderização, validação de formulário e foco de teclado visível. Sem
- * backend: `/login` e `/cadastro` não fazem chamada até o submit; a
- * confirmação de e-mail é mockada.
+ * backend: `/login` não faz chamada até o submit; `/cadastro` só busca a
+ * lista de cursos (`mockCursosOk`); a confirmação de e-mail é mockada.
  */
 
 /** `--uc-color-bg` (#FAFAF8) como o navegador reporta. */
@@ -14,6 +14,7 @@ const CANVAS_BASE = 'rgb(250, 250, 248)';
 
 test.beforeEach(async ({ page }) => {
   await semToken(page);
+  await mockCursosOk(page);
 });
 
 test.describe('Camada base global (Story 14.7)', () => {
@@ -87,6 +88,15 @@ test.describe('Cadastro', () => {
     await expect(page.locator('.campo-erro')).toHaveCount(5);
     await expect(page.getByText('Informe seu nome.')).toBeVisible();
     await expect(page).toHaveURL(/\/cadastro$/);
+  });
+
+  test('curso é escolhido de uma lista carregada de GET /cursos', async ({ page }) => {
+    await page.goto('/cadastro');
+
+    const curso = page.getByLabel('Curso');
+    await expect(curso.locator('option')).toHaveText(['Selecione seu curso', 'Administração', 'Engenharia de Software']);
+    await curso.selectOption({ label: 'Engenharia de Software' });
+    await expect(curso).toHaveValue(/.+/);
   });
 
   test('e-mail inválido dispara a mensagem específica após blur', async ({ page }) => {

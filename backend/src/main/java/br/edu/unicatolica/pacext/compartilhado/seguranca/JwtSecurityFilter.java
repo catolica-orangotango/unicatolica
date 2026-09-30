@@ -55,6 +55,13 @@ public class JwtSecurityFilter implements ContainerRequestFilter {
             "/q/health/live",
             "/q/health/ready");
 
+    /**
+     * Públicos só para leitura ({@code GET}, match exato): {@code /cursos} alimenta o
+     * select do cadastro, antes do login. O {@code POST /cursos} do administrador (KAN-44)
+     * continua exigindo token.
+     */
+    private static final Set<String> ALLOWLIST_SOMENTE_GET = Set.of("/cursos");
+
     public static final String REQUEST_PROPERTY_USUARIO_ID = "pacext.usuarioId";
     public static final String REQUEST_PROPERTY_ROLES = "pacext.roles";
     /** Consumida por {@link SessaoInvalidadaFilter} para checar invalidação por logout. */
@@ -74,7 +81,8 @@ public class JwtSecurityFilter implements ContainerRequestFilter {
 
         String rawPath = requestContext.getUriInfo().getPath();
         String path = rawPath == null ? "/" : (rawPath.startsWith("/") ? rawPath : "/" + rawPath);
-        if (isAllowlisted(path)) {
+        if (isAllowlisted(path) || (HttpMethod.GET.equals(requestContext.getMethod())
+                && ALLOWLIST_SOMENTE_GET.contains(path))) {
             return;
         }
 

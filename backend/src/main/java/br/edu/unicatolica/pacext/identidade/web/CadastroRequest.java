@@ -10,6 +10,6 @@ public record CadastroRequest(
         @NotBlank(message = "nome é obrigatório") String nome,
         @NotBlank(message = "email é obrigatório") @Email(message = "formato de e-mail inválido") String email,
         @NotBlank(message = "senha é obrigatória") String senha,
-        @NotBlank(message = "curso é obrigatório") String curso,
+        @NotNull(message = "cursoId é obrigatório") Long cursoId,
         @NotNull(message = "dataNascimento é obrigatória") LocalDate dataNascimento) {
 }

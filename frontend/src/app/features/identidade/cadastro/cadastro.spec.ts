@@ -3,6 +3,11 @@ import { provideHttpClient } from '@angular/common/http';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Cadastro } from './cadastro';
 
+const CURSOS = [
+  { id: 1, nome: 'Administração' },
+  { id: 14, nome: 'Engenharia de Software' },
+];
+
 describe('Cadastro', () => {
   let fixture: ComponentFixture<Cadastro>;
   let component: Cadastro;
@@ -17,6 +22,8 @@ describe('Cadastro', () => {
     fixture = TestBed.createComponent(Cadastro);
     component = fixture.componentInstance;
     httpMock = TestBed.inject(HttpTestingController);
+    // A lista de cursos do select vem de GET /cursos assim que a tela abre.
+    httpMock.expectOne('http://localhost:8080/cursos').flush(CURSOS);
   });
 
   afterEach(() => {
@@ -28,7 +35,7 @@ describe('Cadastro', () => {
       nome: 'Ana Silva',
       email: 'ana@catolicasc.edu.br',
       senha: 'senha123',
-      curso: 'Engenharia de Software',
+      cursoId: 14,
       dataNascimento: '2005-01-01',
     });
   }
@@ -90,7 +97,7 @@ describe('Cadastro', () => {
   // -- Story 14.7: piso de acessibilidade (A-11) e Design System -----------
 
   describe('erros de campo anunciados (A-11)', () => {
-    const CAMPOS = ['nome', 'email', 'senha', 'curso', 'dataNascimento'] as const;
+    const CAMPOS = ['nome', 'email', 'senha', 'cursoId', 'dataNascimento'] as const;
 
     beforeEach(() => {
       fixture.detectChanges();
@@ -164,6 +171,35 @@ describe('Cadastro', () => {
     expect(compiled.querySelectorAll('[uc-button]')).toHaveLength(0);
   });
 
+  it('o curso é um select com os cursos de GET /cursos e envia o cursoId', () => {
+    fixture.detectChanges();
+    const select = (fixture.nativeElement as HTMLElement).querySelector('select#cursoId') as HTMLSelectElement;
+    expect(select).toBeTruthy();
+    expect([...select.options].map((o) => o.textContent?.trim())).toEqual([
+      'Selecione seu curso',
+      'Administração',
+      'Engenharia de Software',
+    ]);
+
+    select.value = select.options[2].value;
+    select.dispatchEvent(new Event('change'));
+    expect(component['form'].controls.cursoId.value).toBe(14);
+
+    preencherFormularioValido();
+    component['enviar']();
+    const request = httpMock.expectOne('http://localhost:8080/auth/registro');
+    expect(request.request.body.cursoId).toBe(14);
+    expect(request.request.body.curso).toBeUndefined();
+    request.flush({
+      id: 1,
+      nome: 'Ana Silva',
+      email: 'ana@catolicasc.edu.br',
+      curso: 'Engenharia de Software',
+      emailConfirmado: false,
+      criadoEm: '2026-08-27T00:00:00Z',
+    });
+  });
+
   it('não exibe mais o rótulo de story no subtítulo (voz e tom, A-10)', () => {
     fixture.detectChanges();
     expect((fixture.nativeElement as HTMLElement).textContent).not.toContain('Story 1.2');
@@ -189,5 +225,24 @@ describe('Cadastro', () => {
     request.flush(null, { status: 202, statusText: 'Accepted' });
 
     expect(component['reenviado']()).toBe(true);
+  });
+});
+
+describe('Cadastro sem a lista de cursos', () => {
+  it('avisa quando GET /cursos falha', async () => {
+    await TestBed.configureTestingModule({
+      imports: [Cadastro],
+      providers: [provideHttpClient(), provideHttpClientTesting()],
+    }).compileComponents();
+    const fixture = TestBed.createComponent(Cadastro);
+    const httpMock = TestBed.inject(HttpTestingController);
+
+    httpMock.expectOne('http://localhost:8080/cursos').flush(null, { status: 500, statusText: 'Server Error' });
+    fixture.detectChanges();
+
+    expect((fixture.nativeElement as HTMLElement).querySelector('[role="alert"]')?.textContent).toContain(
+      'Não foi possível carregar os cursos',
+    );
+    httpMock.verify();
   });
 });
