@@ -26,9 +26,12 @@
       </div>
     </header>
 
-    <uc-card class="detalhe__aviso">
-      <p><strong>Publicações chegam em breve.</strong></p>
-      <p>Essa comunidade ainda não tem nenhum jeito de postar ou comentar — é só o espaço reservado por enquanto.</p>
-    </uc-card>
+    <app-feed-comunidade
+      class="detalhe__feed"
+      [comunidadeId]="c.id"
+      [comunidadeNome]="c.nome"
+      [tipo]="c.tipo"
+      [souMembro]="c.souMembro === true"
+    />
   </div>
 }
