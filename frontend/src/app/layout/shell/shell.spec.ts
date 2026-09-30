@@ -257,24 +257,39 @@ describe('Shell', () => {
     expect(document.activeElement).toBe(avatarBtn(f));
   });
 
-  it('ativar um item inerte (Perfil) fecha o dropdown e devolve o foco ao avatar', async () => {
+  it('ativar um item inerte (Configurações) fecha o dropdown e devolve o foco ao avatar', async () => {
     const f = await montar(tokenComPerfis(['ALUNO']));
     abrirMenu(f);
 
-    const perfil = itensDoMenu(f).find((b) => (b.textContent ?? '').trim() === 'Perfil')!;
-    perfil.click();
+    const configuracoes = itensDoMenu(f).find((b) => (b.textContent ?? '').trim() === 'Configurações')!;
+    configuracoes.click();
     f.detectChanges();
 
     expect(avatarBtn(f).getAttribute('aria-expanded')).toBe('false');
     expect(document.activeElement).toBe(avatarBtn(f));
   });
 
-  it('Perfil e Configurações são aria-disabled e não alteram a rota ao serem ativados', async () => {
+  it('Perfil fecha o dropdown e navega para /perfil (Stories 4.1/4.2)', async () => {
+    const f = await montar(tokenComPerfis(['ALUNO']));
+    const router = TestBed.inject(Router);
+    const navegar = vi.spyOn(router, 'navigateByUrl').mockResolvedValue(true);
+    abrirMenu(f);
+
+    const perfil = itensDoMenu(f).find((b) => (b.textContent ?? '').trim() === 'Perfil')!;
+    expect(perfil.getAttribute('aria-disabled')).toBeNull();
+    perfil.click();
+    f.detectChanges();
+
+    expect(avatarBtn(f).getAttribute('aria-expanded')).toBe('false');
+    expect(navegar).toHaveBeenCalledWith('/perfil');
+  });
+
+  it('Configurações é aria-disabled e não altera a rota ao ser ativado', async () => {
     const f = await montar(tokenComPerfis(['ALUNO']));
     const router = TestBed.inject(Router);
     const urlAntes = router.url;
 
-    for (const label of ['Perfil', 'Configurações']) {
+    for (const label of ['Configurações']) {
       abrirMenu(f);
       const item = itensDoMenu(f).find((b) => (b.textContent ?? '').trim() === label)!;
       expect(item.getAttribute('aria-disabled')).toBe('true');

@@ -56,7 +56,9 @@
             <div class="feed__cabecalho-post">
               <span class="feed__avatar" aria-hidden="true">{{ iniciais(publicacao.autor.nome) }}</span>
               <div class="feed__meta">
-                <span class="feed__autor">{{ publicacao.autor.nome }}</span>
+                <a class="feed__autor" [routerLink]="['/usuarios', publicacao.autor.id]">{{
+                  publicacao.autor.nome
+                }}</a>
                 <span class="feed__linha-meta">
                   <uc-badge [variant]="tipo() === 'CURSO' ? 'course' : 'open'">{{ comunidadeNome() }}</uc-badge>
                   <time class="feed__horario" [attr.datetime]="publicacao.criadoEm">{{

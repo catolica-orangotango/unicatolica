@@ -1,0 +1,25 @@
+<uc-card class="cartao">
+  <div class="cartao__topo">
+    <span class="cartao__avatar" aria-hidden="true">{{ iniciais(perfil().nome) }}</span>
+    <h1 class="cartao__nome">{{ perfil().nome }}</h1>
+  </div>
+
+  <dl class="cartao__dados">
+    <dt>Curso</dt>
+    <dd>{{ perfil().curso?.nome ?? 'Não informado' }}</dd>
+    <dt>Período</dt>
+    <dd>{{ perfil().periodo ? perfil().periodo + 'º semestre' : 'Não informado' }}</dd>
+    <dt>Interesses</dt>
+    <dd>
+      @if (perfil().interesses.length > 0) {
+        <ul class="cartao__interesses">
+          @for (interesse of perfil().interesses; track interesse) {
+            <li class="cartao__interesse">{{ interesse }}</li>
+          }
+        </ul>
+      } @else {
+        Nenhum interesse ainda
+      }
+    </dd>
+  </dl>
+</uc-card>

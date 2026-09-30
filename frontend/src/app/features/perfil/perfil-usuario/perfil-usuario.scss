@@ -1,0 +1,19 @@
+// Mesmos estados de ComunidadeDetalhe/Feed (tokens --uc-*, Story 14.1).
+:host {
+  display: block;
+}
+
+.perfil {
+  // layout-literal: coluna de leitura, igual a do feed.
+  max-width: 720px;
+}
+
+.perfil__estado {
+  padding: calc(var(--uc-space-unit) * 12) calc(var(--uc-space-unit) * 6);
+  text-align: center;
+  color: var(--uc-color-ink-soft);
+}
+
+.perfil__estado--erro {
+  color: var(--uc-color-error);
+}

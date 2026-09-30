@@ -1,0 +1,161 @@
+// Tokens --uc-* (Story 14.1). Campos e erros no mesmo idioma do cadastro
+// (cadastro.scss): borda de 1px, erro com contorno + mensagem, nunca só cor.
+:host {
+  display: block;
+}
+
+.meu-perfil {
+  // layout-literal: coluna de leitura, igual a do feed.
+  max-width: 720px;
+}
+
+.meu-perfil__estado {
+  padding: calc(var(--uc-space-unit) * 12) calc(var(--uc-space-unit) * 6);
+  text-align: center;
+  color: var(--uc-color-ink-soft);
+}
+
+.meu-perfil__estado--erro,
+.meu-perfil__erro {
+  color: var(--uc-color-error);
+}
+
+.meu-perfil__editar {
+  margin-top: var(--uc-space-section-gap);
+}
+
+.meu-perfil__form {
+  display: flex;
+  flex-direction: column;
+  background: var(--uc-color-surface);
+  border: 1px solid var(--uc-color-border);
+  border-radius: var(--uc-radius-md);
+  padding: var(--uc-space-card-padding);
+}
+
+.meu-perfil__titulo {
+  margin: 0 0 calc(var(--uc-space-unit) * 2);
+  font-size: var(--uc-font-size-greeting);
+  font-weight: var(--uc-font-weight-semibold);
+  color: var(--uc-color-ink);
+}
+
+.meu-perfil__intro,
+.meu-perfil__ajuda {
+  margin: 0 0 calc(var(--uc-space-unit) * 2);
+  font-size: var(--uc-font-size-meta);
+  color: var(--uc-color-ink-soft);
+}
+
+.meu-perfil__intro {
+  margin-bottom: var(--uc-space-section-gap);
+}
+
+.meu-perfil__label {
+  margin-bottom: calc(var(--uc-space-unit) / 2);
+  font-size: var(--uc-font-size-meta);
+  font-weight: var(--uc-font-weight-semibold);
+  color: var(--uc-color-ink);
+}
+
+.meu-perfil__campo {
+  margin-bottom: calc(var(--uc-space-unit) * 4);
+  padding: calc(var(--uc-space-unit) * 2) calc(var(--uc-space-unit) * 2.5);
+  border: 1px solid var(--uc-color-border);
+  border-radius: var(--uc-radius-default);
+  background: var(--uc-color-surface);
+  color: var(--uc-color-ink);
+  font-family: var(--uc-font-family-base);
+  font-size: var(--uc-font-size-body);
+}
+
+.meu-perfil__campo::placeholder {
+  color: var(--uc-color-ink-soft);
+}
+
+.meu-perfil__campo[aria-invalid='true'] {
+  border-color: var(--uc-color-error);
+  margin-bottom: 0;
+}
+
+.campo-erro {
+  margin: 0 0 calc(var(--uc-space-unit) * 4);
+  padding-top: var(--uc-space-unit);
+  color: var(--uc-color-error);
+  font-size: var(--uc-font-size-meta);
+}
+
+.meu-perfil__novo-interesse {
+  display: flex;
+  align-items: flex-start;
+  gap: calc(var(--uc-space-unit) * 2);
+}
+
+.meu-perfil__novo-interesse .meu-perfil__campo {
+  flex: 1;
+}
+
+.meu-perfil__interesses {
+  list-style: none;
+  margin: 0 0 calc(var(--uc-space-unit) * 4);
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: calc(var(--uc-space-unit) * 2);
+}
+
+.meu-perfil__interesse {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--uc-space-unit);
+  padding: calc(var(--uc-space-unit) / 2) var(--uc-space-unit) calc(var(--uc-space-unit) / 2) calc(var(--uc-space-unit) * 2.5);
+  border-radius: var(--uc-radius-full);
+  background: var(--uc-color-orange-tint);
+  color: var(--uc-color-ink);
+  font-size: var(--uc-font-size-meta);
+}
+
+.meu-perfil__remover {
+  border: 0;
+  border-radius: var(--uc-radius-full);
+  background: transparent;
+  color: var(--uc-color-ink);
+  font-size: var(--uc-font-size-body);
+  line-height: var(--uc-line-height-body);
+  padding: 0 var(--uc-space-unit);
+  cursor: pointer;
+}
+
+.meu-perfil__remover:focus-visible {
+  outline: 2px solid var(--uc-color-maroon);
+  outline-offset: 2px;
+}
+
+.meu-perfil__erro {
+  margin: 0 0 calc(var(--uc-space-unit) * 3);
+  font-size: var(--uc-font-size-meta);
+}
+
+.meu-perfil__acoes {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--uc-space-unit) * 3);
+  margin-top: calc(var(--uc-space-unit) * 2);
+}
+
+// Ação secundária: pill de borda, transparente (mesmo idioma do cadastro).
+.botao-secundario {
+  padding: calc(var(--uc-space-unit) * 2) calc(var(--uc-space-unit) * 4);
+  border: 1px solid var(--uc-color-border);
+  border-radius: var(--uc-radius-full);
+  background: transparent;
+  color: var(--uc-color-ink);
+  font-size: var(--uc-font-size-meta);
+  font-weight: var(--uc-font-weight-semibold);
+  cursor: pointer;
+}
+
+.botao-secundario:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

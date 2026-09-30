@@ -1,6 +1,7 @@
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting, TestRequest } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
 import { API_BASE_URL } from '../../../core/config/api.config';
 import { ToastService } from '../../../ui';
 import { Publicacao } from '../publicacoes.service';
@@ -34,6 +35,7 @@ describe('FeedComunidade', () => {
       providers: [
         provideHttpClient(),
         provideHttpClientTesting(),
+        provideRouter([]),
         { provide: ToastService, useValue: { mostrar: (m: string) => toasts.push(m) } },
       ],
     }).compileComponents();
@@ -81,6 +83,8 @@ describe('FeedComunidade', () => {
     expect(posts[0].querySelector('time')?.textContent?.trim()).toBe('agora');
     expect(posts[0].querySelector('.feed__conteudo')?.textContent).toBe('Alguém para uma partida hoje?');
     expect(posts[1].querySelector('.feed__autor')?.textContent?.trim()).toBe('Bruno Reis');
+    // Story 4.4: o nome do autor abre o perfil dele.
+    expect(posts[0].querySelector('a.feed__autor')?.getAttribute('href')).toBe('/usuarios/102');
   });
 
   it('membro sem postagens vê o convite para começar a conversa', async () => {

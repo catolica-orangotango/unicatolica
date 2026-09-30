@@ -1,0 +1,71 @@
+// Tokens --uc-* (Story 14.1); o card é o uc-card (Story 14.2).
+:host {
+  display: block;
+}
+
+.cartao__topo {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--uc-space-unit) * 3);
+  margin-bottom: var(--uc-space-section-gap);
+}
+
+.cartao__avatar {
+  flex-shrink: 0;
+  width: calc(var(--uc-space-unit) * 14);
+  height: calc(var(--uc-space-unit) * 14);
+  border-radius: var(--uc-radius-full);
+  background: linear-gradient(135deg, var(--uc-color-orange), var(--uc-color-maroon));
+  color: var(--uc-color-surface);
+  font-size: var(--uc-font-size-greeting);
+  font-weight: var(--uc-font-weight-semibold);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cartao__nome {
+  margin: 0;
+  font-size: var(--uc-font-size-greeting);
+  font-weight: var(--uc-font-weight-semibold);
+  letter-spacing: var(--uc-letter-spacing-greeting);
+  color: var(--uc-color-ink);
+}
+
+.cartao__dados {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: calc(var(--uc-space-unit) * 2.5) calc(var(--uc-space-unit) * 6);
+  margin: 0;
+  font-size: var(--uc-font-size-body);
+}
+
+.cartao__dados dt {
+  font-size: var(--uc-font-size-label-caps);
+  text-transform: uppercase;
+  letter-spacing: var(--uc-letter-spacing-label-caps);
+  color: var(--uc-color-ink-soft);
+  align-self: center;
+}
+
+.cartao__dados dd {
+  margin: 0;
+  color: var(--uc-color-ink);
+}
+
+.cartao__interesses {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: calc(var(--uc-space-unit) * 2);
+}
+
+.cartao__interesse {
+  padding: calc(var(--uc-space-unit) / 2) calc(var(--uc-space-unit) * 2.5);
+  border-radius: var(--uc-radius-full);
+  background: var(--uc-color-orange-tint);
+  color: var(--uc-color-ink);
+  font-size: var(--uc-font-size-meta);
+}

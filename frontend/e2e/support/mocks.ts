@@ -182,3 +182,55 @@ export const CURSOS_MOCK = [
 export function mockCursosOk(page: Page): Promise<void> {
   return rota(page, (url) => ehApi(url) && url.pathname === '/cursos', 200, JSON.stringify(CURSOS_MOCK));
 }
+
+/** Perfil no formato de `Perfil` do `openapi.yaml`. */
+export interface PerfilMock {
+  usuarioId: number;
+  nome: string;
+  curso: { id: number; nome: string } | null;
+  periodo: number | null;
+  interesses: string[];
+}
+
+/**
+ * `GET`/`PUT /perfil/me` (Stories 4.1/4.2) com estado em memória: o `PUT` grava e um
+ * `GET` depois (reload) devolve o salvo, como o backend real. O curso vem de
+ * {@link CURSOS_MOCK} pelo `cursoId`. Registrar depois de `mockFeedOk`.
+ */
+export async function mockMeuPerfil(page: Page, inicial: PerfilMock): Promise<void> {
+  let atual = { ...inicial };
+  await page.route(
+    (url) => ehApi(url) && url.pathname === '/perfil/me',
+    (route) => {
+      const request = route.request();
+      if (request.method() === 'OPTIONS') {
+        return route.fulfill({ status: 204, headers: { ...CORS, 'access-control-allow-methods': 'GET,PUT,OPTIONS' } });
+      }
+      if (request.method() === 'PUT') {
+        const corpo = request.postDataJSON() as { nome: string; cursoId: number; periodo: number; interesses: string[] };
+        atual = {
+          usuarioId: atual.usuarioId,
+          nome: corpo.nome.trim(),
+          curso: CURSOS_MOCK.find((c) => c.id === corpo.cursoId) ?? null,
+          periodo: corpo.periodo,
+          interesses: [...corpo.interesses].sort((a, b) => a.localeCompare(b)),
+        };
+      }
+      return route.fulfill({
+        status: 200,
+        headers: { ...CORS, 'content-type': 'application/json' },
+        body: JSON.stringify(atual),
+      });
+    },
+  );
+}
+
+/** `GET /usuarios/{id}/perfil` (Story 4.4) -> 200 com o perfil dado. */
+export function mockPerfilDeUsuario(page: Page, perfil: PerfilMock): Promise<void> {
+  return rota(
+    page,
+    (url) => ehApi(url) && url.pathname === `/usuarios/${perfil.usuarioId}/perfil`,
+    200,
+    JSON.stringify(perfil),
+  );
+}

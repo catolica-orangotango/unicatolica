@@ -34,6 +34,17 @@ export const routes: Routes = [
           import('./features/comunidades/comunidades-lista/comunidades-lista').then((m) => m.ComunidadesLista),
       },
       {
+        // Próprio perfil (Stories 4.1/4.2), aberto pelo menu da conta.
+        path: 'perfil',
+        loadComponent: () => import('./features/perfil/meu-perfil/meu-perfil').then((m) => m.MeuPerfil),
+      },
+      {
+        // Perfil de outro usuário, somente leitura (Story 4.4), aberto pelo autor de uma postagem.
+        path: 'usuarios/:id',
+        loadComponent: () =>
+          import('./features/perfil/perfil-usuario/perfil-usuario').then((m) => m.PerfilUsuario),
+      },
+      {
         // Mesmo padrão de "Home" pra qualquer comunidade — curso ou aberta (ver
         // ComunidadeDetalhe). Vem depois de 'comunidades' na lista, mas isso não
         // importa pro Router: segmentos diferentes ('comunidades' vs 'comunidades/:id'),

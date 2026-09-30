@@ -1,0 +1,121 @@
+@if (carregando()) {
+  <p class="meu-perfil__estado">Carregando seu perfil…</p>
+} @else if (erroCarregar(); as mensagem) {
+  <div class="meu-perfil__estado meu-perfil__estado--erro" role="alert">{{ mensagem }}</div>
+} @else if (!editando() && perfil(); as p) {
+  <div class="meu-perfil">
+    <app-perfil-cartao [perfil]="p" />
+    <button type="button" uc-button class="meu-perfil__editar" (click)="abrirEdicao()">Editar perfil</button>
+  </div>
+} @else {
+  <form class="meu-perfil meu-perfil__form" [formGroup]="form" (ngSubmit)="salvar()" novalidate>
+    <h1 class="meu-perfil__titulo">{{ primeiraVez() ? 'Complete seu perfil' : 'Editar perfil' }}</h1>
+    @if (primeiraVez()) {
+      <p class="meu-perfil__intro">Conte seu curso e período para os colegas te encontrarem.</p>
+    }
+
+    <label class="meu-perfil__label" for="nome">Nome</label>
+    <input
+      id="nome"
+      class="meu-perfil__campo"
+      type="text"
+      formControlName="nome"
+      [attr.maxlength]="limites.nome"
+      [attr.aria-invalid]="form.controls.nome.touched && form.controls.nome.invalid ? 'true' : null"
+      [attr.aria-describedby]="form.controls.nome.touched && form.controls.nome.invalid ? 'erro-nome' : null"
+    />
+    @if (form.controls.nome.touched && form.controls.nome.invalid) {
+      <span class="campo-erro" id="erro-nome">Informe seu nome.</span>
+    }
+
+    <label class="meu-perfil__label" for="cursoId">Curso</label>
+    <select
+      id="cursoId"
+      class="meu-perfil__campo"
+      formControlName="cursoId"
+      [attr.aria-invalid]="form.controls.cursoId.touched && form.controls.cursoId.invalid ? 'true' : null"
+      [attr.aria-describedby]="form.controls.cursoId.touched && form.controls.cursoId.invalid ? 'erro-cursoId' : null"
+    >
+      <option [ngValue]="null" disabled>Selecione seu curso</option>
+      @for (curso of opcoesCurso(); track curso.id) {
+        <option [ngValue]="curso.id">{{ curso.nome }}</option>
+      }
+    </select>
+    @if (form.controls.cursoId.touched && form.controls.cursoId.invalid) {
+      <span class="campo-erro" id="erro-cursoId">Escolha seu curso.</span>
+    }
+
+    <label class="meu-perfil__label" for="periodo">Período</label>
+    <select
+      id="periodo"
+      class="meu-perfil__campo"
+      formControlName="periodo"
+      [attr.aria-invalid]="form.controls.periodo.touched && form.controls.periodo.invalid ? 'true' : null"
+      [attr.aria-describedby]="form.controls.periodo.touched && form.controls.periodo.invalid ? 'erro-periodo' : null"
+    >
+      <option [ngValue]="null" disabled>Selecione o semestre</option>
+      @for (periodo of periodos; track periodo) {
+        <option [ngValue]="periodo">{{ periodo }}º semestre</option>
+      }
+    </select>
+    @if (form.controls.periodo.touched && form.controls.periodo.invalid) {
+      <span class="campo-erro" id="erro-periodo">Escolha seu período.</span>
+    }
+
+    <label class="meu-perfil__label" for="novoInteresse">Interesses</label>
+    <p class="meu-perfil__ajuda" id="ajuda-interesses">
+      Opcional. Até {{ limites.interesses }}, com até {{ limites.interesse }} caracteres cada.
+    </p>
+    <div class="meu-perfil__novo-interesse">
+      <input
+        id="novoInteresse"
+        class="meu-perfil__campo"
+        type="text"
+        formControlName="novoInteresse"
+        placeholder="Ex.: Programação, Robótica"
+        aria-describedby="ajuda-interesses"
+        [attr.maxlength]="limites.interesse"
+        (keydown.enter)="adicionarInteresse($event)"
+      />
+      <button
+        type="button"
+        class="botao-secundario"
+        [disabled]="limiteAtingido()"
+        (click)="adicionarInteresse()"
+      >
+        Adicionar
+      </button>
+    </div>
+    @if (avisoInteresse(); as aviso) {
+      <p class="campo-erro" role="status">{{ aviso }}</p>
+    }
+    @if (interesses().length > 0) {
+      <ul class="meu-perfil__interesses" aria-label="Interesses escolhidos">
+        @for (interesse of interesses(); track interesse) {
+          <li class="meu-perfil__interesse">
+            {{ interesse }}
+            <button
+              type="button"
+              class="meu-perfil__remover"
+              [attr.aria-label]="'Remover ' + interesse"
+              (click)="removerInteresse(interesse)"
+            >
+              ×
+            </button>
+          </li>
+        }
+      </ul>
+    }
+
+    @if (erroSalvar(); as mensagem) {
+      <p class="meu-perfil__erro" role="alert">{{ mensagem }}</p>
+    }
+
+    <div class="meu-perfil__acoes">
+      <button type="submit" uc-button [disabled]="salvando()">{{ salvando() ? 'Salvando…' : 'Salvar' }}</button>
+      @if (!primeiraVez()) {
+        <button type="button" class="botao-secundario" [disabled]="salvando()" (click)="cancelar()">Cancelar</button>
+      }
+    </div>
+  </form>
+}
