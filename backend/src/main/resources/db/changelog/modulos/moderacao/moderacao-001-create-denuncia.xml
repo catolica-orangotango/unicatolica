@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Tabelas denuncia, acao_moderacao e restricao_usuario — módulo Moderação (RF75–RF80,
+    Stories 12.1 e 12.4–12.8). O conteúdo denunciado e os usuários são só ids, sem FK:
+    publicacao é de Publicações e usuario é de Identidade (AD-3). O estado do conteúdo
+    (oculto/removido) fica no módulo dono do conteúdo; aqui fica a denúncia e a decisão.
+    Triagem pelo agente de IA (Story 12.2, RF75.1) fica de fora: desenho ainda DEFERRED.
+-->
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="moderacao-001-create-denuncia" author="pacext">
+        <createTable tableName="denuncia">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tipo_conteudo" type="VARCHAR(20)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="conteudo_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <!-- Autor do conteúdo: alvo da notificação (RF78.2/RF79.2) e da restrição (RF80). -->
+            <column name="autor_conteudo_usuario_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <!-- Guardado só para impedir denúncia duplicada; nunca sai em resposta ao moderador (RF77.1). -->
+            <column name="denunciante_usuario_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="motivo" type="TEXT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="situacao" type="VARCHAR(20)" defaultValue="PENDENTE">
+                <constraints nullable="false"/>
+            </column>
+            <!-- Moderador que escalonou (RF80.1); sai da fila dele sem notificação do desfecho (RF80.2). -->
+            <column name="moderador_original_usuario_id" type="BIGINT"/>
+            <column name="moderador_neutro_usuario_id" type="BIGINT"/>
+            <column name="escalonada_em" type="TIMESTAMP WITH TIME ZONE"/>
+            <column name="criado_em" type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="resolvida_em" type="TIMESTAMP WITH TIME ZONE"/>
+        </createTable>
+        <sql>ALTER TABLE denuncia ADD CONSTRAINT ck_denuncia_tipo_conteudo
+            CHECK (tipo_conteudo IN ('PUBLICACAO', 'COMENTARIO', 'ENQUETE'))
+        </sql>
+        <sql>ALTER TABLE denuncia ADD CONSTRAINT ck_denuncia_situacao
+            CHECK (situacao IN ('PENDENTE', 'ESCALONADA', 'RESOLVIDA', 'DESCARTADA'))
+        </sql>
+        <sql>ALTER TABLE denuncia ADD CONSTRAINT ck_denuncia_motivo CHECK (length(trim(motivo)) > 0)</sql>
+        <!-- Escalonada sempre tem os dois moderadores, e o neutro não é o original (RF80.1). -->
+        <sql>ALTER TABLE denuncia ADD CONSTRAINT ck_denuncia_escalonamento
+            CHECK (moderador_neutro_usuario_id IS NULL
+                OR (moderador_original_usuario_id IS NOT NULL
+                    AND escalonada_em IS NOT NULL
+                    AND moderador_neutro_usuario_id &lt;&gt; moderador_original_usuario_id))
+        </sql>
+        <sql>ALTER TABLE denuncia ADD CONSTRAINT ck_denuncia_escalonada_tem_neutro
+            CHECK (situacao &lt;&gt; 'ESCALONADA' OR moderador_neutro_usuario_id IS NOT NULL)
+        </sql>
+        <rollback>
+            <sql>ALTER TABLE denuncia DROP CONSTRAINT ck_denuncia_escalonada_tem_neutro</sql>
+            <sql>ALTER TABLE denuncia DROP CONSTRAINT ck_denuncia_escalonamento</sql>
+            <sql>ALTER TABLE denuncia DROP CONSTRAINT ck_denuncia_motivo</sql>
+            <sql>ALTER TABLE denuncia DROP CONSTRAINT ck_denuncia_situacao</sql>
+            <sql>ALTER TABLE denuncia DROP CONSTRAINT ck_denuncia_tipo_conteudo</sql>
+        </rollback>
+        <addUniqueConstraint tableName="denuncia" columnNames="tipo_conteudo, conteudo_id, denunciante_usuario_id"
+                constraintName="uk_denuncia_conteudo_denunciante"/>
+        <!-- Fila do moderador (RF77): pendentes, mais antiga primeiro. -->
+        <createIndex indexName="idx_denuncia_situacao_criado_em" tableName="denuncia">
+            <column name="situacao"/>
+            <column name="criado_em"/>
+        </createIndex>
+        <createIndex indexName="idx_denuncia_moderador_neutro" tableName="denuncia">
+            <column name="moderador_neutro_usuario_id"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="moderacao-001-create-acao-moderacao" author="pacext">
+        <!--
+            Histórico de decisões (RF78, RF78.1, RF79, RF80, RF80.1), com o motivo enviado ao
+            autor (RF78.2/RF79.2). A trilha oficial de auditoria continua no log_auditoria,
+            gravada pelo AuditoriaService (AD-11, RF79.1).
+        -->
+        <createTable tableName="acao_moderacao">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="denuncia_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="fk_acao_moderacao_denuncia"
+                        references="denuncia(id)"/>
+            </column>
+            <column name="tipo_acao" type="VARCHAR(30)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="moderador_usuario_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="motivo" type="TEXT"/>
+            <column name="criado_em" type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <sql>ALTER TABLE acao_moderacao ADD CONSTRAINT ck_acao_moderacao_tipo_acao
+            CHECK (tipo_acao IN ('OCULTAR', 'RESTAURAR', 'REMOVER', 'RESTRINGIR_USUARIO', 'ESCALONAR', 'DESCARTAR'))
+        </sql>
+        <!-- O autor sempre recebe o motivo ao ocultar ou remover (RF78.2, RF79.2). -->
+        <sql>ALTER TABLE acao_moderacao ADD CONSTRAINT ck_acao_moderacao_motivo
+            CHECK (tipo_acao NOT IN ('OCULTAR', 'REMOVER', 'RESTRINGIR_USUARIO')
+                OR (motivo IS NOT NULL AND length(trim(motivo)) > 0))
+        </sql>
+        <rollback>
+            <sql>ALTER TABLE acao_moderacao DROP CONSTRAINT ck_acao_moderacao_motivo</sql>
+            <sql>ALTER TABLE acao_moderacao DROP CONSTRAINT ck_acao_moderacao_tipo_acao</sql>
+        </rollback>
+        <createIndex indexName="idx_acao_moderacao_denuncia_id" tableName="acao_moderacao">
+            <column name="denuncia_id"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="moderacao-001-create-restricao-usuario" author="pacext">
+        <!-- Restrição de usuário (RF80). fim_em nulo = sem prazo; revogada_em encerra antes do prazo. -->
+        <createTable tableName="restricao_usuario">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="usuario_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="denuncia_id" type="BIGINT">
+                <constraints foreignKeyName="fk_restricao_usuario_denuncia" references="denuncia(id)"/>
+            </column>
+            <column name="moderador_usuario_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="motivo" type="TEXT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="inicio_em" type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="fim_em" type="TIMESTAMP WITH TIME ZONE"/>
+            <column name="revogada_em" type="TIMESTAMP WITH TIME ZONE"/>
+        </createTable>
+        <sql>ALTER TABLE restricao_usuario ADD CONSTRAINT ck_restricao_usuario_periodo
+            CHECK (fim_em IS NULL OR fim_em &gt; inicio_em)
+        </sql>
+        <sql>ALTER TABLE restricao_usuario ADD CONSTRAINT ck_restricao_usuario_motivo CHECK (length(trim(motivo)) > 0)</sql>
+        <rollback>
+            <sql>ALTER TABLE restricao_usuario DROP CONSTRAINT ck_restricao_usuario_motivo</sql>
+            <sql>ALTER TABLE restricao_usuario DROP CONSTRAINT ck_restricao_usuario_periodo</sql>
+        </rollback>
+        <createIndex indexName="idx_restricao_usuario_usuario_id" tableName="restricao_usuario">
+            <column name="usuario_id"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>
