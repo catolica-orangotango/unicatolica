@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Tabela publicacao — módulo Publicações (RF32–RF36, Stories 3.1/3.2).
+    comunidade_id e autor_usuario_id são só ids, sem FK: comunidade é de Comunidades e
+    usuario é de Identidade (AD-3 — dado de outro módulo é referenciado só pelo id).
+-->
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="publicacoes-001-create-publicacao" author="pacext">
+        <createTable tableName="publicacao">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="comunidade_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="autor_usuario_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="conteudo" type="TEXT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="criado_em" type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="atualizado_em" type="TIMESTAMP WITH TIME ZONE"/>
+        </createTable>
+        <!-- Conteúdo obrigatório (RF33): o Service valida antes; o CHECK é a rede de segurança. -->
+        <sql>ALTER TABLE publicacao ADD CONSTRAINT ck_publicacao_conteudo CHECK (length(trim(conteudo)) > 0)</sql>
+        <rollback>
+            <sql>ALTER TABLE publicacao DROP CONSTRAINT ck_publicacao_conteudo</sql>
+        </rollback>
+        <!-- Feed da comunidade (RF36): mais recente primeiro. -->
+        <createIndex indexName="idx_publicacao_comunidade_criado_em" tableName="publicacao">
+            <column name="comunidade_id"/>
+            <column name="criado_em" descending="true"/>
+        </createIndex>
+        <createIndex indexName="idx_publicacao_autor_usuario_id" tableName="publicacao">
+            <column name="autor_usuario_id"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>
