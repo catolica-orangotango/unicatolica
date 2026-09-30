@@ -59,7 +59,7 @@ paths:
                 $ref: '#/components/schemas/CadastroResponse'
         # 409: e-mail já possui conta (RF02). 422: domínio externo ao institucional
         # (RF01.3), formato de e-mail/senha fora da política (RF03/RF04), ou idade menor
-        # que 18 anos (RF01.1) — o schema Erro.code compartilhado (ver ErroResponse no
+        # que 18 anos (RF01.1), ou cursoId inexistente/inativo (CURSO_INVALIDO) — o schema Erro.code compartilhado (ver ErroResponse no
         # backend) distingue os cenários; o response object AD-5 é sempre o mesmo por status.
         '409':
           $ref: '#/components/responses/Conflito'
@@ -406,6 +406,104 @@ paths:
         '404':
           $ref: '#/components/responses/NaoEncontrado'
 
+  /cursos:
+    get:
+      operationId: listarCursos
+      summary: Lista os cursos ativos da instituição, em ordem alfabética
+      tags: [Identidade]
+      description: >
+        Rota pública (allowlist AD-2): a tela de cadastro precisa da lista antes do
+        login. Sem paginação de propósito, como GET /comunidades/minhas — é a lista de um
+        select, com poucas dezenas de itens. Cadastro e edição de cursos pelo
+        administrador ficam fora deste contrato.
+      security: []
+      responses:
+        '200':
+          description: Cursos ativos.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Curso'
+
+  /perfil/me:
+    get:
+      operationId: obterMeuPerfil
+      summary: Perfil acadêmico do usuário autenticado (Story 4.2, RF20)
+      tags: [Perfil]
+      description: >
+        Sempre 200: quem ainda não preencheu o perfil acadêmico (Story 4.1) recebe
+        nome e curso do cadastro, periodo null e interesses vazio — o front usa
+        periodo null para saber que o perfil ainda não foi criado.
+      responses:
+        '200':
+          description: Perfil do usuário autenticado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Perfil'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+    put:
+      operationId: salvarMeuPerfil
+      summary: Cria ou edita o perfil acadêmico do usuário autenticado (Story 4.1, RF14–RF19)
+      tags: [Perfil]
+      description: >
+        Substitui o perfil inteiro (cria na primeira vez, RF14). nome e curso ficam no
+        cadastro do usuário; periodo e interesses, no perfil acadêmico. cursoId vem de
+        GET /cursos. Trocar o curso
+        dispara o auto-join da comunidade do novo curso (Story 2.3, RF24.1). Interesses
+        repetidos sem diferença de maiúsculas/espaços viram um só.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PerfilRequest'
+      responses:
+        '200':
+          description: Perfil salvo.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Perfil'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        # 422: nome em branco, cursoId inexistente/inativo (CURSO_INVALIDO), periodo
+        # fora de 1–12, mais de 10 interesses ou interesse em branco/acima de 50 caracteres.
+        '422':
+          $ref: '#/components/responses/ErroValidacao'
+
+  /usuarios/{id}/perfil:
+    get:
+      operationId: obterPerfilPublico
+      summary: Perfil acadêmico público de outro usuário, somente leitura (Story 4.4, RF20.2)
+      tags: [Perfil]
+      description: >
+        Qualquer usuário autenticado. Mesmos campos do próprio perfil, sem e-mail nem
+        outro dado sensível (RF20.2). Usuário que ainda não criou o perfil acadêmico
+        aparece com periodo null e interesses vazio, como em GET /perfil/me.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Id do usuário.
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Perfil público do usuário.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Perfil'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+
 components:
   schemas:
     LoginRequest:
@@ -435,7 +533,7 @@ components:
         - nome
         - email
         - senha
-        - curso
+        - cursoId
         - dataNascimento
       properties:
         nome:
@@ -447,11 +545,12 @@ components:
         senha:
           type: string
           format: password
-        curso:
-          type: string
+        cursoId:
+          type: integer
+          format: int64
           description: >
-            Nome do curso — usado para o auto-join (RF24.1) contra a comunidade de curso
-            pré-criada pelo administrador (Story 2.1).
+            Id de um curso de GET /cursos — usado para o auto-join (RF24.1) na
+            comunidade do curso (Story 2.1).
         dataNascimento:
           type: string
           format: date
@@ -476,6 +575,7 @@ components:
           format: email
         curso:
           type: string
+          description: Nome do curso escolhido.
         emailConfirmado:
           type: boolean
         criadoEm:
@@ -612,6 +712,75 @@ components:
               type: array
               items:
                 $ref: '#/components/schemas/PublicacaoResponse'
+
+    Curso:
+      type: object
+      description: >
+        Curso da instituição, cadastrado por administrador (a lista inicial vem das 26
+        comunidades de curso do seed). O nome casa com a comunidade de curso no auto-join.
+      required: [id, nome]
+      properties:
+        id:
+          type: integer
+          format: int64
+        nome:
+          type: string
+
+    PerfilRequest:
+      type: object
+      required: [nome, cursoId, periodo, interesses]
+      properties:
+        nome:
+          type: string
+          minLength: 1
+          maxLength: 200
+          description: RF15.
+        cursoId:
+          type: integer
+          format: int64
+          description: RF16 — id de um curso de GET /cursos.
+        periodo:
+          type: integer
+          format: int32
+          minimum: 1
+          maximum: 12
+          description: Semestre atual (RF17).
+        interesses:
+          type: array
+          maxItems: 10
+          description: RF18 — pode ser vazio (onboarding progressivo, RF20.1).
+          items:
+            type: string
+            minLength: 1
+            maxLength: 50
+
+    Perfil:
+      type: object
+      description: >
+        Perfil acadêmico (RF20) — o mesmo schema serve o próprio perfil e o perfil
+        público de terceiros (RF20.2): não tem e-mail nem outro dado sensível.
+      required: [usuarioId, nome, interesses]
+      properties:
+        usuarioId:
+          type: integer
+          format: int64
+        nome:
+          type: string
+        curso:
+          anyOf:
+            - $ref: '#/components/schemas/Curso'
+            - type: 'null'
+          description: null só para conta antiga sem curso reconhecido na migração para a lista de cursos.
+        periodo:
+          type: [integer, 'null']
+          format: int32
+          minimum: 1
+          maximum: 12
+          description: null enquanto o perfil acadêmico não foi criado (Story 4.1).
+        interesses:
+          type: array
+          items:
+            type: string
 
     Erro:
       type: object
