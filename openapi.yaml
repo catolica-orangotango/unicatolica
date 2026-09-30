@@ -323,6 +323,89 @@ paths:
         '404':
           $ref: '#/components/responses/NaoEncontrado'
 
+  /comunidades/{id}/publicacoes:
+    post:
+      operationId: criarPublicacao
+      summary: Cria uma postagem na comunidade (Story 3.1, RF32/RF33/RF34/RF35)
+      tags: [Publicacoes]
+      description: >
+        O autor é sempre o usuário autenticado (RF34) — o corpo não aceita autor nem
+        comunidade; a comunidade vem do path (RF35). Só membro da comunidade publica
+        (RF27.1), seja ela de curso ou aberta.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Id da comunidade.
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PublicacaoRequest'
+      responses:
+        '201':
+          description: Postagem criada.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PublicacaoResponse'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        # 403: usuário não é membro da comunidade (RF27.1). 404: comunidade não existe.
+        # 422: conteúdo ausente, em branco ou acima do limite (RF33).
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '422':
+          $ref: '#/components/responses/ErroValidacao'
+    get:
+      operationId: listarPublicacoes
+      summary: Lista as postagens da comunidade, mais recente primeiro, paginado (Story 3.2, RF36)
+      tags: [Publicacoes]
+      description: >
+        Qualquer usuário autenticado lê o feed, membro ou não (Story 2.5 — não-membro
+        vê o feed com a interação bloqueada; quem decide o bloqueio é o souMembro de
+        GET /comunidades/{id}). Ordem: criadoEm decrescente, id decrescente no empate.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Id da comunidade.
+          schema:
+            type: integer
+            format: int64
+        - name: pagina
+          in: query
+          schema:
+            type: integer
+            format: int32
+            minimum: 0
+            default: 0
+        - name: tamanho
+          in: query
+          schema:
+            type: integer
+            format: int32
+            minimum: 1
+            maximum: 100
+            default: 20
+      responses:
+        '200':
+          description: Página de postagens da comunidade.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PublicacaoPageResponse'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+
 components:
   schemas:
     LoginRequest:
@@ -475,6 +558,60 @@ components:
               type: array
               items:
                 $ref: '#/components/schemas/ComunidadeResponse'
+
+    PublicacaoRequest:
+      type: object
+      required: [conteudo]
+      properties:
+        conteudo:
+          type: string
+          minLength: 1
+          maxLength: 5000
+          description: Corpo da postagem (RF33) — texto só com espaços é rejeitado com 422.
+
+    AutorResumo:
+      type: object
+      description: >
+        Nome e curso do autor, vindos de identidade.UsuarioConsulta (AD-3). Sem foto:
+        o avatar é montado no front a partir das iniciais do nome.
+      required: [id, nome]
+      properties:
+        id:
+          type: integer
+          format: int64
+        nome:
+          type: string
+        curso:
+          type: [string, 'null']
+
+    PublicacaoResponse:
+      type: object
+      required: [id, comunidadeId, autor, conteudo, criadoEm]
+      properties:
+        id:
+          type: integer
+          format: int64
+        comunidadeId:
+          type: integer
+          format: int64
+        autor:
+          $ref: '#/components/schemas/AutorResumo'
+        conteudo:
+          type: string
+        criadoEm:
+          type: string
+          format: date-time
+          description: Base do horário relativo exibido no feed (RF36).
+
+    PublicacaoPageResponse:
+      allOf:
+        - $ref: '#/components/schemas/PageResponse'
+        - type: object
+          properties:
+            content:
+              type: array
+              items:
+                $ref: '#/components/schemas/PublicacaoResponse'
 
     Erro:
       type: object
