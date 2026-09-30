@@ -82,7 +82,7 @@ Implementação de interface da raiz e observer de evento de outro módulo ficam
 | `identidade` | Cadastro (curso escolhido de `GET /cursos`), confirmação de e-mail, login, logout, `GET /usuarios/me` e `/usuarios/{id}` |
 | `comunidades` | Auto-join por curso, criar comunidade aberta, entrar/sair, listar/filtrar |
 | `publicacoes` | Criar postagem e feed da comunidade (`POST`/`GET /comunidades/{id}/publicacoes`); tela no feed de `/comunidades/:id` |
-| `perfil` | Tabelas `perfil_academico` e `perfil_interesse` e repository prontos; endpoints das Stories 4.1/4.2/4.4 pendentes do contrato |
+| `perfil` | Criar/editar e consultar o próprio perfil (`GET`/`PUT /perfil/me`) e ver o de outro usuário (`GET /usuarios/{id}/perfil`) |
 | `moderacao` | Tabelas `denuncia`, `acao_moderacao` e `restricao_usuario` e repositories prontos; endpoints pendentes do contrato |
 | `discussoes`, `filtro`, `materiais`, `enquetes`, `busca`, `notificacoes`, `mensagens` | Previstos na AD-3, ainda sem pacote. A primeira história de cada um cria `<modulo>/` no formato acima, com `package-info.java` |
 
