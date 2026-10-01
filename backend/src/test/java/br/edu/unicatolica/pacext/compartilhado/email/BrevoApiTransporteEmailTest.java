@@ -1,5 +1,6 @@
 package br.edu.unicatolica.pacext.compartilhado.email;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -15,6 +16,8 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 /** Testa o contrato HTTP com a Brevo contra um servidor local que imita a API. */
 class BrevoApiTransporteEmailTest {
@@ -72,11 +75,37 @@ class BrevoApiTransporteEmailTest {
     }
 
     @Test
-    void falhaQuandoABrevoRecusa() {
-        statusResposta = 401;
+    void omiteNomeDoDestinatarioQuandoNuloOuEmBranco() throws IOException {
+        transporte.enviar(new MensagemEmail("ana@catolicasc.edu.br", null, "Assunto", "Texto"));
+        assertTrue(objectMapper.readTree(corpoRecebido.get()).at("/to/0/name").isMissingNode());
+
+        transporte.enviar(new MensagemEmail("ana@catolicasc.edu.br", "  ", "Assunto", "Texto"));
+        assertTrue(objectMapper.readTree(corpoRecebido.get()).at("/to/0/name").isMissingNode());
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = {200, 299})
+    void aceitaQualquerStatus2xx(int status) {
+        statusResposta = status;
+
+        assertDoesNotThrow(() -> transporte.enviar(MENSAGEM));
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = {300, 401, 500})
+    void falhaQuandoABrevoRecusa(int status) {
+        statusResposta = status;
 
         IllegalStateException erro = assertThrows(IllegalStateException.class, () -> transporte.enviar(MENSAGEM));
-        assertTrue(erro.getMessage().contains("HTTP 401"));
+        assertTrue(erro.getMessage().contains("HTTP " + status));
+    }
+
+    @Test
+    void falhaQuandoABrevoEstaInacessivel() {
+        servidor.stop(0);
+
+        IllegalStateException erro = assertThrows(IllegalStateException.class, () -> transporte.enviar(MENSAGEM));
+        assertTrue(erro.getMessage().contains("Falha de rede"));
     }
 
     @Test

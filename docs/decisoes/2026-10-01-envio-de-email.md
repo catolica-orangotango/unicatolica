@@ -37,7 +37,7 @@ flowchart LR
 | Cenário | Configuração (variáveis de ambiente) |
 |---|---|
 | Dev local (padrão) | nada: o e-mail aparece no log do `quarkus:dev` |
-| Produção no Render free | `EMAIL_TRANSPORTE=brevo-api`, `BREVO_API_KEY`, `MAIL_FROM` (verificado na Brevo) |
+| Produção no Render free | `EMAIL_TRANSPORTE=brevo-api` e `BREVO_API_KEY`. O remetente padrão (`luis98.pereira@catolicasc.edu.br`) precisa estar verificado na Brevo; `MAIL_FROM` só se for outro |
 | Hospedagem com SMTP liberado | `EMAIL_TRANSPORTE=smtp` + `QUARKUS_MAILER_HOST/PORT/USERNAME/PASSWORD/START_TLS` do provedor |
 | Domínio próprio no futuro | só muda `MAIL_FROM` (e o provedor, se quiser) |
 
@@ -47,3 +47,5 @@ Um provedor só com API HTTP (sem SMTP), numa hospedagem que bloqueia SMTP, é o
 
 - Remetente verificado sem domínio próprio tem entrega pior. Pode cair no spam, principalmente em caixas institucionais. Registrar um domínio resolve, sem mudar código.
 - A cota grátis (300/dia) cobre o PAC folgado. Testes locais não gastam cota, porque usam a mailbox mock.
+- O envio roda depois do commit, mas ainda dentro da requisição: uma Brevo lenta atrasa a resposta do cadastro em até 10 s (timeout do `BrevoApiTransporteEmail`), sem quebrá-la. Se incomodar, passar a entrega para assíncrona (`@ObservesAsync`).
+- Evolução prevista: o administrador grava e valida o remetente numa tela ([KAN-51](https://unicatolica-sc.atlassian.net/browse/KAN-51)). O desenho está na história; até lá o remetente vem de `MAIL_FROM`.

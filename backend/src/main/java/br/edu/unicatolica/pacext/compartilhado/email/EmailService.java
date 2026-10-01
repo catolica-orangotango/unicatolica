@@ -41,7 +41,7 @@ public class EmailService {
     void validarTransporte(@Observes StartupEvent evento) {
         if (!transportes.isResolvable()) {
             throw new IllegalStateException("app.email.transporte=" + transporteConfigurado
-                    + " não corresponde a nenhum transporte de e-mail (use smtp ou brevo-api)");
+                    + " não corresponde a nenhuma implementação de TransporteEmail");
         }
     }
 

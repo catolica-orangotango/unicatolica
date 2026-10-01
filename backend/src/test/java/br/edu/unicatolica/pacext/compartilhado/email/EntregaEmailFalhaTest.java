@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import jakarta.enterprise.inject.Instance;
@@ -26,5 +27,6 @@ class EntregaEmailFalhaTest {
 
         assertDoesNotThrow(() -> service.entregarAposCommit(
                 new MensagemEmail("ana@catolicasc.edu.br", "Ana", "Assunto", "Texto")));
+        verify(transporte).enviar(any());
     }
 }

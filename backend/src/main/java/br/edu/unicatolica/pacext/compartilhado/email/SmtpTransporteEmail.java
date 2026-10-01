@@ -8,8 +8,9 @@ import jakarta.inject.Inject;
 
 /**
  * Transporte SMTP via {@code quarkus-mailer}. Host, porta, credenciais e TLS vêm de
- * {@code QUARKUS_MAILER_*}; sem host, dev/{@code %test} usam a mailbox mock do Quarkus
- * (nada sai pela rede; visível no log e em {@code /q/dev-ui}).
+ * {@code QUARKUS_MAILER_*}; em dev/{@code %test} o Quarkus usa a mailbox mock por padrão
+ * ({@code QUARKUS_MAILER_MOCK=false} desliga; nada sai pela rede; visível no log e em
+ * {@code /q/dev-ui}).
  */
 @ApplicationScoped
 @LookupIfProperty(name = "app.email.transporte", stringValue = "smtp", lookupIfMissing = true)

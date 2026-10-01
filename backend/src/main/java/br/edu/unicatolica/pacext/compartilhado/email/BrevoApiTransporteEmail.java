@@ -42,7 +42,7 @@ public class BrevoApiTransporteEmail implements TransporteEmail {
     @ConfigProperty(name = "app.email.remetente-nome")
     String remetenteNome;
 
-    HttpClient httpClient = HttpClient.newBuilder().connectTimeout(TIMEOUT).build();
+    private final HttpClient httpClient =HttpClient.newBuilder().connectTimeout(TIMEOUT).build();
 
     @Override
     public void enviar(MensagemEmail mensagem) {
@@ -68,16 +68,21 @@ public class BrevoApiTransporteEmail implements TransporteEmail {
             throw new IllegalStateException("Envio pela API da Brevo interrompido", e);
         }
 
-        if (response.statusCode() / 100 != 2) {
+        int status = response.statusCode();
+        if (status < 200 || status >= 300) {
             throw new IllegalStateException(
-                    "API da Brevo recusou o envio: HTTP " + response.statusCode() + " " + response.body());
+                    "API da Brevo recusou o envio: HTTP " + status + " " + response.body());
         }
     }
 
     private String corpo(MensagemEmail mensagem) {
+        String nome = mensagem.nomeDestinatario();
+        Map<String, String> destinatario = nome == null || nome.isBlank()
+                ? Map.of("email", mensagem.destinatario())
+                : Map.of("email", mensagem.destinatario(), "name", nome);
         Map<String, Object> corpo = Map.of(
                 "sender", Map.of("name", remetenteNome, "email", remetente),
-                "to", List.of(Map.of("email", mensagem.destinatario(), "name", mensagem.nomeDestinatario())),
+                "to", List.of(destinatario),
                 "subject", mensagem.assunto(),
                 "textContent", mensagem.texto());
         try {

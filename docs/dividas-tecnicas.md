@@ -39,6 +39,6 @@ Problemas conhecidos que ainda não têm história nem PR. Quando um item virar 
 
 - **Hoje:** o código está pronto ([decisão de 01/10](decisoes/2026-10-01-envio-de-email.md)). O transporte é escolhido por `EMAIL_TRANSPORTE`, a Brevo é o provedor e o envio acontece depois do commit. Em produção ainda não há conta nem variáveis configuradas, então o e-mail continua sem chegar.
 - **Correção esperada:**
-  1. Criar a conta grátis na Brevo e verificar o endereço que será o remetente.
-  2. No Render, definir `EMAIL_TRANSPORTE=brevo-api`, `BREVO_API_KEY`, `MAIL_FROM` e `MAIL_FROM_NOME`.
+  1. Criar a conta grátis na Brevo e verificar o remetente padrão `luis98.pereira@catolicasc.edu.br` (ou outro, definido em `MAIL_FROM`).
+  2. No Render, definir `EMAIL_TRANSPORTE=brevo-api` e `BREVO_API_KEY`.
   3. Cadastrar um usuário de teste em produção e conferir se o e-mail chega (e se não cai no spam do domínio institucional).
