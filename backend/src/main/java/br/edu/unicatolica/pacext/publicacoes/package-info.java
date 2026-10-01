@@ -8,6 +8,8 @@
  * {@code web}, {@code aplicacao}, {@code dominio}. Implementa criar postagem (Story 3.1,
  * {@code POST /comunidades/{id}/publicacoes}) e o feed da comunidade (Story 3.2,
  * {@code GET /comunidades/{id}/publicacoes}); existência da comunidade e "só membro publica"
- * (RF27.1) vêm de {@code comunidades.ComunidadeConsulta}. Ainda não publica interface na raiz.</p>
+ * (RF27.1) vêm de {@code comunidades.ComunidadeConsulta}. Publica {@link PublicacaoModeracao}:
+ * a Moderação lê a postagem denunciada e a oculta/restaura (Story 12.5, RF78/RF78.1) pela
+ * coluna {@code situacao}; postagem oculta sai do feed.</p>
  */
 package br.edu.unicatolica.pacext.publicacoes;

@@ -36,16 +36,19 @@ class ModeracaoRepositoryTest {
     @Test
     @TestTransaction
     void filaPendenteTrazMaisAntigaPrimeiroESemEscalonadas() {
+        // Outras suítes (ModeracaoFluxoTest) deixam denúncias commitadas: compara só as deste teste.
+        long pendentesAntes = denunciaRepository.contarPendentes();
         Instant agora = Instant.now();
         Denuncia nova = denuncia(500_001L, DENUNCIANTE, agora);
         Denuncia antiga = denuncia(500_002L, DENUNCIANTE, agora.minusSeconds(60));
         Denuncia escalonada = denuncia(500_003L, DENUNCIANTE, agora.minusSeconds(120));
         escalonar(escalonada);
 
-        List<Denuncia> fila = denunciaRepository.listarPendentes(0, 10);
+        List<Long> deste = List.of(nova.id, antiga.id, escalonada.id);
+        List<Denuncia> fila = denunciaRepository.listarPendentes(0, 100);
 
-        assertEquals(List.of(antiga.id, nova.id), fila.stream().map(d -> d.id).toList());
-        assertEquals(2, denunciaRepository.contarPendentes());
+        assertEquals(List.of(antiga.id, nova.id), fila.stream().map(d -> d.id).filter(deste::contains).toList());
+        assertEquals(pendentesAntes + 2, denunciaRepository.contarPendentes());
         assertEquals(List.of(escalonada.id),
                 denunciaRepository.listarEscalonadasPara(MODERADOR_NEUTRO).stream().map(d -> d.id).toList());
     }

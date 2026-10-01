@@ -17,13 +17,28 @@ public class DenunciaRepository implements PanacheRepository<Denuncia> {
 
     /** Fila geral (Story 12.4, RF77) — pendentes, mais antiga primeiro. Escalonadas não entram (RF80.2). */
     public List<Denuncia> listarPendentes(int pagina, int tamanho) {
-        return find("situacao = ?1 order by criadoEm, id", SituacaoDenuncia.PENDENTE)
+        return listarPorSituacao(SituacaoDenuncia.PENDENTE, pagina, tamanho);
+    }
+
+    public long contarPendentes() {
+        return contarPorSituacao(SituacaoDenuncia.PENDENTE);
+    }
+
+    /** Fila filtrada por situação (Story 12.4), mais antiga primeiro; id desempata. */
+    public List<Denuncia> listarPorSituacao(SituacaoDenuncia situacao, int pagina, int tamanho) {
+        return find("situacao = ?1 order by criadoEm, id", situacao)
                 .page(Page.of(pagina, tamanho))
                 .list();
     }
 
-    public long contarPendentes() {
-        return count("situacao = ?1", SituacaoDenuncia.PENDENTE);
+    public long contarPorSituacao(SituacaoDenuncia situacao) {
+        return count("situacao = ?1", situacao);
+    }
+
+    /** Denúncias pendentes do mesmo conteúdo — ocultar resolve todas de uma vez (Story 12.5). */
+    public List<Denuncia> listarPendentesDoConteudo(TipoConteudo tipoConteudo, Long conteudoId) {
+        return list("tipoConteudo = ?1 and conteudoId = ?2 and situacao = ?3 order by criadoEm, id",
+                tipoConteudo, conteudoId, SituacaoDenuncia.PENDENTE);
     }
 
     /** Fila do moderador neutro (Story 12.8, RF80.1). */

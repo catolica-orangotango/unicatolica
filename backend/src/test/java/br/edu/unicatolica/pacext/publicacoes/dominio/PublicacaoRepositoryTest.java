@@ -11,7 +11,7 @@ import java.time.Instant;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 
-/** Prova contra o Postgres real que a migration {@code publicacoes-001} e o feed da comunidade funcionam. */
+/** Prova contra o Postgres real que as migrations {@code publicacoes-001/002} e o feed da comunidade funcionam. */
 @QuarkusTest
 class PublicacaoRepositoryTest {
 
@@ -48,6 +48,29 @@ class PublicacaoRepositoryTest {
         List<Publicacao> segundaPagina = repository.listarPorComunidade(COMUNIDADE, 1, 2);
 
         assertEquals(List.of("post 0"), segundaPagina.stream().map(p -> p.conteudo).toList());
+    }
+
+    @Test
+    @TestTransaction
+    void feedNaoTrazNemContaPostagemOculta() {
+        Instant agora = Instant.now();
+        Publicacao visivel = persistir(COMUNIDADE, "visível", agora.minusSeconds(60));
+        Publicacao oculta = persistir(COMUNIDADE, "oculta", agora);
+        oculta.situacao = SituacaoPublicacao.OCULTA;
+        repository.flush();
+
+        assertEquals(List.of(visivel.id), repository.listarPorComunidade(COMUNIDADE, 0, 10).stream().map(p -> p.id).toList());
+        assertEquals(1, repository.contarPorComunidade(COMUNIDADE));
+        assertEquals(List.of(oculta.id), repository.buscarPorIds(List.of(oculta.id)).stream().map(p -> p.id).toList());
+    }
+
+    @Test
+    @TestTransaction
+    void postagemNovaNasceVisivel() {
+        Publicacao publicacao = persistir(COMUNIDADE, "nova", Instant.now());
+        repository.getEntityManager().refresh(publicacao);
+
+        assertEquals(SituacaoPublicacao.VISIVEL, publicacao.situacao);
     }
 
     @Test

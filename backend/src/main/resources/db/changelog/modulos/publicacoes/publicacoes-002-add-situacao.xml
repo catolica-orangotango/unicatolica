@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Situação da postagem (Story 12.5, RF78/RF78.1): OCULTA sai do feed mas é preservada, e
+    volta a VISIVEL ao ser restaurada. Quem muda é a Moderação, pela interface pública
+    publicacoes.PublicacaoModeracao — nunca escrevendo nesta tabela (AD-3). REMOVIDA entra
+    com a Story 12.6.
+-->
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="publicacoes-002-add-situacao" author="pacext">
+        <addColumn tableName="publicacao">
+            <column name="situacao" type="VARCHAR(20)" defaultValue="VISIVEL">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+        <sql>ALTER TABLE publicacao ADD CONSTRAINT ck_publicacao_situacao CHECK (situacao IN ('VISIVEL', 'OCULTA'))</sql>
+        <rollback>
+            <sql>ALTER TABLE publicacao DROP CONSTRAINT ck_publicacao_situacao</sql>
+            <dropColumn tableName="publicacao" columnName="situacao"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>
