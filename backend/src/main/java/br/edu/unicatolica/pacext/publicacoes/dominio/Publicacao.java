@@ -2,6 +2,8 @@ package br.edu.unicatolica.pacext.publicacoes.dominio;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -34,4 +36,8 @@ public class Publicacao {
 
     @Column(name = "atualizado_em")
     public Instant atualizadoEm;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "situacao", nullable = false, length = 20)
+    public SituacaoPublicacao situacao = SituacaoPublicacao.VISIVEL;
 }
