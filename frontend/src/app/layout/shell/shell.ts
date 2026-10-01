@@ -2,6 +2,7 @@ import { Component, ElementRef, computed, inject, signal, viewChild } from '@ang
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AuthService } from '../../core/auth/auth.service';
 import { ComunidadesService } from '../../features/comunidades/comunidades.service';
+import { ContadorDenuncias } from '../../features/moderacao/contador-denuncias/contador-denuncias';
 
 /** Um item da navegação global. `path === null` = item ainda sem rota (inerte). */
 interface NavItem {
@@ -11,13 +12,15 @@ interface NavItem {
   privileged?: boolean;
   /** Só true no item "Suas comunidades" — expande a lista dinâmica logo abaixo dele. */
   expandeComunidades?: boolean;
+  /** Só true em "Denúncias" — mostra o contador de pendentes (UJ-2, passo 1). */
+  contaDenuncias?: boolean;
 }
 
 /**
  * Itens da sidebar, na ordem exata da tabela "Navegação global" de
  * EXPERIENCE.md: Denúncias e Solicitações de fixação ficam entre "Criar
  * enquete" e "Suas comunidades", e só aparecem para MODERADOR / ADMINISTRADOR.
- * "Início" e "Descobrir comunidades" (Epic 2) têm rota; o resto entra
+ * "Início", "Descobrir comunidades" (Epic 2) e "Denúncias" (Epic 12) têm rota; o resto entra
  * conforme cada epic aterrissa. "Suas comunidades" não vira rota própria —
  * é só o cabeçalho da lista dinâmica (ver {@link Shell.minhasComunidades}).
  */
@@ -27,7 +30,7 @@ const NAV_ITENS: readonly NavItem[] = [
   { label: 'Mensagens', path: null },
   { label: 'Notificações', path: null },
   { label: 'Criar enquete', path: null },
-  { label: 'Denúncias', path: null, privileged: true },
+  { label: 'Denúncias', path: '/moderacao/denuncias', privileged: true, contaDenuncias: true },
   { label: 'Solicitações de fixação', path: null, privileged: true },
   { label: 'Suas comunidades', path: null, expandeComunidades: true },
   { label: 'Descobrir comunidades', path: '/comunidades' },
@@ -35,7 +38,7 @@ const NAV_ITENS: readonly NavItem[] = [
 
 @Component({
   selector: 'app-shell',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive],
+  imports: [ContadorDenuncias, RouterOutlet, RouterLink, RouterLinkActive],
   templateUrl: './shell.html',
   styleUrl: './shell.scss',
   host: {

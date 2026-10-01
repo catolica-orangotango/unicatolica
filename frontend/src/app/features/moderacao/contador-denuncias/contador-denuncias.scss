@@ -1,0 +1,11 @@
+// Pílula grená do contador (key-denuncias.html), à direita do rótulo "Denúncias".
+:host {
+  margin-left: auto;
+}
+
+.contador {
+  border-radius: var(--uc-radius-full);
+  padding: 0 calc(var(--uc-space-unit) * 2);
+  background: var(--uc-color-maroon);
+  color: var(--uc-color-surface);
+}

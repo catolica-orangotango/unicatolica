@@ -350,6 +350,43 @@ describe('Shell', () => {
     expect(navSpy).toHaveBeenCalledWith('/login');
     expect(avatarBtn(f).getAttribute('aria-expanded')).toBe('false');
   });
+  describe('Denúncias (Epic 12)', () => {
+    function linkDenuncias(f: ComponentFixture<Shell>): HTMLAnchorElement {
+      return [...f.nativeElement.querySelectorAll('a.shell__nav-item')].find((a) =>
+        (a.textContent ?? '').includes('Denúncias'),
+      ) as HTMLAnchorElement;
+    }
+
+    it('moderador: "Denúncias" leva à fila e mostra o contador de pendentes', async () => {
+      const f = await montar(tokenComPerfis(['MODERADOR']));
+      const httpMock = TestBed.inject(HttpTestingController);
+
+      const req = httpMock.expectOne((r) => r.url === `${API_BASE_URL}/moderacao/denuncias`);
+      expect(req.request.params.get('situacao')).toBe('PENDENTE');
+      req.flush({ content: [], page: 0, size: 1, totalElements: 3, totalPages: 3 });
+      f.detectChanges();
+
+      const link = linkDenuncias(f);
+      expect(link.getAttribute('href')).toBe('/moderacao/denuncias');
+      expect(link.querySelector('.contador')?.textContent?.trim()).toBe('3');
+      expect(link.querySelector('.contador')?.getAttribute('aria-label')).toBe('3 pendentes');
+    });
+
+    it('moderador sem pendentes: sem contador', async () => {
+      const f = await montar(tokenComPerfis(['MODERADOR']));
+      TestBed.inject(HttpTestingController)
+        .expectOne((r) => r.url === `${API_BASE_URL}/moderacao/denuncias`)
+        .flush({ content: [], page: 0, size: 1, totalElements: 0, totalPages: 0 });
+      f.detectChanges();
+
+      expect(linkDenuncias(f).querySelector('.contador')).toBeNull();
+    });
+
+    it('aluno: não busca a fila de denúncias', async () => {
+      await montar(tokenComPerfis(['ALUNO']));
+
+      TestBed.inject(HttpTestingController).expectNone((r) => r.url === `${API_BASE_URL}/moderacao/denuncias`);
+    });
 });
 
 describe('shell.scss - contrato de estilo por token', () => {
@@ -376,5 +413,6 @@ describe('shell.scss - contrato de estilo por token', () => {
           !/^var\(\s*--uc-[a-z0-9-]+\s*\)$/.test(valor) && !/^(inherit|currentColor)$/i.test(valor),
       );
     expect(offenders).toEqual([]);
+  });
   });
 });

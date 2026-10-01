@@ -19,6 +19,14 @@ function post(id: number, conteudo: string, nome = 'Ana Lima'): Publicacao {
   };
 }
 
+/** JWT não assinado com `sub` — basta para `AuthService.usuarioId()`. */
+function tokenDoUsuario(id: number): string {
+  const parte = (valor: unknown) => btoa(JSON.stringify(valor)).replace(/=+$/, '');
+  return `${parte({ alg: 'none' })}.${parte({ sub: String(id), roles: ['ALUNO'] })}.x`;
+}
+
+const URL_DENUNCIA = `${API_BASE_URL}/denuncias`;
+
 function pagina(content: Publicacao[], page = 0, totalPages = 1) {
   return { content, page, size: 20, totalElements: content.length, totalPages };
 }
@@ -68,7 +76,10 @@ describe('FeedComunidade', () => {
     return el.querySelector('button[type="submit"]') as HTMLButtonElement;
   }
 
-  afterEach(() => httpMock.verify());
+  afterEach(() => {
+    httpMock.verify();
+    localStorage.clear();
+  });
 
   it('lista as postagens com autor, badge da comunidade, horário relativo e corpo', async () => {
     const el = await montar({ souMembro: true });
@@ -191,5 +202,101 @@ describe('FeedComunidade', () => {
     const conteudos = [...el.querySelectorAll('.feed__conteudo')].map((p) => p.textContent);
     expect(conteudos).toEqual(['terceira', 'segunda', 'primeira']);
     expect(el.querySelector('.feed__mais')).toBeNull();
+  });
+
+  describe('Denunciar (Story 12.1)', () => {
+    function botaoComTexto(el: HTMLElement, texto: string): HTMLButtonElement | undefined {
+      return [...el.querySelectorAll('button')].find((b) => b.textContent?.trim() === texto);
+    }
+
+    function digitarMotivo(el: HTMLElement, texto: string): void {
+      const campo = el.querySelector('.feed__denuncia textarea') as HTMLTextAreaElement;
+      campo.value = texto;
+      campo.dispatchEvent(new Event('input'));
+      fixture.detectChanges();
+    }
+
+    async function abrirDenunciaNoPrimeiroPost(): Promise<HTMLElement> {
+      const el = await montar({ souMembro: false });
+      requisicaoFeed().flush(pagina([post(1, 'Link suspeito')]));
+      fixture.detectChanges();
+      botaoComTexto(el, 'Denunciar')?.click();
+      fixture.detectChanges();
+      return el;
+    }
+
+    it('abre o formulário no card, envia o motivo e marca como denunciada', async () => {
+      const el = await abrirDenunciaNoPrimeiroPost();
+
+      expect(el.querySelector('.feed__denuncia label')?.textContent?.trim()).toBe('Por que esta postagem é imprópria?');
+      expect(botaoComTexto(el, 'Enviar denúncia')?.disabled).toBe(true);
+      digitarMotivo(el, '  Link de phishing  ');
+      botaoComTexto(el, 'Enviar denúncia')?.click();
+
+      const req = httpMock.expectOne(URL_DENUNCIA);
+      expect(req.request.body).toEqual({ tipoConteudo: 'PUBLICACAO', conteudoId: 1, motivo: 'Link de phishing' });
+      req.flush({ id: 9, criadoEm: new Date().toISOString() });
+      fixture.detectChanges();
+
+      expect(el.querySelector('.feed__denuncia')).toBeNull();
+      expect(el.querySelector('.feed__denunciada')?.textContent?.trim()).toBe('Denunciada');
+      expect(botaoComTexto(el, 'Denunciar')).toBeUndefined();
+      expect(toasts).toEqual(['Denúncia enviada. A moderação vai analisar.']);
+    });
+
+    it('cancelar fecha o formulário sem enviar', async () => {
+      const el = await abrirDenunciaNoPrimeiroPost();
+
+      botaoComTexto(el, 'Cancelar')?.click();
+      fixture.detectChanges();
+
+      expect(el.querySelector('.feed__denuncia')).toBeNull();
+      expect(botaoComTexto(el, 'Denunciar')).toBeTruthy();
+    });
+
+    it('já denunciada (409) marca como denunciada e avisa com a mensagem da API', async () => {
+      const el = await abrirDenunciaNoPrimeiroPost();
+      digitarMotivo(el, 'spam');
+      botaoComTexto(el, 'Enviar denúncia')?.click();
+
+      httpMock
+        .expectOne(URL_DENUNCIA)
+        .flush(
+          { error: { code: 'DENUNCIA_DUPLICADA', message: 'Você já denunciou este conteúdo.' } },
+          { status: 409, statusText: 'Conflict' },
+        );
+      fixture.detectChanges();
+
+      expect(el.querySelector('.feed__denunciada')).toBeTruthy();
+      expect(toasts).toEqual(['Você já denunciou este conteúdo.']);
+    });
+
+    it('postagem que sumiu (404) mostra a mensagem da API no formulário', async () => {
+      const el = await abrirDenunciaNoPrimeiroPost();
+      digitarMotivo(el, 'spam');
+      botaoComTexto(el, 'Enviar denúncia')?.click();
+
+      httpMock
+        .expectOne(URL_DENUNCIA)
+        .flush(
+          { error: { code: 'CONTEUDO_NAO_ENCONTRADO', message: 'Conteúdo não encontrado.' } },
+          { status: 404, statusText: 'Not Found' },
+        );
+      fixture.detectChanges();
+
+      expect(el.querySelector('.feed__denuncia [role="alert"]')?.textContent?.trim()).toBe('Conteúdo não encontrado.');
+    });
+
+    it('a própria postagem não mostra "Denunciar"', async () => {
+      // post(1) tem autor id 101.
+      localStorage.setItem('pacext.token', tokenDoUsuario(101));
+      const el = await montar({ souMembro: true });
+      requisicaoFeed().flush(pagina([post(1, 'minha'), post(2, 'de outra pessoa')]));
+      fixture.detectChanges();
+
+      const posts = el.querySelectorAll('.feed__post');
+      expect(botaoComTexto(posts[0] as HTMLElement, 'Denunciar')).toBeUndefined();
+      expect(botaoComTexto(posts[1] as HTMLElement, 'Denunciar')).toBeTruthy();
+    });
   });
 });
