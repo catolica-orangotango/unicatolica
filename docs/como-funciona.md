@@ -83,7 +83,7 @@ Implementação de interface da raiz e observer de evento de outro módulo ficam
 | `comunidades` | Auto-join por curso, criar comunidade aberta, entrar/sair, listar/filtrar |
 | `publicacoes` | Criar postagem e feed da comunidade (`POST`/`GET /comunidades/{id}/publicacoes`); tela no feed de `/comunidades/:id`. Postagem oculta pela Moderação sai do feed |
 | `perfil` | Criar/editar e consultar o próprio perfil (`GET`/`PUT /perfil/me`, tela `/perfil`) e ver o de outro usuário (`GET /usuarios/{id}/perfil`, tela `/usuarios/:id`, aberta pelo autor da postagem) |
-| `moderacao` | Denunciar postagem (`POST /denuncias`), fila e análise do moderador sem identidade do denunciante (`GET /moderacao/denuncias[/{id}]`), ocultar/restaurar/descartar (`POST /moderacao/denuncias/{id}/ocultacao\|restauracao\|descarte`), só perfil `MODERADOR`; oculta/restaura a postagem por `publicacoes.PublicacaoModeracao`. Sem tela ainda; remover, restringir e escalonar pendentes |
+| `moderacao` | Denunciar postagem (`POST /denuncias`), fila e análise do moderador sem identidade do denunciante (`GET /moderacao/denuncias[/{id}]`), ocultar/restaurar/descartar (`POST /moderacao/denuncias/{id}/ocultacao\|restauracao\|descarte`), só perfil `MODERADOR`; oculta/restaura a postagem por `publicacoes.PublicacaoModeracao`. Telas: "Denunciar" no card da postagem e fila `/moderacao/denuncias` (menu "Denúncias" com contador, só MODERADOR). Remover, restringir e escalonar pendentes |
 | `discussoes`, `filtro`, `materiais`, `enquetes`, `busca`, `notificacoes`, `mensagens` | Previstos na AD-3, ainda sem pacote. A primeira história de cada um cria `<modulo>/` no formato acima, com `package-info.java` |
 
 ## 4. As regras que mantêm os módulos separados

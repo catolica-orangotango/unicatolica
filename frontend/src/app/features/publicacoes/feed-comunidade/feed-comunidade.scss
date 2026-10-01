@@ -170,3 +170,33 @@
 .feed__mais:disabled {
   cursor: not-allowed;
 }
+
+// Denúncia (Story 12.1): ação discreta no rodapé do card; o formulário abre no
+// lugar e reaproveita .feed__texto/.feed__rodape-caixa da caixa de postar.
+.feed__rodape-post {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: calc(var(--uc-space-unit) * 2.5);
+}
+
+.feed__acao {
+  border: 0;
+  background: transparent;
+  padding: var(--uc-space-unit) calc(var(--uc-space-unit) * 2);
+  color: var(--uc-color-ink-faint);
+  cursor: pointer;
+}
+
+.feed__acao:hover {
+  text-decoration: underline;
+}
+
+.feed__denunciada {
+  color: var(--uc-color-ink-faint);
+}
+
+.feed__denuncia {
+  margin-top: calc(var(--uc-space-unit) * 3);
+  padding-top: calc(var(--uc-space-unit) * 3);
+  border-top: 1px solid var(--uc-color-border);
+}

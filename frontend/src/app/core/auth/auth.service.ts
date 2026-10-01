@@ -91,6 +91,17 @@ export class AuthService {
   }
 
   /**
+   * Id do usuário autenticado, da claim `sub`. `null` sem token ou com `sub` não
+   * numérico. Só serve para decisões de tela (ex.: esconder "Denunciar" na própria
+   * postagem) — quem barra de verdade é o backend.
+   */
+  usuarioId(): number | null {
+    const sub = this.decodificarPayloadJwt()?.['sub'];
+    const id = typeof sub === 'string' && /^\d+$/.test(sub) ? Number(sub) : NaN;
+    return Number.isSafeInteger(id) ? id : null;
+  }
+
+  /**
    * Decodifica só o segmento de payload do JWT armazenado. Base64url -> base64,
    * decodificação UTF-8-safe (para claims com caracteres multibyte não quebrarem
    * o `JSON.parse`) e parse. Retorna `null` em qualquer erro.

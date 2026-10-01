@@ -21,7 +21,10 @@
               [routerLinkActiveOptions]="{ exact: true }"
               #rla="routerLinkActive"
               [attr.aria-current]="rla.isActive ? 'page' : null"
-              >{{ item.label }}</a
+              >{{ item.label }}
+              @if (item.contaDenuncias) {
+                <app-contador-denuncias />
+              }</a
             >
           } @else {
             <span class="shell__nav-item shell__nav-item--inert" aria-disabled="true">{{

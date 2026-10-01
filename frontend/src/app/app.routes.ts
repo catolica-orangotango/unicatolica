@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './core/auth/auth.guard';
+import { moderadorGuard } from './core/auth/moderador.guard';
 
 export const routes: Routes = [
   { path: '', pathMatch: 'full', redirectTo: 'login' },
@@ -43,6 +44,13 @@ export const routes: Routes = [
         path: 'usuarios/:id',
         loadComponent: () =>
           import('./features/perfil/perfil-usuario/perfil-usuario').then((m) => m.PerfilUsuario),
+      },
+      {
+        // Fila de denúncias do moderador (Stories 12.4/12.5) — URL do mockup key-denuncias.
+        path: 'moderacao/denuncias',
+        canActivate: [moderadorGuard],
+        loadComponent: () =>
+          import('./features/moderacao/fila-denuncias/fila-denuncias').then((m) => m.FilaDenuncias),
       },
       {
         // Mesmo padrão de "Home" pra qualquer comunidade — curso ou aberta (ver

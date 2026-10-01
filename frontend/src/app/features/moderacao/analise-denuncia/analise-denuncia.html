@@ -1,0 +1,65 @@
+@let d = denuncia();
+<h2 id="analise-titulo" class="uc-text-question analise__titulo">Denúncia #{{ d.id }}</h2>
+@if (d.conteudo.comunidadeId !== null) {
+  <a class="uc-text-meta analise__link" [routerLink]="['/comunidades', d.conteudo.comunidadeId]">Ver comunidade</a>
+}
+
+<p class="uc-text-meta analise__privacidade">A identidade de quem denunciou não é compartilhada com você.</p>
+
+<div class="analise__conteudo" [class.analise__conteudo--oculto]="d.conteudo.situacao === 'OCULTO'">
+  <div class="uc-text-meta analise__autor-linha">
+    <span class="analise__avatar" aria-hidden="true">{{ iniciais(d.conteudo.autor.nome) }}</span>
+    <span>
+      Postagem de
+      <a class="analise__autor" [routerLink]="['/usuarios', d.conteudo.autor.id]">{{ d.conteudo.autor.nome }}</a>
+      · <time [attr.datetime]="d.conteudo.criadoEm">{{ tempoRelativo(d.conteudo.criadoEm) }}</time>
+    </span>
+    @if (d.conteudo.situacao === 'OCULTO') {
+      <span class="analise__selo">Oculta</span>
+    }
+  </div>
+  <p class="uc-text-body analise__texto">{{ d.conteudo.texto }}</p>
+</div>
+
+<h3 class="uc-text-meta analise__rotulo">Motivo da denúncia</h3>
+<p class="uc-text-body analise__texto analise__motivo">{{ d.motivo }}</p>
+
+@if (d.situacao === 'PENDENTE') {
+  <label class="uc-text-meta analise__rotulo" for="analise-motivo">Motivo da decisão</label>
+  <textarea
+    id="analise-motivo"
+    class="uc-text-body analise__campo"
+    name="motivo"
+    rows="3"
+    placeholder="Obrigatório para ocultar: é o que o autor vai receber. Opcional para descartar."
+    [ngModel]="motivo()"
+    (ngModelChange)="motivo.set($event)"
+    [disabled]="enviando()"
+  ></textarea>
+  <div class="analise__acoes">
+    <button type="button" uc-button [disabled]="!podeOcultar()" (click)="confirmarOcultacao()">
+      {{ enviando() ? 'Enviando…' : 'Ocultar postagem' }}
+    </button>
+    <button type="button" class="uc-text-meta analise__secundario" [disabled]="!podeDescartar()" (click)="confirmarDescarte()">
+      Descartar denúncia
+    </button>
+  </div>
+} @else if (d.conteudo.situacao === 'OCULTO') {
+  <div class="analise__acoes">
+    <button type="button" uc-button [disabled]="enviando()" (click)="restaurar.emit()">
+      {{ enviando() ? 'Enviando…' : 'Restaurar postagem' }}
+    </button>
+  </div>
+} @else {
+  <p class="uc-text-meta analise__fim">
+    {{ d.situacao === 'DESCARTADA' ? 'Denúncia descartada' : 'Denúncia resolvida' }}
+    @if (d.resolvidaEm; as quando) {
+      <time [attr.datetime]="quando">{{ tempoRelativo(quando) }}</time>
+    }
+    — a postagem está visível no feed.
+  </p>
+}
+
+@if (erro(); as mensagem) {
+  <p class="uc-text-meta analise__erro" role="alert">{{ mensagem }}</p>
+}

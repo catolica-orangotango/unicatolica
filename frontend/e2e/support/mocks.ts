@@ -234,3 +234,97 @@ export function mockPerfilDeUsuario(page: Page, perfil: PerfilMock): Promise<voi
     JSON.stringify(perfil),
   );
 }
+
+/** Denúncia no formato de `Denuncia` do `openapi.yaml` — sem campo do denunciante (RF77.1). */
+export interface DenunciaMock {
+  id: number;
+  conteudo: {
+    tipo: 'PUBLICACAO';
+    id: number;
+    texto: string;
+    autor: { id: number; nome: string; curso: string | null };
+    comunidadeId: number | null;
+    criadoEm: string;
+    situacao: 'VISIVEL' | 'OCULTO';
+  };
+  motivo: string;
+  situacao: 'PENDENTE' | 'RESOLVIDA' | 'DESCARTADA';
+  criadoEm: string;
+  resolvidaEm: string | null;
+}
+
+function json(status: number, body: unknown) {
+  return { status, headers: { ...CORS, 'content-type': 'application/json' }, body: JSON.stringify(body) };
+}
+
+/**
+ * Fila do moderador (Stories 12.4/12.5) com estado em memória: `GET /moderacao/denuncias`
+ * filtra por `situacao` e pagina; ocultar resolve as pendentes da mesma postagem,
+ * restaurar volta a postagem a VISIVEL, descartar encerra só a denúncia — como o backend.
+ * Registrar depois de `mockFeedOk`.
+ */
+export async function mockModeracao(page: Page, iniciais: DenunciaMock[]): Promise<DenunciaMock[]> {
+  const denuncias = iniciais.map((d) => ({ ...d, conteudo: { ...d.conteudo } }));
+  await page.route(
+    (url) => ehApi(url) && url.pathname.startsWith('/moderacao/denuncias'),
+    (route) => {
+      const request = route.request();
+      if (request.method() === 'OPTIONS') {
+        return route.fulfill({ status: 204, headers: CORS });
+      }
+      const url = new URL(request.url());
+      const acao = /^\/moderacao\/denuncias\/(\d+)\/(ocultacao|restauracao|descarte)$/.exec(url.pathname);
+      if (request.method() === 'POST' && acao) {
+        const alvo = denuncias.find((d) => d.id === Number(acao[1]));
+        if (!alvo) {
+          return route.fulfill(json(404, { error: { code: 'DENUNCIA_NAO_ENCONTRADA', message: 'Denúncia não encontrada.' } }));
+        }
+        const agora = new Date().toISOString();
+        if (acao[2] === 'ocultacao') {
+          for (const d of denuncias.filter((x) => x.conteudo.id === alvo.conteudo.id)) {
+            d.conteudo.situacao = 'OCULTO';
+            if (d.situacao === 'PENDENTE') {
+              d.situacao = 'RESOLVIDA';
+              d.resolvidaEm = agora;
+            }
+          }
+        } else if (acao[2] === 'restauracao') {
+          denuncias.filter((x) => x.conteudo.id === alvo.conteudo.id).forEach((d) => (d.conteudo.situacao = 'VISIVEL'));
+        } else {
+          alvo.situacao = 'DESCARTADA';
+          alvo.resolvidaEm = agora;
+        }
+        return route.fulfill(json(200, alvo));
+      }
+      const situacao = url.searchParams.get('situacao') ?? 'PENDENTE';
+      const tamanho = Number(url.searchParams.get('tamanho') ?? '20');
+      const filtradas = denuncias.filter((d) => d.situacao === situacao);
+      return route.fulfill(
+        json(200, {
+          content: filtradas.slice(0, tamanho),
+          page: 0,
+          size: tamanho,
+          totalElements: filtradas.length,
+          totalPages: Math.ceil(filtradas.length / tamanho),
+        }),
+      );
+    },
+  );
+  return denuncias;
+}
+
+/** `POST /denuncias` (Story 12.1) -> 201. Devolve os corpos recebidos, para o teste conferir. */
+export async function mockDenunciar(page: Page): Promise<unknown[]> {
+  const recebidas: unknown[] = [];
+  await page.route(
+    (url) => ehApi(url) && url.pathname === '/denuncias',
+    (route) => {
+      if (route.request().method() === 'OPTIONS') {
+        return route.fulfill({ status: 204, headers: CORS });
+      }
+      recebidas.push(route.request().postDataJSON());
+      return route.fulfill(json(201, { id: 900 + recebidas.length, criadoEm: new Date().toISOString() }));
+    },
+  );
+  return recebidas;
+}

@@ -1,0 +1,71 @@
+<div class="fila">
+  <header class="fila__cabecalho">
+    <h1 class="uc-text-greeting fila__titulo">Denúncias</h1>
+    <div class="fila__filtros" role="group" aria-label="Filtrar denúncias">
+      @for (filtro of filtros; track filtro.situacao) {
+        <button
+          type="button"
+          class="uc-text-meta fila__filtro"
+          [class.fila__filtro--ativo]="situacao() === filtro.situacao"
+          [attr.aria-pressed]="situacao() === filtro.situacao"
+          (click)="filtrar(filtro.situacao)"
+        >
+          {{ filtro.rotulo }}
+        </button>
+      }
+    </div>
+  </header>
+
+  @if (carregando()) {
+    <p class="uc-text-body fila__estado">Carregando denúncias…</p>
+  } @else if (erroFila(); as mensagem) {
+    <p class="uc-text-body fila__estado fila__estado--erro" role="alert">{{ mensagem }}</p>
+  } @else if (denuncias().length === 0) {
+    <p class="uc-text-body fila__estado">
+      {{ situacao() === 'PENDENTE' ? 'Nenhuma denúncia pendente. Tudo em ordem por aqui.' : 'Nenhuma denúncia nesta lista.' }}
+    </p>
+  } @else {
+    <div class="fila__corpo">
+      <section class="fila__lista-area" aria-label="Fila de denúncias">
+        <ul class="fila__lista">
+          @for (denuncia of denuncias(); track denuncia.id) {
+            <li>
+              <button
+                type="button"
+                class="fila__item"
+                [class.fila__item--selecionado]="denuncia.id === selecionadaId()"
+                [attr.aria-current]="denuncia.id === selecionadaId() ? 'true' : null"
+                (click)="selecionar(denuncia)"
+              >
+                <span class="uc-text-label-caps fila__item-motivo">{{ denuncia.motivo }}</span>
+                <span class="uc-text-meta fila__item-trecho">“{{ denuncia.conteudo.texto }}”</span>
+                <time class="uc-text-meta fila__item-horario" [attr.datetime]="denuncia.criadoEm">{{
+                  tempoRelativo(denuncia.criadoEm)
+                }}</time>
+              </button>
+            </li>
+          }
+        </ul>
+        @if (temMais()) {
+          <button type="button" class="uc-text-meta fila__mais" [disabled]="carregandoMais()" (click)="carregarMais()">
+            {{ carregandoMais() ? 'Carregando…' : 'Ver mais denúncias' }}
+          </button>
+        }
+      </section>
+
+      @if (selecionada(); as denuncia) {
+        <app-analise-denuncia
+          class="fila__detalhe"
+          role="region"
+          aria-labelledby="analise-titulo"
+          [denuncia]="denuncia"
+          [enviando]="enviando()"
+          [erro]="erroAcao()"
+          (ocultar)="ocultar(denuncia, $event)"
+          (descartar)="descartar(denuncia, $event)"
+          (restaurar)="restaurar(denuncia)"
+        />
+      }
+    </div>
+  }
+</div>

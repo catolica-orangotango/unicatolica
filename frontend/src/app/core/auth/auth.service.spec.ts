@@ -171,4 +171,29 @@ describe('AuthService', () => {
       expect(service.perfis()).toEqual([]);
     });
   });
+
+  describe('usuarioId()', () => {
+    it('le o id numerico da claim sub', () => {
+      localStorage.setItem('pacext.token', jwtComPayload({ sub: '42', [JWT_ROLES_CLAIM]: ['ALUNO'] }));
+
+      expect(service.usuarioId()).toBe(42);
+    });
+
+    it('retorna null quando sub nao e numerico', () => {
+      localStorage.setItem('pacext.token', jwtComPayload({ sub: 'e2e-user' }));
+
+      expect(service.usuarioId()).toBeNull();
+    });
+
+    it('retorna null sem sub, sem token ou com token malformado', () => {
+      localStorage.setItem('pacext.token', jwtComPayload({}));
+      expect(service.usuarioId()).toBeNull();
+
+      localStorage.setItem('pacext.token', 'isto-nao-e-um-jwt');
+      expect(service.usuarioId()).toBeNull();
+
+      localStorage.clear();
+      expect(service.usuarioId()).toBeNull();
+    });
+  });
 });

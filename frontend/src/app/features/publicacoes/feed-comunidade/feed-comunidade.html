@@ -68,6 +68,44 @@
               </div>
             </div>
             <p class="feed__conteudo">{{ publicacao.conteudo }}</p>
+            @if (publicacao.autor.id !== usuarioId) {
+              @if (denunciandoId() === publicacao.id) {
+                <form class="feed__denuncia" (ngSubmit)="enviarDenuncia()">
+                  <label class="feed__rotulo" [attr.for]="'denuncia-' + publicacao.id"
+                    >Por que esta postagem é imprópria?</label
+                  >
+                  <textarea
+                    [id]="'denuncia-' + publicacao.id"
+                    class="feed__texto"
+                    name="motivo"
+                    rows="2"
+                    placeholder="Quem analisar não vai saber que foi você."
+                    [ngModel]="motivoDenuncia()"
+                    (ngModelChange)="motivoDenuncia.set($event)"
+                    [disabled]="enviandoDenuncia()"
+                  ></textarea>
+                  <div class="feed__rodape-caixa">
+                    <button type="button" class="uc-text-meta feed__acao" [disabled]="enviandoDenuncia()" (click)="cancelarDenuncia()">
+                      Cancelar
+                    </button>
+                    <button type="submit" uc-button [disabled]="!podeDenunciar()">
+                      {{ enviandoDenuncia() ? 'Enviando…' : 'Enviar denúncia' }}
+                    </button>
+                  </div>
+                  @if (erroDenuncia(); as mensagem) {
+                    <p class="feed__erro" role="alert">{{ mensagem }}</p>
+                  }
+                </form>
+              } @else {
+                <div class="feed__rodape-post">
+                  @if (denunciadas().has(publicacao.id)) {
+                    <span class="uc-text-meta feed__denunciada">Denunciada</span>
+                  } @else {
+                    <button type="button" class="uc-text-meta feed__acao" (click)="abrirDenuncia(publicacao.id)">Denunciar</button>
+                  }
+                </div>
+              }
+            }
           </uc-card>
         </li>
       } @empty {
