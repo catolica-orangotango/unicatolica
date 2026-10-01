@@ -7,7 +7,7 @@ Problemas conhecidos que ainda não têm história nem PR. Quando um item virar 
 | DT-1 | Cadastro sem campo de confirmação de senha | Aberta |
 | DT-2 | Cadastro sem validação de senha segura | Aberta |
 | DT-3 | Lista de cursos ainda não é mantida pelo administrador | KAN-44 |
-| DT-4 | E-mail de confirmação do cadastro não chega ao usuário | Aberta |
+| DT-4 | E-mail de confirmação do cadastro não chega ao usuário | Código pronto; falta configurar a Brevo no Render |
 
 ## DT-1. Cadastro sem campo de confirmação de senha
 
@@ -37,12 +37,8 @@ Problemas conhecidos que ainda não têm história nem PR. Quando um item virar 
 
 ## DT-4. E-mail de confirmação do cadastro não chega ao usuário
 
-- **Hoje:** o `CadastroService` chama `EmailService.enviarConfirmacaoCadastro`, mas não há SMTP configurado.
-  - Em dev e teste, o Quarkus usa uma caixa de e-mail simulada: a mensagem só aparece no log do `quarkus:dev`.
-  - Em produção, não existe `quarkus.mailer.host` nem credencial no `.env.example`.
-  - Sem o e-mail, o usuário não recebe o link `/confirmar-email?token=...` e não consegue fazer o primeiro login.
+- **Hoje:** o código está pronto ([decisão de 01/10](decisoes/2026-10-01-envio-de-email.md)). O transporte é escolhido por `EMAIL_TRANSPORTE`, a Brevo é o provedor e o envio acontece depois do commit. Em produção ainda não há conta nem variáveis configuradas, então o e-mail continua sem chegar.
 - **Correção esperada:**
-  1. Escolher um provedor SMTP (conta institucional ou serviço transacional).
-  2. Configurar `%prod.quarkus.mailer.*` via variáveis de ambiente e documentar essas variáveis no `.env.example`.
-  3. Decidir o que acontece se o envio falhar: hoje o envio é síncrono, dentro da transação do cadastro.
-  4. Tirar a menção a "ver deferred-work.md" do `application.properties`.
+  1. Criar a conta grátis na Brevo e verificar o endereço que será o remetente.
+  2. No Render, definir `EMAIL_TRANSPORTE=brevo-api`, `BREVO_API_KEY`, `MAIL_FROM` e `MAIL_FROM_NOME`.
+  3. Cadastrar um usuário de teste em produção e conferir se o e-mail chega (e se não cai no spam do domínio institucional).
