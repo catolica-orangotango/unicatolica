@@ -371,6 +371,8 @@ paths:
         Qualquer usuário autenticado lê o feed, membro ou não (Story 2.5 — não-membro
         vê o feed com a interação bloqueada; quem decide o bloqueio é o souMembro de
         GET /comunidades/{id}). Ordem: criadoEm decrescente, id decrescente no empate.
+        Postagem ocultada pela Moderação (Story 12.5, RF78) não aparece nem conta em
+        totalElements; volta ao ser restaurada (RF78.1).
       parameters:
         - name: id
           in: path
@@ -504,7 +506,227 @@ paths:
         '404':
           $ref: '#/components/responses/NaoEncontrado'
 
+  /denuncias:
+    post:
+      operationId: denunciarConteudo
+      summary: Denuncia um conteúdo impróprio, informando o motivo (Story 12.1, RF75, RF76)
+      tags: [Moderacao]
+      description: >
+        Qualquer usuário autenticado que consegue ver o conteúdo pode denunciá-lo — no caso
+        da postagem, qualquer um, já que o feed é aberto (Story 2.5). O denunciante é o
+        usuário autenticado; ele fica guardado só para barrar denúncia repetida e nunca
+        aparece para o moderador (RF77.1). Por enquanto só postagem: comentário (Epic 5) e
+        enquete (Epic 8) entram no enum quando os módulos existirem. Triagem pelo agente
+        de IA (Story 12.2) e aviso ao moderador (Notificações) ficam fora deste corte.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DenunciaRequest'
+      responses:
+        '201':
+          description: Denúncia registrada.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DenunciaRegistrada'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        # 403: denunciar o próprio conteúdo. 404: conteúdo não existe ou está oculto.
+        # 409: o mesmo usuário já denunciou este conteúdo (DENUNCIA_DUPLICADA).
+        # 422: motivo ausente, em branco ou acima do limite.
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Conflito'
+        '422':
+          $ref: '#/components/responses/ErroValidacao'
+
+  /moderacao/denuncias:
+    get:
+      operationId: listarDenuncias
+      summary: Fila de denúncias do moderador, mais antiga primeiro, paginado (Story 12.4, RF77)
+      tags: [Moderacao]
+      description: >
+        Só perfil MODERADOR (RF13); o administrador de plataforma entra quando o papel
+        existir (KAN-44). Nenhum item tem campo com a identidade do denunciante (RF77.1).
+        Uma denúncia por item: o mesmo conteúdo denunciado por várias pessoas aparece
+        várias vezes, cada uma com o próprio motivo. Ordem: criadoEm crescente, id
+        crescente no empate. Com situacao=RESOLVIDA o moderador acha o conteúdo oculto
+        para restaurar (RF78.1).
+      parameters:
+        - name: situacao
+          in: query
+          description: Filtra pela situação da denúncia.
+          schema:
+            type: string
+            enum: [PENDENTE, RESOLVIDA, DESCARTADA]
+            default: PENDENTE
+        - name: pagina
+          in: query
+          schema:
+            type: integer
+            format: int32
+            minimum: 0
+            default: 0
+        - name: tamanho
+          in: query
+          schema:
+            type: integer
+            format: int32
+            minimum: 1
+            maximum: 100
+            default: 20
+      responses:
+        '200':
+          description: Página de denúncias.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DenunciaPageResponse'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+
+  /moderacao/denuncias/{id}:
+    get:
+      operationId: obterDenuncia
+      summary: Denúncia para a tela de análise, sem identidade do denunciante (Story 12.4, RF77.1)
+      tags: [Moderacao]
+      description: Só perfil MODERADOR.
+      parameters:
+        - $ref: '#/components/parameters/DenunciaId'
+      responses:
+        '200':
+          description: Denúncia com o conteúdo denunciado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Denuncia'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+
+  /moderacao/denuncias/{id}/ocultacao:
+    post:
+      operationId: ocultarConteudoDenunciado
+      summary: Oculta o conteúdo denunciado, de forma reversível (Story 12.5, RF78)
+      tags: [Moderacao]
+      description: >
+        Só perfil MODERADOR. O conteúdo sai do feed e para de aceitar interações (inclusive
+        novas denúncias), mas é preservado (RF78). Resolve esta denúncia e todas as outras
+        pendentes do mesmo conteúdo. Registra a ação em acao_moderacao e no log de
+        auditoria (AD-11). O motivo é o que o autor recebe (RF78.2, sem identidade do
+        denunciante); a notificação em si depende do módulo Notificações e fica fora deste
+        corte.
+      parameters:
+        - $ref: '#/components/parameters/DenunciaId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OcultacaoRequest'
+      responses:
+        '200':
+          description: Conteúdo ocultado; denúncia resolvida.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Denuncia'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        # 409: denúncia não está PENDENTE (SITUACAO_INVALIDA). 422: motivo ausente, em branco ou acima do limite.
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Conflito'
+        '422':
+          $ref: '#/components/responses/ErroValidacao'
+
+  /moderacao/denuncias/{id}/restauracao:
+    post:
+      operationId: restaurarConteudoDenunciado
+      summary: Restaura o conteúdo ocultado a partir desta denúncia (Story 12.5, RF78.1)
+      tags: [Moderacao]
+      description: >
+        Qualquer MODERADOR, não só quem ocultou (RF78.1). O conteúdo volta a aparecer
+        normalmente no feed. A denúncia continua RESOLVIDA; a restauração fica no histórico
+        (acao_moderacao) e no log de auditoria. Sem corpo.
+      parameters:
+        - $ref: '#/components/parameters/DenunciaId'
+      responses:
+        '200':
+          description: Conteúdo restaurado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Denuncia'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        # 409: o conteúdo desta denúncia não está oculto (SITUACAO_INVALIDA).
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Conflito'
+
+  /moderacao/denuncias/{id}/descarte:
+    post:
+      operationId: descartarDenuncia
+      summary: Encerra a denúncia sem ação sobre o conteúdo (Story 12.4)
+      tags: [Moderacao]
+      description: >
+        Só perfil MODERADOR. Para quando o moderador não vê violação: a denúncia sai da
+        fila de pendentes e o conteúdo não muda. Só esta denúncia — as outras do mesmo
+        conteúdo seguem na fila, cada uma com o próprio motivo. Motivo opcional, só para o
+        histórico; ninguém é notificado.
+      parameters:
+        - $ref: '#/components/parameters/DenunciaId'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DescarteRequest'
+      responses:
+        '200':
+          description: Denúncia descartada.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Denuncia'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        # 409: denúncia não está PENDENTE (SITUACAO_INVALIDA).
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Conflito'
+
 components:
+  parameters:
+    DenunciaId:
+      name: id
+      in: path
+      required: true
+      description: Id da denúncia.
+      schema:
+        type: integer
+        format: int64
+
   schemas:
     LoginRequest:
       type: object
@@ -781,6 +1003,128 @@ components:
           type: array
           items:
             type: string
+
+    TipoConteudo:
+      type: string
+      enum: [PUBLICACAO]
+      description: >
+        Tipo do conteúdo denunciado; o id aponta para o módulo dono (AD-3). COMENTARIO e
+        ENQUETE entram quando Discussões e Enquetes existirem.
+
+    DenunciaRequest:
+      type: object
+      required: [tipoConteudo, conteudoId, motivo]
+      properties:
+        tipoConteudo:
+          $ref: '#/components/schemas/TipoConteudo'
+        conteudoId:
+          type: integer
+          format: int64
+          description: Id da postagem denunciada.
+        motivo:
+          type: string
+          minLength: 1
+          maxLength: 1000
+          description: RF76 — texto só com espaços é rejeitado com 422.
+
+    DenunciaRegistrada:
+      type: object
+      description: Confirmação para o denunciante — não expõe a fila nem a situação da análise.
+      required: [id, criadoEm]
+      properties:
+        id:
+          type: integer
+          format: int64
+        criadoEm:
+          type: string
+          format: date-time
+
+    ConteudoDenunciado:
+      type: object
+      description: >
+        O conteúdo como está hoje no módulo dono, com o autor vindo de
+        identidade.UsuarioConsulta (AD-3).
+      required: [tipo, id, texto, autor, criadoEm, situacao]
+      properties:
+        tipo:
+          $ref: '#/components/schemas/TipoConteudo'
+        id:
+          type: integer
+          format: int64
+        texto:
+          type: string
+          description: Para postagem, o conteudo dela.
+        autor:
+          $ref: '#/components/schemas/AutorResumo'
+        comunidadeId:
+          type: [integer, 'null']
+          format: int64
+          description: Comunidade onde a postagem está.
+        criadoEm:
+          type: string
+          format: date-time
+        situacao:
+          type: string
+          enum: [VISIVEL, OCULTO]
+          description: >
+            OCULTO depois de ocultado (RF78); decide se a tela mostra "Restaurar". REMOVIDO
+            entra com a Story 12.6.
+
+    Denuncia:
+      type: object
+      description: >
+        Denúncia vista pelo moderador. Não existe, de propósito, nenhum campo com a
+        identidade do denunciante (RF77.1) — nem id, nem nome.
+      required: [id, conteudo, motivo, situacao, criadoEm]
+      properties:
+        id:
+          type: integer
+          format: int64
+        conteudo:
+          $ref: '#/components/schemas/ConteudoDenunciado'
+        motivo:
+          type: string
+          description: Motivo informado pelo denunciante.
+        situacao:
+          type: string
+          enum: [PENDENTE, RESOLVIDA, DESCARTADA]
+          description: >
+            RESOLVIDA quando houve ação sobre o conteúdo (ocultar); DESCARTADA quando o
+            moderador não viu violação. ESCALONADA entra com a Story 12.8.
+        criadoEm:
+          type: string
+          format: date-time
+        resolvidaEm:
+          type: [string, 'null']
+          format: date-time
+
+    DenunciaPageResponse:
+      allOf:
+        - $ref: '#/components/schemas/PageResponse'
+        - type: object
+          properties:
+            content:
+              type: array
+              items:
+                $ref: '#/components/schemas/Denuncia'
+
+    OcultacaoRequest:
+      type: object
+      required: [motivo]
+      properties:
+        motivo:
+          type: string
+          minLength: 1
+          maxLength: 1000
+          description: RF78.2 — é o que o autor recebe. Texto só com espaços é rejeitado com 422.
+
+    DescarteRequest:
+      type: object
+      properties:
+        motivo:
+          type: string
+          maxLength: 1000
+          description: Opcional, só para o histórico.
 
     Erro:
       type: object
