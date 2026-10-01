@@ -54,8 +54,8 @@ flowchart LR
 
 | PR | Conteúdo | Lacuna | Estado |
 |---|---|---|---|
-| T0 | Esta decisão; regra acima no checklist de `como-funciona.md` e no `AGENTS.md`; exemplo de `@QuarkusTest` corrigido para `AutenticacaoFluxoTest` | 8 | Em andamento |
-| T1 | `@QuarkusTest` de `/comunidades` | 1 | Pendente |
+| T0 | Esta decisão; regra acima no checklist de `como-funciona.md` e no `AGENTS.md`; exemplo de `@QuarkusTest` corrigido para `AutenticacaoFluxoTest` | 8 | Concluído (#32) |
+| T1 | `@QuarkusTest` de `/comunidades` | 1 | Em andamento |
 | T2 | `@QuarkusTest` da confirmação de e-mail e do fluxo cadastro → login | 2 | Pendente |
 | T3 | Job E2E no CI (mockado) e job E2E com backend real | 3 | Pendente |
 | T4 | Validação de toda resposta dos `@QuarkusTest` contra o `openapi.yaml` | 4 | Pendente |
@@ -70,12 +70,12 @@ Uma classe `ComunidadeFluxoTest` (`@QuarkusTest`, rest-assured) em `comunidades/
 | Rota | Casos |
 |---|---|
 | todas | 401 sem token; 401 com token malformado |
-| `POST /comunidades` | 201 com o criador como membro; 409 `COMUNIDADE_NOME_EM_USO`; 400 `CAMPO_OBRIGATORIO` (nome em branco) |
-| `GET /comunidades` | Paginação (`pagina`, `tamanho`, `totalElements`); filtro por `tipo` e `nome`; `tipo` inválido |
+| `POST /comunidades` | 201 com o criador como membro; 409 `COMUNIDADE_NOME_EM_USO`; 422 `CAMPO_OBRIGATORIO` (nome em branco) |
+| `GET /comunidades` | Paginação (`pagina`, `tamanho`, `totalElements`); filtro por `tipo` e `nome`; 422 `TIPO_INVALIDO` (o 422 entrou no contrato junto com o T1) |
 | `GET /comunidades/minhas` | Traz a comunidade de curso do auto-join e a recém-criada |
 | `GET /comunidades/{id}` | 200 com `souMembro` verdadeiro e falso; 404 `COMUNIDADE_NAO_ENCONTRADA` |
 | `POST /comunidades/{id}/membros` | 201; 409 `JA_E_MEMBRO`; 404; 403 `COMUNIDADE_TIPO_INVALIDO` (comunidade de curso) |
-| `DELETE /comunidades/{id}/membros/me` | 204, e a comunidade some de `/minhas`; 403 na comunidade de curso |
+| `DELETE /comunidades/{id}/membros/me` | 204, e a comunidade some de `/minhas`. Sair da comunidade de curso hoje dá 204 e o aluno não consegue voltar: fica fora do T1 até a decisão do KAN-73 |
 
 - **Helper de teste:** `UsuarioDeTeste` (em `src/test/.../compartilhado/`) cadastra um usuário com e-mail único, confirma o e-mail direto pelo `UsuarioRepository` e devolve o token de login. T2 reaproveita o helper.
 - **Isolamento:** os `@QuarkusTest` compartilham o banco e as chamadas HTTP não voltam atrás com `@TestTransaction`. Cada teste usa nomes e e-mails com sufixo aleatório e nunca conta registros globais, só os que ele mesmo criou.
