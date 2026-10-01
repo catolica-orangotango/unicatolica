@@ -233,6 +233,8 @@ paths:
                 $ref: '#/components/schemas/ComunidadePageResponse'
         '401':
           $ref: '#/components/responses/NaoAutenticado'
+        '422':
+          $ref: '#/components/responses/ErroValidacao'
 
   /comunidades/minhas:
     get:

@@ -8,6 +8,7 @@ import static io.restassured.RestAssured.given;
 import static io.restassured.http.ContentType.JSON;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import br.edu.unicatolica.pacext.compartilhado.UsuarioDeTeste;
 import br.edu.unicatolica.pacext.identidade.UsuarioCadastrado;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -77,14 +78,8 @@ class CadastroAutoJoinFluxoTest {
     private static io.restassured.response.Response cadastrar(String email, String nomeDoCurso) {
         return given().contentType(JSON)
                 .body(Map.of("nome", "Aluno Teste", "email", email, "senha", "Senha123!",
-                        "cursoId", idDoCurso(nomeDoCurso), "dataNascimento", "2000-01-01"))
+                        "cursoId", UsuarioDeTeste.idDoCurso(nomeDoCurso), "dataNascimento", "2000-01-01"))
                 .when().post("/auth/registro");
-    }
-
-    private static Integer idDoCurso(String nome) {
-        return given().when().get("/cursos")
-                .then().statusCode(200)
-                .extract().path("find { it.nome == '" + nome + "' }.id");
     }
 
     private static String emailUnico() {
