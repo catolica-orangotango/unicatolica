@@ -92,6 +92,86 @@
   cursor: default;
 }
 
+// -- Notificações: item da sidebar + painel (Story 10.1) ----------------
+.shell__nav-item-wrapper {
+  position: relative;
+}
+
+.shell__nav-item--button {
+  justify-content: space-between;
+  // layout-literal: ocupa a largura do item de nav, nao e uma dimensao de design
+  width: 100%;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  cursor: pointer;
+}
+
+.shell__nav-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: calc(var(--uc-space-unit) * 4.5);
+  height: calc(var(--uc-space-unit) * 4.5);
+  padding: 0 calc(var(--uc-space-unit) * 1.5);
+  border-radius: var(--uc-radius-full);
+  background: var(--uc-color-error);
+  color: var(--uc-color-surface);
+  font-size: var(--uc-font-size-label-caps);
+  font-weight: var(--uc-font-weight-semibold);
+}
+
+.shell__notificacoes-painel {
+  position: absolute;
+  // layout-literal: ancora logo abaixo do item (100% da altura dele), nao um espacamento
+  top: calc(100% + var(--uc-space-unit));
+  left: 0;
+  min-width: 280px; // layout-literal: ~280px de largura minima do painel (mesmo padrao do dropdown de conta)
+  max-height: 360px; // layout-literal: limite de altura antes de rolar - sem token de "altura de lista"
+  overflow-y: auto;
+  padding: calc(var(--uc-space-unit) / 2);
+  background: var(--uc-color-surface);
+  border: 1px solid var(--uc-color-border);
+  border-radius: var(--uc-radius-md);
+  box-shadow: var(--uc-shadow-overlay);
+  z-index: 1; // acima do resto da sidebar
+  animation: shell-menu-fade 150ms ease-out; // mesma animação do dropdown de conta
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shell__notificacoes-painel {
+    animation: none;
+  }
+}
+
+.shell__notificacao-item {
+  display: block;
+  // layout-literal: ocupa a largura do painel, nao e uma dimensao de design
+  width: 100%;
+  padding: calc(var(--uc-space-unit) * 2) calc(var(--uc-space-unit) * 3);
+  border: 0;
+  border-radius: var(--uc-radius-sm);
+  background: transparent;
+  color: var(--uc-color-ink);
+  font: inherit;
+  font-size: var(--uc-font-size-meta);
+  text-align: left;
+  cursor: pointer;
+}
+
+.shell__notificacao-item:hover {
+  background: var(--uc-color-orange-tint);
+}
+
+.shell__notificacao-item--nao-lida {
+  font-weight: var(--uc-font-weight-semibold);
+}
+
+.shell__notificacao-item--vazio {
+  color: var(--uc-color-ink-faint);
+  cursor: default;
+}
+
 // -- "Suas comunidades" dynamic sub-list (Epic 2) -----------------------
 // Deliberately NOT .shell__nav-item: it's a list of links to community
 // pages, not part of the fixed global nav IA above it.
@@ -234,7 +314,8 @@
 .shell__nav-item:focus-visible,
 .shell__comunidade-item:focus-visible,
 .shell__avatar:focus-visible,
-.shell__menu-item:focus-visible {
+.shell__menu-item:focus-visible,
+.shell__notificacao-item:focus-visible {
   outline: 2px solid var(--uc-color-maroon);
   outline-offset: 2px;
 }

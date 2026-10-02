@@ -3,6 +3,8 @@ package br.edu.unicatolica.pacext.perfil.aplicacao;
 import br.edu.unicatolica.pacext.compartilhado.erro.ApiException;
 import br.edu.unicatolica.pacext.identidade.DadosCadastrais;
 import br.edu.unicatolica.pacext.identidade.UsuarioCadastro;
+import br.edu.unicatolica.pacext.notificacoes.NotificacaoEmissor;
+import br.edu.unicatolica.pacext.notificacoes.TipoNotificacao;
 import br.edu.unicatolica.pacext.perfil.dominio.PerfilAcademico;
 import br.edu.unicatolica.pacext.perfil.dominio.PerfilAcademicoRepository;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -33,6 +35,9 @@ public class PerfilService {
 
     @Inject
     UsuarioCadastro usuarioCadastro;
+
+    @Inject
+    NotificacaoEmissor notificacaoEmissor;
 
     /** Story 4.2 (RF20) — sem perfil acadêmico ainda, devolve período nulo e interesses vazio. */
     public PerfilCompleto obter(Long usuarioId) {
@@ -69,6 +74,11 @@ public class PerfilService {
         perfil.interesses.addAll(interessesValidos);
         if (existente.isEmpty()) {
             perfilRepository.persist(perfil);
+        }
+        // Story 10.1: perfil completo (com interesses) encerra o aviso de onboarding, sem
+        // esperar o usuário abrir a lista de notificações para marcar como lida.
+        if (!perfil.interesses.isEmpty()) {
+            notificacaoEmissor.marcarComoLidaPorTipo(usuarioId, TipoNotificacao.ONBOARDING_PERFIL);
         }
         return montar(dados, Optional.of(perfil));
     }

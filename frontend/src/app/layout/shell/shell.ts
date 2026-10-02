@@ -3,6 +3,7 @@ import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/rou
 import { AuthService } from '../../core/auth/auth.service';
 import { ComunidadesService } from '../../features/comunidades/comunidades.service';
 import { ContadorDenuncias } from '../../features/moderacao/contador-denuncias/contador-denuncias';
+import { NotificacoesService } from '../../features/notificacoes/notificacoes.service';
 
 /** Um item da navegação global. `path === null` = item ainda sem rota (inerte). */
 interface NavItem {
@@ -14,6 +15,8 @@ interface NavItem {
   expandeComunidades?: boolean;
   /** Só true em "Denúncias" — mostra o contador de pendentes (UJ-2, passo 1). */
   contaDenuncias?: boolean;
+  /** Só true em "Notificações" — abre o painel (ver {@link Shell.alternarNotificacoes}) em vez de navegar. */
+  abrePainelNotificacoes?: boolean;
 }
 
 /**
@@ -28,7 +31,7 @@ const NAV_ITENS: readonly NavItem[] = [
   { label: 'Início', path: '/feed' },
   { label: 'Buscar', path: null },
   { label: 'Mensagens', path: null },
-  { label: 'Notificações', path: null },
+  { label: 'Notificações', path: null, abrePainelNotificacoes: true },
   { label: 'Criar enquete', path: null },
   { label: 'Denúncias', path: '/moderacao/denuncias', privileged: true, contaDenuncias: true },
   { label: 'Solicitações de fixação', path: null, privileged: true },
@@ -42,25 +45,37 @@ const NAV_ITENS: readonly NavItem[] = [
   templateUrl: './shell.html',
   styleUrl: './shell.scss',
   host: {
-    '(document:keydown.escape)': 'fecharMenu()',
-    '(document:click)': 'fecharMenu()',
+    '(document:keydown.escape)': 'fecharPaineis()',
+    '(document:click)': 'fecharPaineis()',
   },
 })
 export class Shell {
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
   private readonly comunidadesService = inject(ComunidadesService);
+  private readonly notificacoesService = inject(NotificacoesService);
 
   private readonly avatar = viewChild<ElementRef<HTMLButtonElement>>('avatar');
+  private readonly sininho = viewChild<ElementRef<HTMLButtonElement>>('sininho');
 
   protected readonly navItens = NAV_ITENS;
   protected readonly menuAberto = signal(false);
+  protected readonly notificacoesAbertas = signal(false);
   /**
    * "Suas comunidades" (Epic 2) — cache compartilhada do `ComunidadesService`
    * (ver lá): entrar/sair numa comunidade em qualquer tela atualiza isto aqui
    * também, sem precisar recarregar a página.
    */
   protected readonly minhasComunidades = this.comunidadesService.minhasComunidades;
+
+  /** Painel de notificações (Story 10.1) — mesma cache compartilhada do `NotificacoesService`. */
+  protected readonly notificacoes = this.notificacoesService.notificacoes;
+  protected readonly notificacoesNaoLidas = this.notificacoesService.naoLidas;
+  /** Nome acessível do botão de notificações — o badge visual é `aria-hidden`, então a contagem precisa estar aqui. */
+  protected readonly rotuloNotificacoes = computed(() => {
+    const naoLidas = this.notificacoesNaoLidas();
+    return naoLidas > 0 ? `Notificações (${naoLidas} não lidas)` : 'Notificações';
+  });
 
   /**
    * Derivado uma única vez (não é um método re-executado por item do `@for`).
@@ -75,26 +90,42 @@ export class Shell {
     // Best-effort: a sidebar não é o lugar de mostrar erro de rede — em caso de
     // falha a cache simplesmente fica vazia, sem travar o resto da navegação.
     this.comunidadesService.carregarMinhas().subscribe({ error: () => undefined });
+    this.notificacoesService.carregar().subscribe({ error: () => undefined });
   }
 
   protected alternarMenu(evento: Event): void {
     // Impede que o clique borbulhe até o listener `document:click` e feche o
     // menu no mesmo gesto que o abriu.
     evento.stopPropagation();
+    this.notificacoesAbertas.set(false);
     this.menuAberto.update((aberto) => !aberto);
   }
 
-  /**
-   * Fecha o dropdown e devolve o foco ao avatar. Caminho de Escape, clique
-   * fora e ativação de item - onde o foco precisa voltar para um lugar
-   * previsível.
-   */
-  protected fecharMenu(): void {
-    if (!this.menuAberto()) {
-      return;
-    }
+  /** Story 10.1 — abre/fecha o painel de notificações; recarrega ao abrir. */
+  protected alternarNotificacoes(evento: Event): void {
+    evento.stopPropagation();
     this.menuAberto.set(false);
-    this.avatar()?.nativeElement.focus();
+    const vaiAbrir = !this.notificacoesAbertas();
+    this.notificacoesAbertas.set(vaiAbrir);
+    if (vaiAbrir) {
+      this.notificacoesService.carregar().subscribe({ error: () => undefined });
+    }
+  }
+
+  /**
+   * Fecha os dois painéis (menu da conta e notificações) e devolve o foco ao
+   * botão que os abriu. Caminho de Escape, clique fora e ativação de item -
+   * onde o foco precisa voltar para um lugar previsível.
+   */
+  protected fecharPaineis(): void {
+    if (this.menuAberto()) {
+      this.menuAberto.set(false);
+      this.avatar()?.nativeElement.focus();
+    }
+    if (this.notificacoesAbertas()) {
+      this.notificacoesAbertas.set(false);
+      this.sininho()?.nativeElement.focus();
+    }
   }
 
   /**
@@ -111,14 +142,39 @@ export class Shell {
     this.menuAberto.set(false);
   }
 
+  /** Mesmo padrão de {@link aoSairFoco}, para o painel de notificações. */
+  protected aoSairFocoNotificacoes(evento: FocusEvent): void {
+    const painel = evento.currentTarget as HTMLElement;
+    const proximo = evento.relatedTarget as Node | null;
+    if (proximo && painel.contains(proximo)) {
+      return;
+    }
+    this.notificacoesAbertas.set(false);
+  }
+
+  /**
+   * Clique numa notificação do painel: marca como lida (best-effort — a UI já
+   * mostra otimisticamente, então uma falha de rede aqui não trava a
+   * navegação) e leva para a tela relacionada, se houver link.
+   */
+  protected aoClicarNotificacao(notificacao: { id: number; lida: boolean; link: string | null }): void {
+    if (!notificacao.lida) {
+      this.notificacoesService.marcarComoLida(notificacao.id).subscribe({ error: () => undefined });
+    }
+    this.notificacoesAbertas.set(false);
+    if (notificacao.link) {
+      this.router.navigateByUrl(notificacao.link).catch(() => {});
+    }
+  }
+
   /** Próprio perfil (Stories 4.1/4.2). */
   protected abrirPerfil(): void {
-    this.fecharMenu();
+    this.fecharPaineis();
     this.router.navigateByUrl('/perfil').catch(() => {});
   }
 
   protected sair(): void {
-    this.fecharMenu();
+    this.fecharPaineis();
     this.auth.logout();
     this.router.navigateByUrl('/login').catch(() => {});
   }

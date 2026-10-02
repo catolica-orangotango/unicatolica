@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Contador de logins do usuário — usado pelo gatilho da notificação de onboarding
+    progressivo (Epic 4, Story 4.3, RF20.1): a partir do 2º login, se o perfil academico
+    continuar incompleto, o módulo Perfil observa o evento identidade.LoginRealizado e
+    pede uma notificação a Notificações. Ver identidade.aplicacao.AuthService.
+-->
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="identidade-006-add-total-logins" author="pacext">
+        <addColumn tableName="usuario">
+            <column name="total_logins" type="INTEGER" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
+</databaseChangeLog>
