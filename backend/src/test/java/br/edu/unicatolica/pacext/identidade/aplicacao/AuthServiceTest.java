@@ -7,9 +7,11 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import br.edu.unicatolica.pacext.identidade.LoginRealizado;
 import br.edu.unicatolica.pacext.identidade.dominio.CredenciaisInvalidasException;
 import br.edu.unicatolica.pacext.identidade.dominio.EmailNaoConfirmadoException;
 import br.edu.unicatolica.pacext.identidade.dominio.PasswordHasher;
@@ -17,6 +19,7 @@ import br.edu.unicatolica.pacext.identidade.dominio.Usuario;
 import br.edu.unicatolica.pacext.identidade.dominio.UsuarioRepository;
 import br.edu.unicatolica.pacext.compartilhado.auditoria.AuditoriaService;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.enterprise.event.Event;
 import io.smallrye.jwt.auth.principal.DefaultJWTParser;
 import io.smallrye.jwt.auth.principal.JWTAuthContextInfo;
 import io.smallrye.jwt.util.KeyUtils;
@@ -46,6 +49,8 @@ class AuthServiceTest {
 
     private final UsuarioRepository usuarioRepository = mock(UsuarioRepository.class);
     private final AuditoriaService auditoriaService = mock(AuditoriaService.class);
+    @SuppressWarnings("unchecked")
+    private final Event<LoginRealizado> loginRealizado = mock(Event.class);
     private final AuthService authService = new AuthService();
 
     @BeforeAll
@@ -59,6 +64,7 @@ class AuthServiceTest {
         authService.usuarioRepository = usuarioRepository;
         authService.passwordHasher = new PasswordHasher();
         authService.auditoriaService = auditoriaService;
+        authService.loginRealizado = loginRealizado;
         authService.privateKey = privateKey;
         authService.issuer = ISSUER;
     }
@@ -117,6 +123,30 @@ class AuthServiceTest {
         authService.autenticar(usuario.email, "Senha123!");
 
         verify(auditoriaService).registrar(eq(42L), eq("identidade"), eq("LOGIN"), any());
+    }
+
+    @Test
+    void autenticarIncrementaTotalLoginsEDisparaLoginRealizadoParaAluno() {
+        Usuario usuario = usuarioConfirmado("Senha123!");
+        usuario.totalLogins = 1;
+        when(usuarioRepository.buscarPorEmail(usuario.email)).thenReturn(Optional.of(usuario));
+
+        authService.autenticar(usuario.email, "Senha123!");
+
+        assertEquals(2, usuario.totalLogins);
+        verify(loginRealizado).fire(new LoginRealizado(42L, 2));
+    }
+
+    @Test
+    void autenticarNaoDisparaLoginRealizadoParaModeradorOuAdministrador() {
+        Usuario usuario = usuarioConfirmado("Senha123!");
+        usuario.perfil = "MODERADOR";
+        when(usuarioRepository.buscarPorEmail(usuario.email)).thenReturn(Optional.of(usuario));
+
+        authService.autenticar(usuario.email, "Senha123!");
+
+        assertEquals(1, usuario.totalLogins);
+        verify(loginRealizado, never()).fire(any());
     }
 
     @Test

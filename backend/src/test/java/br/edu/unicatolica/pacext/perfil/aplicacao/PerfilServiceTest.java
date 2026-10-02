@@ -14,6 +14,8 @@ import static org.mockito.Mockito.when;
 import br.edu.unicatolica.pacext.compartilhado.erro.ApiException;
 import br.edu.unicatolica.pacext.identidade.DadosCadastrais;
 import br.edu.unicatolica.pacext.identidade.UsuarioCadastro;
+import br.edu.unicatolica.pacext.notificacoes.NotificacaoEmissor;
+import br.edu.unicatolica.pacext.notificacoes.TipoNotificacao;
 import br.edu.unicatolica.pacext.perfil.dominio.PerfilAcademico;
 import br.edu.unicatolica.pacext.perfil.dominio.PerfilAcademicoRepository;
 import java.util.ArrayList;
@@ -37,14 +39,17 @@ class PerfilServiceTest {
     private PerfilService service;
     private PerfilAcademicoRepository repository;
     private UsuarioCadastro usuarioCadastro;
+    private NotificacaoEmissor notificacaoEmissor;
 
     @BeforeEach
     void setUp() {
         service = new PerfilService();
         repository = mock(PerfilAcademicoRepository.class);
         usuarioCadastro = mock(UsuarioCadastro.class);
+        notificacaoEmissor = mock(NotificacaoEmissor.class);
         service.perfilRepository = repository;
         service.usuarioCadastro = usuarioCadastro;
+        service.notificacaoEmissor = notificacaoEmissor;
 
         when(usuarioCadastro.buscar(USUARIO_ID)).thenReturn(Optional.of(DADOS));
         when(usuarioCadastro.atualizarNomeECurso(any(), any(), any())).thenReturn(DADOS);
@@ -164,6 +169,20 @@ class PerfilServiceTest {
         assertThrows(ApiException.class, () -> service.salvar(USUARIO_ID, "Ana", CURSO_ID, 13, List.of()));
 
         verify(usuarioCadastro, never()).atualizarNomeECurso(any(), any(), any());
+    }
+
+    @Test
+    void salvarComInteresseMarcaAvisoDeOnboardingComoLido() {
+        service.salvar(USUARIO_ID, "Ana Lima", CURSO_ID, 3, List.of("Java"));
+
+        verify(notificacaoEmissor).marcarComoLidaPorTipo(USUARIO_ID, TipoNotificacao.ONBOARDING_PERFIL);
+    }
+
+    @Test
+    void salvarSemInteresseNaoMarcaAvisoDeOnboardingComoLido() {
+        service.salvar(USUARIO_ID, "Ana Lima", CURSO_ID, 3, List.of());
+
+        verify(notificacaoEmissor, never()).marcarComoLidaPorTipo(any(), any());
     }
 
     private static PerfilAcademico perfil(short periodo, String... interesses) {
