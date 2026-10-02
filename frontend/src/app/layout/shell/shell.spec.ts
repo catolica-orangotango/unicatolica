@@ -537,14 +537,16 @@ describe('Shell - painel de notificações (Story 10.1)', () => {
 
     (f.nativeElement.querySelector('.shell__avatar') as HTMLButtonElement).click();
     f.detectChanges();
-    expect(f.nativeElement.querySelector('[role="menu"]')).toBeTruthy();
+    expect(f.nativeElement.querySelector('#shell-menu')).toBeTruthy();
 
     sininhoBtn(f).click();
     f.detectChanges();
     flushNotificacoes(httpMock);
     f.detectChanges();
 
-    expect(f.nativeElement.querySelector('[role="menu"]')).toBeNull();
+    // #shell-menu (dropdown da conta), não [role="menu"] genérico - o painel de
+    // notificações também usa role="menu" e continua aberto aqui de propósito.
+    expect(f.nativeElement.querySelector('#shell-menu')).toBeNull();
     expect(f.nativeElement.querySelector('#shell-notificacoes')).toBeTruthy();
   });
 });
