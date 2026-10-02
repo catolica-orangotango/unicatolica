@@ -75,6 +75,14 @@ public class Usuario {
     @Column(name = "sessao_valida_desde")
     public Instant sessaoValidaDesde;
 
+    /**
+     * Quantas vezes este usuário já fez login (Story 4.3, RF20.1) — incrementado em
+     * {@code AuthService.autenticar}. Único consumidor hoje é o gatilho da notificação de
+     * onboarding progressivo, que dispara a partir do 2º login.
+     */
+    @Column(name = "total_logins", nullable = false)
+    public int totalLogins;
+
     @Column(name = "criado_em", nullable = false)
     public Instant criadoEm;
 

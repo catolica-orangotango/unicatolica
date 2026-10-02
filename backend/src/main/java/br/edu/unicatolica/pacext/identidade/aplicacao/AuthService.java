@@ -1,5 +1,6 @@
 package br.edu.unicatolica.pacext.identidade.aplicacao;
 
+import br.edu.unicatolica.pacext.identidade.LoginRealizado;
 import br.edu.unicatolica.pacext.identidade.dominio.CredenciaisInvalidasException;
 import br.edu.unicatolica.pacext.identidade.dominio.EmailNaoConfirmadoException;
 import br.edu.unicatolica.pacext.identidade.dominio.PasswordHasher;
@@ -8,6 +9,7 @@ import br.edu.unicatolica.pacext.identidade.dominio.UsuarioRepository;
 import br.edu.unicatolica.pacext.compartilhado.auditoria.AuditoriaService;
 import io.smallrye.jwt.build.Jwt;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.event.Event;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import java.security.PrivateKey;
@@ -37,6 +39,9 @@ public class AuthService {
     @Inject
     PrivateKey privateKey;
 
+    @Inject
+    Event<LoginRealizado> loginRealizado;
+
     @ConfigProperty(name = "mp.jwt.verify.issuer")
     String issuer;
 
@@ -49,7 +54,12 @@ public class AuthService {
      *         checagem de confirmação só acontece depois de validar a senha, de propósito:
      *         senha errada sempre cai em CredenciaisInvalidasException, mesmo para e-mail
      *         não confirmado — senão daria pra enumerar contas pendentes testando senhas.
+     *
+     *         <p>{@code @Transactional}: precisa de transação para persistir o incremento
+     *         de {@code totalLogins} (Story 4.3) e para o observer de {@link LoginRealizado}
+     *         rodar na mesma transação (mesmo padrão de {@code UsuarioCadastrado}).</p>
      */
+    @Transactional
     public String autenticar(String email, String senha) {
         Usuario usuario = buscarUsuarioComCredencialValida(email, senha);
 
@@ -68,6 +78,14 @@ public class AuthService {
                 .sign(privateKey);
 
         auditoriaService.registrar(usuario.id, "identidade", "LOGIN", "Login bem-sucedido.");
+
+        usuario.totalLogins++;
+        // Só ALUNO tem "perfil acadêmico" a completar (Story 4.3) — login de
+        // MODERADOR/ADMINISTRADOR não dispara o gatilho de onboarding.
+        if ("ALUNO".equals(usuario.perfil)) {
+            loginRealizado.fire(new LoginRealizado(usuario.id, usuario.totalLogins));
+        }
+
         return token;
     }
 

@@ -26,6 +26,51 @@
                 <app-contador-denuncias />
               }</a
             >
+          } @else if (item.abrePainelNotificacoes) {
+            <div class="shell__nav-item-wrapper">
+              <button
+                #sininho
+                type="button"
+                class="shell__nav-item shell__nav-item--button"
+                [attr.aria-label]="rotuloNotificacoes()"
+                aria-haspopup="menu"
+                aria-controls="shell-notificacoes"
+                [attr.aria-expanded]="notificacoesAbertas() ? 'true' : 'false'"
+                (click)="alternarNotificacoes($event)"
+              >
+                {{ item.label }}
+                @if (notificacoesNaoLidas() > 0) {
+                  <span class="shell__nav-badge" aria-hidden="true">{{ notificacoesNaoLidas() }}</span>
+                }
+              </button>
+
+              @if (notificacoesAbertas()) {
+                <div
+                  id="shell-notificacoes"
+                  class="shell__notificacoes-painel"
+                  role="menu"
+                  aria-label="Notificações"
+                  (click)="$event.stopPropagation()"
+                  (focusout)="aoSairFocoNotificacoes($event)"
+                >
+                  @for (notificacao of notificacoes(); track notificacao.id) {
+                    <button
+                      type="button"
+                      class="shell__notificacao-item"
+                      [class.shell__notificacao-item--nao-lida]="!notificacao.lida"
+                      role="menuitem"
+                      (click)="aoClicarNotificacao(notificacao)"
+                    >
+                      {{ notificacao.texto }}
+                    </button>
+                  } @empty {
+                    <p class="shell__notificacao-item shell__notificacao-item--vazio">
+                      Sem notificações por enquanto.
+                    </p>
+                  }
+                </div>
+              }
+            </div>
           } @else {
             <span class="shell__nav-item shell__nav-item--inert" aria-disabled="true">{{
               item.label
@@ -91,7 +136,7 @@
           class="shell__menu-item"
           role="menuitem"
           aria-disabled="true"
-          (click)="fecharMenu()"
+          (click)="fecharPaineis()"
         >
           Configurações
         </button>

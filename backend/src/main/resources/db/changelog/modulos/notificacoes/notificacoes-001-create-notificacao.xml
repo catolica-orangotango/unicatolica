@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Tabela notificacao — módulo Notificações (Epic 4/10, Story 10.1, RF20.1). Hoje o único
+    emissor é o gatilho de onboarding progressivo do Perfil Acadêmico, mas o desenho já é
+    genérico por tipo (TipoNotificacao) para os próximos épicos (ex.: resposta a postagem).
+    usuario_id é só o id, sem FK (AD-3).
+-->
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="notificacoes-001-create-notificacao" author="pacext">
+        <createTable tableName="notificacao">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="usuario_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="tipo" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="texto" type="TEXT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="link" type="VARCHAR(255)"/>
+            <column name="lida" type="BOOLEAN" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+            <column name="criado_em" type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <!-- Listagem "minhas notificações" (mais recentes primeiro) e o gatilho de onboarding, que
+             precisa checar/marcar não-lidas de um tipo específico para um usuário. -->
+        <createIndex indexName="idx_notificacao_usuario_criado_em" tableName="notificacao">
+            <column name="usuario_id"/>
+            <column name="criado_em" descending="true"/>
+        </createIndex>
+        <createIndex indexName="idx_notificacao_usuario_tipo_lida" tableName="notificacao">
+            <column name="usuario_id"/>
+            <column name="tipo"/>
+            <column name="lida"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>

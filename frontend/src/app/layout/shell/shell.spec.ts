@@ -387,6 +387,168 @@ describe('Shell', () => {
 
       TestBed.inject(HttpTestingController).expectNone((r) => r.url === `${API_BASE_URL}/moderacao/denuncias`);
     });
+  });
+});
+
+describe('Shell - painel de notificações (Story 10.1)', () => {
+  let fixture: ComponentFixture<Shell> | undefined;
+
+  async function montar(): Promise<{ f: ComponentFixture<Shell>; httpMock: HttpTestingController }> {
+    localStorage.clear();
+    localStorage.setItem(TOKEN_KEY, tokenComPerfis(['ALUNO']));
+
+    await TestBed.configureTestingModule({
+      imports: [Shell],
+      providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        provideRouter([
+          {
+            path: 'feed',
+            loadComponent: () => import('../../features/feed/feed').then((m) => m.Feed),
+          },
+          {
+            path: 'perfil',
+            loadComponent: () => import('../../features/perfil/meu-perfil/meu-perfil').then((m) => m.MeuPerfil),
+          },
+        ]),
+      ],
+    }).compileComponents();
+
+    const criado = TestBed.createComponent(Shell);
+    document.body.appendChild(criado.nativeElement);
+    criado.detectChanges();
+    await criado.whenStable();
+    criado.detectChanges();
+    fixture = criado;
+
+    const httpMock = TestBed.inject(HttpTestingController);
+    httpMock.match(`${API_BASE_URL}/comunidades/minhas`).forEach((req) => req.flush([]));
+    return { f: criado, httpMock };
+  }
+
+  function sininhoBtn(f: ComponentFixture<Shell>): HTMLButtonElement {
+    return f.nativeElement.querySelector('.shell__nav-item--button') as HTMLButtonElement;
+  }
+
+  function flushNotificacoes(
+    httpMock: HttpTestingController,
+    notificacoes: { id: number; tipo: string; texto: string; link: string | null; lida: boolean; criadoEm: string }[] = [],
+  ): void {
+    for (const req of httpMock.match(`${API_BASE_URL}/notificacoes/me?pagina=0&tamanho=20`)) {
+      req.flush({ content: notificacoes, page: 0, size: 20, totalElements: notificacoes.length, totalPages: 1 });
+    }
+  }
+
+  afterEach(() => {
+    fixture?.nativeElement.remove();
+    fixture = undefined;
+    localStorage.clear();
+    vi.restoreAllMocks();
+  });
+
+  it('sem não lidas: sem badge e aria-label é só "Notificações"', async () => {
+    const { f, httpMock } = await montar();
+    flushNotificacoes(httpMock);
+    f.detectChanges();
+
+    const botao = sininhoBtn(f);
+    expect(botao.querySelector('.shell__nav-badge')).toBeNull();
+    expect(botao.getAttribute('aria-label')).toBe('Notificações');
+  });
+
+  it('com não lidas: mostra o badge e o aria-label inclui a contagem', async () => {
+    const { f, httpMock } = await montar();
+    flushNotificacoes(httpMock, [
+      { id: 1, tipo: 'ONBOARDING_PERFIL', texto: 'Complete seu perfil', link: '/perfil', lida: false, criadoEm: '2026-09-30T12:00:00Z' },
+    ]);
+    f.detectChanges();
+
+    const botao = sininhoBtn(f);
+    expect(botao.querySelector('.shell__nav-badge')?.textContent?.trim()).toBe('1');
+    expect(botao.getAttribute('aria-label')).toBe('Notificações (1 não lidas)');
+  });
+
+  it('clicar no sininho abre o painel, recarrega e marca aria-expanded="true"', async () => {
+    const { f, httpMock } = await montar();
+    flushNotificacoes(httpMock);
+    f.detectChanges();
+
+    const botao = sininhoBtn(f);
+    expect(botao.getAttribute('aria-expanded')).toBe('false');
+    expect(f.nativeElement.querySelector('#shell-notificacoes')).toBeNull();
+
+    botao.click();
+    f.detectChanges();
+    flushNotificacoes(httpMock, [
+      { id: 1, tipo: 'ONBOARDING_PERFIL', texto: 'Complete seu perfil', link: '/perfil', lida: false, criadoEm: '2026-09-30T12:00:00Z' },
+    ]);
+    f.detectChanges();
+
+    expect(botao.getAttribute('aria-expanded')).toBe('true');
+    const painel = f.nativeElement.querySelector('#shell-notificacoes');
+    expect(painel).toBeTruthy();
+    expect(painel.textContent).toContain('Complete seu perfil');
+  });
+
+  it('painel vazio mostra "Sem notificações por enquanto."', async () => {
+    const { f, httpMock } = await montar();
+    flushNotificacoes(httpMock);
+    f.detectChanges();
+
+    sininhoBtn(f).click();
+    f.detectChanges();
+    flushNotificacoes(httpMock);
+    f.detectChanges();
+
+    expect(f.nativeElement.querySelector('.shell__notificacao-item--vazio')?.textContent?.trim()).toBe(
+      'Sem notificações por enquanto.',
+    );
+  });
+
+  it('clicar numa notificação não lida marca como lida, fecha o painel e navega para o link', async () => {
+    const { f, httpMock } = await montar();
+    flushNotificacoes(httpMock);
+    f.detectChanges();
+    const router = TestBed.inject(Router);
+    const navSpy = vi.spyOn(router, 'navigateByUrl').mockResolvedValue(true);
+
+    sininhoBtn(f).click();
+    f.detectChanges();
+    flushNotificacoes(httpMock, [
+      { id: 7, tipo: 'ONBOARDING_PERFIL', texto: 'Complete seu perfil', link: '/perfil', lida: false, criadoEm: '2026-09-30T12:00:00Z' },
+    ]);
+    f.detectChanges();
+
+    const item = f.nativeElement.querySelector('.shell__notificacao-item') as HTMLButtonElement;
+    item.click();
+    f.detectChanges();
+
+    httpMock.expectOne(`${API_BASE_URL}/notificacoes/7/lida`).flush(null);
+
+    expect(sininhoBtn(f).getAttribute('aria-expanded')).toBe('false');
+    expect(navSpy).toHaveBeenCalledWith('/perfil');
+  });
+
+  it('abrir o painel de notificações fecha o dropdown da conta', async () => {
+    const { f, httpMock } = await montar();
+    flushNotificacoes(httpMock);
+    f.detectChanges();
+
+    (f.nativeElement.querySelector('.shell__avatar') as HTMLButtonElement).click();
+    f.detectChanges();
+    expect(f.nativeElement.querySelector('#shell-menu')).toBeTruthy();
+
+    sininhoBtn(f).click();
+    f.detectChanges();
+    flushNotificacoes(httpMock);
+    f.detectChanges();
+
+    // #shell-menu (dropdown da conta), não [role="menu"] genérico - o painel de
+    // notificações também usa role="menu" e continua aberto aqui de propósito.
+    expect(f.nativeElement.querySelector('#shell-menu')).toBeNull();
+    expect(f.nativeElement.querySelector('#shell-notificacoes')).toBeTruthy();
+  });
 });
 
 describe('shell.scss - contrato de estilo por token', () => {
@@ -413,6 +575,5 @@ describe('shell.scss - contrato de estilo por token', () => {
           !/^var\(\s*--uc-[a-z0-9-]+\s*\)$/.test(valor) && !/^(inherit|currentColor)$/i.test(valor),
       );
     expect(offenders).toEqual([]);
-  });
   });
 });

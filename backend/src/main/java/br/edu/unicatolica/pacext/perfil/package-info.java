@@ -11,5 +11,11 @@
  * curso são gravados por {@code identidade.UsuarioCadastro}; a troca de curso refaz o
  * auto-join pelo evento {@code identidade.CursoDoUsuarioAlterado}. Ainda não publica
  * interface na raiz.</p>
+ *
+ * <p>Desde a Story 10.1 (RF20.1), também depende de {@code notificacoes.NotificacaoEmissor}:
+ * {@code aplicacao.NotificarPerfilIncompletoNoLogin} observa {@code identidade.LoginRealizado}
+ * e pede um aviso de onboarding a partir do 2º login sem interesses cadastrados;
+ * {@code PerfilService.salvar} marca esse aviso como lido assim que o perfil passa a ter
+ * pelo menos um interesse.</p>
  */
 package br.edu.unicatolica.pacext.perfil;
