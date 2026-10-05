@@ -21,9 +21,9 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
 /**
- * Endpoints do Epic 2 (Stories 2.2, 2.4, 2.5) — entrada rápida desta fatia (ver
- * docs/decisoes/2026-08-modelo-epico-2-comunidades.md); Stories 2.1 (endpoint de admin) e 2.6
- * (administração) ficam de fora, bloqueadas pelo papel ADMINISTRADOR de plataforma.
+ * Endpoints do Epic 2 (Stories 2.2, 2.4, 2.5, 2.6) — entrada rápida desta fatia (ver
+ * docs/decisoes/2026-08-modelo-epico-2-comunidades.md); Story 2.1 (endpoint de admin) fica de fora,
+ * bloqueada pelo papel ADMINISTRADOR de plataforma.
  */
 @Path("/comunidades")
 public class ComunidadeResource {

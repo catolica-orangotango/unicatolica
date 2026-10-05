@@ -31,7 +31,7 @@ import org.mockito.ArgumentCaptor;
 
 /**
  * Testa {@link ComunidadeService} isoladamente com Mockito — critérios das Stories 2.2,
- * 2.4 e 2.5. Entrada rápida desta fatia (ver docs/decisoes/2026-08-modelo-epico-2-comunidades.md).
+ * 2.4, 2.5 e 2.6. Entrada rápida desta fatia (ver docs/decisoes/2026-08-modelo-epico-2-comunidades.md).
  */
 class ComunidadeServiceTest {
 
@@ -295,6 +295,36 @@ class ComunidadeServiceTest {
         ApiException erro = assertThrows(ApiException.class, () -> service.removerMembro(USUARIO_ID, 1L, 7L));
 
         assertEquals("MEMBRO_NAO_ENCONTRADO", erro.getCode());
+    }
+
+    @Test
+    void administradorNaoRemoveOutroAdministrador() {
+        Comunidade comunidade = comunidadeAberta();
+        when(comunidadeRepository.buscarAtivaPorId(1L)).thenReturn(Optional.of(comunidade));
+        when(comunidadeMembroRepository.ehAdministrador(comunidade, USUARIO_ID)).thenReturn(true);
+        when(comunidadeMembroRepository.existeAssociacao(comunidade, 7L)).thenReturn(true);
+        when(comunidadeMembroRepository.ehAdministrador(comunidade, 7L)).thenReturn(true);
+
+        ApiException erro = assertThrows(ApiException.class, () -> service.removerMembro(USUARIO_ID, 1L, 7L));
+
+        assertEquals("ADMIN_NAO_PODE_SER_REMOVIDO", erro.getCode());
+        assertEquals(422, erro.getStatus());
+        verify(comunidadeMembroRepository, never()).removerAssociacao(any(), any());
+    }
+
+    @Test
+    void administradorNaoRemoveASiMesmo() {
+        Comunidade comunidade = comunidadeAberta();
+        when(comunidadeRepository.buscarAtivaPorId(1L)).thenReturn(Optional.of(comunidade));
+        when(comunidadeMembroRepository.ehAdministrador(comunidade, USUARIO_ID)).thenReturn(true);
+        when(comunidadeMembroRepository.existeAssociacao(comunidade, USUARIO_ID)).thenReturn(true);
+
+        ApiException erro = assertThrows(ApiException.class,
+                () -> service.removerMembro(USUARIO_ID, 1L, USUARIO_ID));
+
+        assertEquals("ADMIN_NAO_PODE_SER_REMOVIDO", erro.getCode());
+        assertEquals(422, erro.getStatus());
+        verify(comunidadeMembroRepository, never()).removerAssociacao(any(), any());
     }
 
     private Comunidade comunidadeAberta() {

@@ -80,7 +80,7 @@ Implementação de interface da raiz e observer de evento de outro módulo ficam
 | Módulo | Estado |
 |---|---|
 | `identidade` | Cadastro (curso escolhido de `GET /cursos`), confirmação de e-mail, login, logout, `GET /usuarios/me` e `/usuarios/{id}` |
-| `comunidades` | Auto-join por curso, criar comunidade aberta, entrar/sair, listar/filtrar |
+| `comunidades` | Auto-join por curso, criar comunidade aberta, entrar/sair, listar/filtrar. O administrador da comunidade remove membro (`DELETE /comunidades/{id}/membros/{usuarioId}`), edita nome/descrição (`PATCH /comunidades/{id}`) e exclui logicamente (`DELETE /comunidades/{id}`); comunidade excluída vira inexistente também para `ComunidadeConsulta` (Publicações responde 404) |
 | `publicacoes` | Criar postagem e feed da comunidade (`POST`/`GET /comunidades/{id}/publicacoes`); tela no feed de `/comunidades/:id`. Postagem oculta pela Moderação sai do feed |
 | `perfil` | Criar/editar e consultar o próprio perfil (`GET`/`PUT /perfil/me`, tela `/perfil`) e ver o de outro usuário (`GET /usuarios/{id}/perfil`, tela `/usuarios/:id`, aberta pelo autor da postagem) |
 | `moderacao` | Denunciar postagem (`POST /denuncias`), fila e análise do moderador sem identidade do denunciante (`GET /moderacao/denuncias[/{id}]`), ocultar/restaurar/descartar (`POST /moderacao/denuncias/{id}/ocultacao\|restauracao\|descarte`), só perfil `MODERADOR`; oculta/restaura a postagem por `publicacoes.PublicacaoModeracao`. Telas: "Denunciar" no card da postagem e fila `/moderacao/denuncias` (menu "Denúncias" com contador, só MODERADOR). Remover, restringir e escalonar pendentes |
