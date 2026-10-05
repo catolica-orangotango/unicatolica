@@ -89,8 +89,9 @@ export async function mockFeedOk(page: Page): Promise<void> {
   const paginaVazia = { content: [], page: 0, size: 6, totalElements: 0, totalPages: 0 };
 
   await rota(page, (url) => url.pathname === '/usuarios/me', 200, JSON.stringify(usuario));
-  await rota(page, (url) => url.pathname === '/comunidades/minhas', 200, JSON.stringify([]));
-  await rota(page, (url) => url.pathname === '/comunidades', 200, JSON.stringify(paginaVazia));
+  // `ehApi`: `/comunidades` também é rota do Angular (lista de descoberta).
+  await rota(page, (url) => ehApi(url) && url.pathname === '/comunidades/minhas', 200, JSON.stringify([]));
+  await rota(page, (url) => ehApi(url) && url.pathname === '/comunidades', 200, JSON.stringify(paginaVazia));
 }
 
 /**
@@ -325,6 +326,54 @@ export async function mockDenunciar(page: Page): Promise<unknown[]> {
       recebidas.push(route.request().postDataJSON());
       return route.fulfill(json(201, { id: 900 + recebidas.length, criadoEm: new Date().toISOString() }));
     },
+  );
+  return recebidas;
+}
+
+/** `POST /comunidades` (Story 2.2) com estado; nome em `nomesEmUso` → 409. Registrar após `mockFeedOk`. */
+export async function mockCriarComunidade(
+  page: Page,
+  opcoes: { id: number; nomesEmUso?: string[] },
+): Promise<unknown[]> {
+  const recebidas: unknown[] = [];
+  const minhas: unknown[] = [];
+
+  await page.route(
+    (url) => ehApi(url) && url.pathname === '/comunidades',
+    (route) => {
+      const request = route.request();
+      if (request.method() === 'OPTIONS') {
+        return route.fulfill({ status: 204, headers: CORS });
+      }
+      if (request.method() !== 'POST') {
+        return route.fallback();
+      }
+      const corpo = request.postDataJSON() as { nome: string; descricao: string | null };
+      recebidas.push(corpo);
+      if (opcoes.nomesEmUso?.includes(corpo.nome)) {
+        return route.fulfill({
+          status: 409,
+          headers: { ...CORS, 'content-type': 'application/json' },
+          body: envelopeErro('COMUNIDADE_NOME_EM_USO', 'Já existe uma comunidade com esse nome.'),
+        });
+      }
+      const criada = {
+        id: opcoes.id,
+        nome: corpo.nome,
+        descricao: corpo.descricao,
+        tipo: 'ABERTA',
+        criadoEm: new Date().toISOString(),
+      };
+      minhas.push(criada);
+      return route.fulfill(json(201, criada));
+    },
+  );
+  await page.route(
+    (url) => ehApi(url) && url.pathname === '/comunidades/minhas',
+    (route) =>
+      route.request().method() === 'OPTIONS'
+        ? route.fulfill({ status: 204, headers: CORS })
+        : route.fulfill(json(200, minhas)),
   );
   return recebidas;
 }
