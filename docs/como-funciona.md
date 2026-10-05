@@ -104,7 +104,7 @@ As regras 1, 2 e 4, e a regra "`identidade` não importa nenhum outro módulo", 
 - Um changelog por módulo em `backend/src/main/resources/db/changelog/modulos/<modulo>/`.
 - Nome do arquivo e id do changeset: `<modulo>-NNN-descricao` (ex.: `comunidades-002-seed-comunidades-curso`). Nunca um contador global (AD-9).
 - O mestre `db.changelog-master.xml` inclui tudo com `includeAll`. Não edite o mestre por PR.
-- Seeds só de desenvolvimento usam `context="dev"`, que nunca roda em produção.
+- Seeds só de desenvolvimento usam `context="dev"`, que nunca roda em produção (lá o contexto é `prod`; com a lista vazia, o Liquibase rodaria todos os changesets).
 - Convenções: tabela/coluna em português, id `bigint` identity, `Instant` para timestamp e `LocalDate` para data sem hora.
 
 ## 6. Frontend
@@ -147,6 +147,13 @@ cd frontend && npm ci && npm start      # Angular :4200
 ```
 
 O Postgres sobe sozinho pelo Quarkus Dev Services, tanto no `quarkus:dev` quanto no `./mvnw test`. O banco de dev é descartado ao parar o Quarkus, e o seed do contexto `dev` recria os dados de teste a cada subida. Para usar um banco persistente (ex.: o `db` do compose), defina `QUARKUS_DATASOURCE_JDBC_URL=jdbc:postgresql://localhost:5432/pacext` no `.env`.
+
+Usuários de teste criados pelo seed (só em dev, senha `Senha123!` para os dois):
+
+| E-mail | Perfil | Para quê |
+|---|---|---|
+| `aluno.teste@catolicasc.edu.br` | `ALUNO` | Login, comunidades, publicações, perfil |
+| `moderador.teste@catolicasc.edu.br` | `MODERADOR` | Fila de denúncias, ocultar/restaurar/descartar |
 
 Sem nada instalado além do Docker, `docker-compose up` continua subindo tudo junto (Postgres :5432, Quarkus :8080, Angular :4200), só que mais devagar.
 
