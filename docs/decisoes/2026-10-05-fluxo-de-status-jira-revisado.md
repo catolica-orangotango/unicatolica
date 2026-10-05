@@ -16,7 +16,7 @@ O workflow também aceitava saltos (ex.: A fazer direto para Em Análise de PR).
 
 ## Decisão
 
-O workflow passa a ter 8 status e transições com nome, sem saltos.
+O workflow passa a ter 8 status (mais o status Backlog, criado junto com as sprints, ainda sem uso definido) e transições com nome, sem saltos.
 
 ```mermaid
 flowchart LR
@@ -52,18 +52,19 @@ Em tracejado, os status que ficam fora do quadro (ver "Quadro" abaixo).
 
 As regras de 02/10 continuam valendo: chave `KAN-xx` no PR, e Teste é validação funcional, não teste automatizado. Mudam ou entram estas:
 
+- **Só entra em sprint quem tem critérios de aceite.** A descrição precisa listar critérios verificáveis, sem decisão pendente (ex.: "qual é a política de senha", "bloquear ou permitir voltar"). Sem isso, o item fica no Backlog, em planejamento ou Divida técnica, até alguém escrever os critérios. É o mesmo combinado da transição "Definido critérios de aceite": o que não tem critério não chega a A fazer e não entra na sprint.
 - **Sem atalho para Feito.** Até uma tarefa criada depois da entrega (ex.: KAN-77, que mapeou a denúncia já mergeada) passa por Teste. Código mergeado sem teste manual registrado não está Feito.
 - **Recusa sempre com comentário.** Quem reprova escreve o motivo e, se houver, o log ou o print. O KAN-77 é o exemplo: o comentário trouxe o log do erro, e a causa (sessão de 5 minutos) virou o KAN-78.
 - **Problema achado no meio de outra tarefa vira ticket próprio** em Divida técnica, e não entra no PR da tarefa atual. Exemplo: o KAN-79 saiu do teste do KAN-78.
 - **Responsável definido em A fazer - SPRINT.** Depois que a tarefa sai de A fazer, o responsável não muda. Num projeto *team-managed*, o Jira não bloqueia isso por status, então é um combinado do time. Se for preciso garantir, dá para usar uma automação que desfaz a troca.
 
-### Quadro
+### Quadro e sprints
 
-O quadro mostra só o fluxo da sprint: **A fazer - SPRINT, Recusa, Fazendo, Em Análise PR, Teste e Feito**. **planejamento** e **Divida técnica** saíram do quadro, mas continuam existindo como status: os itens ficam no backlog e aparecem em filtros, por exemplo `project = KAN AND status in (planejamento, "Divida técnica")`.
+O quadro tem **sprints** ligadas desde 05/10 e mostra só os itens da sprint ativa. As colunas são **Backlog** (agrupa os status Backlog, planejamento e Divida técnica), **A fazer - SPRINT, Recusa, Fazendo, Em Análise PR, Teste e Feito**. Item que não está em nenhuma sprint fica na página de Backlog. Para ver só planejamento e dívida técnica: `project = KAN AND status in (planejamento, "Divida técnica")`.
 
 ## Consequências
 
 - **Volta ao começo:** a tarefa reprovada passa por Recusa e depois por Fazendo, e não volta direto para o começo. O quadro mostra o que voltou e por quê.
 - **Cliques a mais:** quem move tarefa pelo quadro ou pela API precisa seguir a ordem. Não dá mais para levar de A fazer até Feito numa transição só.
 - **Automação de 02/10:** a regra "PR mergeado → Teste" foi escrita para o fluxo antigo. Ela precisa ser revista para usar a transição "PR Revisado e aprovado". Também falta confirmar se ainda está ativa.
-- **Fora do quadro:** planejamento e dívida técnica ficam fora do dia a dia da sprint. Quem cuida do backlog precisa olhar esses itens com regularidade.
+- **Backlog:** planejamento e dívida técnica ficam fora do dia a dia da sprint. Quem cuida do backlog precisa olhar esses itens com regularidade e escrever os critérios antes da planning.
