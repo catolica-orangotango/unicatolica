@@ -122,6 +122,29 @@ paths:
         '401':
           $ref: '#/components/responses/NaoAutenticado'
 
+  /auth/refresh:
+    post:
+      operationId: renovarSessao
+      summary: Troca o token atual, ainda válido, por um token novo (KAN-78).
+      tags: [Identidade]
+      description: >
+        A sessão expira por inatividade: o token vale o tempo configurado em
+        SESSAO_INATIVIDADE_MINUTOS (padrão 15 minutos), e o frontend chama este
+        endpoint enquanto o usuário está ativo para receber um token novo, com o
+        mesmo prazo contado a partir de agora. Exige token válido (não entra na
+        allowlist do JwtSecurityFilter, AD-2). Token vencido ou invalidado por
+        logout (RF11) não renova: responde 401, e o usuário entra de novo. O perfil
+        (roles) do token novo é lido do banco, não copiado do token antigo.
+      responses:
+        '200':
+          description: Token novo.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+
   /usuarios/me:
     get:
       operationId: obterUsuarioAutenticado

@@ -7,12 +7,14 @@ import br.edu.unicatolica.pacext.identidade.dominio.PasswordHasher;
 import br.edu.unicatolica.pacext.identidade.dominio.Usuario;
 import br.edu.unicatolica.pacext.identidade.dominio.UsuarioRepository;
 import br.edu.unicatolica.pacext.compartilhado.auditoria.AuditoriaService;
+import br.edu.unicatolica.pacext.compartilhado.erro.ApiException;
 import io.smallrye.jwt.build.Jwt;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.Event;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import java.security.PrivateKey;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Optional;
@@ -46,6 +48,15 @@ public class AuthService {
     String issuer;
 
     /**
+     * Tempo de inatividade da sessão: cada token vale isso, e o frontend o troca por um novo
+     * em {@link #renovar} enquanto o usuário está ativo (KAN-78). Sem {@code expiresIn}, o
+     * SmallRye usava o padrão de 300 segundos — ver
+     * docs/decisoes/2026-10-05-validade-da-sessao.md.
+     */
+    @ConfigProperty(name = "identidade.sessao.inatividade-minutos")
+    long sessaoInatividadeMinutos;
+
+    /**
      * @throws CredenciaisInvalidasException se o e-mail não existe ou a senha não confere —
      *         mensagem genérica, nunca indica qual das duas, para não vazar quais e-mails
      *         existem na base (RF07).
@@ -67,15 +78,7 @@ public class AuthService {
             throw new EmailNaoConfirmadoException();
         }
 
-        // Claim literal "roles" (não o helper .groups(), que grava sob a claim padrão
-        // "groups") — AD-2 promete "roles" por nome, e smallrye.jwt.path.groups=roles só
-        // funcionava até aqui por coincidência: fallback silencioso do SmallRye para
-        // "groups" quando o path configurado não resolve (defeito D3).
-        String token = Jwt.claims()
-                .issuer(issuer)
-                .subject(String.valueOf(usuario.id))
-                .claim("roles", Set.of(usuario.perfil))
-                .sign(privateKey);
+        String token = emitirToken(usuario);
 
         auditoriaService.registrar(usuario.id, "identidade", "LOGIN", "Login bem-sucedido.");
 
@@ -87,6 +90,35 @@ public class AuthService {
         }
 
         return token;
+    }
+
+    /**
+     * Troca o token atual por um novo, com o prazo de inatividade contado a partir de agora
+     * (KAN-78). Quem chega aqui já passou pelo {@code JwtSecurityFilter} e pelo
+     * {@code SessaoInvalidadaFilter}: token vencido ou anterior ao logout nunca renova. O
+     * perfil vem do banco, não do token antigo. Sem auditoria: o frontend renova várias vezes
+     * por sessão, e o registro relevante é o login.
+     *
+     * @throws ApiException 401 se o usuário do token não existe mais.
+     */
+    public String renovar(Long usuarioId) {
+        Usuario usuario = usuarioRepository.findByIdOptional(usuarioId)
+                .orElseThrow(() -> ApiException.naoAutenticado(
+                        "NAO_AUTENTICADO", "Autenticação necessária.", null));
+        return emitirToken(usuario);
+    }
+
+    // Claim literal "roles" (não o helper .groups(), que grava sob a claim padrão "groups")
+    // — AD-2 promete "roles" por nome, e smallrye.jwt.path.groups=roles só funcionava até
+    // aqui por coincidência: fallback silencioso do SmallRye para "groups" quando o path
+    // configurado não resolve (defeito D3).
+    private String emitirToken(Usuario usuario) {
+        return Jwt.claims()
+                .issuer(issuer)
+                .subject(String.valueOf(usuario.id))
+                .claim("roles", Set.of(usuario.perfil))
+                .expiresIn(Duration.ofMinutes(sessaoInatividadeMinutos))
+                .sign(privateKey);
     }
 
     /**
