@@ -55,6 +55,33 @@ export class AuthService {
     return typeof exp !== 'number' || exp * 1000 > Date.now();
   }
 
+  /**
+   * Troca o token atual, ainda válido, por um novo (`POST /auth/refresh`, KAN-78). Chamado
+   * pelo `SessaoAtividadeService` enquanto o usuário está ativo. Um 401 aqui (token vencido
+   * ou sessão encerrada) cai no `sessaoExpiradaInterceptor`.
+   */
+  renovar(): Observable<LoginResponse> {
+    return this.http
+      .post<LoginResponse>(`${API_BASE_URL}/auth/refresh`, null, {
+        headers: this.obterCabecalhoAutorizacao(),
+      })
+      .pipe(tap((resposta) => this.armazenarToken(resposta.token)));
+  }
+
+  /**
+   * Instantes de emissão (`iat`) e expiração (`exp`) do token atual, em milissegundos.
+   * `null` sem token ou sem as duas claims numéricas. A diferença entre os dois é o tempo de
+   * inatividade configurado no backend — o frontend não repete esse número.
+   */
+  periodoDoToken(): { emitidoEm: number; expiraEm: number } | null {
+    const payload = this.decodificarPayloadJwt();
+    const iat = payload?.['iat'];
+    const exp = payload?.['exp'];
+    return typeof iat === 'number' && typeof exp === 'number'
+      ? { emitidoEm: iat * 1000, expiraEm: exp * 1000 }
+      : null;
+  }
+
   /** Apaga o token só no navegador, sem avisar o servidor — usado quando a sessão expirou. */
   encerrarSessaoLocal(): void {
     localStorage.removeItem(TOKEN_STORAGE_KEY);

@@ -87,6 +87,26 @@ describe('AuthService', () => {
     httpMock.expectNone('http://localhost:8080/auth/logout');
   });
 
+  it('renovar: POST /auth/refresh com o token atual e guarda o token novo', () => {
+    localStorage.setItem('pacext.token', 'token-atual');
+
+    service.renovar().subscribe();
+
+    const req = httpMock.expectOne('http://localhost:8080/auth/refresh');
+    expect(req.request.method).toBe('POST');
+    expect(req.request.headers.get('Authorization')).toBe('Bearer token-atual');
+    req.flush({ token: 'token-novo' });
+    expect(service.obterToken()).toBe('token-novo');
+  });
+
+  it('periodoDoToken: iat e exp em milissegundos; null sem as claims', () => {
+    localStorage.setItem('pacext.token', jwtComPayload({ sub: '1', iat: 100, exp: 1000 }));
+    expect(service.periodoDoToken()).toEqual({ emitidoEm: 100_000, expiraEm: 1_000_000 });
+
+    localStorage.setItem('pacext.token', 'token-fake');
+    expect(service.periodoDoToken()).toBeNull();
+  });
+
   it('remove o token armazenado ao fazer logout', () => {
     service.login('aluno@catolicasc.edu.br', 'Senha123!').subscribe();
     httpMock.expectOne('http://localhost:8080/auth/login').flush({ token: 'token-fake' });

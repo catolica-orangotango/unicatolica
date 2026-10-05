@@ -18,6 +18,7 @@ import br.edu.unicatolica.pacext.identidade.dominio.PasswordHasher;
 import br.edu.unicatolica.pacext.identidade.dominio.Usuario;
 import br.edu.unicatolica.pacext.identidade.dominio.UsuarioRepository;
 import br.edu.unicatolica.pacext.compartilhado.auditoria.AuditoriaService;
+import br.edu.unicatolica.pacext.compartilhado.erro.ApiException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.enterprise.event.Event;
 import io.smallrye.jwt.auth.principal.DefaultJWTParser;
@@ -67,7 +68,7 @@ class AuthServiceTest {
         authService.loginRealizado = loginRealizado;
         authService.privateKey = privateKey;
         authService.issuer = ISSUER;
-        authService.sessaoValidadeHoras = 8;
+        authService.sessaoInatividadeMinutos = 15;
     }
 
     private Usuario usuarioConfirmado(String senha) {
@@ -118,15 +119,43 @@ class AuthServiceTest {
 
     /** KAN-78: sem {@code expiresIn}, o SmallRye emitia o token com validade de 5 minutos. */
     @Test
-    void tokenEmitidoValeAsHorasConfiguradas() throws Exception {
+    void tokenEmitidoValeOTempoDeInatividadeConfigurado() throws Exception {
         Usuario usuario = usuarioConfirmado("Senha123!");
         when(usuarioRepository.buscarPorEmail(usuario.email)).thenReturn(Optional.of(usuario));
 
         String token = authService.autenticar(usuario.email, "Senha123!");
 
+        JsonWebToken jwt = validar(token);
+        assertEquals(15 * 60, jwt.getExpirationTime() - jwt.getIssuedAtTime());
+    }
+
+    @Test
+    void renovarEmiteTokenNovoComPerfilAtualDoBanco() throws Exception {
+        Usuario usuario = usuarioConfirmado("Senha123!");
+        usuario.perfil = "MODERADOR";
+        when(usuarioRepository.findByIdOptional(42L)).thenReturn(Optional.of(usuario));
+
+        JsonWebToken jwt = validar(authService.renovar(42L));
+
+        assertEquals("42", jwt.getSubject());
+        assertEquals(Set.of("MODERADOR"), jwt.getGroups());
+        assertEquals(15 * 60, jwt.getExpirationTime() - jwt.getIssuedAtTime());
+    }
+
+    @Test
+    void renovarParaUsuarioInexistenteResponde401() {
+        when(usuarioRepository.findByIdOptional(99L)).thenReturn(Optional.empty());
+
+        ApiException erro = assertThrows(ApiException.class, () -> authService.renovar(99L));
+
+        assertEquals(401, erro.getStatus());
+        assertEquals("NAO_AUTENTICADO", erro.getCode());
+    }
+
+    private static JsonWebToken validar(String token) throws Exception {
         JWTAuthContextInfo contextInfo = new JWTAuthContextInfo(publicKey, ISSUER);
-        JsonWebToken jwt = new DefaultJWTParser(contextInfo).parse(token);
-        assertEquals(8 * 60 * 60, jwt.getExpirationTime() - jwt.getIssuedAtTime());
+        contextInfo.setGroupsPath("roles");
+        return new DefaultJWTParser(contextInfo).parse(token);
     }
 
     @Test
