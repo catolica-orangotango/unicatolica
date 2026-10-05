@@ -2,6 +2,10 @@
   <h1 class="login__titulo">Entrar</h1>
   <p class="login__subtitulo">Use seu e-mail institucional para entrar na UniCatólica.</p>
 
+  @if (sessaoExpirada) {
+    <p class="login__aviso" role="status">Sua sessão expirou. Entre novamente para continuar.</p>
+  }
+
   <form class="login__form" [formGroup]="form" (ngSubmit)="enviar()" novalidate>
     <label class="login__label" for="email">E-mail</label>
     <input

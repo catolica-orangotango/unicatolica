@@ -39,6 +39,7 @@ Sem as duas chaves preenchidas o `quarkus:dev` não sobe (`mp.jwt.verify.publick
 | `JWT_PRIVATE_KEY` | **Obrigatória** | Gerada pelo `dev-setup.sh` | Chave RSA privada que assina o token de sessão, em base64 numa linha só, sem BEGIN/END. Segredo. Produção: par próprio, só no Render. |
 | `JWT_PUBLIC_KEY` | **Obrigatória** | Gerada pelo `dev-setup.sh` | Chave pública do mesmo par, que valida o token. Mesmo formato da privada. |
 | `JWT_ISSUER` | Tem padrão | `https://pacext.unicatolica.edu.br` | Emissor esperado no token. Não precisa mudar. |
+| `SESSAO_INATIVIDADE_MINUTOS` | Tem padrão | `15` | Minutos sem atividade até a sessão expirar e a tela voltar para o login. É a validade de cada token, renovado por `POST /auth/refresh` enquanto o usuário está ativo. Ver [decisão de 05/10](decisoes/2026-10-05-validade-da-sessao.md). |
 
 Para gerar as chaves à mão, sem o `dev-setup.sh`:
 

@@ -12,6 +12,12 @@ class AuthStub {
   obterToken(): string | null {
     return this.token;
   }
+  sessaoValida(): boolean {
+    return this.token !== null;
+  }
+  encerrarSessaoLocal(): void {
+    this.token = null;
+  }
   possuiPerfil(): boolean {
     return false;
   }

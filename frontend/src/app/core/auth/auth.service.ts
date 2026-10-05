@@ -43,6 +43,51 @@ export class AuthService {
   }
 
   /**
+   * Há token e a claim `exp` dele ainda não passou (KAN-78). Token sem `exp` legível conta
+   * como válido: quem decide de verdade é o backend, e um 401 dele encerra a sessão pelo
+   * `sessaoExpiradaInterceptor`.
+   */
+  sessaoValida(): boolean {
+    if (!this.obterToken()) {
+      return false;
+    }
+    const exp = this.decodificarPayloadJwt()?.['exp'];
+    return typeof exp !== 'number' || exp * 1000 > Date.now();
+  }
+
+  /**
+   * Troca o token atual, ainda válido, por um novo (`POST /auth/refresh`, KAN-78). Chamado
+   * pelo `SessaoAtividadeService` enquanto o usuário está ativo. Um 401 aqui (token vencido
+   * ou sessão encerrada) cai no `sessaoExpiradaInterceptor`.
+   */
+  renovar(): Observable<LoginResponse> {
+    return this.http
+      .post<LoginResponse>(`${API_BASE_URL}/auth/refresh`, null, {
+        headers: this.obterCabecalhoAutorizacao(),
+      })
+      .pipe(tap((resposta) => this.armazenarToken(resposta.token)));
+  }
+
+  /**
+   * Instantes de emissão (`iat`) e expiração (`exp`) do token atual, em milissegundos.
+   * `null` sem token ou sem as duas claims numéricas. A diferença entre os dois é o tempo de
+   * inatividade configurado no backend — o frontend não repete esse número.
+   */
+  periodoDoToken(): { emitidoEm: number; expiraEm: number } | null {
+    const payload = this.decodificarPayloadJwt();
+    const iat = payload?.['iat'];
+    const exp = payload?.['exp'];
+    return typeof iat === 'number' && typeof exp === 'number'
+      ? { emitidoEm: iat * 1000, expiraEm: exp * 1000 }
+      : null;
+  }
+
+  /** Apaga o token só no navegador, sem avisar o servidor — usado quando a sessão expirou. */
+  encerrarSessaoLocal(): void {
+    localStorage.removeItem(TOKEN_STORAGE_KEY);
+  }
+
+  /**
    * Header `Authorization` pronto pra passar em `{ headers }` de qualquer chamada
    * autenticada — ainda não existe um `HttpInterceptor` global (AD-7 não decidiu isso
    * ainda), então cada serviço que fala com endpoint autenticado usa isto explicitamente
@@ -55,7 +100,7 @@ export class AuthService {
 
   logout(): void {
     const token = this.obterToken();
-    localStorage.removeItem(TOKEN_STORAGE_KEY);
+    this.encerrarSessaoLocal();
     if (token) {
       // Encerra a sessão no servidor (Story 1.6) — best-effort: mesmo se falhar (ex.: token
       // já expirado), a sessão local já foi encerrada acima, que é o que importa para o usuário.

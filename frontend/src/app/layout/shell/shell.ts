@@ -1,6 +1,7 @@
-import { Component, ElementRef, computed, inject, signal, viewChild } from '@angular/core';
+import { Component, DestroyRef, ElementRef, computed, inject, signal, viewChild } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AuthService } from '../../core/auth/auth.service';
+import { SessaoAtividadeService } from '../../core/auth/sessao-atividade.service';
 import { ComunidadesService } from '../../features/comunidades/comunidades.service';
 import { ContadorDenuncias } from '../../features/moderacao/contador-denuncias/contador-denuncias';
 import { NotificacoesService } from '../../features/notificacoes/notificacoes.service';
@@ -91,6 +92,11 @@ export class Shell {
     // falha a cache simplesmente fica vazia, sem travar o resto da navegação.
     this.comunidadesService.carregarMinhas().subscribe({ error: () => undefined });
     this.notificacoesService.carregar().subscribe({ error: () => undefined });
+
+    // Sessão por inatividade (KAN-78): só roda enquanto a casca autenticada existe.
+    const sessaoAtividade = inject(SessaoAtividadeService);
+    sessaoAtividade.iniciar();
+    inject(DestroyRef).onDestroy(() => sessaoAtividade.parar());
   }
 
   protected alternarMenu(evento: Event): void {
