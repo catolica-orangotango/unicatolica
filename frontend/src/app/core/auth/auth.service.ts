@@ -43,6 +43,24 @@ export class AuthService {
   }
 
   /**
+   * Há token e a claim `exp` dele ainda não passou (KAN-78). Token sem `exp` legível conta
+   * como válido: quem decide de verdade é o backend, e um 401 dele encerra a sessão pelo
+   * `sessaoExpiradaInterceptor`.
+   */
+  sessaoValida(): boolean {
+    if (!this.obterToken()) {
+      return false;
+    }
+    const exp = this.decodificarPayloadJwt()?.['exp'];
+    return typeof exp !== 'number' || exp * 1000 > Date.now();
+  }
+
+  /** Apaga o token só no navegador, sem avisar o servidor — usado quando a sessão expirou. */
+  encerrarSessaoLocal(): void {
+    localStorage.removeItem(TOKEN_STORAGE_KEY);
+  }
+
+  /**
    * Header `Authorization` pronto pra passar em `{ headers }` de qualquer chamada
    * autenticada — ainda não existe um `HttpInterceptor` global (AD-7 não decidiu isso
    * ainda), então cada serviço que fala com endpoint autenticado usa isto explicitamente
@@ -55,7 +73,7 @@ export class AuthService {
 
   logout(): void {
     const token = this.obterToken();
-    localStorage.removeItem(TOKEN_STORAGE_KEY);
+    this.encerrarSessaoLocal();
     if (token) {
       // Encerra a sessão no servidor (Story 1.6) — best-effort: mesmo se falhar (ex.: token
       // já expirado), a sessão local já foi encerrada acima, que é o que importa para o usuário.

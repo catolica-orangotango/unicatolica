@@ -52,6 +52,41 @@ describe('AuthService', () => {
     expect(service.obterToken()).toBe('token-fake');
   });
 
+  // -- KAN-78: sessão expirada ---------------------------------------------
+
+  it('sessaoValida: false sem token', () => {
+    expect(service.sessaoValida()).toBe(false);
+  });
+
+  it('sessaoValida: true com exp no futuro', () => {
+    const exp = Math.floor(Date.now() / 1000) + 60;
+    localStorage.setItem('pacext.token', jwtComPayload({ sub: '1', exp }));
+
+    expect(service.sessaoValida()).toBe(true);
+  });
+
+  it('sessaoValida: false com exp no passado', () => {
+    const exp = Math.floor(Date.now() / 1000) - 60;
+    localStorage.setItem('pacext.token', jwtComPayload({ sub: '1', exp }));
+
+    expect(service.sessaoValida()).toBe(false);
+  });
+
+  it('sessaoValida: true com token sem exp legível (o backend decide)', () => {
+    localStorage.setItem('pacext.token', 'token-fake');
+
+    expect(service.sessaoValida()).toBe(true);
+  });
+
+  it('encerrarSessaoLocal apaga o token sem chamar o servidor', () => {
+    localStorage.setItem('pacext.token', 'token-fake');
+
+    service.encerrarSessaoLocal();
+
+    expect(service.obterToken()).toBeNull();
+    httpMock.expectNone('http://localhost:8080/auth/logout');
+  });
+
   it('remove o token armazenado ao fazer logout', () => {
     service.login('aluno@catolicasc.edu.br', 'Senha123!').subscribe();
     httpMock.expectOne('http://localhost:8080/auth/login').flush({ token: 'token-fake' });

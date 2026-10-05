@@ -1,6 +1,6 @@
 import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/auth/auth.service';
 import { UcAuthShell } from '../../../layout/auth-shell/auth-shell';
 import { UcButton } from '../../../ui/button/button';
@@ -15,6 +15,7 @@ export class Login {
   private readonly formBuilder = inject(FormBuilder);
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
 
   protected readonly form = this.formBuilder.group({
     email: ['', [Validators.required, Validators.email]],
@@ -23,9 +24,14 @@ export class Login {
 
   protected readonly enviando = signal(false);
   protected readonly mensagemErro = signal<string | null>(null);
+  // Vem do authGuard ou do sessaoExpiradaInterceptor (KAN-78).
+  protected readonly sessaoExpirada =
+    this.route.snapshot.queryParamMap.get('sessao') === 'expirada';
 
   constructor() {
-    if (this.authService.obterToken()) {
+    // sessaoValida, não só obterToken: com um token vencido no localStorage, o login
+    // mandaria para /feed e o authGuard devolveria para cá, em ciclo.
+    if (this.authService.sessaoValida()) {
       this.router.navigateByUrl('/feed');
     }
   }

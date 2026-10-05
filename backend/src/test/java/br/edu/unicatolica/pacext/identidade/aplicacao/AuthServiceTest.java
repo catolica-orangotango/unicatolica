@@ -67,6 +67,7 @@ class AuthServiceTest {
         authService.loginRealizado = loginRealizado;
         authService.privateKey = privateKey;
         authService.issuer = ISSUER;
+        authService.sessaoValidadeHoras = 8;
     }
 
     private Usuario usuarioConfirmado(String senha) {
@@ -113,6 +114,19 @@ class AuthServiceTest {
         String payloadJson = new String(Base64.getUrlDecoder().decode(partes[1]));
         Map<?, ?> payload = new ObjectMapper().readValue(payloadJson, Map.class);
         assertEquals(java.util.List.of("ALUNO"), payload.get("roles"));
+    }
+
+    /** KAN-78: sem {@code expiresIn}, o SmallRye emitia o token com validade de 5 minutos. */
+    @Test
+    void tokenEmitidoValeAsHorasConfiguradas() throws Exception {
+        Usuario usuario = usuarioConfirmado("Senha123!");
+        when(usuarioRepository.buscarPorEmail(usuario.email)).thenReturn(Optional.of(usuario));
+
+        String token = authService.autenticar(usuario.email, "Senha123!");
+
+        JWTAuthContextInfo contextInfo = new JWTAuthContextInfo(publicKey, ISSUER);
+        JsonWebToken jwt = new DefaultJWTParser(contextInfo).parse(token);
+        assertEquals(8 * 60 * 60, jwt.getExpirationTime() - jwt.getIssuedAtTime());
     }
 
     @Test

@@ -13,6 +13,7 @@ import jakarta.enterprise.event.Event;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import java.security.PrivateKey;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Optional;
@@ -46,6 +47,14 @@ public class AuthService {
     String issuer;
 
     /**
+     * Validade do token de sessão. Sem {@code expiresIn}, o SmallRye usa o padrão de 300
+     * segundos e a sessão caía em 5 minutos (KAN-78) — ver
+     * docs/decisoes/2026-10-05-validade-da-sessao.md.
+     */
+    @ConfigProperty(name = "identidade.sessao.validade-horas")
+    long sessaoValidadeHoras;
+
+    /**
      * @throws CredenciaisInvalidasException se o e-mail não existe ou a senha não confere —
      *         mensagem genérica, nunca indica qual das duas, para não vazar quais e-mails
      *         existem na base (RF07).
@@ -75,6 +84,7 @@ public class AuthService {
                 .issuer(issuer)
                 .subject(String.valueOf(usuario.id))
                 .claim("roles", Set.of(usuario.perfil))
+                .expiresIn(Duration.ofHours(sessaoValidadeHoras))
                 .sign(privateKey);
 
         auditoriaService.registrar(usuario.id, "identidade", "LOGIN", "Login bem-sucedido.");
