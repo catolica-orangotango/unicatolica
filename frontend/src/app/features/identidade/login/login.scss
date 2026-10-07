@@ -27,6 +27,18 @@
   color: var(--uc-color-ink-soft);
 }
 
+// Aviso neutro de sessão expirada (KAN-78): não é erro de quem está entrando,
+// então usa a borda comum, não o vermelho de `.login__erro`.
+.login__aviso {
+  margin: 0 0 calc(var(--uc-space-unit) * 4);
+  padding: calc(var(--uc-space-unit) * 2.5) calc(var(--uc-space-unit) * 3);
+  border: 1px solid var(--uc-color-border);
+  border-radius: var(--uc-radius-default);
+  background: var(--uc-color-surface);
+  color: var(--uc-color-ink);
+  font-size: var(--uc-font-size-meta);
+}
+
 .login__form {
   display: flex;
   flex-direction: column;

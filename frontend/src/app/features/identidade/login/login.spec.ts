@@ -1,7 +1,7 @@
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { Router, provideRouter } from '@angular/router';
+import { ActivatedRoute, Router, convertToParamMap, provideRouter } from '@angular/router';
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -135,6 +135,50 @@ describe('Login', () => {
     localFixture.detectChanges();
 
     expect(navigateSpy).toHaveBeenCalledWith('/feed');
+  });
+});
+
+describe('Login com sessão expirada (KAN-78)', () => {
+  function criar(queryParams: Record<string, string>): HTMLElement {
+    localStorage.clear();
+    TestBed.configureTestingModule({
+      imports: [Login],
+      providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        provideRouter([]),
+        { provide: ActivatedRoute, useValue: { snapshot: { queryParamMap: convertToParamMap(queryParams) } } },
+      ],
+    });
+    const fixture = TestBed.createComponent(Login);
+    fixture.detectChanges();
+    return fixture.nativeElement as HTMLElement;
+  }
+
+  it('mostra o aviso de sessão expirada com ?sessao=expirada', () => {
+    const aviso = criar({ sessao: 'expirada' }).querySelector('.login__aviso');
+
+    expect(aviso?.getAttribute('role')).toBe('status');
+    expect(aviso?.textContent).toContain('Sua sessão expirou');
+  });
+
+  it('não mostra o aviso sem o parâmetro', () => {
+    expect(criar({}).querySelector('.login__aviso')).toBeNull();
+  });
+
+  it('não redireciona para /feed com token vencido no localStorage', () => {
+    localStorage.clear();
+    const exp = Math.floor(Date.now() / 1000) - 60;
+    localStorage.setItem('pacext.token', `h.${btoa(JSON.stringify({ sub: '1', exp }))}.a`);
+    TestBed.configureTestingModule({
+      imports: [Login],
+      providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([])],
+    });
+    const navigateSpy = vi.spyOn(TestBed.inject(Router), 'navigateByUrl').mockResolvedValue(true);
+
+    TestBed.createComponent(Login).detectChanges();
+
+    expect(navigateSpy).not.toHaveBeenCalled();
   });
 });
 

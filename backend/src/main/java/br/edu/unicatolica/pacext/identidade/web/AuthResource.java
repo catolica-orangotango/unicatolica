@@ -30,6 +30,18 @@ public class AuthResource {
     }
 
     /**
+     * Renova a sessão (KAN-78) — exige token válido, como o logout. Devolve um token novo
+     * com o prazo de inatividade contado a partir de agora.
+     */
+    @POST
+    @Path("/refresh")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response refresh() {
+        String token = authService.renovar(usuarioAutenticado.id());
+        return Response.ok(new LoginResponse(token)).build();
+    }
+
+    /**
      * Logout (Story 1.6, RF10/RF11) — exige token válido (não entra na allowlist do
      * {@code JwtSecurityFilter}) para saber qual usuário deslogar.
      */

@@ -83,6 +83,17 @@ class AuthResourceTest {
         verify(authService).logout(42L);
     }
 
+    @Test
+    void retorna200ComTokenNovoAoRenovarSessao() {
+        when(usuarioAutenticado.id()).thenReturn(42L);
+        when(authService.renovar(42L)).thenReturn("token-renovado");
+
+        Response response = resource.refresh();
+
+        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+        assertEquals("token-renovado", ((LoginResponse) response.getEntity()).token());
+    }
+
     /** O Resource deixa a {@link ApiException} subir; o mapper monta o envelope (AD-5). */
     private static Response respostaDoErro(Executable chamada) {
         return new ApiExceptionMapper().toResponse(assertThrows(ApiException.class, chamada));
