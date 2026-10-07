@@ -1,10 +1,30 @@
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Component, inject, signal } from '@angular/core';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { AbstractControl, FormBuilder, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
 import { API_BASE_URL } from '../../../core/config/api.config';
 import { UcAuthShell } from '../../../layout/auth-shell/auth-shell';
 import { UcButton } from '../../../ui/button/button';
 import { Curso, CursoService } from '../curso.service';
+
+/**
+ * Validador de grupo (DT-1): confirmarSenha só ganha o erro `senhasDiferentes` quando não
+ * está vazio (vazio já é coberto por `Validators.required` no próprio controle) e difere
+ * de `senha`. Setar o erro no controle filho, não no grupo, é o que deixa o template
+ * tratar `confirmarSenha` igual a qualquer outro campo (`touched && invalid`).
+ */
+function senhasConferemValidator(form: AbstractControl): ValidationErrors | null {
+  const senha = form.get('senha');
+  const confirmarSenha = form.get('confirmarSenha');
+  if (!senha || !confirmarSenha || !confirmarSenha.value) {
+    return null;
+  }
+  if (senha.value !== confirmarSenha.value) {
+    confirmarSenha.setErrors({ senhasDiferentes: true });
+  } else if (confirmarSenha.hasError('senhasDiferentes')) {
+    confirmarSenha.setErrors(null);
+  }
+  return null;
+}
 
 /**
  * Envelope de erro padrão da API (AD-5) — espelha `ErroResponse` do backend.
@@ -57,13 +77,17 @@ export class Cadastro {
   protected readonly reenviando = signal(false);
   protected readonly reenviado = signal(false);
 
-  protected readonly form = this.formBuilder.nonNullable.group({
-    nome: ['', [Validators.required]],
-    email: ['', [Validators.required, Validators.email]],
-    senha: ['', [Validators.required]],
-    cursoId: this.formBuilder.control<number | null>(null, [Validators.required]),
-    dataNascimento: ['', [Validators.required]],
-  });
+  protected readonly form = this.formBuilder.nonNullable.group(
+    {
+      nome: ['', [Validators.required]],
+      email: ['', [Validators.required, Validators.email]],
+      senha: ['', [Validators.required]],
+      confirmarSenha: ['', [Validators.required]],
+      cursoId: this.formBuilder.control<number | null>(null, [Validators.required]),
+      dataNascimento: ['', [Validators.required]],
+    },
+    { validators: senhasConferemValidator },
+  );
 
   constructor() {
     this.cursoService.listar().subscribe({
@@ -82,7 +106,11 @@ export class Cadastro {
     this.erro.set(null);
     this.sucesso.set(null);
 
-    this.http.post<CadastroResponse>(`${API_BASE_URL}/auth/registro`, this.form.getRawValue()).subscribe({
+    // confirmarSenha é só do formulário (DT-1) — o contrato de POST /auth/registro não
+    // recebe esse campo.
+    const { confirmarSenha, ...corpo } = this.form.getRawValue();
+
+    this.http.post<CadastroResponse>(`${API_BASE_URL}/auth/registro`, corpo).subscribe({
       next: (resposta) => {
         this.enviando.set(false);
         this.sucesso.set(resposta);

@@ -35,6 +35,7 @@ describe('Cadastro', () => {
       nome: 'Ana Silva',
       email: 'ana@catolicasc.edu.br',
       senha: 'senha123',
+      confirmarSenha: 'senha123',
       cursoId: 14,
       dataNascimento: '2005-01-01',
     });
@@ -97,7 +98,7 @@ describe('Cadastro', () => {
   // -- Story 14.7: piso de acessibilidade (A-11) e Design System -----------
 
   describe('erros de campo anunciados (A-11)', () => {
-    const CAMPOS = ['nome', 'email', 'senha', 'cursoId', 'dataNascimento'] as const;
+    const CAMPOS = ['nome', 'email', 'senha', 'confirmarSenha', 'cursoId', 'dataNascimento'] as const;
 
     beforeEach(() => {
       fixture.detectChanges();
@@ -105,9 +106,9 @@ describe('Cadastro', () => {
       fixture.detectChanges();
     });
 
-    it('renderiza um .campo-erro com id para cada um dos cinco campos', () => {
+    it('renderiza um .campo-erro com id para cada um dos seis campos', () => {
       const erros = [...(fixture.nativeElement as HTMLElement).querySelectorAll('.campo-erro')];
-      expect(erros).toHaveLength(5);
+      expect(erros).toHaveLength(6);
       expect(erros.map((el) => el.id)).toEqual(CAMPOS.map((campo) => `erro-${campo}`));
     });
 
@@ -129,6 +130,69 @@ describe('Cadastro', () => {
       expect(compiled.querySelectorAll('.campo-erro')).toHaveLength(0);
       expect(compiled.querySelector('#nome')!.getAttribute('aria-invalid')).toBeNull();
       expect(compiled.querySelector('#nome')!.getAttribute('aria-describedby')).toBeNull();
+    });
+  });
+
+  describe('Confirmar senha (DT-1)', () => {
+    it('vazio, depois de tocar, mostra "Confirme sua senha."', () => {
+      fixture.detectChanges();
+      component['form'].controls.confirmarSenha.markAsTouched();
+      fixture.detectChanges();
+
+      const erro = (fixture.nativeElement as HTMLElement).querySelector('#erro-confirmarSenha');
+      expect(erro?.textContent?.trim()).toBe('Confirme sua senha.');
+    });
+
+    it('senhas diferentes, depois de tocar, mostra "As senhas não conferem." e não envia', () => {
+      fixture.detectChanges();
+      component['form'].setValue({
+        nome: 'Ana Silva',
+        email: 'ana@catolicasc.edu.br',
+        senha: 'senha123',
+        confirmarSenha: 'outraSenha',
+        cursoId: 14,
+        dataNascimento: '2005-01-01',
+      });
+      component['form'].controls.confirmarSenha.markAsTouched();
+      fixture.detectChanges();
+
+      const erro = (fixture.nativeElement as HTMLElement).querySelector('#erro-confirmarSenha');
+      expect(erro?.textContent?.trim()).toBe('As senhas não conferem.');
+
+      component['enviar']();
+      httpMock.expectNone('http://localhost:8080/auth/registro');
+    });
+
+    it('senhas iguais: cadastra normalmente e não leva confirmarSenha no corpo', () => {
+      preencherFormularioValido();
+
+      component['enviar']();
+
+      const request = httpMock.expectOne('http://localhost:8080/auth/registro');
+      expect(request.request.body.senha).toBe('senha123');
+      expect(request.request.body.confirmarSenha).toBeUndefined();
+      request.flush({
+        id: 1,
+        nome: 'Ana Silva',
+        email: 'ana@catolicasc.edu.br',
+        curso: 'Engenharia de Software',
+        emailConfirmado: false,
+        criadoEm: '2026-08-27T00:00:00Z',
+      });
+    });
+
+    it('mudar a Senha depois reavalia a mensagem de Confirmar senha', () => {
+      fixture.detectChanges();
+      preencherFormularioValido(); // senha e confirmarSenha == 'senha123', sem erro
+      component['form'].controls.confirmarSenha.markAsTouched(); // já tocou o campo antes
+      fixture.detectChanges();
+      expect((fixture.nativeElement as HTMLElement).querySelector('#erro-confirmarSenha')).toBeNull();
+
+      component['form'].controls.senha.setValue('outraSenhaAgora');
+      fixture.detectChanges();
+
+      const erro = (fixture.nativeElement as HTMLElement).querySelector('#erro-confirmarSenha');
+      expect(erro?.textContent?.trim()).toBe('As senhas não conferem.');
     });
   });
 

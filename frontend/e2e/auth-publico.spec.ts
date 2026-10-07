@@ -70,13 +70,13 @@ test.describe('Login', () => {
 });
 
 test.describe('Cadastro', () => {
-  const CAMPOS = ['Nome completo', 'E-mail institucional', 'Senha', 'Curso', 'Data de nascimento'];
+  const CAMPOS = ['Nome completo', 'E-mail institucional', 'Senha', 'Confirmar senha', 'Curso', 'Data de nascimento'];
 
-  test('renderiza os cinco campos com label associada e o botão Cadastrar', async ({ page }) => {
+  test('renderiza os seis campos com label associada e o botão Cadastrar', async ({ page }) => {
     await page.goto('/cadastro');
 
     for (const rotulo of CAMPOS) {
-      await expect(page.getByLabel(rotulo)).toBeVisible();
+      await expect(page.getByLabel(rotulo, { exact: true })).toBeVisible();
     }
     await expect(page.getByRole('button', { name: 'Cadastrar' })).toBeVisible();
   });
@@ -85,8 +85,20 @@ test.describe('Cadastro', () => {
     await page.goto('/cadastro');
     await page.getByRole('button', { name: 'Cadastrar' }).click();
 
-    await expect(page.locator('.campo-erro')).toHaveCount(5);
+    await expect(page.locator('.campo-erro')).toHaveCount(6);
     await expect(page.getByText('Informe seu nome.')).toBeVisible();
+    await expect(page).toHaveURL(/\/cadastro$/);
+  });
+
+  test('senhas diferentes não envia e mostra "As senhas não conferem." (DT-1)', async ({ page }) => {
+    await page.goto('/cadastro');
+    await page.getByLabel('Senha', { exact: true }).fill('Senha123!');
+    await page.getByLabel('Confirmar senha').fill('OutraSenha456!');
+    await page.getByLabel('Curso').focus(); // tira o foco -> marca confirmarSenha como touched
+
+    await expect(page.getByText('As senhas não conferem.')).toBeVisible();
+
+    await page.getByRole('button', { name: 'Cadastrar' }).click();
     await expect(page).toHaveURL(/\/cadastro$/);
   });
 
@@ -102,7 +114,7 @@ test.describe('Cadastro', () => {
   test('e-mail inválido dispara a mensagem específica após blur', async ({ page }) => {
     await page.goto('/cadastro');
     await page.getByLabel('E-mail institucional').fill('abc');
-    await page.getByLabel('Senha').click(); // tira o foco -> marca como touched
+    await page.getByLabel('Senha', { exact: true }).click(); // tira o foco -> marca como touched
 
     await expect(page.getByText('Informe um e-mail institucional válido.')).toBeVisible();
   });

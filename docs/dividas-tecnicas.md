@@ -4,15 +4,9 @@ Problemas conhecidos que ainda não têm história nem PR. Quando um item virar 
 
 | # | Dívida | Estado |
 |---|---|---|
-| DT-1 | Cadastro sem campo de confirmação de senha | Aberta |
 | DT-2 | Cadastro sem validação de senha segura | Aberta |
 | DT-3 | Lista de cursos ainda não é mantida pelo administrador | KAN-44 |
 | DT-4 | E-mail de confirmação do cadastro não chega ao usuário | Código pronto; falta configurar a Brevo no Render |
-
-## DT-1. Cadastro sem campo de confirmação de senha
-
-- **Hoje:** o formulário (`frontend/src/app/features/identidade/cadastro/`) tem um único campo `senha`. Um erro de digitação passa despercebido e o usuário não consegue entrar depois.
-- **Correção esperada:** campo "Confirmar senha" com um validador de grupo no `FormGroup`, mais uma mensagem de erro acessível (`aria-describedby`, igual aos outros campos). É só no frontend: o `CadastroRequest` não recebe a confirmação.
 
 ## DT-2. Cadastro sem validação de senha segura
 

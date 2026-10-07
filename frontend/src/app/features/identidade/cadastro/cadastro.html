@@ -100,6 +100,28 @@
         <span class="campo-erro" id="erro-senha">Informe uma senha.</span>
       }
 
+      <label class="cadastro__label" for="confirmarSenha">Confirmar senha</label>
+      <input
+        class="cadastro__campo"
+        id="confirmarSenha"
+        type="password"
+        formControlName="confirmarSenha"
+        autocomplete="new-password"
+        [attr.aria-invalid]="
+          form.controls.confirmarSenha.touched && form.controls.confirmarSenha.invalid ? 'true' : null
+        "
+        [attr.aria-describedby]="
+          form.controls.confirmarSenha.touched && form.controls.confirmarSenha.invalid
+            ? 'erro-confirmarSenha'
+            : null
+        "
+      />
+      @if (form.controls.confirmarSenha.touched && form.controls.confirmarSenha.invalid) {
+        <span class="campo-erro" id="erro-confirmarSenha">
+          {{ form.controls.confirmarSenha.hasError('required') ? 'Confirme sua senha.' : 'As senhas não conferem.' }}
+        </span>
+      }
+
       <label class="cadastro__label" for="cursoId">Curso</label>
       <select
         class="cadastro__campo"
