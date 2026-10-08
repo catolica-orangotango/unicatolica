@@ -31,9 +31,9 @@ test('pelo menu da conta, completa o perfil e ele continua salvo depois de recar
 
   await page.getByLabel('Curso').selectOption({ label: 'Engenharia de Software' });
   await page.getByLabel('Período').selectOption({ label: '3º semestre' });
-  await page.getByLabel('Interesses').fill('Robótica');
-  await page.getByLabel('Interesses').press('Enter');
-  await page.getByLabel('Interesses').fill('Java');
+  await page.getByRole('textbox', { name: 'Interesses' }).fill('Robótica');
+  await page.getByRole('textbox', { name: 'Interesses' }).press('Enter');
+  await page.getByRole('textbox', { name: 'Interesses' }).fill('Java');
   await page.getByRole('button', { name: 'Adicionar' }).click();
   await page.getByRole('button', { name: 'Salvar' }).click();
 
