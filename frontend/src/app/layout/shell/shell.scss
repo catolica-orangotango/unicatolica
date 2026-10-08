@@ -36,6 +36,11 @@
   height: 100vh; // layout-literal: fallback de viewport para navegadores sem dvh
   height: 100dvh; // layout-literal: altura de viewport dinamica, nao e um espacamento de design
   overflow-y: auto;
+  // Explicito, nao so o padrao: sem isso, o navegador computa overflow-x como auto
+  // tambem (regra do CSS Overflow quando so overflow-y nao e 'visible'), abrindo
+  // scroll horizontal pra qualquer filho mais largo que a sidebar (ex.: o painel de
+  // notificacoes, antes de caber em 100% da largura dela).
+  overflow-x: hidden;
   padding: var(--uc-space-section-gap) var(--uc-space-card-padding);
   background: var(--uc-color-bg);
   border-right: 1px solid var(--uc-color-border);
@@ -126,7 +131,14 @@
   // layout-literal: ancora logo abaixo do item (100% da altura dele), nao um espacamento
   top: calc(100% + var(--uc-space-unit));
   left: 0;
-  min-width: 280px; // layout-literal: ~280px de largura minima do painel (mesmo padrao do dropdown de conta)
+  // 100% do .shell__nav-item-wrapper (position: relative), nao 280px fixo como o dropdown
+  // de conta: .shell__sidebar tem overflow-y: auto, e por isso o navegador computa
+  // overflow-x como auto tambem (regra do CSS Overflow quando so um eixo nao e
+  // 'visible') - qualquer coisa mais larga que a sidebar fica cortada/com scroll
+  // horizontal, mesmo sendo position: absolute (e mesmo com position: fixed, que
+  // tambem e clipado por overflow de ancestral). Caber na sidebar em vez de tentar
+  // escapar dela.
+  width: 100%; // layout-literal: preenche o wrapper que o contém, não é dimensão de design
   max-height: 360px; // layout-literal: limite de altura antes de rolar - sem token de "altura de lista"
   overflow-y: auto;
   padding: calc(var(--uc-space-unit) / 2);
