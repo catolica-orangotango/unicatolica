@@ -112,8 +112,10 @@ describe('MeuPerfil', () => {
     httpMock.expectOne(`${API_BASE_URL}/comunidades/minhas`).flush([]);
     // Perfil completo pode marcar a notificação "complete seu perfil" como lida no
     // backend (Story 4.3) - o badge da sidebar recarrega pra não ficar preso no cache.
+    // expectOne com string compara a URL inteira, com query string (?pagina=0&tamanho=20)
+    // incluída - casa pelo path só via função de match.
     httpMock
-      .expectOne(`${API_BASE_URL}/notificacoes/me`)
+      .expectOne((req) => req.url === `${API_BASE_URL}/notificacoes/me`)
       .flush({ content: [], page: 0, size: 20, totalElements: 0, totalPages: 0 });
     fixture.detectChanges();
 
@@ -139,7 +141,7 @@ describe('MeuPerfil', () => {
     httpMock.expectOne(`${API_BASE_URL}/perfil/me`).flush(COM_PERFIL);
     // Mesmo curso: não recarrega /comunidades/minhas, só /notificacoes/me — o backend já
     // marcou a notificação como lida como efeito colateral do PUT /perfil/me.
-    httpMock.expectOne(`${API_BASE_URL}/notificacoes/me`).flush({
+    httpMock.expectOne((req) => req.url === `${API_BASE_URL}/notificacoes/me`).flush({
       content: [
         { id: 1, tipo: 'PERFIL_INCOMPLETO', texto: 'Complete seu perfil', link: null, lida: true, criadoEm: '2026-10-08T00:00:00Z' },
       ],
