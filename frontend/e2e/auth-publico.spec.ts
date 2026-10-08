@@ -90,7 +90,7 @@ test.describe('Cadastro', () => {
     await expect(page).toHaveURL(/\/cadastro$/);
   });
 
-  test('senhas diferentes não envia e mostra "As senhas não conferem." (DT-1)', async ({ page }) => {
+  test('senhas diferentes marca o campo como inválido (sem mensagem) e não envia (DT-1)', async ({ page }) => {
     await page.goto('/cadastro');
 
     // Os outros campos ficam válidos de propósito: sem isso o formulário já fica inválido
@@ -108,7 +108,9 @@ test.describe('Cadastro', () => {
     await page.getByLabel('Curso').selectOption({ label: 'Engenharia de Software' });
     await page.getByLabel('Data de nascimento').fill('2000-01-01');
 
-    await expect(page.getByText('As senhas não conferem.')).toBeVisible();
+    // Sem mensagem visível (pedido do time) — o campo só fica marcado como inválido.
+    await expect(page.getByText('As senhas não conferem.')).toHaveCount(0);
+    await expect(page.getByLabel('Confirmar senha')).toHaveAttribute('aria-invalid', 'true');
 
     await page.getByRole('button', { name: 'Cadastrar' }).click();
     await expect(page).toHaveURL(/\/cadastro$/);
@@ -140,6 +142,34 @@ test.describe('Cadastro', () => {
     for (const texto of await requisitos.allTextContents()) {
       expect(texto.trim().startsWith('✓')).toBe(true);
     }
+  });
+
+  test('segurar o botão mostra as duas senhas; soltar esconde de novo', async ({ page }) => {
+    await page.goto('/cadastro');
+    await page.getByLabel('Senha', { exact: true }).fill('Senha123!');
+    await page.getByLabel('Confirmar senha').fill('OutraSenha456!');
+
+    const senha = page.getByLabel('Senha', { exact: true });
+    const confirmarSenha = page.getByLabel('Confirmar senha');
+    await expect(senha).toHaveAttribute('type', 'password');
+    await expect(confirmarSenha).toHaveAttribute('type', 'password');
+
+    // Locator por classe, não por name do role: o aria-label alterna de texto conforme o
+    // estado (ver cadastro.html), então getByRole com name fixo pararia de casar depois
+    // de pressionado.
+    const botao = page.locator('.cadastro__botao-olho');
+    await expect(botao).toHaveAttribute('aria-label', 'Mostrar as senhas enquanto pressionado');
+    await botao.hover();
+    await page.mouse.down();
+
+    await expect(senha).toHaveAttribute('type', 'text');
+    await expect(confirmarSenha).toHaveAttribute('type', 'text');
+    await expect(botao).toHaveAttribute('aria-label', 'Mostrando as senhas');
+
+    await page.mouse.up();
+
+    await expect(senha).toHaveAttribute('type', 'password');
+    await expect(confirmarSenha).toHaveAttribute('type', 'password');
   });
 
   test('curso é escolhido de uma lista carregada de GET /cursos', async ({ page }) => {

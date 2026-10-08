@@ -109,6 +109,9 @@ export class Cadastro {
   protected readonly reenviando = signal(false);
   protected readonly reenviado = signal(false);
 
+  /** Mostra Senha e Confirmar senha em texto puro só enquanto o botão está pressionado. */
+  protected readonly mostrarSenhas = signal(false);
+
   protected readonly form = this.formBuilder.nonNullable.group(
     {
       nome: ['', [Validators.required]],
@@ -134,13 +137,14 @@ export class Cadastro {
     return confirmarSenha.touched && (confirmarSenha.invalid || this.form.hasError('senhasDiferentes'));
   }
 
-  /** Não assume que todo erro de `confirmarSenha` é "senhas não conferem" (pode ser só vazio). */
+  /**
+   * Não assume que todo erro de `confirmarSenha` é "senhas não conferem" (pode ser só
+   * vazio). Sem mensagem pra senhas diferentes: o campo continua marcado como inválido
+   * (aria-invalid) e o envio continua bloqueado, só não mostra texto nesse caso.
+   */
   protected mensagemErroConfirmarSenha(): string {
     if (this.form.controls.confirmarSenha.hasError('required')) {
       return 'Confirme sua senha.';
-    }
-    if (this.form.hasError('senhasDiferentes')) {
-      return 'As senhas não conferem.';
     }
     return '';
   }

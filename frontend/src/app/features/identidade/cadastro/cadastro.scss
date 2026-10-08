@@ -160,6 +160,51 @@
   cursor: not-allowed;
 }
 
+// Ícone de olho dentro do campo Senha (controla as duas senhas juntas, ver
+// cadastro.ts#mostrarSenhas) - o wrapper assume a margem que .cadastro__campo teria
+// sozinho, porque a margem do input não colapsa do jeito certo com um botão
+// position: absolute como irmão dentro dele.
+.cadastro__campo-com-olho {
+  position: relative;
+  margin-bottom: calc(var(--uc-space-unit) * 4);
+}
+
+.cadastro__campo-com-olho .cadastro__campo {
+  // layout-literal: o input deixa de ser item flex direto de .cadastro__form (que
+  // esticava sozinho via align-items: stretch) - o wrapper position: relative vira o
+  // item flex, então o input precisa da largura total explicitamente.
+  width: 100%;
+  margin-bottom: 0;
+  // layout-literal: espaço pro botão do olho não cobrir o texto digitado
+  padding-right: calc(var(--uc-space-unit) * 9);
+}
+
+.cadastro__campo-com-olho .cadastro__campo[aria-invalid='true'] {
+  margin-bottom: 0;
+}
+
+.cadastro__botao-olho {
+  position: absolute;
+  top: 50%;
+  right: calc(var(--uc-space-unit) * 1.5);
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: calc(var(--uc-space-unit) * 6);
+  height: calc(var(--uc-space-unit) * 6);
+  padding: 0;
+  border: 0;
+  border-radius: var(--uc-radius-sm);
+  background: transparent;
+  color: var(--uc-color-ink-soft);
+  cursor: pointer;
+}
+
+.cadastro__botao-olho:hover {
+  color: var(--uc-color-ink);
+}
+
 .cadastro__reenvio-confirmado {
   margin: var(--uc-space-section-gap) 0 0;
   font-size: var(--uc-font-size-meta);

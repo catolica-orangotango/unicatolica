@@ -143,7 +143,7 @@ describe('Cadastro', () => {
       expect(erro?.textContent?.trim()).toBe('Confirme sua senha.');
     });
 
-    it('senhas diferentes, depois de tocar, mostra "As senhas não conferem." e não envia', () => {
+    it('senhas diferentes, depois de tocar, marca o campo como inválido (sem mensagem) e não envia', () => {
       fixture.detectChanges();
       component['form'].setValue({
         nome: 'Ana Silva',
@@ -156,8 +156,9 @@ describe('Cadastro', () => {
       component['form'].controls.confirmarSenha.markAsTouched();
       fixture.detectChanges();
 
-      const erro = (fixture.nativeElement as HTMLElement).querySelector('#erro-confirmarSenha');
-      expect(erro?.textContent?.trim()).toBe('As senhas não conferem.');
+      const campo = (fixture.nativeElement as HTMLElement).querySelector('#confirmarSenha');
+      expect(campo?.getAttribute('aria-invalid')).toBe('true');
+      expect((fixture.nativeElement as HTMLElement).querySelector('#erro-confirmarSenha')).toBeNull();
 
       component['enviar']();
       httpMock.expectNone('http://localhost:8080/auth/registro');
@@ -181,18 +182,19 @@ describe('Cadastro', () => {
       });
     });
 
-    it('mudar a Senha depois reavalia a mensagem de Confirmar senha', () => {
+    it('mudar a Senha depois reavalia o estado inválido de Confirmar senha', () => {
       fixture.detectChanges();
       preencherFormularioValido(); // senha e confirmarSenha == 'Senha123!', sem erro
       component['form'].controls.confirmarSenha.markAsTouched(); // já tocou o campo antes
       fixture.detectChanges();
-      expect((fixture.nativeElement as HTMLElement).querySelector('#erro-confirmarSenha')).toBeNull();
+      let campo = (fixture.nativeElement as HTMLElement).querySelector('#confirmarSenha');
+      expect(campo?.getAttribute('aria-invalid')).toBeNull();
 
       component['form'].controls.senha.setValue('outraSenhaAgora');
       fixture.detectChanges();
 
-      const erro = (fixture.nativeElement as HTMLElement).querySelector('#erro-confirmarSenha');
-      expect(erro?.textContent?.trim()).toBe('As senhas não conferem.');
+      campo = (fixture.nativeElement as HTMLElement).querySelector('#confirmarSenha');
+      expect(campo?.getAttribute('aria-invalid')).toBe('true');
     });
 
     it('senha vazia com confirmar senha preenchida não mostra "As senhas não conferem." (revisão do PR #58)', () => {
@@ -211,7 +213,7 @@ describe('Cadastro', () => {
       expect((fixture.nativeElement as HTMLElement).querySelector('#erro-confirmarSenha')).toBeNull();
     });
 
-    it('revalidar só o campo confirmarSenha (onlySelf) não apaga o erro de senhas diferentes (regressão do PR #58)', () => {
+    it('revalidar só o campo confirmarSenha (onlySelf) não apaga o estado inválido de senhas diferentes (regressão do PR #58)', () => {
       // `updateValueAndValidity()` sem opções já propaga pro grupo por padrão (reproduziria
       // o bug "por acidente" mesmo sem o fix). `{ onlySelf: true }` é o que isola de verdade
       // a revalidação do campo, reproduzindo o cenário real do bug: o validador original
@@ -230,16 +232,14 @@ describe('Cadastro', () => {
       });
       component['form'].controls.confirmarSenha.markAsTouched();
       fixture.detectChanges();
-      expect(
-        (fixture.nativeElement as HTMLElement).querySelector('#erro-confirmarSenha')?.textContent?.trim(),
-      ).toBe('As senhas não conferem.');
+      let campo = (fixture.nativeElement as HTMLElement).querySelector('#confirmarSenha');
+      expect(campo?.getAttribute('aria-invalid')).toBe('true');
 
       component['form'].controls.confirmarSenha.updateValueAndValidity({ onlySelf: true });
       fixture.detectChanges();
 
-      expect(
-        (fixture.nativeElement as HTMLElement).querySelector('#erro-confirmarSenha')?.textContent?.trim(),
-      ).toBe('As senhas não conferem.');
+      campo = (fixture.nativeElement as HTMLElement).querySelector('#confirmarSenha');
+      expect(campo?.getAttribute('aria-invalid')).toBe('true');
     });
 
     it('monta o corpo da requisição só com os campos do contrato de POST /auth/registro', () => {
@@ -321,6 +321,75 @@ describe('Cadastro', () => {
 
       component['enviar']();
       httpMock.expectNone('http://localhost:8080/auth/registro');
+    });
+  });
+
+  describe('Mostrar senhas (segurar o botão)', () => {
+    function tiposDosCampos(el: HTMLElement): [string | null, string | null] {
+      return [
+        el.querySelector('#senha')?.getAttribute('type') ?? null,
+        el.querySelector('#confirmarSenha')?.getAttribute('type') ?? null,
+      ];
+    }
+
+    it('os dois campos começam como password', () => {
+      const el = fixture.nativeElement as HTMLElement;
+      fixture.detectChanges();
+
+      expect(tiposDosCampos(el)).toEqual(['password', 'password']);
+    });
+
+    it('pressionar (mousedown) mostra as duas senhas como texto; soltar (mouseup) esconde de novo', () => {
+      const el = fixture.nativeElement as HTMLElement;
+      fixture.detectChanges();
+      const botao = el.querySelector('.cadastro__botao-olho') as HTMLButtonElement;
+
+      botao.dispatchEvent(new MouseEvent('mousedown'));
+      fixture.detectChanges();
+      expect(tiposDosCampos(el)).toEqual(['text', 'text']);
+      expect(botao.getAttribute('aria-label')).toBe('Mostrando as senhas');
+
+      botao.dispatchEvent(new MouseEvent('mouseup'));
+      fixture.detectChanges();
+      expect(tiposDosCampos(el)).toEqual(['password', 'password']);
+    });
+
+    it('soltar o mouse fora do botão (mouseleave) também esconde', () => {
+      const el = fixture.nativeElement as HTMLElement;
+      fixture.detectChanges();
+      const botao = el.querySelector('.cadastro__botao-olho') as HTMLButtonElement;
+
+      botao.dispatchEvent(new MouseEvent('mousedown'));
+      botao.dispatchEvent(new MouseEvent('mouseleave'));
+      fixture.detectChanges();
+
+      expect(tiposDosCampos(el)).toEqual(['password', 'password']);
+    });
+
+    it('funciona pelo teclado: Enter/Espaço pressionado mostra, soltar esconde', () => {
+      const el = fixture.nativeElement as HTMLElement;
+      fixture.detectChanges();
+      const botao = el.querySelector('.cadastro__botao-olho') as HTMLButtonElement;
+
+      botao.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
+      fixture.detectChanges();
+      expect(tiposDosCampos(el)).toEqual(['text', 'text']);
+
+      botao.dispatchEvent(new KeyboardEvent('keyup', { key: 'Enter' }));
+      fixture.detectChanges();
+      expect(tiposDosCampos(el)).toEqual(['password', 'password']);
+    });
+
+    it('perder o foco do botão (blur) esconde, mesmo sem mouseup/keyup', () => {
+      const el = fixture.nativeElement as HTMLElement;
+      fixture.detectChanges();
+      const botao = el.querySelector('.cadastro__botao-olho') as HTMLButtonElement;
+
+      botao.dispatchEvent(new MouseEvent('mousedown'));
+      botao.dispatchEvent(new FocusEvent('blur'));
+      fixture.detectChanges();
+
+      expect(tiposDosCampos(el)).toEqual(['password', 'password']);
     });
   });
 
