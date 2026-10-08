@@ -194,6 +194,72 @@ describe('Cadastro', () => {
       const erro = (fixture.nativeElement as HTMLElement).querySelector('#erro-confirmarSenha');
       expect(erro?.textContent?.trim()).toBe('As senhas não conferem.');
     });
+
+    it('senha vazia com confirmar senha preenchida não mostra "As senhas não conferem." (revisão do PR #58)', () => {
+      fixture.detectChanges();
+      component['form'].setValue({
+        nome: 'Ana Silva',
+        email: 'ana@catolicasc.edu.br',
+        senha: '',
+        confirmarSenha: 'senha123',
+        cursoId: 14,
+        dataNascimento: '2005-01-01',
+      });
+      component['form'].controls.confirmarSenha.markAsTouched();
+      fixture.detectChanges();
+
+      expect((fixture.nativeElement as HTMLElement).querySelector('#erro-confirmarSenha')).toBeNull();
+    });
+
+    it('revalidar só o campo confirmarSenha (onlySelf) não apaga o erro de senhas diferentes (regressão do PR #58)', () => {
+      // `updateValueAndValidity()` sem opções já propaga pro grupo por padrão (reproduziria
+      // o bug "por acidente" mesmo sem o fix). `{ onlySelf: true }` é o que isola de verdade
+      // a revalidação do campo, reproduzindo o cenário real do bug: o validador original
+      // gravava o erro via confirmarSenha.setErrors(...), que o próprio
+      // Validators.required do campo apaga ao rodar sozinho (sem o grupo ter a chance de
+      // restaurar). O erro agora vive no grupo (form.hasError('senhasDiferentes')), que uma
+      // revalidação isolada do filho não mexe.
+      fixture.detectChanges();
+      component['form'].setValue({
+        nome: 'Ana Silva',
+        email: 'ana@catolicasc.edu.br',
+        senha: 'senha123',
+        confirmarSenha: 'outraSenha',
+        cursoId: 14,
+        dataNascimento: '2005-01-01',
+      });
+      component['form'].controls.confirmarSenha.markAsTouched();
+      fixture.detectChanges();
+      expect(
+        (fixture.nativeElement as HTMLElement).querySelector('#erro-confirmarSenha')?.textContent?.trim(),
+      ).toBe('As senhas não conferem.');
+
+      component['form'].controls.confirmarSenha.updateValueAndValidity({ onlySelf: true });
+      fixture.detectChanges();
+
+      expect(
+        (fixture.nativeElement as HTMLElement).querySelector('#erro-confirmarSenha')?.textContent?.trim(),
+      ).toBe('As senhas não conferem.');
+    });
+
+    it('monta o corpo da requisição só com os campos do contrato de POST /auth/registro', () => {
+      preencherFormularioValido();
+
+      component['enviar']();
+
+      const request = httpMock.expectOne('http://localhost:8080/auth/registro');
+      expect(Object.keys(request.request.body).sort()).toEqual(
+        ['cursoId', 'dataNascimento', 'email', 'nome', 'senha'].sort(),
+      );
+      request.flush({
+        id: 1,
+        nome: 'Ana Silva',
+        email: 'ana@catolicasc.edu.br',
+        curso: 'Engenharia de Software',
+        emailConfirmado: false,
+        criadoEm: '2026-08-27T00:00:00Z',
+      });
+    });
   });
 
   it('usa o botão forte do Design System e uma única ação laranja', () => {

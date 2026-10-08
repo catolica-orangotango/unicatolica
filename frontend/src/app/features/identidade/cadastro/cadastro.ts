@@ -7,23 +7,21 @@ import { UcButton } from '../../../ui/button/button';
 import { Curso, CursoService } from '../curso.service';
 
 /**
- * Validador de grupo (DT-1): confirmarSenha só ganha o erro `senhasDiferentes` quando não
- * está vazio (vazio já é coberto por `Validators.required` no próprio controle) e difere
- * de `senha`. Setar o erro no controle filho, não no grupo, é o que deixa o template
- * tratar `confirmarSenha` igual a qualquer outro campo (`touched && invalid`).
+ * Validador de grupo (DT-1): retorna `{ senhasDiferentes: true }` no próprio grupo, nunca
+ * via `setErrors` imperativo no controle filho — `setErrors` substitui (não mescla) os
+ * erros do controle, então qualquer revalidação de só `confirmarSenha` (ex.: o próprio
+ * `Validators.required` rodando de novo) apagaria o erro sem o grupo saber. O template lê
+ * o erro em `form.hasError('senhasDiferentes')` (ver `confirmarSenhaComErro`).
+ * Não compara quando `senha` ou `confirmarSenha` estão vazios — vazio já é coberto pelo
+ * `Validators.required` de cada controle.
  */
 function senhasConferemValidator(form: AbstractControl): ValidationErrors | null {
   const senha = form.get('senha');
   const confirmarSenha = form.get('confirmarSenha');
-  if (!senha || !confirmarSenha || !confirmarSenha.value) {
+  if (!senha?.value || !confirmarSenha?.value) {
     return null;
   }
-  if (senha.value !== confirmarSenha.value) {
-    confirmarSenha.setErrors({ senhasDiferentes: true });
-  } else if (confirmarSenha.hasError('senhasDiferentes')) {
-    confirmarSenha.setErrors(null);
-  }
-  return null;
+  return senha.value === confirmarSenha.value ? null : { senhasDiferentes: true };
 }
 
 /**
@@ -96,6 +94,23 @@ export class Cadastro {
     });
   }
 
+  /** `confirmarSenha` só existe no formulário (DT-1); erro de grupo também conta como erro do campo. */
+  protected confirmarSenhaComErro(): boolean {
+    const confirmarSenha = this.form.controls.confirmarSenha;
+    return confirmarSenha.touched && (confirmarSenha.invalid || this.form.hasError('senhasDiferentes'));
+  }
+
+  /** Não assume que todo erro de `confirmarSenha` é "senhas não conferem" (pode ser só vazio). */
+  protected mensagemErroConfirmarSenha(): string {
+    if (this.form.controls.confirmarSenha.hasError('required')) {
+      return 'Confirme sua senha.';
+    }
+    if (this.form.hasError('senhasDiferentes')) {
+      return 'As senhas não conferem.';
+    }
+    return '';
+  }
+
   protected enviar(): void {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
@@ -106,9 +121,16 @@ export class Cadastro {
     this.erro.set(null);
     this.sucesso.set(null);
 
-    // confirmarSenha é só do formulário (DT-1) — o contrato de POST /auth/registro não
-    // recebe esse campo.
-    const { confirmarSenha, ...corpo } = this.form.getRawValue();
+    // Corpo montado explicitamente com os campos do contrato de POST /auth/registro —
+    // confirmarSenha (só do formulário, DT-1) nunca entra aqui.
+    const valores = this.form.getRawValue();
+    const corpo = {
+      nome: valores.nome,
+      email: valores.email,
+      senha: valores.senha,
+      cursoId: valores.cursoId,
+      dataNascimento: valores.dataNascimento,
+    };
 
     this.http.post<CadastroResponse>(`${API_BASE_URL}/auth/registro`, corpo).subscribe({
       next: (resposta) => {

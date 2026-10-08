@@ -92,14 +92,38 @@ test.describe('Cadastro', () => {
 
   test('senhas diferentes não envia e mostra "As senhas não conferem." (DT-1)', async ({ page }) => {
     await page.goto('/cadastro');
+
+    // Os outros campos ficam válidos de propósito: sem isso o formulário já fica inválido
+    // por causa deles, e o teste "passa" mesmo que o validador de senha nunca rode.
+    let registroChamado = false;
+    await page.route('**/auth/registro', (route) => {
+      registroChamado = true;
+      return route.fulfill({ status: 201, contentType: 'application/json', body: '{}' });
+    });
+
+    await page.getByLabel('Nome completo').fill('Ana Teste');
+    await page.getByLabel('E-mail institucional').fill('ana.teste@catolicasc.edu.br');
     await page.getByLabel('Senha', { exact: true }).fill('Senha123!');
     await page.getByLabel('Confirmar senha').fill('OutraSenha456!');
-    await page.getByLabel('Curso').focus(); // tira o foco -> marca confirmarSenha como touched
+    await page.getByLabel('Curso').selectOption({ label: 'Engenharia de Software' });
+    await page.getByLabel('Data de nascimento').fill('2000-01-01');
 
     await expect(page.getByText('As senhas não conferem.')).toBeVisible();
 
     await page.getByRole('button', { name: 'Cadastrar' }).click();
     await expect(page).toHaveURL(/\/cadastro$/);
+    expect(registroChamado).toBe(false);
+  });
+
+  test('senha vazia com confirmar senha preenchida não mostra "As senhas não conferem." (revisão do PR #58)', async ({
+    page,
+  }) => {
+    await page.goto('/cadastro');
+
+    await page.getByLabel('Confirmar senha').fill('Senha123!');
+    await page.getByLabel('Curso').focus(); // tira o foco -> marca confirmarSenha como touched
+
+    await expect(page.getByText('As senhas não conferem.')).not.toBeVisible();
   });
 
   test('curso é escolhido de uma lista carregada de GET /cursos', async ({ page }) => {
