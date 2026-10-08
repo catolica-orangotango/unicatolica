@@ -7,6 +7,32 @@ import { UcButton } from '../../../ui/button/button';
 import { Curso, CursoService } from '../curso.service';
 
 /**
+ * Política de senha (DT-2, KAN-50, decisão em
+ * docs/decisoes/2026-10-07-politica-de-senha.md): mínimo 8 caracteres, 1 maiúscula, 1
+ * número, 1 caractere especial — mesma regra do `CadastroService.validarPoliticaSenha` no
+ * backend. As chaves do erro (`minTamanho`, `maiuscula`, `numero`, `especial`) também
+ * alimentam o checklist da tela, por isso cada regra vira sua própria chave em vez de um
+ * único erro genérico.
+ */
+function senhaForteValidator(control: AbstractControl): ValidationErrors | null {
+  const valor = (control.value as string | null) ?? '';
+  const erros: ValidationErrors = {};
+  if (valor.length < 8) {
+    erros['minTamanho'] = true;
+  }
+  if (!/[A-Z]/.test(valor)) {
+    erros['maiuscula'] = true;
+  }
+  if (!/[0-9]/.test(valor)) {
+    erros['numero'] = true;
+  }
+  if (!/[^A-Za-z0-9]/.test(valor)) {
+    erros['especial'] = true;
+  }
+  return Object.keys(erros).length > 0 ? erros : null;
+}
+
+/**
  * Validador de grupo (DT-1): retorna `{ senhasDiferentes: true }` no próprio grupo, nunca
  * via `setErrors` imperativo no controle filho — `setErrors` substitui (não mescla) os
  * erros do controle, então qualquer revalidação de só `confirmarSenha` (ex.: o próprio
@@ -69,6 +95,14 @@ export class Cadastro {
   protected readonly cursos = signal<Curso[]>([]);
   protected readonly erroCursos = signal(false);
 
+  /** Checklist da política de senha (DT-2, KAN-50) — chave bate com o erro de `senhaForteValidator`. */
+  protected readonly requisitosSenha = [
+    { chave: 'minTamanho', texto: 'Mínimo de 8 caracteres' },
+    { chave: 'maiuscula', texto: 'Pelo menos uma letra maiúscula' },
+    { chave: 'numero', texto: 'Pelo menos um número' },
+    { chave: 'especial', texto: 'Pelo menos um caractere especial' },
+  ];
+
   protected readonly enviando = signal(false);
   protected readonly erro = signal<string | null>(null);
   protected readonly sucesso = signal<CadastroResponse | null>(null);
@@ -79,7 +113,7 @@ export class Cadastro {
     {
       nome: ['', [Validators.required]],
       email: ['', [Validators.required, Validators.email]],
-      senha: ['', [Validators.required]],
+      senha: ['', [Validators.required, senhaForteValidator]],
       confirmarSenha: ['', [Validators.required]],
       cursoId: this.formBuilder.control<number | null>(null, [Validators.required]),
       dataNascimento: ['', [Validators.required]],

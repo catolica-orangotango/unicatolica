@@ -29,8 +29,9 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
 public class CadastroService {
 
     private static final int IDADE_MINIMA = 18;
-    private static final Pattern SENHA_TEM_LETRA = Pattern.compile(".*[A-Za-z].*");
+    private static final Pattern SENHA_TEM_MAIUSCULA = Pattern.compile(".*[A-Z].*");
     private static final Pattern SENHA_TEM_DIGITO = Pattern.compile(".*\\d.*");
+    private static final Pattern SENHA_TEM_ESPECIAL = Pattern.compile(".*[^A-Za-z0-9].*");
 
     @Inject
     UsuarioRepository usuarioRepository;
@@ -60,7 +61,7 @@ public class CadastroService {
     @ConfigProperty(name = "identidade.email.dominio-institucional")
     String dominioInstitucional;
 
-    /** [DECISÃO A CONFIRMAR] política de senha não definida nos artefatos — mínimo aplicado aqui. */
+    /** Política de senha (DT-2, KAN-50, decisão em docs/decisoes/2026-10-07-politica-de-senha.md). */
     @ConfigProperty(name = "identidade.senha.tamanho-minimo")
     int senhaTamanhoMinimo;
 
@@ -125,11 +126,13 @@ public class CadastroService {
     private void validarPoliticaSenha(String senha) {
         boolean valida = senha != null
                 && senha.length() >= senhaTamanhoMinimo
-                && SENHA_TEM_LETRA.matcher(senha).matches()
-                && SENHA_TEM_DIGITO.matcher(senha).matches();
+                && SENHA_TEM_MAIUSCULA.matcher(senha).matches()
+                && SENHA_TEM_DIGITO.matcher(senha).matches()
+                && SENHA_TEM_ESPECIAL.matcher(senha).matches();
         if (!valida) {
             throw ApiException.validacao("SENHA_POLITICA_INVALIDA", "A senha não atende aos requisitos mínimos.",
-                    "Use pelo menos " + senhaTamanhoMinimo + " caracteres, com letras e números.");
+                    "Use pelo menos " + senhaTamanhoMinimo
+                            + " caracteres, com letra maiúscula, número e caractere especial.");
         }
     }
 

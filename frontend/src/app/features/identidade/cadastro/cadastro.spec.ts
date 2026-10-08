@@ -34,8 +34,8 @@ describe('Cadastro', () => {
     component['form'].setValue({
       nome: 'Ana Silva',
       email: 'ana@catolicasc.edu.br',
-      senha: 'senha123',
-      confirmarSenha: 'senha123',
+      senha: 'Senha123!',
+      confirmarSenha: 'Senha123!',
       cursoId: 14,
       dataNascimento: '2005-01-01',
     });
@@ -148,8 +148,8 @@ describe('Cadastro', () => {
       component['form'].setValue({
         nome: 'Ana Silva',
         email: 'ana@catolicasc.edu.br',
-        senha: 'senha123',
-        confirmarSenha: 'outraSenha',
+        senha: 'Senha123!',
+        confirmarSenha: 'OutraSenha456@',
         cursoId: 14,
         dataNascimento: '2005-01-01',
       });
@@ -169,7 +169,7 @@ describe('Cadastro', () => {
       component['enviar']();
 
       const request = httpMock.expectOne('http://localhost:8080/auth/registro');
-      expect(request.request.body.senha).toBe('senha123');
+      expect(request.request.body.senha).toBe('Senha123!');
       expect(request.request.body.confirmarSenha).toBeUndefined();
       request.flush({
         id: 1,
@@ -183,7 +183,7 @@ describe('Cadastro', () => {
 
     it('mudar a Senha depois reavalia a mensagem de Confirmar senha', () => {
       fixture.detectChanges();
-      preencherFormularioValido(); // senha e confirmarSenha == 'senha123', sem erro
+      preencherFormularioValido(); // senha e confirmarSenha == 'Senha123!', sem erro
       component['form'].controls.confirmarSenha.markAsTouched(); // já tocou o campo antes
       fixture.detectChanges();
       expect((fixture.nativeElement as HTMLElement).querySelector('#erro-confirmarSenha')).toBeNull();
@@ -259,6 +259,68 @@ describe('Cadastro', () => {
         emailConfirmado: false,
         criadoEm: '2026-08-27T00:00:00Z',
       });
+    });
+  });
+
+  describe('Requisitos de senha (DT-2, KAN-50)', () => {
+    function textoRequisitos(): string[] {
+      return [...(fixture.nativeElement as HTMLElement).querySelectorAll('.cadastro__requisito')].map((el) =>
+        el.textContent!.trim(),
+      );
+    }
+
+    function requisitosAtendidos(): boolean[] {
+      return [...(fixture.nativeElement as HTMLElement).querySelectorAll('.cadastro__requisito')].map((el) =>
+        el.classList.contains('cadastro__requisito--ok'),
+      );
+    }
+
+    it('mostra os quatro requisitos, todos pendentes quando o campo está vazio', () => {
+      fixture.detectChanges();
+
+      expect(textoRequisitos()).toEqual([
+        '○ Mínimo de 8 caracteres',
+        '○ Pelo menos uma letra maiúscula',
+        '○ Pelo menos um número',
+        '○ Pelo menos um caractere especial',
+      ]);
+      expect(requisitosAtendidos()).toEqual([false, false, false, false]);
+    });
+
+    it('marca como atendido só o que a senha digitada já cumpre', () => {
+      fixture.detectChanges();
+      component['form'].controls.senha.setValue('senhacomprida'); // 8+ chars e minúsculas, sem maiúscula/número/especial
+      fixture.detectChanges();
+
+      expect(requisitosAtendidos()).toEqual([true, false, false, false]);
+    });
+
+    it('marca os quatro como atendidos quando a senha cumpre a política inteira', () => {
+      fixture.detectChanges();
+      component['form'].controls.senha.setValue('Senha123!');
+      fixture.detectChanges();
+
+      expect(requisitosAtendidos()).toEqual([true, true, true, true]);
+    });
+
+    it('senha fraca, depois de tocar, mostra a mensagem genérica e não envia', () => {
+      fixture.detectChanges();
+      component['form'].setValue({
+        nome: 'Ana Silva',
+        email: 'ana@catolicasc.edu.br',
+        senha: 'fraca',
+        confirmarSenha: 'fraca',
+        cursoId: 14,
+        dataNascimento: '2005-01-01',
+      });
+      component['form'].controls.senha.markAsTouched();
+      fixture.detectChanges();
+
+      const erro = (fixture.nativeElement as HTMLElement).querySelector('#erro-senha');
+      expect(erro?.textContent?.trim()).toBe('Sua senha não atende aos requisitos abaixo.');
+
+      component['enviar']();
+      httpMock.expectNone('http://localhost:8080/auth/registro');
     });
   });
 

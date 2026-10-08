@@ -97,8 +97,29 @@
         "
       />
       @if (form.controls.senha.touched && form.controls.senha.invalid) {
-        <span class="campo-erro" id="erro-senha">Informe uma senha.</span>
+        <span class="campo-erro" id="erro-senha">
+          {{
+            form.controls.senha.hasError('required')
+              ? 'Informe uma senha.'
+              : 'Sua senha não atende aos requisitos abaixo.'
+          }}
+        </span>
       }
+
+      <ul class="cadastro__requisitos-senha" aria-label="Requisitos da senha">
+        @for (requisito of requisitosSenha; track requisito.chave) {
+          <li
+            class="cadastro__requisito"
+            [class.cadastro__requisito--ok]="!form.controls.senha.hasError(requisito.chave)"
+            [attr.aria-label]="
+              requisito.texto + (form.controls.senha.hasError(requisito.chave) ? ' (pendente)' : ' (atendido)')
+            "
+          >
+            <span aria-hidden="true">{{ form.controls.senha.hasError(requisito.chave) ? '○' : '✓' }}</span>
+            {{ requisito.texto }}
+          </li>
+        }
+      </ul>
 
       <label class="cadastro__label" for="confirmarSenha">Confirmar senha</label>
       <input

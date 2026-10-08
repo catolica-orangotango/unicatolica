@@ -70,6 +70,28 @@
   font-size: var(--uc-font-size-meta);
 }
 
+// Checklist de política de senha (DT-2, KAN-50) — fica sempre visível, não só depois do
+// touched/invalid como os outros campos: o objetivo é orientar enquanto o usuário digita.
+// "não atendido" usa ink-faint (neutro), nunca --uc-color-error, porque um requisito ainda
+// não cumprido não é um erro até o usuário tentar enviar o formulário.
+.cadastro__requisitos-senha {
+  margin: 0 0 calc(var(--uc-space-unit) * 4);
+  padding: 0;
+  list-style: none;
+  font-size: var(--uc-font-size-meta);
+}
+
+.cadastro__requisito {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--uc-space-unit) * 1.5);
+  color: var(--uc-color-ink-faint);
+}
+
+.cadastro__requisito--ok {
+  color: var(--uc-color-green-ok);
+}
+
 .cadastro__enviar {
   align-self: flex-start;
   margin-top: calc(var(--uc-space-unit) * 2);

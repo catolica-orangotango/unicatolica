@@ -126,6 +126,22 @@ test.describe('Cadastro', () => {
     await expect(page.getByText('As senhas não conferem.')).not.toBeVisible();
   });
 
+  test('checklist de requisitos da senha atualiza em tempo real (DT-2, KAN-50)', async ({ page }) => {
+    await page.goto('/cadastro');
+
+    const requisitos = page.locator('.cadastro__requisito');
+    await expect(requisitos).toHaveCount(4);
+    for (const texto of await requisitos.allTextContents()) {
+      expect(texto.trim().startsWith('○')).toBe(true);
+    }
+
+    await page.getByLabel('Senha', { exact: true }).fill('Senha123!');
+
+    for (const texto of await requisitos.allTextContents()) {
+      expect(texto.trim().startsWith('✓')).toBe(true);
+    }
+  });
+
   test('curso é escolhido de uma lista carregada de GET /cursos', async ({ page }) => {
     await page.goto('/cadastro');
 

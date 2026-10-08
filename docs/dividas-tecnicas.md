@@ -4,18 +4,8 @@ Problemas conhecidos que ainda não têm história nem PR. Quando um item virar 
 
 | # | Dívida | Estado |
 |---|---|---|
-| DT-2 | Cadastro sem validação de senha segura | Aberta |
 | DT-3 | Lista de cursos ainda não é mantida pelo administrador | KAN-44 |
 | DT-4 | E-mail de confirmação do cadastro não chega ao usuário | Código pronto; falta configurar a Brevo no Render |
-
-## DT-2. Cadastro sem validação de senha segura
-
-- **Backend:** `CadastroService.validarPoliticaSenha` exige só 8 caracteres (`identidade.senha.tamanho-minimo`), com ao menos uma letra e um dígito. O próprio código marca a regra como `[DECISÃO A CONFIRMAR]`, porque o RF04 não define a política.
-- **Frontend:** o campo só tem `Validators.required`. O usuário não vê os requisitos e só descobre a regra pelo erro `SENHA_POLITICA_INVALIDA` depois de enviar.
-- **Correção esperada:**
-  1. O time decide a política (tamanho, maiúscula, símbolo, lista de senhas comuns) em `docs/decisoes/`.
-  2. O backend aplica essa política.
-  3. O frontend mostra os requisitos e valida antes de enviar, com a mesma regra.
 
 ## DT-3. Lista de cursos ainda não é mantida pelo administrador
 
