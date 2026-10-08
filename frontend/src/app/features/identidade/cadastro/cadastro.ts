@@ -1,5 +1,6 @@
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { AbstractControl, FormBuilder, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
 import { API_BASE_URL } from '../../../core/config/api.config';
 import { UcAuthShell } from '../../../layout/auth-shell/auth-shell';
@@ -70,6 +71,12 @@ interface CadastroResponse {
   criadoEm: string;
 }
 
+interface RequisitoSenha {
+  chave: string;
+  texto: string;
+  atendido: boolean;
+}
+
 /**
  * Tela de cadastro (Story 1.2), restilizada no Design System "Campus Clean" pela
  * Story 14.7. Cobre os critérios de aceite da história: envia nome, e-mail
@@ -95,14 +102,6 @@ export class Cadastro {
   protected readonly cursos = signal<Curso[]>([]);
   protected readonly erroCursos = signal(false);
 
-  /** Checklist da política de senha (DT-2, KAN-50) — chave bate com o erro de `senhaForteValidator`. */
-  protected readonly requisitosSenha = [
-    { chave: 'minTamanho', texto: 'Mínimo de 8 caracteres' },
-    { chave: 'maiuscula', texto: 'Pelo menos uma letra maiúscula' },
-    { chave: 'numero', texto: 'Pelo menos um número' },
-    { chave: 'especial', texto: 'Pelo menos um caractere especial' },
-  ];
-
   protected readonly enviando = signal(false);
   protected readonly erro = signal<string | null>(null);
   protected readonly sucesso = signal<CadastroResponse | null>(null);
@@ -123,6 +122,24 @@ export class Cadastro {
     },
     { validators: senhasConferemValidator },
   );
+
+  private readonly senhaValor = toSignal(this.form.controls.senha.valueChanges, { initialValue: '' });
+
+  /**
+   * Checklist da política de senha (DT-2, KAN-50) — computado a partir de um signal, não
+   * de chamadas a `form.controls.senha.hasError(...)` direto no `@for` do template: isso
+   * apresentou um bug de renderização em que um item ficava com o DOM desatualizado
+   * quando só ele (não os quatro juntos) mudava de estado numa mesma digitação.
+   */
+  protected readonly requisitosSenha = computed<RequisitoSenha[]>(() => {
+    const valor = this.senhaValor() ?? '';
+    return [
+      { chave: 'minTamanho', texto: 'Mínimo de 8 caracteres', atendido: valor.length >= 8 },
+      { chave: 'maiuscula', texto: 'Pelo menos uma letra maiúscula', atendido: /[A-Z]/.test(valor) },
+      { chave: 'numero', texto: 'Pelo menos um número', atendido: /[0-9]/.test(valor) },
+      { chave: 'especial', texto: 'Pelo menos um caractere especial', atendido: /[^A-Za-z0-9]/.test(valor) },
+    ];
+  });
 
   constructor() {
     this.cursoService.listar().subscribe({

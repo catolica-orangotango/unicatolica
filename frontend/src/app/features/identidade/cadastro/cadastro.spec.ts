@@ -500,23 +500,7 @@ describe('Cadastro - Requisitos de senha (DT-2, KAN-50)', () => {
     fixture.detectChanges();
     component['form'].controls.senha.setValue('senhacomprida'); // 8+ chars e minúsculas, sem maiúscula/número/especial
     fixture.detectChanges();
-    // App zoneless: um detectChanges() sozinho não garante que o agendamento de CD
-    // assentou - whenStable() espera o ciclo pendente antes de ler o DOM.
     await fixture.whenStable();
-
-    // DEBUG TEMP
-    const senhaControl = component['form'].controls.senha;
-    console.log('DEBUG valor=', JSON.stringify(senhaControl.value));
-    console.log('DEBUG length=', senhaControl.value?.length);
-    console.log('DEBUG hasError minTamanho=', senhaControl.hasError('minTamanho'));
-    console.log('DEBUG hasError maiuscula=', senhaControl.hasError('maiuscula'));
-    console.log('DEBUG hasError numero=', senhaControl.hasError('numero'));
-    console.log('DEBUG hasError especial=', senhaControl.hasError('especial'));
-    console.log('DEBUG errors=', JSON.stringify(senhaControl.errors));
-    console.log(
-      'DEBUG html=',
-      (fixture.nativeElement as HTMLElement).querySelector('.cadastro__requisitos-senha')?.outerHTML,
-    );
 
     expect(requisitosAtendidos(fixture)).toEqual([true, false, false, false]);
     fixture.destroy();

@@ -140,15 +140,13 @@
       }
 
       <ul class="cadastro__requisitos-senha" aria-label="Requisitos da senha">
-        @for (requisito of requisitosSenha; track requisito.chave) {
+        @for (requisito of requisitosSenha(); track requisito.chave) {
           <li
             class="cadastro__requisito"
-            [class.cadastro__requisito--ok]="!form.controls.senha.hasError(requisito.chave)"
-            [attr.aria-label]="
-              requisito.texto + (form.controls.senha.hasError(requisito.chave) ? ' (pendente)' : ' (atendido)')
-            "
+            [class.cadastro__requisito--ok]="requisito.atendido"
+            [attr.aria-label]="requisito.texto + (requisito.atendido ? ' (atendido)' : ' (pendente)')"
           >
-            <span aria-hidden="true">{{ form.controls.senha.hasError(requisito.chave) ? '○' : '✓' }}</span>
+            <span aria-hidden="true">{{ requisito.atendido ? '✓' : '○' }}</span>
             {{ requisito.texto }}
           </li>
         }
