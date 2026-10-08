@@ -196,8 +196,16 @@ export interface PerfilMock {
  * `GET`/`PUT /perfil/me` (Stories 4.1/4.2) com estado em memória: o `PUT` grava e um
  * `GET` depois (reload) devolve o salvo, como o backend real. O curso vem de
  * {@link CURSOS_MOCK} pelo `cursoId`. Registrar depois de `mockFeedOk`.
+ *
+ * `marcarLidaAoSalvar` reproduz o efeito colateral real da Story 4.3: salvar o perfil
+ * marca a notificação "complete seu perfil" como lida no backend. Passe a lista mutável
+ * de {@link mockNotificacoes} e o id da notificação para simular isso no `PUT`.
  */
-export async function mockMeuPerfil(page: Page, inicial: PerfilMock): Promise<void> {
+export async function mockMeuPerfil(
+  page: Page,
+  inicial: PerfilMock,
+  opcoes?: { marcarLidaAoSalvar?: { notificacoes: NotificacaoMock[]; id: number } },
+): Promise<void> {
   let atual = { ...inicial };
   await page.route(
     (url) => ehApi(url) && url.pathname === '/perfil/me',
@@ -215,6 +223,13 @@ export async function mockMeuPerfil(page: Page, inicial: PerfilMock): Promise<vo
           periodo: corpo.periodo,
           interesses: [...corpo.interesses].sort((a, b) => a.localeCompare(b)),
         };
+        if (opcoes?.marcarLidaAoSalvar) {
+          const { notificacoes, id } = opcoes.marcarLidaAoSalvar;
+          const notificacao = notificacoes.find((n) => n.id === id);
+          if (notificacao) {
+            notificacao.lida = true;
+          }
+        }
       }
       return route.fulfill({
         status: 200,
@@ -233,6 +248,57 @@ export function mockPerfilDeUsuario(page: Page, perfil: PerfilMock): Promise<voi
     200,
     JSON.stringify(perfil),
   );
+}
+
+/** Notificação no formato de `Notificacao` do `openapi.yaml` (Story 10.1). */
+export interface NotificacaoMock {
+  id: number;
+  tipo: string;
+  texto: string;
+  link: string | null;
+  lida: boolean;
+  criadoEm: string;
+}
+
+/**
+ * `GET /notificacoes/me` e `POST /notificacoes/{id}/lida` (Story 10.1) com estado em
+ * memória — a mesma lista alimenta o badge e o painel da sidebar, e uma notificação
+ * marcada como lida (pelo painel ou como efeito colateral de outra rota — ver o
+ * `marcarLida` opcional em {@link mockMeuPerfil}) reflete no próximo `GET`. Registrar
+ * depois de `mockFeedOk`.
+ */
+export async function mockNotificacoes(page: Page, iniciais: NotificacaoMock[]): Promise<NotificacaoMock[]> {
+  const notificacoes = iniciais.map((n) => ({ ...n }));
+  await page.route(
+    (url) => ehApi(url) && /^\/notificacoes(\/|$)/.test(url.pathname),
+    (route) => {
+      const request = route.request();
+      if (request.method() === 'OPTIONS') {
+        return route.fulfill({
+          status: 204,
+          headers: { ...CORS, 'access-control-allow-methods': 'GET,POST,OPTIONS' },
+        });
+      }
+      const alvo = /^\/notificacoes\/(\d+)\/lida$/.exec(new URL(request.url()).pathname);
+      if (request.method() === 'POST' && alvo) {
+        const notificacao = notificacoes.find((n) => n.id === Number(alvo[1]));
+        if (notificacao) {
+          notificacao.lida = true;
+        }
+        return route.fulfill({ status: 204, headers: CORS });
+      }
+      return route.fulfill(
+        json(200, {
+          content: notificacoes,
+          page: 0,
+          size: 20,
+          totalElements: notificacoes.length,
+          totalPages: notificacoes.length > 0 ? 1 : 0,
+        }),
+      );
+    },
+  );
+  return notificacoes;
 }
 
 /** Denúncia no formato de `Denuncia` do `openapi.yaml` — sem campo do denunciante (RF77.1). */
