@@ -16,11 +16,12 @@ import java.time.Instant;
 import java.util.List;
 
 /**
- * Regras de negócio das Stories 2.2 (criar comunidade aberta), 2.4 (entrar/sair) e 2.5
- * (listar/filtrar/visualizar) do Epic 2. Entrada rápida (protótipo desta fatia, ver
- * docs/decisoes/2026-08-modelo-epico-2-comunidades.md) — Story 2.1 (endpoint de admin criar comunidade de
- * curso) e 2.6 (administração) ficam de fora por dependerem do papel ADMINISTRADOR de
- * plataforma, que ainda não existe em Identidade.
+ * Regras de negócio das Stories 2.2 (criar comunidade aberta), 2.4 (entrar/sair), 2.5
+ * (listar/filtrar/visualizar) e 2.6 (administrar: remover membro, editar, excluir) do Epic 2.
+ * Entrada rápida (protótipo desta fatia, ver docs/decisoes/2026-08-modelo-epico-2-comunidades.md) —
+ * Story 2.1 (endpoint de admin criar comunidade de curso) fica de fora por depender do papel
+ * ADMINISTRADOR de plataforma, que ainda não existe em Identidade. Na 2.6 o administrador é o
+ * papel {@code ADMINISTRADOR} <em>dentro da comunidade</em>, não o da plataforma.
  */
 @ApplicationScoped
 public class ComunidadeService {
@@ -89,6 +90,62 @@ public class ComunidadeService {
         comunidadeMembroRepository.removerAssociacao(comunidade, usuarioId);
     }
 
+    /**
+     * Story 2.6 (RF29) — só administrador da comunidade remove um membro, e nunca outro
+     * administrador (nem a si mesmo): evita comunidade sem administrador. Para encerrar a
+     * comunidade, o administrador a exclui.
+     */
+    @Transactional
+    public void removerMembro(Long solicitanteId, Long comunidadeId, Long usuarioIdAlvo) {
+        Comunidade comunidade = buscarOuFalhar(comunidadeId);
+        validarAdministrador(comunidade, solicitanteId);
+        if (!comunidadeMembroRepository.existeAssociacao(comunidade, usuarioIdAlvo)) {
+            throw ApiException.naoEncontrado("MEMBRO_NAO_ENCONTRADO", "Esse usuário não é membro da comunidade.", null);
+        }
+        if (comunidadeMembroRepository.ehAdministrador(comunidade, usuarioIdAlvo)) {
+            throw ApiException.validacao("ADMIN_NAO_PODE_SER_REMOVIDO",
+                    "Um administrador não pode ser removido da comunidade.", "usuarioId");
+        }
+        comunidadeMembroRepository.removerAssociacao(comunidade, usuarioIdAlvo);
+        auditoriaService.registrar(solicitanteId, "comunidades", "MEMBRO_REMOVIDO", "Comunidade", comunidade.id,
+                "usuarioId=" + usuarioIdAlvo);
+    }
+
+    /** Story 2.6 (RF30) — edita nome/descrição; o tipo nunca é alterado (imutável desde a criação). */
+    @Transactional
+    public Comunidade editar(Long solicitanteId, Long comunidadeId, String nome, String descricao) {
+        Comunidade comunidade = buscarOuFalhar(comunidadeId);
+        validarAdministrador(comunidade, solicitanteId);
+        validarNomeObrigatorio(nome);
+        if (comunidadeRepository.existePorNomeEDiferente(nome, comunidade.id)) {
+            throw ApiException.conflito("COMUNIDADE_NOME_EM_USO", "Já existe uma comunidade com esse nome.", null);
+        }
+
+        comunidade.nome = nome.trim();
+        comunidade.descricao = descricao;
+        comunidade.atualizadoEm = Instant.now();
+
+        auditoriaService.registrar(solicitanteId, "comunidades", "COMUNIDADE_EDITADA", "Comunidade", comunidade.id,
+                null);
+        return comunidade;
+    }
+
+    /**
+     * Story 2.6 (RF31) — exclusão lógica: some das listagens e deixa de aceitar interações.
+     * Os dados ficam preservados e o nome continua reservado ({@code nome} é {@code unique}).
+     */
+    @Transactional
+    public void excluir(Long solicitanteId, Long comunidadeId) {
+        Comunidade comunidade = buscarOuFalhar(comunidadeId);
+        validarAdministrador(comunidade, solicitanteId);
+
+        comunidade.ativa = false;
+        comunidade.atualizadoEm = Instant.now();
+
+        auditoriaService.registrar(solicitanteId, "comunidades", "COMUNIDADE_EXCLUIDA", "Comunidade", comunidade.id,
+                null);
+    }
+
     /** Story 2.5 (RF27, RF28). */
     public PageResponse<Comunidade> listar(TipoComunidade tipo, String nome, int pagina, int tamanho) {
         List<Comunidade> conteudo = comunidadeRepository.listar(tipo, nome, pagina, tamanho);
@@ -108,7 +165,7 @@ public class ComunidadeService {
 
     /** Story 2.5 (RF27.1) — {@code usuarioId} nulo não deveria acontecer (endpoint autenticado). */
     public Comunidade buscarOuFalhar(Long comunidadeId) {
-        return comunidadeRepository.findByIdOptional(comunidadeId)
+        return comunidadeRepository.buscarAtivaPorId(comunidadeId)
                 .orElseThrow(() -> ApiException.naoEncontrado("COMUNIDADE_NAO_ENCONTRADA",
                         "Comunidade não encontrada.", null));
     }
@@ -124,6 +181,13 @@ public class ComunidadeService {
                     "Só é possível entrar ou sair de comunidades abertas.", null);
         }
         return comunidade;
+    }
+
+    private void validarAdministrador(Comunidade comunidade, Long usuarioId) {
+        if (!comunidadeMembroRepository.ehAdministrador(comunidade, usuarioId)) {
+            throw ApiException.semPermissao("SEM_PERMISSAO_ADMINISTRAR",
+                    "Só o administrador da comunidade pode fazer isso.", null);
+        }
     }
 
     private void validarNomeObrigatorio(String nome) {

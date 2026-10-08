@@ -12,14 +12,23 @@ public class ComunidadeMembroRepository implements PanacheRepository<ComunidadeM
         return count("comunidade = ?1 and usuarioId = ?2", comunidade, usuarioId) > 0;
     }
 
-    /** Mesma checagem só pelo id — para {@code ComunidadeConsulta}, sem carregar a comunidade. */
+    /**
+     * Mesma checagem só pelo id — para {@code ComunidadeConsulta}, sem carregar a comunidade.
+     * Comunidade excluída (Story 2.6, RF31) não tem mais membros para fins de interação.
+     */
     public boolean existeAssociacao(Long comunidadeId, Long usuarioId) {
-        return count("comunidade.id = ?1 and usuarioId = ?2", comunidadeId, usuarioId) > 0;
+        return count("comunidade.id = ?1 and comunidade.ativa = true and usuarioId = ?2", comunidadeId, usuarioId) > 0;
     }
 
-    /** Home (RF27.1-ish) — "Suas comunidades" na barra lateral, mais recente primeiro. */
+    /** Story 2.6 (RF29/RF30/RF31) — administrador da comunidade, não da plataforma. */
+    public boolean ehAdministrador(Comunidade comunidade, Long usuarioId) {
+        return count("comunidade = ?1 and usuarioId = ?2 and papelNaComunidade = ?3", comunidade, usuarioId,
+                PapelMembro.ADMINISTRADOR) > 0;
+    }
+
+    /** Home (RF27.1-ish) — "Suas comunidades" na barra lateral, mais recente primeiro; sem as excluídas (RF31). */
     public List<ComunidadeMembro> listarPorUsuario(Long usuarioId) {
-        return list("usuarioId = ?1 order by entrouEm desc", usuarioId);
+        return list("usuarioId = ?1 and comunidade.ativa = true order by entrouEm desc", usuarioId);
     }
 
     public long removerAssociacao(Comunidade comunidade, Long usuarioId) {

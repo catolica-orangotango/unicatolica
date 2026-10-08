@@ -24,8 +24,8 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
 /**
- * Prova pelo HTTP real (rest-assured) o contrato de {@code /comunidades} (Stories 2.2, 2.4 e
- * 2.5): caminho feliz, 401 e cada código de erro do {@code openapi.yaml}.
+ * Prova pelo HTTP real (rest-assured) o contrato de {@code /comunidades} (Stories 2.2, 2.4, 2.5
+ * e 2.6): caminho feliz, 401 e cada código de erro do {@code openapi.yaml}.
  *
  * <p>Os testes compartilham o banco: cada um cria as próprias comunidades com nome único e
  * só conta o que ele mesmo criou.</p>
@@ -55,7 +55,10 @@ class ComunidadeFluxoTest {
                 new Rota(Method.GET, "/comunidades/minhas"),
                 new Rota(Method.GET, "/comunidades/1"),
                 new Rota(Method.POST, "/comunidades/1/membros"),
-                new Rota(Method.DELETE, "/comunidades/1/membros/me"));
+                new Rota(Method.DELETE, "/comunidades/1/membros/me"),
+                new Rota(Method.PATCH, "/comunidades/1"),
+                new Rota(Method.DELETE, "/comunidades/1"),
+                new Rota(Method.DELETE, "/comunidades/1/membros/2"));
     }
 
     @ParameterizedTest(name = "{0}")
@@ -246,6 +249,209 @@ class ComunidadeFluxoTest {
 
         aluno.autenticado().when().get("/comunidades/{id}", id)
                 .then().body("souMembro", equalTo(false));
+    }
+
+    // ---- Story 2.6: administração da comunidade (RF29, RF30, RF31) ----
+
+    @Test
+    void administradorEditaNomeEDescricaoEOTipoNaoMuda() {
+        Integer id = criar(aluno, prefixo);
+
+        aluno.autenticado().contentType(JSON)
+                .body(Map.of("nome", "  " + prefixo + " editada  ", "descricao", "Nova descrição", "tipo", "CURSO"))
+                .when().patch("/comunidades/{id}", id)
+                .then().statusCode(200)
+                .body("id", equalTo(id))
+                .body("nome", equalTo(prefixo + " editada"))
+                .body("descricao", equalTo("Nova descrição"))
+                .body("tipo", equalTo("ABERTA"))
+                .body("souMembro", equalTo(true));
+
+        aluno.autenticado().when().get("/comunidades/{id}", id)
+                .then().statusCode(200)
+                .body("nome", equalTo(prefixo + " editada"))
+                .body("tipo", equalTo("ABERTA"));
+    }
+
+    @Test
+    void editarSemTrocarONomeNaoDaConflitoComElaMesma() {
+        Integer id = criar(aluno, prefixo);
+
+        aluno.autenticado().contentType(JSON)
+                .body(Map.of("nome", prefixo.toUpperCase(), "descricao", "Só a descrição mudou"))
+                .when().patch("/comunidades/{id}", id)
+                .then().statusCode(200)
+                .body("descricao", equalTo("Só a descrição mudou"));
+    }
+
+    @Test
+    void editarComNomeDeOutraComunidadeDa409() {
+        criar(aluno, prefixo + " A");
+        Integer segunda = criar(aluno, prefixo + " B");
+
+        aluno.autenticado().contentType(JSON)
+                .body(Map.of("nome", (prefixo + " A").toUpperCase()))
+                .when().patch("/comunidades/{id}", segunda)
+                .then().statusCode(409)
+                .body("error.code", equalTo("COMUNIDADE_NOME_EM_USO"));
+    }
+
+    @Test
+    void editarComNomeEmBrancoDa422() {
+        Integer id = criar(aluno, prefixo);
+
+        aluno.autenticado().contentType(JSON)
+                .body(Map.of("nome", "   "))
+                .when().patch("/comunidades/{id}", id)
+                .then().statusCode(422)
+                .body("error.code", equalTo("CAMPO_OBRIGATORIO"));
+    }
+
+    @Test
+    void quemNaoEAdministradorNaoEditaNemExclui() {
+        Integer id = criar(aluno, prefixo);
+        Sessao membro = usuarioDeTeste.novo(CURSO);
+        membro.autenticado().when().post("/comunidades/{id}/membros", id).then().statusCode(201);
+        Sessao estranho = usuarioDeTeste.novo(CURSO);
+
+        for (Sessao sessao : List.of(membro, estranho)) {
+            sessao.autenticado().contentType(JSON).body(Map.of("nome", "Invasão"))
+                    .when().patch("/comunidades/{id}", id)
+                    .then().statusCode(403)
+                    .body("error.code", equalTo("SEM_PERMISSAO_ADMINISTRAR"));
+
+            sessao.autenticado().when().delete("/comunidades/{id}", id)
+                    .then().statusCode(403)
+                    .body("error.code", equalTo("SEM_PERMISSAO_ADMINISTRAR"));
+        }
+
+        aluno.autenticado().when().get("/comunidades/{id}", id)
+                .then().statusCode(200)
+                .body("nome", equalTo(prefixo));
+    }
+
+    @Test
+    void editarOuExcluirComunidadeInexistenteDa404() {
+        aluno.autenticado().contentType(JSON).body(Map.of("nome", prefixo))
+                .when().patch("/comunidades/{id}", INEXISTENTE)
+                .then().statusCode(404)
+                .body("error.code", equalTo("COMUNIDADE_NAO_ENCONTRADA"));
+
+        aluno.autenticado().when().delete("/comunidades/{id}", INEXISTENTE)
+                .then().statusCode(404)
+                .body("error.code", equalTo("COMUNIDADE_NAO_ENCONTRADA"));
+    }
+
+    @Test
+    void comunidadeExcluidaSomeDeTodoLugarEDeixaDeAceitarInteracoes() {
+        Integer id = criar(aluno, prefixo);
+        Sessao membro = usuarioDeTeste.novo(CURSO);
+        membro.autenticado().when().post("/comunidades/{id}/membros", id).then().statusCode(201);
+
+        aluno.autenticado().when().delete("/comunidades/{id}", id)
+                .then().statusCode(204);
+
+        aluno.autenticado().when().get("/comunidades/{id}", id)
+                .then().statusCode(404)
+                .body("error.code", equalTo("COMUNIDADE_NAO_ENCONTRADA"));
+        aluno.autenticado().queryParam("nome", prefixo)
+                .when().get("/comunidades")
+                .then().statusCode(200)
+                .body("totalElements", equalTo(0));
+        aluno.autenticado().when().get("/comunidades/minhas")
+                .then().body("id", not(hasItem(id)));
+        membro.autenticado().when().get("/comunidades/minhas")
+                .then().body("id", not(hasItem(id)));
+
+        usuarioDeTeste.novo(CURSO).autenticado().when().post("/comunidades/{id}/membros", id)
+                .then().statusCode(404)
+                .body("error.code", equalTo("COMUNIDADE_NAO_ENCONTRADA"));
+        membro.autenticado().contentType(JSON).body(Map.of("conteudo", "ainda posso?"))
+                .when().post("/comunidades/{id}/publicacoes", id)
+                .then().statusCode(404)
+                .body("error.code", equalTo("COMUNIDADE_NAO_ENCONTRADA"));
+        membro.autenticado().when().get("/comunidades/{id}/publicacoes", id)
+                .then().statusCode(404)
+                .body("error.code", equalTo("COMUNIDADE_NAO_ENCONTRADA"));
+
+        aluno.autenticado().when().delete("/comunidades/{id}", id)
+                .then().statusCode(404);
+    }
+
+    @Test
+    void nomeDeComunidadeExcluidaContinuaReservado() {
+        Integer id = criar(aluno, prefixo);
+        aluno.autenticado().when().delete("/comunidades/{id}", id).then().statusCode(204);
+
+        aluno.autenticado().contentType(JSON).body(Map.of("nome", prefixo))
+                .when().post("/comunidades")
+                .then().statusCode(409)
+                .body("error.code", equalTo("COMUNIDADE_NOME_EM_USO"));
+    }
+
+    @Test
+    void administradorRemoveMembroEEleSomeDeMinhasEPerdeAPermissaoDePublicar() {
+        Integer id = criar(aluno, prefixo);
+        Sessao membro = usuarioDeTeste.novo(CURSO);
+        membro.autenticado().when().post("/comunidades/{id}/membros", id).then().statusCode(201);
+        membro.autenticado().contentType(JSON).body(Map.of("conteudo", "antes de ser removido"))
+                .when().post("/comunidades/{id}/publicacoes", id)
+                .then().statusCode(201);
+
+        aluno.autenticado().when().delete("/comunidades/{id}/membros/{usuarioId}", id, membro.id())
+                .then().statusCode(204);
+
+        membro.autenticado().when().get("/comunidades/minhas")
+                .then().body("id", not(hasItem(id)));
+        membro.autenticado().when().get("/comunidades/{id}", id)
+                .then().statusCode(200)
+                .body("souMembro", equalTo(false));
+        membro.autenticado().contentType(JSON).body(Map.of("conteudo", "depois de ser removido"))
+                .when().post("/comunidades/{id}/publicacoes", id)
+                .then().statusCode(403)
+                .body("error.code", equalTo("NAO_E_MEMBRO"));
+    }
+
+    @Test
+    void quemNaoEAdministradorNaoRemoveMembro() {
+        Integer id = criar(aluno, prefixo);
+        Sessao membro = usuarioDeTeste.novo(CURSO);
+        Sessao colega = usuarioDeTeste.novo(CURSO);
+        membro.autenticado().when().post("/comunidades/{id}/membros", id).then().statusCode(201);
+        colega.autenticado().when().post("/comunidades/{id}/membros", id).then().statusCode(201);
+
+        membro.autenticado().when().delete("/comunidades/{id}/membros/{usuarioId}", id, colega.id())
+                .then().statusCode(403)
+                .body("error.code", equalTo("SEM_PERMISSAO_ADMINISTRAR"));
+
+        colega.autenticado().when().get("/comunidades/{id}", id)
+                .then().body("souMembro", equalTo(true));
+    }
+
+    @Test
+    void removerQuemNaoEMembroOuComunidadeInexistenteDa404() {
+        Integer id = criar(aluno, prefixo);
+        Sessao estranho = usuarioDeTeste.novo(CURSO);
+
+        aluno.autenticado().when().delete("/comunidades/{id}/membros/{usuarioId}", id, estranho.id())
+                .then().statusCode(404)
+                .body("error.code", equalTo("MEMBRO_NAO_ENCONTRADO"));
+
+        aluno.autenticado().when().delete("/comunidades/{id}/membros/{usuarioId}", INEXISTENTE, estranho.id())
+                .then().statusCode(404)
+                .body("error.code", equalTo("COMUNIDADE_NAO_ENCONTRADA"));
+    }
+
+    @Test
+    void administradorNaoPodeSerRemovidoNemPorSiMesmo() {
+        Integer id = criar(aluno, prefixo);
+
+        aluno.autenticado().when().delete("/comunidades/{id}/membros/{usuarioId}", id, aluno.id())
+                .then().statusCode(422)
+                .body("error.code", equalTo("ADMIN_NAO_PODE_SER_REMOVIDO"));
+
+        aluno.autenticado().when().get("/comunidades/{id}", id)
+                .then().body("souMembro", equalTo(true));
     }
 
     private Integer criar(Sessao sessao, String nome) {

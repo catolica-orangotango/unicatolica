@@ -9,9 +9,12 @@
  * {@code identidade.CursoDoUsuarioAlterado} para trocar de comunidade de curso. Organizado
  * como {@code identidade}: {@code web}, {@code aplicacao}, {@code dominio}. Implementa
  * auto-join (Story 2.3/RF24.1), criação de comunidade aberta (Story 2.2/RF21-23) e
- * entrar/sair/listar/filtrar (Stories 2.4/2.5, RF24-28) — entrada rápida desta fatia, ver
- * {@code docs/decisoes/2026-08-modelo-epico-2-comunidades.md}. Story 2.1 (endpoint de admin criar comunidade
- * de curso) e Story 2.6 (administração) ficam de fora, bloqueadas pelo papel
+ * entrar/sair/listar/filtrar (Stories 2.4/2.5, RF24-28) e administração pelo administrador
+ * da comunidade — remover membro, editar e excluir logicamente (Story 2.6, RF29-31) — entrada
+ * rápida desta fatia, ver {@code docs/decisoes/2026-08-modelo-epico-2-comunidades.md}.
+ * Comunidade excluída (coluna {@code ativa}) some das listagens e de
+ * {@link ComunidadeConsulta#existe}, então os outros módulos deixam de aceitar interações nela.
+ * Story 2.1 (endpoint de admin criar comunidade de curso) fica de fora, bloqueada pelo papel
  * {@code ADMINISTRADOR} de plataforma, que ainda não existe em Identidade; os 26 cursos da
  * instituição já estão pré-carregados via seed (changelog
  * {@code comunidades-002-seed-comunidades-curso.xml}).</p>

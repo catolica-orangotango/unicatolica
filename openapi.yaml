@@ -302,6 +302,68 @@ paths:
           $ref: '#/components/responses/NaoAutenticado'
         '404':
           $ref: '#/components/responses/NaoEncontrado'
+    patch:
+      operationId: editarComunidade
+      summary: Edita nome/descrição da comunidade — só administrador dela (Story 2.6, RF30)
+      tags: [Comunidades]
+      description: >
+        O corpo não aceita "tipo" de propósito: o tipo (CURSO/ABERTA) é imutável desde a
+        criação (RF21.1).
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ComunidadeRequest'
+      responses:
+        '200':
+          description: Comunidade atualizada.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ComunidadeResponse'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        # 403: não é administrador da comunidade. 409: nome já usado por outra comunidade.
+        # 422: nome não informado (RF22).
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Conflito'
+        '422':
+          $ref: '#/components/responses/ErroValidacao'
+    delete:
+      operationId: excluirComunidade
+      summary: Exclui (logicamente) a comunidade — só administrador dela (Story 2.6, RF31)
+      tags: [Comunidades]
+      description: >
+        Exclusão lógica: a comunidade some das listagens e do detalhe (404) e não aceita mais
+        interações; os dados são preservados.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '204':
+          description: Comunidade excluída.
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
 
   /comunidades/{id}/membros:
     post:
@@ -347,6 +409,41 @@ paths:
           $ref: '#/components/responses/NaoAutenticado'
         '404':
           $ref: '#/components/responses/NaoEncontrado'
+
+  /comunidades/{id}/membros/{usuarioId}:
+    delete:
+      operationId: removerMembroDaComunidade
+      summary: Remove um membro da comunidade — só administrador dela (Story 2.6, RF29)
+      tags: [Comunidades]
+      description: >
+        Só remove quem é membro comum; um administrador (inclusive o próprio solicitante)
+        não pode ser removido por aqui, para a comunidade não ficar sem administrador.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: usuarioId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '204':
+          description: Membro removido.
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        # 403: solicitante não é administrador da comunidade. 404: comunidade ou membro inexistente.
+        # 422: o usuário a remover é administrador da comunidade.
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '422':
+          $ref: '#/components/responses/ErroValidacao'
 
   /comunidades/{id}/publicacoes:
     post:

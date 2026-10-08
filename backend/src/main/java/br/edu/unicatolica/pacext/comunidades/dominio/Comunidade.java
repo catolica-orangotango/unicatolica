@@ -44,4 +44,8 @@ public class Comunidade {
 
     @Column(name = "atualizado_em")
     public Instant atualizadoEm;
+
+    /** Exclusão lógica (Story 2.6, RF31) — {@code false} some das listagens e bloqueia interações. */
+    @Column(name = "ativa", nullable = false)
+    public boolean ativa = true;
 }

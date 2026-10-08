@@ -134,6 +134,20 @@ Sem mudança de código — só passa a ter efeito real assim que a seed da 2.1 
   nas listagens", não "apaga os dados") — precisa de coluna nova `ativa BOOLEAN DEFAULT true`
   via migration (`comunidades-003-...`); listagens (2.5) passam a filtrar `ativa=true`.
 
+Decisões da implementação:
+
+- "Administrador" aqui é o papel `ADMINISTRADOR` **dentro da comunidade** (`comunidade_membro`),
+  não o da plataforma — por isso a 2.6 não depende da 2.1.
+- Administrador não pode ser removido pelo `DELETE .../membros/{usuarioId}` (nem a si mesmo):
+  422 `ADMIN_NAO_PODE_SER_REMOVIDO`, para a comunidade não ficar sem administrador. Para
+  encerrá-la, o administrador a exclui. (O `DELETE .../membros/me` da 2.4 ainda deixa o único
+  administrador sair; fica como pendência.)
+- Comunidade excluída é inexistente para todos: `buscarAtivaPorId` (404 nas rotas de
+  Comunidades), `ComunidadeConsulta.existe`/`ehMembro` (Publicações responde 404 ao postar ou
+  listar o feed), `/comunidades/minhas` e o auto-join de curso.
+- O nome de uma comunidade excluída continua reservado (`nome` é `unique`): criar outra com o
+  mesmo nome devolve 409.
+
 ## Ordem de implementação sugerida
 
 ```

@@ -18,7 +18,7 @@ class ComunidadeConsultaImpl implements ComunidadeConsulta {
 
     @Override
     public boolean existe(Long comunidadeId) {
-        return comunidadeRepository.count("id", comunidadeId) > 0;
+        return comunidadeRepository.existeAtiva(comunidadeId);
     }
 
     @Override
