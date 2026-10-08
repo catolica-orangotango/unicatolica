@@ -90,12 +90,11 @@
           [type]="mostrarSenhas() ? 'text' : 'password'"
           formControlName="senha"
           autocomplete="new-password"
+          (focus)="senhaFocada.set(true)"
           [attr.aria-invalid]="
             form.controls.senha.touched && form.controls.senha.invalid ? 'true' : null
           "
-          [attr.aria-describedby]="
-            form.controls.senha.touched && form.controls.senha.invalid ? 'erro-senha' : null
-          "
+          [attr.aria-describedby]="senhaDescritoPor()"
         />
         <!--
           Segurar pra mostrar (Senha e Confirmar senha juntas), não alternar: solta e volta
@@ -139,18 +138,20 @@
         </span>
       }
 
-      <ul class="cadastro__requisitos-senha" aria-label="Requisitos da senha">
-        @for (requisito of requisitosSenha(); track requisito.chave) {
-          <li
-            class="cadastro__requisito"
-            [class.cadastro__requisito--ok]="requisito.atendido"
-            [attr.aria-label]="requisito.texto + (requisito.atendido ? ' (atendido)' : ' (pendente)')"
-          >
-            <span aria-hidden="true">{{ requisito.atendido ? '✓' : '○' }}</span>
-            {{ requisito.texto }}
-          </li>
-        }
-      </ul>
+      @if (senhaFocada()) {
+        <ul class="cadastro__requisitos-senha" id="requisitos-senha" aria-label="Requisitos da senha">
+          @for (requisito of requisitosSenha(); track requisito.chave) {
+            <li
+              class="cadastro__requisito"
+              [class.cadastro__requisito--ok]="requisito.atendido"
+              [attr.aria-label]="requisito.texto + (requisito.atendido ? ' (atendido)' : ' (pendente)')"
+            >
+              <span aria-hidden="true">{{ requisito.atendido ? '✓' : '○' }}</span>
+              {{ requisito.texto }}
+            </li>
+          }
+        </ul>
+      }
 
       <label class="cadastro__label" for="confirmarSenha">Confirmar senha</label>
       <input

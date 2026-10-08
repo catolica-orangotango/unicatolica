@@ -90,7 +90,7 @@ test.describe('Cadastro', () => {
     await expect(page).toHaveURL(/\/cadastro$/);
   });
 
-  test('senhas diferentes marca o campo como inválido (sem mensagem) e não envia (DT-1)', async ({ page }) => {
+  test('senhas diferentes mostra "As senhas não conferem." e não envia (DT-1)', async ({ page }) => {
     await page.goto('/cadastro');
 
     // Os outros campos ficam válidos de propósito: sem isso o formulário já fica inválido
@@ -105,13 +105,14 @@ test.describe('Cadastro', () => {
     await page.getByLabel('E-mail institucional').fill('ana.teste@catolicasc.edu.br');
     await page.getByLabel('Senha', { exact: true }).fill('Senha123!');
     await page.getByLabel('Confirmar senha').fill('OutraSenha456!');
+    await page.getByLabel('Confirmar senha').blur(); // marca touched, sem depender de pra onde o foco vai
     await page.getByLabel('Curso').selectOption({ label: 'Engenharia de Software' });
-    await page.getByLabel('Data de nascimento').fill('2000-01-01');
 
-    // Sem mensagem visível (pedido do time) — o campo só fica marcado como inválido.
-    await expect(page.getByText('As senhas não conferem.')).toHaveCount(0);
+    await expect(page.getByText('As senhas não conferem.')).toBeVisible();
     await expect(page.getByLabel('Confirmar senha')).toHaveAttribute('aria-invalid', 'true');
+    await expect(page.getByLabel('Confirmar senha')).toHaveAttribute('aria-describedby', 'erro-confirmarSenha');
 
+    await page.getByLabel('Data de nascimento').fill('2000-01-01');
     await page.getByRole('button', { name: 'Cadastrar' }).click();
     await expect(page).toHaveURL(/\/cadastro$/);
     expect(registroChamado).toBe(false);
@@ -128,16 +129,28 @@ test.describe('Cadastro', () => {
     await expect(page.getByText('As senhas não conferem.')).not.toBeVisible();
   });
 
-  test('checklist de requisitos da senha atualiza em tempo real (DT-2, KAN-50)', async ({ page }) => {
+  test('checklist de requisitos fica escondido até focar Senha, depois atualiza em tempo real (DT-2, KAN-50)', async ({
+    page,
+  }) => {
     await page.goto('/cadastro');
+    const senha = page.getByLabel('Senha', { exact: true });
+    // Espera a página terminar de montar antes de checar "ausente": sem isso, a
+    // checagem de count 0 passaria por acaso no instante antes do Angular renderizar,
+    // mesmo que o checklist não estivesse realmente escondido por código.
+    await expect(senha).toBeVisible();
 
     const requisitos = page.locator('.cadastro__requisito');
+    await expect(requisitos).toHaveCount(0);
+
+    await senha.focus();
+
     await expect(requisitos).toHaveCount(4);
+    await expect(senha).toHaveAttribute('aria-describedby', 'requisitos-senha');
     for (const texto of await requisitos.allTextContents()) {
       expect(texto.trim().startsWith('○')).toBe(true);
     }
 
-    await page.getByLabel('Senha', { exact: true }).fill('Senha123!');
+    await senha.fill('Senha123!');
 
     for (const texto of await requisitos.allTextContents()) {
       expect(texto.trim().startsWith('✓')).toBe(true);

@@ -143,7 +143,7 @@ describe('Cadastro', () => {
       expect(erro?.textContent?.trim()).toBe('Confirme sua senha.');
     });
 
-    it('senhas diferentes, depois de tocar, marca o campo como inválido (sem mensagem) e não envia', () => {
+    it('senhas diferentes, depois de tocar, mostra "As senhas não conferem." e não envia', () => {
       fixture.detectChanges();
       component['form'].setValue({
         nome: 'Ana Silva',
@@ -158,7 +158,9 @@ describe('Cadastro', () => {
 
       const campo = (fixture.nativeElement as HTMLElement).querySelector('#confirmarSenha');
       expect(campo?.getAttribute('aria-invalid')).toBe('true');
-      expect((fixture.nativeElement as HTMLElement).querySelector('#erro-confirmarSenha')).toBeNull();
+      const erro = (fixture.nativeElement as HTMLElement).querySelector('#erro-confirmarSenha');
+      expect(erro?.textContent?.trim()).toBe('As senhas não conferem.');
+      expect(campo?.getAttribute('aria-describedby')).toBe('erro-confirmarSenha');
 
       component['enviar']();
       httpMock.expectNone('http://localhost:8080/auth/registro');
@@ -182,19 +184,18 @@ describe('Cadastro', () => {
       });
     });
 
-    it('mudar a Senha depois reavalia o estado inválido de Confirmar senha', () => {
+    it('mudar a Senha depois reavalia a mensagem de Confirmar senha', () => {
       fixture.detectChanges();
       preencherFormularioValido(); // senha e confirmarSenha == 'Senha123!', sem erro
       component['form'].controls.confirmarSenha.markAsTouched(); // já tocou o campo antes
       fixture.detectChanges();
-      let campo = (fixture.nativeElement as HTMLElement).querySelector('#confirmarSenha');
-      expect(campo?.getAttribute('aria-invalid')).toBeNull();
+      expect((fixture.nativeElement as HTMLElement).querySelector('#erro-confirmarSenha')).toBeNull();
 
       component['form'].controls.senha.setValue('outraSenhaAgora');
       fixture.detectChanges();
 
-      campo = (fixture.nativeElement as HTMLElement).querySelector('#confirmarSenha');
-      expect(campo?.getAttribute('aria-invalid')).toBe('true');
+      const erro = (fixture.nativeElement as HTMLElement).querySelector('#erro-confirmarSenha');
+      expect(erro?.textContent?.trim()).toBe('As senhas não conferem.');
     });
 
     it('senha vazia com confirmar senha preenchida não mostra "As senhas não conferem." (revisão do PR #58)', () => {
@@ -213,7 +214,7 @@ describe('Cadastro', () => {
       expect((fixture.nativeElement as HTMLElement).querySelector('#erro-confirmarSenha')).toBeNull();
     });
 
-    it('revalidar só o campo confirmarSenha (onlySelf) não apaga o estado inválido de senhas diferentes (regressão do PR #58)', () => {
+    it('revalidar só o campo confirmarSenha (onlySelf) não apaga o erro de senhas diferentes (regressão do PR #58)', () => {
       // `updateValueAndValidity()` sem opções já propaga pro grupo por padrão (reproduziria
       // o bug "por acidente" mesmo sem o fix). `{ onlySelf: true }` é o que isola de verdade
       // a revalidação do campo, reproduzindo o cenário real do bug: o validador original
@@ -232,14 +233,16 @@ describe('Cadastro', () => {
       });
       component['form'].controls.confirmarSenha.markAsTouched();
       fixture.detectChanges();
-      let campo = (fixture.nativeElement as HTMLElement).querySelector('#confirmarSenha');
-      expect(campo?.getAttribute('aria-invalid')).toBe('true');
+      expect(
+        (fixture.nativeElement as HTMLElement).querySelector('#erro-confirmarSenha')?.textContent?.trim(),
+      ).toBe('As senhas não conferem.');
 
       component['form'].controls.confirmarSenha.updateValueAndValidity({ onlySelf: true });
       fixture.detectChanges();
 
-      campo = (fixture.nativeElement as HTMLElement).querySelector('#confirmarSenha');
-      expect(campo?.getAttribute('aria-invalid')).toBe('true');
+      expect(
+        (fixture.nativeElement as HTMLElement).querySelector('#erro-confirmarSenha')?.textContent?.trim(),
+      ).toBe('As senhas não conferem.');
     });
 
     it('monta o corpo da requisição só com os campos do contrato de POST /auth/registro', () => {
@@ -481,9 +484,39 @@ describe('Cadastro - Requisitos de senha (DT-2, KAN-50)', () => {
     );
   }
 
+  function focarSenha(fixture: ComponentFixture<Cadastro>): void {
+    (fixture.nativeElement as HTMLElement).querySelector('#senha')!.dispatchEvent(new FocusEvent('focus'));
+    fixture.detectChanges();
+  }
+
+  it('fica escondido até o campo Senha ser focado (critério de aceite do KAN-50)', async () => {
+    const { fixture } = await montar();
+    fixture.detectChanges();
+
+    expect((fixture.nativeElement as HTMLElement).querySelector('#requisitos-senha')).toBeNull();
+
+    focarSenha(fixture);
+
+    expect((fixture.nativeElement as HTMLElement).querySelector('#requisitos-senha')).toBeTruthy();
+    fixture.destroy();
+  });
+
+  it('liga o campo Senha ao checklist por aria-describedby quando focado', async () => {
+    const { fixture } = await montar();
+    fixture.detectChanges();
+    const senha = (fixture.nativeElement as HTMLElement).querySelector('#senha')!;
+    expect(senha.getAttribute('aria-describedby')).toBeNull();
+
+    focarSenha(fixture);
+
+    expect(senha.getAttribute('aria-describedby')).toBe('requisitos-senha');
+    fixture.destroy();
+  });
+
   it('mostra os quatro requisitos, todos pendentes quando o campo está vazio', async () => {
     const { fixture } = await montar();
     fixture.detectChanges();
+    focarSenha(fixture);
 
     expect(textoRequisitos(fixture)).toEqual([
       '○ Mínimo de 8 caracteres',
@@ -498,6 +531,7 @@ describe('Cadastro - Requisitos de senha (DT-2, KAN-50)', () => {
   it('marca como atendido só o que a senha digitada já cumpre', async () => {
     const { fixture, component } = await montar();
     fixture.detectChanges();
+    focarSenha(fixture);
     component['form'].controls.senha.setValue('senhacomprida'); // 8+ chars e minúsculas, sem maiúscula/número/especial
     fixture.detectChanges();
     await fixture.whenStable();
@@ -509,6 +543,7 @@ describe('Cadastro - Requisitos de senha (DT-2, KAN-50)', () => {
   it('marca os quatro como atendidos quando a senha cumpre a política inteira', async () => {
     const { fixture, component } = await montar();
     fixture.detectChanges();
+    focarSenha(fixture);
     component['form'].controls.senha.setValue('Senha123!');
     fixture.detectChanges();
     await fixture.whenStable();

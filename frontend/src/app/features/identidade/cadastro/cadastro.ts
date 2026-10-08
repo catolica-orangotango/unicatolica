@@ -11,24 +11,23 @@ import { Curso, CursoService } from '../curso.service';
  * Política de senha (DT-2, KAN-50, decisão em
  * docs/decisoes/2026-10-07-politica-de-senha.md): mínimo 8 caracteres, 1 maiúscula, 1
  * número, 1 caractere especial — mesma regra do `CadastroService.validarPoliticaSenha` no
- * backend. As chaves do erro (`minTamanho`, `maiuscula`, `numero`, `especial`) também
- * alimentam o checklist da tela, por isso cada regra vira sua própria chave em vez de um
- * único erro genérico.
+ * backend. Fonte única: `senhaForteValidator` (bloqueia o envio) e o checklist da tela
+ * (`Cadastro.requisitosSenha`) leem daqui, em vez de cada um reimplementar a mesma regra.
  */
+const REGRAS_SENHA: ReadonlyArray<{ chave: string; texto: string; cumprida: (valor: string) => boolean }> = [
+  { chave: 'minTamanho', texto: 'Mínimo de 8 caracteres', cumprida: (valor) => valor.length >= 8 },
+  { chave: 'maiuscula', texto: 'Pelo menos uma letra maiúscula', cumprida: (valor) => /[A-Z]/.test(valor) },
+  { chave: 'numero', texto: 'Pelo menos um número', cumprida: (valor) => /[0-9]/.test(valor) },
+  { chave: 'especial', texto: 'Pelo menos um caractere especial', cumprida: (valor) => /[^A-Za-z0-9]/.test(valor) },
+];
+
 function senhaForteValidator(control: AbstractControl): ValidationErrors | null {
   const valor = (control.value as string | null) ?? '';
   const erros: ValidationErrors = {};
-  if (valor.length < 8) {
-    erros['minTamanho'] = true;
-  }
-  if (!/[A-Z]/.test(valor)) {
-    erros['maiuscula'] = true;
-  }
-  if (!/[0-9]/.test(valor)) {
-    erros['numero'] = true;
-  }
-  if (!/[^A-Za-z0-9]/.test(valor)) {
-    erros['especial'] = true;
+  for (const regra of REGRAS_SENHA) {
+    if (!regra.cumprida(valor)) {
+      erros[regra.chave] = true;
+    }
   }
   return Object.keys(erros).length > 0 ? erros : null;
 }
@@ -111,6 +110,9 @@ export class Cadastro {
   /** Mostra Senha e Confirmar senha em texto puro só enquanto o botão está pressionado. */
   protected readonly mostrarSenhas = signal(false);
 
+  /** Checklist (KAN-50) só aparece depois que o usuário interage com o campo Senha. */
+  protected readonly senhaFocada = signal(false);
+
   protected readonly form = this.formBuilder.nonNullable.group(
     {
       nome: ['', [Validators.required]],
@@ -129,16 +131,12 @@ export class Cadastro {
    * Checklist da política de senha (DT-2, KAN-50) — computado a partir de um signal, não
    * de chamadas a `form.controls.senha.hasError(...)` direto no `@for` do template: isso
    * apresentou um bug de renderização em que um item ficava com o DOM desatualizado
-   * quando só ele (não os quatro juntos) mudava de estado numa mesma digitação.
+   * quando só ele (não os quatro juntos) mudava de estado numa mesma digitação. Mesma
+   * regra de `senhaForteValidator` (`REGRAS_SENHA`), não uma cópia.
    */
   protected readonly requisitosSenha = computed<RequisitoSenha[]>(() => {
     const valor = this.senhaValor() ?? '';
-    return [
-      { chave: 'minTamanho', texto: 'Mínimo de 8 caracteres', atendido: valor.length >= 8 },
-      { chave: 'maiuscula', texto: 'Pelo menos uma letra maiúscula', atendido: /[A-Z]/.test(valor) },
-      { chave: 'numero', texto: 'Pelo menos um número', atendido: /[0-9]/.test(valor) },
-      { chave: 'especial', texto: 'Pelo menos um caractere especial', atendido: /[^A-Za-z0-9]/.test(valor) },
-    ];
+    return REGRAS_SENHA.map((regra) => ({ chave: regra.chave, texto: regra.texto, atendido: regra.cumprida(valor) }));
   });
 
   constructor() {
@@ -156,14 +154,29 @@ export class Cadastro {
 
   /**
    * Não assume que todo erro de `confirmarSenha` é "senhas não conferem" (pode ser só
-   * vazio). Sem mensagem pra senhas diferentes: o campo continua marcado como inválido
-   * (aria-invalid) e o envio continua bloqueado, só não mostra texto nesse caso.
+   * vazio) — critério de aceite do KAN-48 exige a mensagem (e WCAG 3.3.1/RNF06: só
+   * `aria-invalid` sem texto não identifica o erro pra quem usa leitor de tela).
    */
   protected mensagemErroConfirmarSenha(): string {
     if (this.form.controls.confirmarSenha.hasError('required')) {
       return 'Confirme sua senha.';
     }
+    if (this.form.hasError('senhasDiferentes')) {
+      return 'As senhas não conferem.';
+    }
     return '';
+  }
+
+  /** `aria-describedby` do campo Senha: erro (se tocado e inválido) e/ou o checklist (se visível). */
+  protected senhaDescritoPor(): string | null {
+    const partes: string[] = [];
+    if (this.form.controls.senha.touched && this.form.controls.senha.invalid) {
+      partes.push('erro-senha');
+    }
+    if (this.senhaFocada()) {
+      partes.push('requisitos-senha');
+    }
+    return partes.length > 0 ? partes.join(' ') : null;
   }
 
   protected enviar(): void {
