@@ -6,14 +6,17 @@ export const routes: Routes = [
   { path: '', pathMatch: 'full', redirectTo: 'login' },
   {
     path: 'login',
+    title: 'Entrar',
     loadComponent: () => import('./features/identidade/login/login').then((m) => m.Login),
   },
   {
     path: 'cadastro',
+    title: 'Criar conta',
     loadComponent: () => import('./features/identidade/cadastro/cadastro').then((m) => m.Cadastro),
   },
   {
     path: 'confirmar-email',
+    title: 'Confirmar e-mail',
     loadComponent: () => import('./features/identidade/confirmar-email/confirmar-email').then((m) => m.ConfirmarEmail),
   },
   {
@@ -27,27 +30,32 @@ export const routes: Routes = [
     children: [
       {
         path: 'feed',
+        title: 'Início',
         loadComponent: () => import('./features/feed/feed').then((m) => m.Feed),
       },
       {
         path: 'comunidades',
+        title: 'Descobrir comunidades',
         loadComponent: () =>
           import('./features/comunidades/comunidades-lista/comunidades-lista').then((m) => m.ComunidadesLista),
       },
       {
         // Próprio perfil (Stories 4.1/4.2), aberto pelo menu da conta.
         path: 'perfil',
+        title: 'Meu perfil',
         loadComponent: () => import('./features/perfil/meu-perfil/meu-perfil').then((m) => m.MeuPerfil),
       },
       {
         // Perfil de outro usuário, somente leitura (Story 4.4), aberto pelo autor de uma postagem.
         path: 'usuarios/:id',
+        title: 'Perfil',
         loadComponent: () =>
           import('./features/perfil/perfil-usuario/perfil-usuario').then((m) => m.PerfilUsuario),
       },
       {
         // Fila de denúncias do moderador (Stories 12.4/12.5) — URL do mockup key-denuncias.
         path: 'moderacao/denuncias',
+        title: 'Denúncias',
         canActivate: [moderadorGuard],
         loadComponent: () =>
           import('./features/moderacao/fila-denuncias/fila-denuncias').then((m) => m.FilaDenuncias),
@@ -58,6 +66,7 @@ export const routes: Routes = [
         // importa pro Router: segmentos diferentes ('comunidades' vs 'comunidades/:id'),
         // sem ambiguidade de precedência como haveria em frameworks tipo JAX-RS.
         path: 'comunidades/:id',
+        title: 'Comunidade',
         loadComponent: () =>
           import('./features/comunidades/comunidade-detalhe/comunidade-detalhe').then((m) => m.ComunidadeDetalhe),
       },

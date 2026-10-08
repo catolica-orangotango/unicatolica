@@ -20,7 +20,7 @@ Ferramenta automática não cobre tudo. Teclado, ordem de foco, leitor de tela e
 - [ ] Toast de sucesso ou erro é anunciado pelo leitor, e a confirmação também aparece na tela de forma persistente quando for crítica. *4.1.3*
 - [ ] Com zoom de 200% e com 320px de largura, nada é cortado e não aparece rolagem horizontal. *1.4.4, 1.4.10*
 - [ ] Alvos de clique têm pelo menos 24×24 px, ou espaço suficiente entre eles. *2.5.8*
-- [ ] O título da aba muda ao trocar de tela. *2.4.2*
+- [ ] O título da aba descreve a tela ("Meu perfil — UniCatólica"). O e2e já confere o texto; aqui confira se ele faz sentido para quem usa leitor de tela. *2.4.2*
 
 ## Por tela
 
@@ -43,5 +43,6 @@ Ferramenta automática não cobre tudo. Teclado, ordem de foco, leitor de tela e
 
 Ao criar uma tela:
 
-1. Acrescente um teste em `frontend/e2e/acessibilidade.spec.ts` que abra a tela em cada estado (vazio, com erro, com conteúdo) e chame `esperarSemViolacoes(page)`.
-2. Acrescente uma linha na tabela acima com o que for específico dela.
+1. Dê um `title:` à rota em `app.routes.ts`, só com o nome da tela; o sufixo " — UniCatólica" vem do `TituloStrategy`.
+2. Acrescente um teste em `frontend/e2e/acessibilidade.spec.ts` que abra a tela em cada estado (vazio, com erro, com conteúdo), confira o título com `toHaveTitle` e chame `esperarSemViolacoes(page)`.
+3. Acrescente uma linha na tabela acima com o que for específico dela.

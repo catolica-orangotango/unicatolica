@@ -13,12 +13,14 @@ import { plantarToken } from './support/seed';
 
 /**
  * T6 (KAN-71): axe em cada tela e nos painéis do shell, nos estados que o usuário vê
- * (vazio, com erro, com conteúdo). Backend mockado, como nas outras suítes.
+ * (vazio, com erro, com conteúdo), e o título da aba de cada tela (WCAG 2.4.2, que o axe
+ * não confere). Backend mockado, como nas outras suítes.
  */
 
 test.describe('Telas públicas', () => {
   test('login, vazio e com erro de validação', async ({ page }) => {
     await page.goto('/login');
+    await expect(page).toHaveTitle('Entrar — UniCatólica');
     await esperarSemViolacoes(page);
 
     await page.getByRole('button', { name: 'Entrar' }).click();
@@ -28,6 +30,7 @@ test.describe('Telas públicas', () => {
   test('cadastro, vazio e com erro de validação', async ({ page }) => {
     await mockCursosOk(page);
     await page.goto('/cadastro');
+    await expect(page).toHaveTitle('Criar conta — UniCatólica');
     await esperarSemViolacoes(page);
 
     await page.getByRole('button', { name: 'Cadastrar' }).click();
@@ -37,6 +40,7 @@ test.describe('Telas públicas', () => {
   test('confirmar e-mail, link inválido e confirmado', async ({ page }) => {
     await page.goto('/confirmar-email');
     await expect(page.getByRole('heading', { name: 'Não foi possível confirmar' })).toBeVisible();
+    await expect(page).toHaveTitle('Confirmar e-mail — UniCatólica');
     await esperarSemViolacoes(page);
 
     await mockConfirmacaoOk(page);
@@ -55,6 +59,7 @@ test.describe('Telas do aluno', () => {
 
   test('início com o menu da conta aberto', async ({ page }) => {
     await page.goto('/feed');
+    await expect(page).toHaveTitle('Início — UniCatólica');
     await esperarSemViolacoes(page);
 
     await page.getByRole('button', { name: 'Menu da conta' }).click();
@@ -78,6 +83,7 @@ test.describe('Telas do aluno', () => {
   test('lista de comunidades', async ({ page }) => {
     await page.goto('/comunidades');
     await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
+    await expect(page).toHaveTitle('Descobrir comunidades — UniCatólica');
     await esperarSemViolacoes(page);
   });
 
@@ -99,6 +105,7 @@ test.describe('Telas do aluno', () => {
     });
     await page.goto('/comunidades/27');
     await expect(page.getByText('Alguém para uma partida na sexta?')).toBeVisible();
+    await expect(page).toHaveTitle('Comunidade — UniCatólica');
     await esperarSemViolacoes(page);
   });
 
@@ -106,6 +113,7 @@ test.describe('Telas do aluno', () => {
     await mockMeuPerfil(page, { usuarioId: 1, nome: 'Usuário Teste', curso: null, periodo: null, interesses: [] });
     await page.goto('/perfil');
     await expect(page.getByRole('heading', { name: 'Complete seu perfil' })).toBeVisible();
+    await expect(page).toHaveTitle('Meu perfil — UniCatólica');
     await esperarSemViolacoes(page);
 
     await page.getByLabel('Curso').selectOption({ label: 'Engenharia de Software' });
@@ -127,6 +135,7 @@ test.describe('Telas do aluno', () => {
     });
     await page.goto('/usuarios/2');
     await expect(page.getByRole('heading', { name: 'Maria Souza' })).toBeVisible();
+    await expect(page).toHaveTitle('Perfil — UniCatólica');
     await esperarSemViolacoes(page);
   });
 });
@@ -154,6 +163,7 @@ test('moderador: fila e análise da denúncia', async ({ page }) => {
   ]);
   await page.goto('/moderacao/denuncias');
   await expect(page.locator('app-analise-denuncia')).toBeVisible();
+  await expect(page).toHaveTitle('Denúncias — UniCatólica');
   await esperarSemViolacoes(page);
 });
 
