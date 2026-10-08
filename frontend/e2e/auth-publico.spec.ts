@@ -90,7 +90,7 @@ test.describe('Cadastro', () => {
     await expect(page).toHaveURL(/\/cadastro$/);
   });
 
-  test('senhas diferentes mostra "As senhas não conferem." e não envia (DT-1)', async ({ page }) => {
+  test('senhas diferentes mostra "As senhas não conferem." e não envia', async ({ page }) => {
     await page.goto('/cadastro');
 
     // Os outros campos ficam válidos de propósito: sem isso o formulário já fica inválido
@@ -118,7 +118,7 @@ test.describe('Cadastro', () => {
     expect(registroChamado).toBe(false);
   });
 
-  test('senha vazia com confirmar senha preenchida não mostra "As senhas não conferem." (revisão do PR #58)', async ({
+  test('senha vazia com confirmar senha preenchida não mostra "As senhas não conferem."', async ({
     page,
   }) => {
     await page.goto('/cadastro');
@@ -129,7 +129,7 @@ test.describe('Cadastro', () => {
     await expect(page.getByText('As senhas não conferem.')).not.toBeVisible();
   });
 
-  test('checklist de requisitos fica escondido até focar Senha, depois atualiza em tempo real (DT-2, KAN-50)', async ({
+  test('checklist de requisitos fica escondido até focar Senha, depois atualiza em tempo real', async ({
     page,
   }) => {
     await page.goto('/cadastro');

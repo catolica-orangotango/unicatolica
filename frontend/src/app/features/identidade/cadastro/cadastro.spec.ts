@@ -133,7 +133,7 @@ describe('Cadastro', () => {
     });
   });
 
-  describe('Confirmar senha (DT-1)', () => {
+  describe('Confirmar senha', () => {
     it('vazio, depois de tocar, mostra "Confirme sua senha."', () => {
       fixture.detectChanges();
       component['form'].controls.confirmarSenha.markAsTouched();
@@ -198,7 +198,7 @@ describe('Cadastro', () => {
       expect(erro?.textContent?.trim()).toBe('As senhas não conferem.');
     });
 
-    it('senha vazia com confirmar senha preenchida não mostra "As senhas não conferem." (revisão do PR #58)', () => {
+    it('senha vazia com confirmar senha preenchida não mostra "As senhas não conferem."', () => {
       fixture.detectChanges();
       component['form'].setValue({
         nome: 'Ana Silva',
@@ -214,14 +214,11 @@ describe('Cadastro', () => {
       expect((fixture.nativeElement as HTMLElement).querySelector('#erro-confirmarSenha')).toBeNull();
     });
 
-    it('revalidar só o campo confirmarSenha (onlySelf) não apaga o erro de senhas diferentes (regressão do PR #58)', () => {
-      // `updateValueAndValidity()` sem opções já propaga pro grupo por padrão (reproduziria
-      // o bug "por acidente" mesmo sem o fix). `{ onlySelf: true }` é o que isola de verdade
-      // a revalidação do campo, reproduzindo o cenário real do bug: o validador original
-      // gravava o erro via confirmarSenha.setErrors(...), que o próprio
-      // Validators.required do campo apaga ao rodar sozinho (sem o grupo ter a chance de
-      // restaurar). O erro agora vive no grupo (form.hasError('senhasDiferentes')), que uma
-      // revalidação isolada do filho não mexe.
+    it('revalidar só o campo confirmarSenha (onlySelf) não apaga o erro de senhas diferentes', () => {
+      // `updateValueAndValidity()` sem opções já propaga pro grupo por padrão; `{ onlySelf:
+      // true }` isola a revalidação só do campo filho. O erro vive no grupo
+      // (`form.hasError('senhasDiferentes')`), então uma revalidação isolada do filho não
+      // deve mexer nele.
       fixture.detectChanges();
       component['form'].setValue({
         nome: 'Ana Silva',
@@ -453,7 +450,7 @@ describe('Cadastro sem a lista de cursos', () => {
 // setup próprio por teste, em vez do `fixture`/`component` compartilhado nos `let` do
 // describe principal, pra não depender de nenhum estado deixado por outro teste do mesmo
 // arquivo.
-describe('Cadastro - Requisitos de senha (DT-2, KAN-50)', () => {
+describe('Cadastro - Requisitos de senha', () => {
   const CURSOS = [
     { id: 1, nome: 'Administração' },
     { id: 14, nome: 'Engenharia de Software' },
@@ -489,7 +486,7 @@ describe('Cadastro - Requisitos de senha (DT-2, KAN-50)', () => {
     fixture.detectChanges();
   }
 
-  it('fica escondido até o campo Senha ser focado (critério de aceite do KAN-50)', async () => {
+  it('fica escondido até o campo Senha ser focado', async () => {
     const { fixture } = await montar();
     fixture.detectChanges();
 

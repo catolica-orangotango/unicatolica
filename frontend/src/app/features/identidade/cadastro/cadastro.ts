@@ -8,11 +8,10 @@ import { UcButton } from '../../../ui/button/button';
 import { Curso, CursoService } from '../curso.service';
 
 /**
- * Política de senha (DT-2, KAN-50, decisão em
- * docs/decisoes/2026-10-07-politica-de-senha.md): mínimo 8 caracteres, 1 maiúscula, 1
- * número, 1 caractere especial — mesma regra do `CadastroService.validarPoliticaSenha` no
- * backend. Fonte única: `senhaForteValidator` (bloqueia o envio) e o checklist da tela
- * (`Cadastro.requisitosSenha`) leem daqui, em vez de cada um reimplementar a mesma regra.
+ * Mesma política do backend (`CadastroService.validarPoliticaSenha`): mínimo 8
+ * caracteres, 1 maiúscula, 1 número, 1 caractere especial. Fonte única — o validador
+ * (bloqueia o envio) e o checklist da tela leem daqui, em vez de cada um reimplementar a
+ * mesma regra.
  */
 const REGRAS_SENHA: ReadonlyArray<{ chave: string; texto: string; cumprida: (valor: string) => boolean }> = [
   { chave: 'minTamanho', texto: 'Mínimo de 8 caracteres', cumprida: (valor) => valor.length >= 8 },
@@ -33,9 +32,9 @@ function senhaForteValidator(control: AbstractControl): ValidationErrors | null 
 }
 
 /**
- * Validador de grupo (DT-1): retorna `{ senhasDiferentes: true }` no próprio grupo, nunca
- * via `setErrors` imperativo no controle filho — `setErrors` substitui (não mescla) os
- * erros do controle, então qualquer revalidação de só `confirmarSenha` (ex.: o próprio
+ * Validador de grupo: retorna `{ senhasDiferentes: true }` no próprio grupo, nunca via
+ * `setErrors` imperativo no controle filho — `setErrors` substitui (não mescla) os erros
+ * do controle, então qualquer revalidação de só `confirmarSenha` (ex.: o próprio
  * `Validators.required` rodando de novo) apagaria o erro sem o grupo saber. O template lê
  * o erro em `form.hasError('senhasDiferentes')` (ver `confirmarSenhaComErro`).
  * Não compara quando `senha` ou `confirmarSenha` estão vazios — vazio já é coberto pelo
@@ -110,7 +109,7 @@ export class Cadastro {
   /** Mostra Senha e Confirmar senha em texto puro só enquanto o botão está pressionado. */
   protected readonly mostrarSenhas = signal(false);
 
-  /** Checklist (KAN-50) só aparece depois que o usuário interage com o campo Senha. */
+  /** Checklist de requisitos só aparece depois que o usuário interage com o campo Senha. */
   protected readonly senhaFocada = signal(false);
 
   protected readonly form = this.formBuilder.nonNullable.group(
@@ -128,11 +127,11 @@ export class Cadastro {
   private readonly senhaValor = toSignal(this.form.controls.senha.valueChanges, { initialValue: '' });
 
   /**
-   * Checklist da política de senha (DT-2, KAN-50) — computado a partir de um signal, não
-   * de chamadas a `form.controls.senha.hasError(...)` direto no `@for` do template: isso
-   * apresentou um bug de renderização em que um item ficava com o DOM desatualizado
-   * quando só ele (não os quatro juntos) mudava de estado numa mesma digitação. Mesma
-   * regra de `senhaForteValidator` (`REGRAS_SENHA`), não uma cópia.
+   * Checklist de requisitos — computado a partir de um signal, não de chamadas a
+   * `form.controls.senha.hasError(...)` direto no `@for` do template: isso apresentou um
+   * bug de renderização em que um item ficava com o DOM desatualizado quando só ele (não
+   * os quatro juntos) mudava de estado numa mesma digitação. Mesma regra de
+   * `senhaForteValidator` (`REGRAS_SENHA`), não uma cópia.
    */
   protected readonly requisitosSenha = computed<RequisitoSenha[]>(() => {
     const valor = this.senhaValor() ?? '';
@@ -146,7 +145,7 @@ export class Cadastro {
     });
   }
 
-  /** `confirmarSenha` só existe no formulário (DT-1); erro de grupo também conta como erro do campo. */
+  /** `confirmarSenha` só existe no formulário; erro de grupo também conta como erro do campo. */
   protected confirmarSenhaComErro(): boolean {
     const confirmarSenha = this.form.controls.confirmarSenha;
     return confirmarSenha.touched && (confirmarSenha.invalid || this.form.hasError('senhasDiferentes'));
@@ -154,8 +153,8 @@ export class Cadastro {
 
   /**
    * Não assume que todo erro de `confirmarSenha` é "senhas não conferem" (pode ser só
-   * vazio) — critério de aceite do KAN-48 exige a mensagem (e WCAG 3.3.1/RNF06: só
-   * `aria-invalid` sem texto não identifica o erro pra quem usa leitor de tela).
+   * vazio). A mensagem é obrigatória (WCAG 3.3.1) — só `aria-invalid`, sem texto, não
+   * identifica o erro pra quem usa leitor de tela.
    */
   protected mensagemErroConfirmarSenha(): string {
     if (this.form.controls.confirmarSenha.hasError('required')) {
@@ -190,7 +189,7 @@ export class Cadastro {
     this.sucesso.set(null);
 
     // Corpo montado explicitamente com os campos do contrato de POST /auth/registro —
-    // confirmarSenha (só do formulário, DT-1) nunca entra aqui.
+    // confirmarSenha (só do formulário) nunca entra aqui.
     const valores = this.form.getRawValue();
     const corpo = {
       nome: valores.nome,

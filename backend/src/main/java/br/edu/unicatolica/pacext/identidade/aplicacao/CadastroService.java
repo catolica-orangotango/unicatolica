@@ -61,7 +61,7 @@ public class CadastroService {
     @ConfigProperty(name = "identidade.email.dominio-institucional")
     String dominioInstitucional;
 
-    /** Política de senha (DT-2, KAN-50, decisão em docs/decisoes/2026-10-07-politica-de-senha.md). */
+    /** Decisão da política em docs/decisoes/2026-10-07-politica-de-senha.md. */
     @ConfigProperty(name = "identidade.senha.tamanho-minimo")
     int senhaTamanhoMinimo;
 
