@@ -170,10 +170,10 @@
 }
 
 .cadastro__campo-com-olho .cadastro__campo {
-  // layout-literal: o input deixa de ser item flex direto de .cadastro__form (que
-  // esticava sozinho via align-items: stretch) - o wrapper position: relative vira o
-  // item flex, então o input precisa da largura total explicitamente.
-  width: 100%;
+  // o input deixa de ser item flex direto de .cadastro__form (que esticava sozinho via
+  // align-items: stretch) - o wrapper position: relative vira o item flex, então o input
+  // precisa da largura total explicitamente.
+  width: 100%; // layout-literal: preenche o wrapper que o contém, não é dimensão de design
   margin-bottom: 0;
   // layout-literal: espaço pro botão do olho não cobrir o texto digitado
   padding-right: calc(var(--uc-space-unit) * 9);
@@ -185,7 +185,7 @@
 
 .cadastro__botao-olho {
   position: absolute;
-  top: 50%;
+  top: 50%; // layout-literal: centraliza verticalmente no input, não é espaçamento de design
   right: calc(var(--uc-space-unit) * 1.5);
   transform: translateY(-50%);
   display: flex;

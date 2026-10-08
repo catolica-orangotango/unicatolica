@@ -262,68 +262,6 @@ describe('Cadastro', () => {
     });
   });
 
-  describe('Requisitos de senha (DT-2, KAN-50)', () => {
-    function textoRequisitos(): string[] {
-      return [...(fixture.nativeElement as HTMLElement).querySelectorAll('.cadastro__requisito')].map((el) =>
-        el.textContent!.trim(),
-      );
-    }
-
-    function requisitosAtendidos(): boolean[] {
-      return [...(fixture.nativeElement as HTMLElement).querySelectorAll('.cadastro__requisito')].map((el) =>
-        el.classList.contains('cadastro__requisito--ok'),
-      );
-    }
-
-    it('mostra os quatro requisitos, todos pendentes quando o campo está vazio', () => {
-      fixture.detectChanges();
-
-      expect(textoRequisitos()).toEqual([
-        '○ Mínimo de 8 caracteres',
-        '○ Pelo menos uma letra maiúscula',
-        '○ Pelo menos um número',
-        '○ Pelo menos um caractere especial',
-      ]);
-      expect(requisitosAtendidos()).toEqual([false, false, false, false]);
-    });
-
-    it('marca como atendido só o que a senha digitada já cumpre', () => {
-      fixture.detectChanges();
-      component['form'].controls.senha.setValue('senhacomprida'); // 8+ chars e minúsculas, sem maiúscula/número/especial
-      fixture.detectChanges();
-
-      expect(requisitosAtendidos()).toEqual([true, false, false, false]);
-    });
-
-    it('marca os quatro como atendidos quando a senha cumpre a política inteira', () => {
-      fixture.detectChanges();
-      component['form'].controls.senha.setValue('Senha123!');
-      fixture.detectChanges();
-
-      expect(requisitosAtendidos()).toEqual([true, true, true, true]);
-    });
-
-    it('senha fraca, depois de tocar, mostra a mensagem genérica e não envia', () => {
-      fixture.detectChanges();
-      component['form'].setValue({
-        nome: 'Ana Silva',
-        email: 'ana@catolicasc.edu.br',
-        senha: 'fraca',
-        confirmarSenha: 'fraca',
-        cursoId: 14,
-        dataNascimento: '2005-01-01',
-      });
-      component['form'].controls.senha.markAsTouched();
-      fixture.detectChanges();
-
-      const erro = (fixture.nativeElement as HTMLElement).querySelector('#erro-senha');
-      expect(erro?.textContent?.trim()).toBe('Sua senha não atende aos requisitos abaixo.');
-
-      component['enviar']();
-      httpMock.expectNone('http://localhost:8080/auth/registro');
-    });
-  });
-
   describe('Mostrar senhas (segurar o botão)', () => {
     function tiposDosCampos(el: HTMLElement): [string | null, string | null] {
       return [
@@ -505,5 +443,102 @@ describe('Cadastro sem a lista de cursos', () => {
       'Não foi possível carregar os cursos',
     );
     httpMock.verify();
+  });
+});
+
+// Describe de nível superior (não aninhado em `describe('Cadastro', ...)`) de propósito:
+// setup próprio por teste, em vez do `fixture`/`component` compartilhado nos `let` do
+// describe principal, pra não depender de nenhum estado deixado por outro teste do mesmo
+// arquivo.
+describe('Cadastro - Requisitos de senha (DT-2, KAN-50)', () => {
+  const CURSOS = [
+    { id: 1, nome: 'Administração' },
+    { id: 14, nome: 'Engenharia de Software' },
+  ];
+
+  async function montar(): Promise<{ fixture: ComponentFixture<Cadastro>; component: Cadastro; httpMock: HttpTestingController }> {
+    await TestBed.configureTestingModule({
+      imports: [Cadastro],
+      providers: [provideHttpClient(), provideHttpClientTesting()],
+    }).compileComponents();
+
+    const fixture = TestBed.createComponent(Cadastro);
+    const httpMock = TestBed.inject(HttpTestingController);
+    httpMock.expectOne('http://localhost:8080/cursos').flush(CURSOS);
+
+    return { fixture, component: fixture.componentInstance, httpMock };
+  }
+
+  function textoRequisitos(fixture: ComponentFixture<Cadastro>): string[] {
+    return [...(fixture.nativeElement as HTMLElement).querySelectorAll('.cadastro__requisito')].map((el) =>
+      el.textContent!.trim(),
+    );
+  }
+
+  function requisitosAtendidos(fixture: ComponentFixture<Cadastro>): boolean[] {
+    return [...(fixture.nativeElement as HTMLElement).querySelectorAll('.cadastro__requisito')].map((el) =>
+      el.classList.contains('cadastro__requisito--ok'),
+    );
+  }
+
+  it('mostra os quatro requisitos, todos pendentes quando o campo está vazio', async () => {
+    const { fixture } = await montar();
+    fixture.detectChanges();
+
+    expect(textoRequisitos(fixture)).toEqual([
+      '○ Mínimo de 8 caracteres',
+      '○ Pelo menos uma letra maiúscula',
+      '○ Pelo menos um número',
+      '○ Pelo menos um caractere especial',
+    ]);
+    expect(requisitosAtendidos(fixture)).toEqual([false, false, false, false]);
+    fixture.destroy();
+  });
+
+  it('marca como atendido só o que a senha digitada já cumpre', async () => {
+    const { fixture, component } = await montar();
+    fixture.detectChanges();
+    component['form'].controls.senha.setValue('senhacomprida'); // 8+ chars e minúsculas, sem maiúscula/número/especial
+    fixture.detectChanges();
+    // App zoneless: um detectChanges() sozinho não garante que o agendamento de CD
+    // assentou - whenStable() espera o ciclo pendente antes de ler o DOM.
+    await fixture.whenStable();
+
+    expect(requisitosAtendidos(fixture)).toEqual([true, false, false, false]);
+    fixture.destroy();
+  });
+
+  it('marca os quatro como atendidos quando a senha cumpre a política inteira', async () => {
+    const { fixture, component } = await montar();
+    fixture.detectChanges();
+    component['form'].controls.senha.setValue('Senha123!');
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(requisitosAtendidos(fixture)).toEqual([true, true, true, true]);
+    fixture.destroy();
+  });
+
+  it('senha fraca, depois de tocar, mostra a mensagem genérica e não envia', async () => {
+    const { fixture, component, httpMock } = await montar();
+    fixture.detectChanges();
+    component['form'].setValue({
+      nome: 'Ana Silva',
+      email: 'ana@catolicasc.edu.br',
+      senha: 'fraca',
+      confirmarSenha: 'fraca',
+      cursoId: 14,
+      dataNascimento: '2005-01-01',
+    });
+    component['form'].controls.senha.markAsTouched();
+    fixture.detectChanges();
+
+    const erro = (fixture.nativeElement as HTMLElement).querySelector('#erro-senha');
+    expect(erro?.textContent?.trim()).toBe('Sua senha não atende aos requisitos abaixo.');
+
+    component['enviar']();
+    httpMock.expectNone('http://localhost:8080/auth/registro');
+    httpMock.verify();
+    fixture.destroy();
   });
 });
