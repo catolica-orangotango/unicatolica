@@ -12,6 +12,7 @@ Rede social acadêmica do Campus Joinville da CatólicaSC — projeto de PAC Ext
 - Nunca escrever direto em `log_auditoria` — sempre injetar `compartilhado.auditoria.AuditoriaService` (AD-11).
 - Nunca commitar segredos/config — só variáveis de ambiente (Render env vars / `.env` local, modelo em `.env.example`).
 - `main` é protegida: sem push direto, nem para admin. Fluxo: branch → PR → os 3 checks do CI verdes → squash merge. Sem revisão humana obrigatória (AD-8, decisão do time).
+- Branch sempre começa pela chave do ticket (`KAN-48-confirmar-senha`) e o título do PR termina com ela (`(KAN-48)`); PR de branch sem a chave é rejeitado (`docs/decisoes/2026-10-08-branch-com-chave-do-ticket.md`). Regras de assistente de IA em `CLAUDE.md`.
 
 ## Where things are
 
