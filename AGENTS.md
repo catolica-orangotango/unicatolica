@@ -13,6 +13,7 @@ Rede social acadêmica do Campus Joinville da CatólicaSC — projeto de PAC Ext
 - Nunca commitar segredos/config — só variáveis de ambiente (Render env vars / `.env` local, modelo em `.env.example`).
 - `main` é protegida: sem push direto, nem para admin. Fluxo: branch → PR → os 3 checks do CI verdes → squash merge. Sem revisão humana obrigatória (AD-8, decisão do time).
 - Branch sempre começa pela chave do ticket (`KAN-48-confirmar-senha`) e o título do PR termina com ela (`(KAN-48)`); PR de branch sem a chave é rejeitado (`docs/decisoes/2026-10-08-branch-com-chave-do-ticket.md`). Regras de assistente de IA em `CLAUDE.md`.
+- Análise de PR e teste são conduzidos por colaborador diferente do autor/responsável; a IA pode fazer o trabalho, e esse colaborador confere o resultado antes de aprovar, recusar ou mover o ticket (`docs/decisoes/2026-10-08-revisao-e-teste-por-outro-colaborador.md`). Não muda a AD-8: merge segue só com CI verde.
 
 ## Where things are
 
