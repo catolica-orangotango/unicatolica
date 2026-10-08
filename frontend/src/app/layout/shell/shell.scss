@@ -138,7 +138,7 @@
   // horizontal, mesmo sendo position: absolute (e mesmo com position: fixed, que
   // tambem e clipado por overflow de ancestral). Caber na sidebar em vez de tentar
   // escapar dela.
-  width: 100%;
+  width: 100%; // layout-literal: preenche o wrapper que o contém, não é dimensão de design
   max-height: 360px; // layout-literal: limite de altura antes de rolar - sem token de "altura de lista"
   overflow-y: auto;
   padding: calc(var(--uc-space-unit) / 2);
