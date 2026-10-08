@@ -45,7 +45,7 @@ Rede social acadêmica do Campus Joinville da CatólicaSC — projeto de PAC Ext
 - Changelog Liquibase: um arquivo por módulo, changeset id prefixado pelo nome do módulo (ex.: `comunidades-002-...`), nunca contador global (AD-9).
 - Cada módulo do backend documenta em `package-info.java` seus RFs, tabelas próprias e interface publicada — manter atualizado ao mexer no módulo.
 - Frontend: SCSS nunca hardcoda hex/px/fonte/raio — só `var(--uc-*)` e classes `.uc-text-*`; `scss-guard.spec.ts` quebra o build.
-- Frontend segue WCAG 2.2 nível AA (RNF06) — não verificado automaticamente em CI.
+- Frontend segue WCAG 2.2 nível AA (RNF06): `e2e/acessibilidade.spec.ts` roda o axe em cada tela (violação `serious`/`critical` falha; tela nova ganha um teste ali), e teclado/foco/leitor de tela seguem `docs/acessibilidade-checklist.md`. Texto sempre com contraste 4.5:1 — não usar cor fora dos tokens.
 - Teste é parte da entrega, não dívida: Service com unitário por `ApiException`; Resource com `@QuarkusTest` pelo HTTP (caminho feliz, 401, cada código de erro); tela com Vitest + e2e. Adiar só quando estritamente necessário, registrando motivo e prazo em `docs/dividas-tecnicas.md`. Plano das lacunas atuais (T0–T7) em `docs/decisoes/2026-09-27-cobertura-de-testes.md`.
 
 <!-- /bmad:context -->

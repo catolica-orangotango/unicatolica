@@ -64,7 +64,12 @@
                       {{ notificacao.texto }}
                     </button>
                   } @empty {
-                    <p class="shell__notificacao-item shell__notificacao-item--vazio">
+                    <!-- role="menu" exige ao menos um menuitem, mesmo vazio (axe aria-required-children) -->
+                    <p
+                      class="shell__notificacao-item shell__notificacao-item--vazio"
+                      role="menuitem"
+                      aria-disabled="true"
+                    >
                       Sem notificações por enquanto.
                     </p>
                   }

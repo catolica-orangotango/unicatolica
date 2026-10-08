@@ -90,7 +90,7 @@ export async function mockFeedOk(page: Page): Promise<void> {
 
   await rota(page, (url) => url.pathname === '/usuarios/me', 200, JSON.stringify(usuario));
   await rota(page, (url) => url.pathname === '/comunidades/minhas', 200, JSON.stringify([]));
-  await rota(page, (url) => url.pathname === '/comunidades', 200, JSON.stringify(paginaVazia));
+  await rota(page, (url) => ehApi(url) && url.pathname === '/comunidades', 200, JSON.stringify(paginaVazia));
 }
 
 /**

@@ -3,16 +3,16 @@ name: UniCatólica — Campus Clean
 description: Sistema visual leve e claro para a rede social acadêmica da UniCatólica — reduz a densidade de "portal de notícias" do protótipo original sem abandonar a identidade institucional.
 status: final
 created: 2026-08-17
-updated: 2026-08-22
+updated: 2026-10-08
 colors:
   bg: '#FAFAF8'
   surface: '#FFFFFF'
   border: '#EAEAE6'
   ink: '#1C1C1A'
   ink-soft: '#6B6B66'
-  ink-faint: '#A2A29C'
+  ink-faint: '#6E6E68'
   maroon: '#7A1F2B'
-  orange: '#EA6A2E'
+  orange: '#BC4913'
   orange-tint: '#FDEEE6'
   green-ok: '#3A7D5C'
 typography:
@@ -77,11 +77,13 @@ A postura é: espaço em branco generoso, cards de baixo contraste, uma única c
 
 - **`bg` (#FAFAF8) / `surface` (#FFFFFF)** — canvas base e superfícies de card. Quase branco, nunca branco puro no fundo geral, para reduzir a sensação clínica sem sacrificar contraste.
 - **`border` (#EAEAE6)** — divisórias e contornos de card. Sempre sutil; nunca usado para hierarquia de importância.
-- **`ink` (#1C1C1A) / `ink-soft` (#6B6B66) / `ink-faint` (#A2A29C)** — três níveis de texto: conteúdo principal, texto secundário (metadados, timestamps), texto terciário (labels, placeholders).
+- **`ink` (#1C1C1A) / `ink-soft` (#6B6B66) / `ink-faint` (#6E6E68)** — três níveis de texto: conteúdo principal, texto secundário (metadados, timestamps), texto terciário (labels, placeholders).
 - **`maroon` (#7A1F2B)** — cor institucional da Católica SC, herdada do protótipo Figma. Uso deliberadamente mínimo: traço de marca, ícone ativo, títulos de comunidade de curso. **Nunca como fundo dominante de tela** — é a principal divergência visual em relação ao protótipo original.
-- **`orange` (#EA6A2E)** — único acento de ação do sistema. Reservado para CTA primário (botões "Participar", "Publicar", link ativo na navbar) e para o badge "novo"/tag de destaque. Se outra cor começar a competir por atenção de ação, é sinal de que o token está sendo mal usado.
+- **`orange` (#BC4913)** — único acento de ação do sistema. Reservado para CTA primário (botões "Participar", "Publicar", link ativo na navbar) e para o badge "novo"/tag de destaque. Se outra cor começar a competir por atenção de ação, é sinal de que o token está sendo mal usado.
 - **`orange-tint` (#FDEEE6)** — fundo suave para badges e estado ativo de item de navegação; nunca para texto.
 - **`green-ok` (#3A7D5C)** — verde de sucesso genérico do sistema: indica "você é membro"/confirmação de associação e também qualquer outra confirmação positiva (ex.: formulário salvo, ação concluída). Um único token de sucesso, não dois.
+
+**Contraste (RNF06, WCAG 2.2 AA).** Todo texto precisa de razão 4.5:1 sobre `bg`, `surface` e `orange-tint`, e o teste de acessibilidade dos e2e (axe) falha abaixo disso. Por isso `orange` (era #EA6A2E, 3.18:1 com texto branco) e `ink-faint` (era #A2A29C, 2.45:1 sobre `bg`) foram escurecidos em 08/10/2026 (KAN-71). Efeito colateral: `ink-faint` ficou muito próximo de `ink-soft`, então a diferença entre texto secundário e terciário passa a vir de tamanho e peso, não de cor.
 
 **Modo escuro:** fora de escopo do MVP (decisão confirmada em conversa). Nenhum token dark é definido aqui.
 

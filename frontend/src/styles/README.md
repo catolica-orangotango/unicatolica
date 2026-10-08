@@ -134,9 +134,9 @@ vermelho).
 | `--uc-color-border`      | `#EAEAE6` | `colors.border` - divisoria / contorno de card (1px)                                                                     |
 | `--uc-color-ink`         | `#1C1C1A` | `colors.ink` - texto de conteudo principal                                                                               |
 | `--uc-color-ink-soft`    | `#6B6B66` | `colors.ink-soft` - texto secundario (metadados, timestamps)                                                             |
-| `--uc-color-ink-faint`   | `#A2A29C` | `colors.ink-faint` - texto terciario (labels, placeholders)                                                              |
+| `--uc-color-ink-faint`   | `#6E6E68` | `colors.ink-faint` - texto terciario (labels, placeholders)                                                              |
 | `--uc-color-maroon`      | `#7A1F2B` | `colors.maroon` - acento institucional minimo (traco, icone ativo, titulo de comunidade de curso); nunca fundo dominante |
-| `--uc-color-orange`      | `#EA6A2E` | `colors.orange` - unico acento de acao forte (CTA primario, tag de destaque)                                             |
+| `--uc-color-orange`      | `#BC4913` | `colors.orange` - unico acento de acao forte (CTA primario, tag de destaque)                                             |
 | `--uc-color-orange-tint` | `#FDEEE6` | `colors.orange-tint` - fundo suave de badge / nav ativa; nunca texto                                                     |
 | `--uc-color-green-ok`    | `#3A7D5C` | `colors.green-ok` - unico token de sucesso (membro, confirmacao positiva)                                                |
 | `--uc-color-error`       | `#B3261E` | `colors.error` - texto de erro (validacao inline, falha de login/cadastro); aviso e borda + texto, nunca bloco preenchido |

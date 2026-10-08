@@ -2,8 +2,14 @@
   <h1>Descobrir comunidades</h1>
 
   <form class="lista__filtros" (ngSubmit)="aplicarFiltro(tipoSelecionado.value, nomeDigitado.value)">
-    <input #nomeDigitado type="text" placeholder="Buscar por nome…" [value]="filtroNome()" />
-    <select #tipoSelecionado [value]="filtroTipo()">
+    <input
+      #nomeDigitado
+      type="text"
+      placeholder="Buscar por nome…"
+      aria-label="Buscar comunidade por nome"
+      [value]="filtroNome()"
+    />
+    <select #tipoSelecionado aria-label="Tipo de comunidade" [value]="filtroTipo()">
       <option value="">Todos os tipos</option>
       <option value="CURSO">Comunidade de curso</option>
       <option value="ABERTA">Comunidade aberta</option>

@@ -501,9 +501,10 @@ describe('Shell - painel de notificações (Story 10.1)', () => {
     flushNotificacoes(httpMock);
     f.detectChanges();
 
-    expect(f.nativeElement.querySelector('.shell__notificacao-item--vazio')?.textContent?.trim()).toBe(
-      'Sem notificações por enquanto.',
-    );
+    const vazio = f.nativeElement.querySelector('.shell__notificacao-item--vazio') as HTMLElement;
+    expect(vazio.textContent?.trim()).toBe('Sem notificações por enquanto.');
+    expect(vazio.getAttribute('role')).toBe('menuitem');
+    expect(vazio.getAttribute('aria-disabled')).toBe('true');
   });
 
   it('clicar numa notificação não lida marca como lida, fecha o painel e navega para o link', async () => {

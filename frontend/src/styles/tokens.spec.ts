@@ -28,9 +28,9 @@ const EXPECTED: Record<string, Record<string, string>> = {
     '--uc-color-border': '#EAEAE6',
     '--uc-color-ink': '#1C1C1A',
     '--uc-color-ink-soft': '#6B6B66',
-    '--uc-color-ink-faint': '#A2A29C',
+    '--uc-color-ink-faint': '#6E6E68',
     '--uc-color-maroon': '#7A1F2B',
-    '--uc-color-orange': '#EA6A2E',
+    '--uc-color-orange': '#BC4913',
     '--uc-color-orange-tint': '#FDEEE6',
     '--uc-color-green-ok': '#3A7D5C',
     // Added in Story 14.7 and escalated back into DESIGN.md `colors.error`

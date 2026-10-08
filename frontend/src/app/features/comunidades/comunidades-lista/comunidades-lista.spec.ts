@@ -56,6 +56,14 @@ describe('ComunidadesLista', () => {
     expect(compiled.querySelectorAll('.lista__card').length).toBe(2);
   });
 
+  it('filtros têm nome acessível (WCAG 4.1.2)', async () => {
+    await montar(paginaUnica);
+
+    const compiled = fixture.nativeElement as HTMLElement;
+    expect(compiled.querySelector('input')?.getAttribute('aria-label')).toBe('Buscar comunidade por nome');
+    expect(compiled.querySelector('select')?.getAttribute('aria-label')).toBe('Tipo de comunidade');
+  });
+
   it('entra numa comunidade aberta e atualiza o estado sem recarregar tudo', async () => {
     await montar(paginaUnica);
     const compiled = fixture.nativeElement as HTMLElement;

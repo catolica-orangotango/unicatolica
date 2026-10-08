@@ -60,7 +60,7 @@ flowchart LR
 | T3 | Job E2E no CI (mockado) e job E2E com backend real | 3 | Pendente |
 | T4 | Validação de toda resposta dos `@QuarkusTest` contra o `openapi.yaml` | 4 | Pendente |
 | T5 | JaCoCo e coverage do Vitest, com gate que não deixa a cobertura cair | 5 | Pendente |
-| T6 | `@axe-core/playwright` nos e2e das telas | 6 | Pendente |
+| T6 | `@axe-core/playwright` nos e2e das telas; checklist manual em `docs/acessibilidade-checklist.md` | 6 | Em andamento (KAN-71): roda local; no CI quando o T3 entrar |
 | T7 | Vitest em modo browser para `ui/` e `styles/` | 7 | Pendente |
 
 ### T1. Comunidades pelo HTTP
