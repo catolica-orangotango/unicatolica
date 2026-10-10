@@ -1,7 +1,7 @@
 name: CI
 
 # Gate de merge (AD-8 da Architecture Spine): build + testes automatizados
-# (frontend e backend) + validação do contrato OpenAPI em todo PR. Merge em
+# (frontend, backend e e2e) + validação do contrato OpenAPI em todo PR. Merge em
 # main exige este workflow verde — sem revisão humana obrigatória (decisão do
 # time, ver Boundaries do spec).
 on:
@@ -55,6 +55,100 @@ jobs:
 
       - name: Rodar build + testes (mvnw test)
         run: ./mvnw --batch-mode test
+
+  e2e:
+    name: E2E — Playwright (backend mockado)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Instalar dependências
+        run: npm ci
+
+      - name: Instalar o Chromium do Playwright
+        run: npx playwright install --with-deps chromium
+
+      # Os testes @backend se pulam sozinhos sem E2E_BACKEND; rodam no job abaixo.
+      - name: Rodar e2e
+        run: npm run e2e
+
+      - name: Publicar relatório do Playwright
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-mockado
+          path: frontend/playwright-report/
+          retention-days: 7
+
+  e2e-backend:
+    name: E2E backend — Playwright com Quarkus real
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+          cache: 'maven'
+          cache-dependency-path: backend/pom.xml
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      # Cria o .env a partir do .env.example com chaves JWT novas. Sem EMAIL_TRANSPORTE no
+      # .env, o e-mail vai para a mailbox mock e o link de confirmação sai no log.
+      - name: Preparar .env
+        run: ./scripts/dev-setup.sh
+
+      # Dev Services sobe o Postgres no Docker do runner, igual ao job Backend.
+      - name: Subir o Quarkus em dev
+        working-directory: backend
+        run: |
+          nohup ./mvnw --batch-mode quarkus:dev -Dquarkus.console.enabled=false -Ddebug=false \
+            > "$GITHUB_WORKSPACE/quarkus.log" 2>&1 &
+          for i in $(seq 1 150); do
+            curl -sf http://localhost:8080/q/health > /dev/null && exit 0
+            sleep 2
+          done
+          echo "Quarkus não subiu em 5 minutos"; tail -100 "$GITHUB_WORKSPACE/quarkus.log"; exit 1
+
+      - name: Instalar dependências do frontend
+        working-directory: frontend
+        run: npm ci
+
+      - name: Instalar o Chromium do Playwright
+        working-directory: frontend
+        run: npx playwright install --with-deps chromium
+
+      - name: Rodar e2e com backend real
+        working-directory: frontend
+        env:
+          E2E_BACKEND: '1'
+          E2E_QUARKUS_LOG: ${{ github.workspace }}/quarkus.log
+        run: npx playwright test --grep @backend
+
+      - name: Publicar relatório do Playwright e log do Quarkus
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-backend
+          path: |
+            frontend/playwright-report/
+            quarkus.log
+          retention-days: 7
 
   contrato-openapi:
     name: Contrato — valida openapi.yaml
