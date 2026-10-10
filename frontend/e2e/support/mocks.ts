@@ -89,8 +89,9 @@ export async function mockFeedOk(page: Page): Promise<void> {
   const paginaVazia = { content: [], page: 0, size: 6, totalElements: 0, totalPages: 0 };
 
   await rota(page, (url) => url.pathname === '/usuarios/me', 200, JSON.stringify(usuario));
-  await rota(page, (url) => url.pathname === '/comunidades/minhas', 200, JSON.stringify([]));
-  await rota(page, (url) => url.pathname === '/comunidades', 200, JSON.stringify(paginaVazia));
+  // `ehApi`: `/comunidades` também é rota do Angular (lista de descoberta).
+  await rota(page, (url) => ehApi(url) && url.pathname === '/comunidades/minhas', 200, JSON.stringify([]));
+  await rota(page, (url) => ehApi(url) && url.pathname === '/comunidades', 200, JSON.stringify(paginaVazia));
 }
 
 /**
@@ -196,8 +197,16 @@ export interface PerfilMock {
  * `GET`/`PUT /perfil/me` (Stories 4.1/4.2) com estado em memória: o `PUT` grava e um
  * `GET` depois (reload) devolve o salvo, como o backend real. O curso vem de
  * {@link CURSOS_MOCK} pelo `cursoId`. Registrar depois de `mockFeedOk`.
+ *
+ * `marcarLidaAoSalvar` reproduz o efeito colateral real da Story 4.3: salvar o perfil
+ * marca a notificação "complete seu perfil" como lida no backend. Passe a lista mutável
+ * de {@link mockNotificacoes} e o id da notificação para simular isso no `PUT`.
  */
-export async function mockMeuPerfil(page: Page, inicial: PerfilMock): Promise<void> {
+export async function mockMeuPerfil(
+  page: Page,
+  inicial: PerfilMock,
+  opcoes?: { marcarLidaAoSalvar?: { notificacoes: NotificacaoMock[]; id: number } },
+): Promise<void> {
   let atual = { ...inicial };
   await page.route(
     (url) => ehApi(url) && url.pathname === '/perfil/me',
@@ -215,6 +224,13 @@ export async function mockMeuPerfil(page: Page, inicial: PerfilMock): Promise<vo
           periodo: corpo.periodo,
           interesses: [...corpo.interesses].sort((a, b) => a.localeCompare(b)),
         };
+        if (opcoes?.marcarLidaAoSalvar) {
+          const { notificacoes, id } = opcoes.marcarLidaAoSalvar;
+          const notificacao = notificacoes.find((n) => n.id === id);
+          if (notificacao) {
+            notificacao.lida = true;
+          }
+        }
       }
       return route.fulfill({
         status: 200,
@@ -233,6 +249,57 @@ export function mockPerfilDeUsuario(page: Page, perfil: PerfilMock): Promise<voi
     200,
     JSON.stringify(perfil),
   );
+}
+
+/** Notificação no formato de `Notificacao` do `openapi.yaml` (Story 10.1). */
+export interface NotificacaoMock {
+  id: number;
+  tipo: string;
+  texto: string;
+  link: string | null;
+  lida: boolean;
+  criadoEm: string;
+}
+
+/**
+ * `GET /notificacoes/me` e `POST /notificacoes/{id}/lida` (Story 10.1) com estado em
+ * memória — a mesma lista alimenta o badge e o painel da sidebar, e uma notificação
+ * marcada como lida (pelo painel ou como efeito colateral de outra rota — ver o
+ * `marcarLida` opcional em {@link mockMeuPerfil}) reflete no próximo `GET`. Registrar
+ * depois de `mockFeedOk`.
+ */
+export async function mockNotificacoes(page: Page, iniciais: NotificacaoMock[]): Promise<NotificacaoMock[]> {
+  const notificacoes = iniciais.map((n) => ({ ...n }));
+  await page.route(
+    (url) => ehApi(url) && /^\/notificacoes(\/|$)/.test(url.pathname),
+    (route) => {
+      const request = route.request();
+      if (request.method() === 'OPTIONS') {
+        return route.fulfill({
+          status: 204,
+          headers: { ...CORS, 'access-control-allow-methods': 'GET,POST,OPTIONS' },
+        });
+      }
+      const alvo = /^\/notificacoes\/(\d+)\/lida$/.exec(new URL(request.url()).pathname);
+      if (request.method() === 'POST' && alvo) {
+        const notificacao = notificacoes.find((n) => n.id === Number(alvo[1]));
+        if (notificacao) {
+          notificacao.lida = true;
+        }
+        return route.fulfill({ status: 204, headers: CORS });
+      }
+      return route.fulfill(
+        json(200, {
+          content: notificacoes,
+          page: 0,
+          size: 20,
+          totalElements: notificacoes.length,
+          totalPages: notificacoes.length > 0 ? 1 : 0,
+        }),
+      );
+    },
+  );
+  return notificacoes;
 }
 
 /** Denúncia no formato de `Denuncia` do `openapi.yaml` — sem campo do denunciante (RF77.1). */
@@ -325,6 +392,54 @@ export async function mockDenunciar(page: Page): Promise<unknown[]> {
       recebidas.push(route.request().postDataJSON());
       return route.fulfill(json(201, { id: 900 + recebidas.length, criadoEm: new Date().toISOString() }));
     },
+  );
+  return recebidas;
+}
+
+/** `POST /comunidades` (Story 2.2) com estado; nome em `nomesEmUso` → 409. Registrar após `mockFeedOk`. */
+export async function mockCriarComunidade(
+  page: Page,
+  opcoes: { id: number; nomesEmUso?: string[] },
+): Promise<unknown[]> {
+  const recebidas: unknown[] = [];
+  const minhas: unknown[] = [];
+
+  await page.route(
+    (url) => ehApi(url) && url.pathname === '/comunidades',
+    (route) => {
+      const request = route.request();
+      if (request.method() === 'OPTIONS') {
+        return route.fulfill({ status: 204, headers: CORS });
+      }
+      if (request.method() !== 'POST') {
+        return route.fallback();
+      }
+      const corpo = request.postDataJSON() as { nome: string; descricao: string | null };
+      recebidas.push(corpo);
+      if (opcoes.nomesEmUso?.includes(corpo.nome)) {
+        return route.fulfill({
+          status: 409,
+          headers: { ...CORS, 'content-type': 'application/json' },
+          body: envelopeErro('COMUNIDADE_NOME_EM_USO', 'Já existe uma comunidade com esse nome.'),
+        });
+      }
+      const criada = {
+        id: opcoes.id,
+        nome: corpo.nome,
+        descricao: corpo.descricao,
+        tipo: 'ABERTA',
+        criadoEm: new Date().toISOString(),
+      };
+      minhas.push(criada);
+      return route.fulfill(json(201, criada));
+    },
+  );
+  await page.route(
+    (url) => ehApi(url) && url.pathname === '/comunidades/minhas',
+    (route) =>
+      route.request().method() === 'OPTIONS'
+        ? route.fulfill({ status: 204, headers: CORS })
+        : route.fulfill(json(200, minhas)),
   );
   return recebidas;
 }

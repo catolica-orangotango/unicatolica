@@ -4,24 +4,9 @@ Problemas conhecidos que ainda não têm história nem PR. Quando um item virar 
 
 | # | Dívida | Estado |
 |---|---|---|
-| DT-1 | Cadastro sem campo de confirmação de senha | Aberta |
-| DT-2 | Cadastro sem validação de senha segura | Aberta |
 | DT-3 | Lista de cursos ainda não é mantida pelo administrador | KAN-44 |
 | DT-4 | E-mail de confirmação do cadastro não chega ao usuário | Código pronto; falta configurar a Brevo no Render |
-
-## DT-1. Cadastro sem campo de confirmação de senha
-
-- **Hoje:** o formulário (`frontend/src/app/features/identidade/cadastro/`) tem um único campo `senha`. Um erro de digitação passa despercebido e o usuário não consegue entrar depois.
-- **Correção esperada:** campo "Confirmar senha" com um validador de grupo no `FormGroup`, mais uma mensagem de erro acessível (`aria-describedby`, igual aos outros campos). É só no frontend: o `CadastroRequest` não recebe a confirmação.
-
-## DT-2. Cadastro sem validação de senha segura
-
-- **Backend:** `CadastroService.validarPoliticaSenha` exige só 8 caracteres (`identidade.senha.tamanho-minimo`), com ao menos uma letra e um dígito. O próprio código marca a regra como `[DECISÃO A CONFIRMAR]`, porque o RF04 não define a política.
-- **Frontend:** o campo só tem `Validators.required`. O usuário não vê os requisitos e só descobre a regra pelo erro `SENHA_POLITICA_INVALIDA` depois de enviar.
-- **Correção esperada:**
-  1. O time decide a política (tamanho, maiúscula, símbolo, lista de senhas comuns) em `docs/decisoes/`.
-  2. O backend aplica essa política.
-  3. O frontend mostra os requisitos e valida antes de enviar, com a mesma regra.
+| DT-5 | Nome de comunidade sem limite de tamanho no backend | Aberta |
 
 ## DT-3. Lista de cursos ainda não é mantida pelo administrador
 
@@ -42,3 +27,12 @@ Problemas conhecidos que ainda não têm história nem PR. Quando um item virar 
   1. Criar a conta grátis na Brevo e verificar o remetente padrão `luis98.pereira@catolicasc.edu.br` (ou outro, definido em `MAIL_FROM`).
   2. No Render, definir `EMAIL_TRANSPORTE=brevo-api` e `BREVO_API_KEY`.
   3. Cadastrar um usuário de teste em produção e conferir se o e-mail chega (e se não cai no spam do domínio institucional).
+
+## DT-5. Nome de comunidade sem limite de tamanho no backend
+
+- **Hoje:** a coluna `comunidade.nome` é `varchar(150)`, mas `ComunidadeService.criarComunidadeAberta` só valida que o nome foi informado, e o `ComunidadeRequest` do `openapi.yaml` não tem `maxLength`. Nome com mais de 150 caracteres estoura no banco e volta 500, não 422. A tela de criar comunidade (KAN-22) barra no frontend com `maxlength`, mas uma chamada direta à API ainda cai no 500.
+- **Correção esperada:**
+  1. `maxLength: 150` em `nome` no `ComunidadeRequest` do `openapi.yaml`.
+  2. `ComunidadeService` lança `ApiException.validacao` (422) acima de 150, com teste unitário e `@QuarkusTest` pelo HTTP.
+  3. O `LIMITE_NOME_COMUNIDADE` do `comunidades.service.ts` continua igual ao do backend.
+- **Prazo:** antes de liberar a criação de comunidade em produção para os alunos.
