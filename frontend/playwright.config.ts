@@ -7,8 +7,8 @@ import { defineConfig, devices } from '@playwright/test';
  *
  * O runner sobe o `ng serve` sozinho (`webServer` abaixo). Nenhuma suíte
  * precisa do backend: as chamadas `/auth/*` são mockadas com `page.route()`.
- * O único teste que fala com o Quarkus real fica atrás de `E2E_BACKEND=1`
- * (ver `e2e/auth-fluxo.spec.ts`).
+ * Os testes que falam com o Quarkus real têm a tag `@backend` e só rodam com
+ * `E2E_BACKEND=1` (job "E2E backend" do CI; ver `e2e/backend-real.spec.ts`).
  *
  * Pré-requisito único: `npx playwright install chromium`.
  */

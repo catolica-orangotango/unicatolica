@@ -6,9 +6,10 @@ import { semToken, tokenAtual } from './support/seed';
  * Suíte 2 - fluxo de autenticação entrando na shell.
  *
  * O grupo "mockado" roda sempre (sem backend): `page.route()` responde
- * `/auth/login`. O grupo "backend real" só roda com `E2E_BACKEND=1` e o
- * docker-compose no ar, usando o usuário semente `aluno.teste` (perfil ALUNO,
- * e-mail confirmado) do changeset `identidade-002-seed-usuario-teste`.
+ * `/auth/login`. O grupo "backend real" (tag `@backend`) só roda com `E2E_BACKEND=1`
+ * e o `quarkus:dev` no ar (job "E2E backend" do CI), usando o usuário semente
+ * `aluno.teste` (perfil ALUNO, e-mail confirmado) do changeset
+ * `identidade-002-seed-usuario-teste`.
  */
 
 test.beforeEach(async ({ page }) => {
@@ -46,11 +47,8 @@ test.describe('login mockado', () => {
   });
 });
 
-test.describe('login com backend real', () => {
-  test.skip(
-    !process.env['E2E_BACKEND'],
-    'defina E2E_BACKEND=1 com o docker-compose no ar para rodar este teste',
-  );
+test.describe('login com backend real', { tag: '@backend' }, () => {
+  test.skip(!process.env['E2E_BACKEND'], 'defina E2E_BACKEND=1 com o quarkus:dev no ar');
 
   test('usuário semente ALUNO faz login e vê a sidebar sem itens de moderação', async ({
     page,

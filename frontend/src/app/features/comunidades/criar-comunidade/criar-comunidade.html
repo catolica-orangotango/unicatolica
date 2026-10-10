@@ -1,0 +1,37 @@
+<form class="criar" [formGroup]="form" (ngSubmit)="criar()" novalidate>
+  <h1 class="criar__titulo">Criar comunidade</h1>
+  <p class="criar__intro">Reúna colegas em torno de um interesse. Qualquer aluno pode participar, e você será o administrador.</p>
+
+  <label class="criar__label" for="nome">Nome</label>
+  <input
+    id="nome"
+    class="criar__campo"
+    type="text"
+    formControlName="nome"
+    [attr.maxlength]="limiteNome"
+    [attr.aria-invalid]="form.controls.nome.touched && form.controls.nome.invalid ? 'true' : null"
+    [attr.aria-describedby]="form.controls.nome.touched && form.controls.nome.invalid ? 'erro-nome' : null"
+  />
+  @if (form.controls.nome.touched && form.controls.nome.invalid) {
+    <span class="campo-erro" id="erro-nome">Informe o nome da comunidade.</span>
+  }
+
+  <label class="criar__label" for="descricao">Descrição</label>
+  <p class="criar__ajuda" id="ajuda-descricao">Opcional. Conte do que a comunidade trata.</p>
+  <textarea
+    id="descricao"
+    class="criar__campo criar__descricao"
+    formControlName="descricao"
+    rows="4"
+    aria-describedby="ajuda-descricao"
+  ></textarea>
+
+  @if (erroSalvar(); as mensagem) {
+    <p class="criar__erro" role="alert">{{ mensagem }}</p>
+  }
+
+  <div class="criar__acoes">
+    <button type="submit" uc-button [disabled]="salvando()">{{ salvando() ? 'Criando…' : 'Criar comunidade' }}</button>
+    <a class="botao-secundario" routerLink="/comunidades">Cancelar</a>
+  </div>
+</form>

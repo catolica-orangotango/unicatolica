@@ -5,6 +5,7 @@ import { forkJoin } from 'rxjs';
 import { ToastService, UcButton } from '../../../ui';
 import { ComunidadesService } from '../../comunidades/comunidades.service';
 import { Curso, CursoService } from '../../identidade/curso.service';
+import { NotificacoesService } from '../../notificacoes/notificacoes.service';
 import { PerfilCartao } from '../perfil-cartao/perfil-cartao';
 import { LIMITES_PERFIL, Perfil, PerfilService } from '../perfil.service';
 
@@ -23,6 +24,7 @@ export class MeuPerfil {
   private readonly perfilService = inject(PerfilService);
   private readonly cursoService = inject(CursoService);
   private readonly comunidadesService = inject(ComunidadesService);
+  private readonly notificacoesService = inject(NotificacoesService);
   private readonly toastService = inject(ToastService);
   private readonly formBuilder = inject(FormBuilder);
 
@@ -144,6 +146,10 @@ export class MeuPerfil {
           // Trocar de curso troca a comunidade de curso (auto-join): atualiza a sidebar.
           this.comunidadesService.carregarMinhas().subscribe({ error: () => {} });
         }
+        // Completar o perfil marca a notificação "complete seu perfil" como lida no
+        // backend (Story 4.3) - sem isso o badge da sidebar fica preso no cache antigo
+        // até o painel reabrir ou a página recarregar.
+        this.notificacoesService.carregar().subscribe({ error: () => {} });
       },
       error: (erro: HttpErrorResponse) => {
         this.salvando.set(false);

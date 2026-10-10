@@ -1,0 +1,91 @@
+// Mesmo formulário do meu-perfil.scss: erro com contorno + mensagem, nunca só cor.
+:host {
+  display: block;
+}
+
+.criar {
+  // layout-literal: coluna de leitura, igual a do feed e do perfil.
+  max-width: 720px;
+  display: flex;
+  flex-direction: column;
+  background: var(--uc-color-surface);
+  border: 1px solid var(--uc-color-border);
+  border-radius: var(--uc-radius-md);
+  padding: var(--uc-space-card-padding);
+}
+
+.criar__titulo {
+  margin: 0 0 calc(var(--uc-space-unit) * 2);
+  font-size: var(--uc-font-size-greeting);
+  font-weight: var(--uc-font-weight-semibold);
+  color: var(--uc-color-ink);
+}
+
+.criar__intro,
+.criar__ajuda {
+  margin: 0 0 calc(var(--uc-space-unit) * 2);
+  font-size: var(--uc-font-size-meta);
+  color: var(--uc-color-ink-soft);
+}
+
+.criar__intro {
+  margin-bottom: var(--uc-space-section-gap);
+}
+
+.criar__label {
+  margin-bottom: calc(var(--uc-space-unit) / 2);
+  font-size: var(--uc-font-size-meta);
+  font-weight: var(--uc-font-weight-semibold);
+  color: var(--uc-color-ink);
+}
+
+.criar__campo {
+  margin-bottom: calc(var(--uc-space-unit) * 4);
+  padding: calc(var(--uc-space-unit) * 2) calc(var(--uc-space-unit) * 2.5);
+  border: 1px solid var(--uc-color-border);
+  border-radius: var(--uc-radius-default);
+  background: var(--uc-color-surface);
+  color: var(--uc-color-ink);
+  font-family: var(--uc-font-family-base);
+  font-size: var(--uc-font-size-body);
+}
+
+.criar__campo[aria-invalid='true'] {
+  border-color: var(--uc-color-error);
+  margin-bottom: 0;
+}
+
+.criar__descricao {
+  resize: vertical;
+}
+
+.campo-erro {
+  margin: 0 0 calc(var(--uc-space-unit) * 4);
+  padding-top: var(--uc-space-unit);
+  color: var(--uc-color-error);
+  font-size: var(--uc-font-size-meta);
+}
+
+.criar__erro {
+  margin: 0 0 calc(var(--uc-space-unit) * 3);
+  color: var(--uc-color-error);
+  font-size: var(--uc-font-size-meta);
+}
+
+.criar__acoes {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--uc-space-unit) * 3);
+  margin-top: calc(var(--uc-space-unit) * 2);
+}
+
+.botao-secundario {
+  padding: calc(var(--uc-space-unit) * 2) calc(var(--uc-space-unit) * 4);
+  border: 1px solid var(--uc-color-border);
+  border-radius: var(--uc-radius-full);
+  background: transparent;
+  color: var(--uc-color-ink);
+  font-size: var(--uc-font-size-meta);
+  font-weight: var(--uc-font-weight-semibold);
+  text-decoration: none;
+}
