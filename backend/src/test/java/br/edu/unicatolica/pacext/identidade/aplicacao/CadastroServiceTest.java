@@ -39,7 +39,7 @@ import org.junit.jupiter.api.Test;
 class CadastroServiceTest {
 
     private static final String EMAIL_INSTITUCIONAL = "aluno@catolicasc.edu.br";
-    private static final String SENHA_VALIDA = "senha123";
+    private static final String SENHA_VALIDA = "Senha123!";
     private static final LocalDate NASCIMENTO_MAIOR_IDADE = LocalDate.now().minusYears(20);
     private static final Long CURSO_ID = 14L;
 
@@ -132,6 +132,38 @@ class CadastroServiceTest {
                 EMAIL_INSTITUCIONAL, "123", CURSO_ID, NASCIMENTO_MAIOR_IDADE));
 
         assertEquals(422, erro.getStatus());
+        assertEquals("SENHA_POLITICA_INVALIDA", erro.getCode());
+    }
+
+    @Test
+    void rejeitaSenhaMenorQueOMinimo() {
+        ApiException erro = assertThrows(ApiException.class, () -> service.cadastrar("Ana Silva",
+                EMAIL_INSTITUCIONAL, "Sen1!", CURSO_ID, NASCIMENTO_MAIOR_IDADE));
+
+        assertEquals("SENHA_POLITICA_INVALIDA", erro.getCode());
+    }
+
+    @Test
+    void rejeitaSenhaSemLetraMaiuscula() {
+        ApiException erro = assertThrows(ApiException.class, () -> service.cadastrar("Ana Silva",
+                EMAIL_INSTITUCIONAL, "senha123!", CURSO_ID, NASCIMENTO_MAIOR_IDADE));
+
+        assertEquals("SENHA_POLITICA_INVALIDA", erro.getCode());
+    }
+
+    @Test
+    void rejeitaSenhaSemNumero() {
+        ApiException erro = assertThrows(ApiException.class, () -> service.cadastrar("Ana Silva",
+                EMAIL_INSTITUCIONAL, "SenhaForte!", CURSO_ID, NASCIMENTO_MAIOR_IDADE));
+
+        assertEquals("SENHA_POLITICA_INVALIDA", erro.getCode());
+    }
+
+    @Test
+    void rejeitaSenhaSemCaractereEspecial() {
+        ApiException erro = assertThrows(ApiException.class, () -> service.cadastrar("Ana Silva",
+                EMAIL_INSTITUCIONAL, "Senha1234", CURSO_ID, NASCIMENTO_MAIOR_IDADE));
+
         assertEquals("SENHA_POLITICA_INVALIDA", erro.getCode());
     }
 

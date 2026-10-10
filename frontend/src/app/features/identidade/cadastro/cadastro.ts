@@ -1,10 +1,53 @@
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { Component, inject, signal } from '@angular/core';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Component, computed, inject, signal } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { AbstractControl, FormBuilder, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
 import { API_BASE_URL } from '../../../core/config/api.config';
 import { UcAuthShell } from '../../../layout/auth-shell/auth-shell';
 import { UcButton } from '../../../ui/button/button';
 import { Curso, CursoService } from '../curso.service';
+
+/**
+ * Mesma política do backend (`CadastroService.validarPoliticaSenha`): mínimo 8
+ * caracteres, 1 maiúscula, 1 número, 1 caractere especial. Fonte única — o validador
+ * (bloqueia o envio) e o checklist da tela leem daqui, em vez de cada um reimplementar a
+ * mesma regra.
+ */
+const REGRAS_SENHA: ReadonlyArray<{ chave: string; texto: string; cumprida: (valor: string) => boolean }> = [
+  { chave: 'minTamanho', texto: 'Mínimo de 8 caracteres', cumprida: (valor) => valor.length >= 8 },
+  { chave: 'maiuscula', texto: 'Pelo menos uma letra maiúscula', cumprida: (valor) => /[A-Z]/.test(valor) },
+  { chave: 'numero', texto: 'Pelo menos um número', cumprida: (valor) => /[0-9]/.test(valor) },
+  { chave: 'especial', texto: 'Pelo menos um caractere especial', cumprida: (valor) => /[^A-Za-z0-9]/.test(valor) },
+];
+
+function senhaForteValidator(control: AbstractControl): ValidationErrors | null {
+  const valor = (control.value as string | null) ?? '';
+  const erros: ValidationErrors = {};
+  for (const regra of REGRAS_SENHA) {
+    if (!regra.cumprida(valor)) {
+      erros[regra.chave] = true;
+    }
+  }
+  return Object.keys(erros).length > 0 ? erros : null;
+}
+
+/**
+ * Validador de grupo: retorna `{ senhasDiferentes: true }` no próprio grupo, nunca via
+ * `setErrors` imperativo no controle filho — `setErrors` substitui (não mescla) os erros
+ * do controle, então qualquer revalidação de só `confirmarSenha` (ex.: o próprio
+ * `Validators.required` rodando de novo) apagaria o erro sem o grupo saber. O template lê
+ * o erro em `form.hasError('senhasDiferentes')` (ver `confirmarSenhaComErro`).
+ * Não compara quando `senha` ou `confirmarSenha` estão vazios — vazio já é coberto pelo
+ * `Validators.required` de cada controle.
+ */
+function senhasConferemValidator(form: AbstractControl): ValidationErrors | null {
+  const senha = form.get('senha');
+  const confirmarSenha = form.get('confirmarSenha');
+  if (!senha?.value || !confirmarSenha?.value) {
+    return null;
+  }
+  return senha.value === confirmarSenha.value ? null : { senhasDiferentes: true };
+}
 
 /**
  * Envelope de erro padrão da API (AD-5) — espelha `ErroResponse` do backend.
@@ -24,6 +67,12 @@ interface CadastroResponse {
   curso: string;
   emailConfirmado: boolean;
   criadoEm: string;
+}
+
+interface RequisitoSenha {
+  chave: string;
+  texto: string;
+  atendido: boolean;
 }
 
 /**
@@ -57,12 +106,36 @@ export class Cadastro {
   protected readonly reenviando = signal(false);
   protected readonly reenviado = signal(false);
 
-  protected readonly form = this.formBuilder.nonNullable.group({
-    nome: ['', [Validators.required]],
-    email: ['', [Validators.required, Validators.email]],
-    senha: ['', [Validators.required]],
-    cursoId: this.formBuilder.control<number | null>(null, [Validators.required]),
-    dataNascimento: ['', [Validators.required]],
+  /** Mostra Senha e Confirmar senha em texto puro só enquanto o botão está pressionado. */
+  protected readonly mostrarSenhas = signal(false);
+
+  /** Checklist de requisitos só aparece depois que o usuário interage com o campo Senha. */
+  protected readonly senhaFocada = signal(false);
+
+  protected readonly form = this.formBuilder.nonNullable.group(
+    {
+      nome: ['', [Validators.required]],
+      email: ['', [Validators.required, Validators.email]],
+      senha: ['', [Validators.required, senhaForteValidator]],
+      confirmarSenha: ['', [Validators.required]],
+      cursoId: this.formBuilder.control<number | null>(null, [Validators.required]),
+      dataNascimento: ['', [Validators.required]],
+    },
+    { validators: senhasConferemValidator },
+  );
+
+  private readonly senhaValor = toSignal(this.form.controls.senha.valueChanges, { initialValue: '' });
+
+  /**
+   * Checklist de requisitos — computado a partir de um signal, não de chamadas a
+   * `form.controls.senha.hasError(...)` direto no `@for` do template: isso apresentou um
+   * bug de renderização em que um item ficava com o DOM desatualizado quando só ele (não
+   * os quatro juntos) mudava de estado numa mesma digitação. Mesma regra de
+   * `senhaForteValidator` (`REGRAS_SENHA`), não uma cópia.
+   */
+  protected readonly requisitosSenha = computed<RequisitoSenha[]>(() => {
+    const valor = this.senhaValor() ?? '';
+    return REGRAS_SENHA.map((regra) => ({ chave: regra.chave, texto: regra.texto, atendido: regra.cumprida(valor) }));
   });
 
   constructor() {
@@ -70,6 +143,39 @@ export class Cadastro {
       next: (cursos) => this.cursos.set(cursos),
       error: () => this.erroCursos.set(true),
     });
+  }
+
+  /** `confirmarSenha` só existe no formulário; erro de grupo também conta como erro do campo. */
+  protected confirmarSenhaComErro(): boolean {
+    const confirmarSenha = this.form.controls.confirmarSenha;
+    return confirmarSenha.touched && (confirmarSenha.invalid || this.form.hasError('senhasDiferentes'));
+  }
+
+  /**
+   * Não assume que todo erro de `confirmarSenha` é "senhas não conferem" (pode ser só
+   * vazio). A mensagem é obrigatória (WCAG 3.3.1) — só `aria-invalid`, sem texto, não
+   * identifica o erro pra quem usa leitor de tela.
+   */
+  protected mensagemErroConfirmarSenha(): string {
+    if (this.form.controls.confirmarSenha.hasError('required')) {
+      return 'Confirme sua senha.';
+    }
+    if (this.form.hasError('senhasDiferentes')) {
+      return 'As senhas não conferem.';
+    }
+    return '';
+  }
+
+  /** `aria-describedby` do campo Senha: erro (se tocado e inválido) e/ou o checklist (se visível). */
+  protected senhaDescritoPor(): string | null {
+    const partes: string[] = [];
+    if (this.form.controls.senha.touched && this.form.controls.senha.invalid) {
+      partes.push('erro-senha');
+    }
+    if (this.senhaFocada()) {
+      partes.push('requisitos-senha');
+    }
+    return partes.length > 0 ? partes.join(' ') : null;
   }
 
   protected enviar(): void {
@@ -82,7 +188,18 @@ export class Cadastro {
     this.erro.set(null);
     this.sucesso.set(null);
 
-    this.http.post<CadastroResponse>(`${API_BASE_URL}/auth/registro`, this.form.getRawValue()).subscribe({
+    // Corpo montado explicitamente com os campos do contrato de POST /auth/registro —
+    // confirmarSenha (só do formulário) nunca entra aqui.
+    const valores = this.form.getRawValue();
+    const corpo = {
+      nome: valores.nome,
+      email: valores.email,
+      senha: valores.senha,
+      cursoId: valores.cursoId,
+      dataNascimento: valores.dataNascimento,
+    };
+
+    this.http.post<CadastroResponse>(`${API_BASE_URL}/auth/registro`, corpo).subscribe({
       next: (resposta) => {
         this.enviando.set(false);
         this.sucesso.set(resposta);
