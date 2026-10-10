@@ -1,5 +1,8 @@
 <div class="lista">
-  <h1>Descobrir comunidades</h1>
+  <div class="lista__topo">
+    <h1>Descobrir comunidades</h1>
+    <button type="button" uc-button routerLink="/comunidades/nova">Criar comunidade</button>
+  </div>
 
   <form class="lista__filtros" (ngSubmit)="aplicarFiltro(tipoSelecionado.value, nomeDigitado.value)">
     <input #nomeDigitado type="text" placeholder="Buscar por nome…" [value]="filtroNome()" />
