@@ -1,7 +1,7 @@
 # Fluxo de status das tarefas no Jira
 
 - **Data:** 02/10/2026
-- **Status:** proposta, para o time aprovar
+- **Status:** substituída pelo [fluxo revisado de 05/10](2026-10-05-fluxo-de-status-jira-revisado.md)
 
 ## Contexto
 
