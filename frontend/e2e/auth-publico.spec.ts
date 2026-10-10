@@ -70,13 +70,13 @@ test.describe('Login', () => {
 });
 
 test.describe('Cadastro', () => {
-  const CAMPOS = ['Nome completo', 'E-mail institucional', 'Senha', 'Curso', 'Data de nascimento'];
+  const CAMPOS = ['Nome completo', 'E-mail institucional', 'Senha', 'Confirmar senha', 'Curso', 'Data de nascimento'];
 
-  test('renderiza os cinco campos com label associada e o botão Cadastrar', async ({ page }) => {
+  test('renderiza os seis campos com label associada e o botão Cadastrar', async ({ page }) => {
     await page.goto('/cadastro');
 
     for (const rotulo of CAMPOS) {
-      await expect(page.getByLabel(rotulo)).toBeVisible();
+      await expect(page.getByLabel(rotulo, { exact: true })).toBeVisible();
     }
     await expect(page.getByRole('button', { name: 'Cadastrar' })).toBeVisible();
   });
@@ -85,9 +85,104 @@ test.describe('Cadastro', () => {
     await page.goto('/cadastro');
     await page.getByRole('button', { name: 'Cadastrar' }).click();
 
-    await expect(page.locator('.campo-erro')).toHaveCount(5);
+    await expect(page.locator('.campo-erro')).toHaveCount(6);
     await expect(page.getByText('Informe seu nome.')).toBeVisible();
     await expect(page).toHaveURL(/\/cadastro$/);
+  });
+
+  test('senhas diferentes mostra "As senhas não conferem." e não envia', async ({ page }) => {
+    await page.goto('/cadastro');
+
+    // Os outros campos ficam válidos de propósito: sem isso o formulário já fica inválido
+    // por causa deles, e o teste "passa" mesmo que o validador de senha nunca rode.
+    let registroChamado = false;
+    await page.route('**/auth/registro', (route) => {
+      registroChamado = true;
+      return route.fulfill({ status: 201, contentType: 'application/json', body: '{}' });
+    });
+
+    await page.getByLabel('Nome completo').fill('Ana Teste');
+    await page.getByLabel('E-mail institucional').fill('ana.teste@catolicasc.edu.br');
+    await page.getByLabel('Senha', { exact: true }).fill('Senha123!');
+    await page.getByLabel('Confirmar senha').fill('OutraSenha456!');
+    await page.getByLabel('Confirmar senha').blur(); // marca touched, sem depender de pra onde o foco vai
+    await page.getByLabel('Curso').selectOption({ label: 'Engenharia de Software' });
+
+    await expect(page.getByText('As senhas não conferem.')).toBeVisible();
+    await expect(page.getByLabel('Confirmar senha')).toHaveAttribute('aria-invalid', 'true');
+    await expect(page.getByLabel('Confirmar senha')).toHaveAttribute('aria-describedby', 'erro-confirmarSenha');
+
+    await page.getByLabel('Data de nascimento').fill('2000-01-01');
+    await page.getByRole('button', { name: 'Cadastrar' }).click();
+    await expect(page).toHaveURL(/\/cadastro$/);
+    expect(registroChamado).toBe(false);
+  });
+
+  test('senha vazia com confirmar senha preenchida não mostra "As senhas não conferem."', async ({
+    page,
+  }) => {
+    await page.goto('/cadastro');
+
+    await page.getByLabel('Confirmar senha').fill('Senha123!');
+    await page.getByLabel('Curso').focus(); // tira o foco -> marca confirmarSenha como touched
+
+    await expect(page.getByText('As senhas não conferem.')).not.toBeVisible();
+  });
+
+  test('checklist de requisitos fica escondido até focar Senha, depois atualiza em tempo real', async ({
+    page,
+  }) => {
+    await page.goto('/cadastro');
+    const senha = page.getByLabel('Senha', { exact: true });
+    // Espera a página terminar de montar antes de checar "ausente": sem isso, a
+    // checagem de count 0 passaria por acaso no instante antes do Angular renderizar,
+    // mesmo que o checklist não estivesse realmente escondido por código.
+    await expect(senha).toBeVisible();
+
+    const requisitos = page.locator('.cadastro__requisito');
+    await expect(requisitos).toHaveCount(0);
+
+    await senha.focus();
+
+    await expect(requisitos).toHaveCount(4);
+    await expect(senha).toHaveAttribute('aria-describedby', 'requisitos-senha');
+    for (const texto of await requisitos.allTextContents()) {
+      expect(texto.trim().startsWith('○')).toBe(true);
+    }
+
+    await senha.fill('Senha123!');
+
+    for (const texto of await requisitos.allTextContents()) {
+      expect(texto.trim().startsWith('✓')).toBe(true);
+    }
+  });
+
+  test('segurar o botão mostra as duas senhas; soltar esconde de novo', async ({ page }) => {
+    await page.goto('/cadastro');
+    await page.getByLabel('Senha', { exact: true }).fill('Senha123!');
+    await page.getByLabel('Confirmar senha').fill('OutraSenha456!');
+
+    const senha = page.getByLabel('Senha', { exact: true });
+    const confirmarSenha = page.getByLabel('Confirmar senha');
+    await expect(senha).toHaveAttribute('type', 'password');
+    await expect(confirmarSenha).toHaveAttribute('type', 'password');
+
+    // Locator por classe, não por name do role: o aria-label alterna de texto conforme o
+    // estado (ver cadastro.html), então getByRole com name fixo pararia de casar depois
+    // de pressionado.
+    const botao = page.locator('.cadastro__botao-olho');
+    await expect(botao).toHaveAttribute('aria-label', 'Mostrar as senhas enquanto pressionado');
+    await botao.hover();
+    await page.mouse.down();
+
+    await expect(senha).toHaveAttribute('type', 'text');
+    await expect(confirmarSenha).toHaveAttribute('type', 'text');
+    await expect(botao).toHaveAttribute('aria-label', 'Mostrando as senhas');
+
+    await page.mouse.up();
+
+    await expect(senha).toHaveAttribute('type', 'password');
+    await expect(confirmarSenha).toHaveAttribute('type', 'password');
   });
 
   test('curso é escolhido de uma lista carregada de GET /cursos', async ({ page }) => {
@@ -102,7 +197,7 @@ test.describe('Cadastro', () => {
   test('e-mail inválido dispara a mensagem específica após blur', async ({ page }) => {
     await page.goto('/cadastro');
     await page.getByLabel('E-mail institucional').fill('abc');
-    await page.getByLabel('Senha').click(); // tira o foco -> marca como touched
+    await page.getByLabel('Senha', { exact: true }).click(); // tira o foco -> marca como touched
 
     await expect(page.getByText('Informe um e-mail institucional válido.')).toBeVisible();
   });
