@@ -22,7 +22,8 @@ test.describe('backend real', { tag: '@backend' }, () => {
     await page.goto('/cadastro');
     await page.getByLabel('Nome completo').fill('Aluno Cadastro E2E');
     await page.getByLabel('E-mail institucional').fill(email);
-    await page.getByLabel('Senha').fill(SENHA);
+    await page.getByLabel('Senha', { exact: true }).fill(SENHA);
+    await page.getByLabel('Confirmar senha').fill(SENHA);
     await page.getByLabel('Curso').selectOption({ label: CURSO_ENG_SOFTWARE.nome });
     await page.getByLabel('Data de nascimento').fill('2000-01-01');
     await page.getByRole('button', { name: 'Cadastrar' }).click();
