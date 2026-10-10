@@ -63,6 +63,7 @@ export const routes: Routes = [
       {
         // Criar comunidade (Story 2.2). Fica antes de ':id', senão 'nova' casa como id.
         path: 'comunidades/nova',
+        title: 'Criar comunidade',
         loadComponent: () =>
           import('./features/comunidades/criar-comunidade/criar-comunidade').then((m) => m.CriarComunidade),
       },

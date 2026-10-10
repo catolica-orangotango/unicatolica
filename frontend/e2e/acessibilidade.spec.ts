@@ -87,6 +87,17 @@ test.describe('Telas do aluno', () => {
     await esperarSemViolacoes(page);
   });
 
+  test('criar comunidade, vazio e com erro de validação', async ({ page }) => {
+    await page.goto('/comunidades/nova');
+    await expect(page.getByRole('heading', { level: 1, name: 'Criar comunidade' })).toBeVisible();
+    await expect(page).toHaveTitle('Criar comunidade — UniCatólica');
+    await esperarSemViolacoes(page);
+
+    await page.getByRole('button', { name: 'Criar comunidade' }).click();
+    await expect(page.getByLabel('Nome')).toHaveAttribute('aria-invalid', 'true');
+    await esperarSemViolacoes(page);
+  });
+
   test('detalhe da comunidade com feed', async ({ page }) => {
     await mockComunidadeComFeed(page, {
       id: 27,

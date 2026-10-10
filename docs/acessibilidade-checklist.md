@@ -34,6 +34,7 @@ Ferramenta automática não cobre tudo. Teclado, ordem de foco, leitor de tela e
 | Shell: notificações | O botão anuncia quantas não lidas há; `Esc` fecha e o foco volta ao botão; o item leva ao link certo. |
 | Início (`/feed`) | Lista "Descubra comunidades" lida como lista; o estado vazio é lido. |
 | Lista de comunidades (`/comunidades`) | Campo de busca e tipo com nome lido pelo leitor; paginação anuncia a página atual. |
+| Criar comunidade (`/comunidades/nova`) | Enviar sem nome leva o foco ao campo e o erro é lido; "Nome já em uso" é anunciado como alerta. |
 | Detalhe da comunidade (`/comunidades/:id`) | Caixa de postar com rótulo e contador de caracteres anunciado; "Denunciar" abre o formulário de motivo no card, o foco vai para ele, e o resultado do envio é lido. |
 | Meu perfil (`/perfil`) | Adicionar e remover interesse por teclado; o chip removido é anunciado; "Perfil salvo" é lido. |
 | Perfil de outro usuário (`/usuarios/:id`) | Conteúdo somente leitura, sem botões de edição no caminho do `Tab`. |
