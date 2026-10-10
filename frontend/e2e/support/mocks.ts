@@ -92,6 +92,8 @@ export async function mockFeedOk(page: Page): Promise<void> {
   // `ehApi`: `/comunidades` também é rota do Angular (lista de descoberta).
   await rota(page, (url) => ehApi(url) && url.pathname === '/comunidades/minhas', 200, JSON.stringify([]));
   await rota(page, (url) => ehApi(url) && url.pathname === '/comunidades', 200, JSON.stringify(paginaVazia));
+  // A shell busca as notificações ao montar; sem mock, o ERR_CONNECTION_REFUSED vai para o console.
+  await mockNotificacoes(page, []);
 }
 
 /**
