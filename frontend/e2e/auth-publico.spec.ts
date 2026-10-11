@@ -79,6 +79,8 @@ test.describe('Cadastro', () => {
       await expect(page.getByLabel(rotulo, { exact: true })).toBeVisible();
     }
     await expect(page.getByRole('button', { name: 'Cadastrar' })).toBeVisible();
+    // Nenhum erro antes de o usuário interagir (KAN-48: "Confirme sua senha." aparecia ao abrir).
+    await expect(page.locator('.campo-erro')).toHaveCount(0);
   });
 
   test('submeter vazio mostra o erro de cada campo e não navega', async ({ page }) => {

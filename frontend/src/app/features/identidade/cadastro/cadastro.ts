@@ -157,6 +157,10 @@ export class Cadastro {
    * identifica o erro pra quem usa leitor de tela.
    */
   protected mensagemErroConfirmarSenha(): string {
+    // Mesma condição do aria-invalid: nada aparece antes de o usuário tocar no campo.
+    if (!this.confirmarSenhaComErro()) {
+      return '';
+    }
     if (this.form.controls.confirmarSenha.hasError('required')) {
       return 'Confirme sua senha.';
     }

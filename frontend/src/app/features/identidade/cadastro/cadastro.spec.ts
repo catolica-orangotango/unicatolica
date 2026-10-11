@@ -134,6 +134,16 @@ describe('Cadastro', () => {
   });
 
   describe('Confirmar senha', () => {
+    it('sem tocar no campo, não mostra mensagem nem liga aria-describedby', () => {
+      fixture.detectChanges();
+
+      const compiled = fixture.nativeElement as HTMLElement;
+      const campo = compiled.querySelector('#confirmarSenha');
+      expect(compiled.querySelector('#erro-confirmarSenha')).toBeNull();
+      expect(campo?.getAttribute('aria-describedby')).toBeNull();
+      expect(campo?.getAttribute('aria-invalid')).toBeNull();
+    });
+
     it('vazio, depois de tocar, mostra "Confirme sua senha."', () => {
       fixture.detectChanges();
       component['form'].controls.confirmarSenha.markAsTouched();
