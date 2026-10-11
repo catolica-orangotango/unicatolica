@@ -12,7 +12,17 @@ export interface Comunidade {
   descricao: string | null;
   tipo: 'CURSO' | 'ABERTA';
   souMembro: boolean | null;
+  souAdministrador: boolean | null;
   criadoEm: string;
+}
+
+/** Espelha `MembroComunidadeResponse` (Story 2.6). */
+export interface MembroComunidade {
+  usuarioId: number;
+  nome: string;
+  curso: string | null;
+  papel: 'ADMINISTRADOR' | 'MEMBRO';
+  membroDesde: string;
 }
 
 /** Espelha `PageResponse<T>` do backend (AD-4). */
@@ -113,6 +123,49 @@ export class ComunidadesService {
       .pipe(
         switchMap(() => this.carregarMinhas()),
         tap(() => this.toastService.mostrar(`Você entrou em ${nome}`)),
+        map(() => undefined),
+      );
+  }
+
+  /** `GET /comunidades/{id}/membros` (Story 2.6) — administradores primeiro. */
+  listarMembros(id: number, pagina = 0, tamanho = 20): Observable<Pagina<MembroComunidade>> {
+    return this.http.get<Pagina<MembroComunidade>>(`${API_BASE_URL}/comunidades/${id}/membros`, {
+      headers: this.authService.obterCabecalhoAutorizacao(),
+      params: { pagina: String(pagina), tamanho: String(tamanho) },
+    });
+  }
+
+  /** `PATCH /comunidades/{id}` (Story 2.6) — recarrega a sidebar, que mostra o nome. */
+  editar(id: number, dados: { nome?: string; descricao?: string }): Observable<Comunidade> {
+    return this.http
+      .patch<Comunidade>(`${API_BASE_URL}/comunidades/${id}`, dados, {
+        headers: this.authService.obterCabecalhoAutorizacao(),
+      })
+      .pipe(
+        switchMap((comunidade) =>
+          this.carregarMinhas().pipe(
+            catchError(() => of([])),
+            map(() => comunidade),
+          ),
+        ),
+      );
+  }
+
+  /** `DELETE /comunidades/{id}/membros/{usuarioId}` (Story 2.6, RF29). */
+  removerMembro(id: number, usuarioId: number): Observable<void> {
+    return this.http.delete<void>(`${API_BASE_URL}/comunidades/${id}/membros/${usuarioId}`, {
+      headers: this.authService.obterCabecalhoAutorizacao(),
+    });
+  }
+
+  /** `DELETE /comunidades/{id}` (Story 2.6, RF31) — a comunidade some da sidebar. */
+  excluir(id: number): Observable<void> {
+    return this.http
+      .delete<void>(`${API_BASE_URL}/comunidades/${id}`, {
+        headers: this.authService.obterCabecalhoAutorizacao(),
+      })
+      .pipe(
+        switchMap(() => this.carregarMinhas().pipe(catchError(() => of([])))),
         map(() => undefined),
       );
   }

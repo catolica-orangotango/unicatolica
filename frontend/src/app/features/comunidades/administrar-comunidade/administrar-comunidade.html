@@ -1,0 +1,107 @@
+<section class="admin" aria-labelledby="admin-titulo">
+  <h2 class="admin__titulo" id="admin-titulo">Administração</h2>
+
+  <form class="admin__bloco" [formGroup]="form" (ngSubmit)="salvar()" novalidate>
+    <h3 class="admin__subtitulo">Dados da comunidade</h3>
+
+    <label class="admin__label" for="admin-nome">Nome</label>
+    <input
+      id="admin-nome"
+      class="admin__campo"
+      type="text"
+      formControlName="nome"
+      [attr.maxlength]="limiteNome"
+      [attr.aria-invalid]="form.controls.nome.touched && form.controls.nome.invalid ? 'true' : null"
+      [attr.aria-describedby]="form.controls.nome.touched && form.controls.nome.invalid ? 'erro-admin-nome' : null"
+    />
+    @if (form.controls.nome.touched && form.controls.nome.invalid) {
+      <span class="admin__erro-campo" id="erro-admin-nome">Informe o nome da comunidade.</span>
+    }
+
+    <label class="admin__label" for="admin-descricao">Descrição</label>
+    <textarea id="admin-descricao" class="admin__campo admin__descricao" formControlName="descricao" rows="3"></textarea>
+
+    @if (erroSalvar(); as mensagem) {
+      <p class="admin__erro" role="alert">{{ mensagem }}</p>
+    }
+
+    <div class="admin__acoes">
+      <button type="submit" uc-button [disabled]="salvando()">{{ salvando() ? 'Salvando…' : 'Salvar alterações' }}</button>
+    </div>
+  </form>
+
+  <div class="admin__bloco">
+    <h3 class="admin__subtitulo">Membros</h3>
+
+    @if (erroMembros(); as mensagem) {
+      <p class="admin__erro" role="alert">{{ mensagem }}</p>
+    }
+
+    <ul class="admin__membros">
+      @for (membro of membros(); track membro.usuarioId) {
+        <li class="admin__membro">
+          <div class="admin__membro-dados">
+            <span class="admin__membro-nome">{{ membro.nome }}</span>
+            <span class="admin__membro-meta">
+              {{ membro.papel === 'ADMINISTRADOR' ? 'Administrador' : 'Membro' }}@if (membro.curso) { · {{ membro.curso }}}
+            </span>
+          </div>
+
+          @if (membro.papel === 'MEMBRO') {
+            @if (removendo()?.usuarioId === membro.usuarioId) {
+              <div class="admin__confirmacao" role="group" [attr.aria-label]="'Confirmar remoção de ' + membro.nome">
+                <span class="admin__confirmacao-texto">Remover {{ membro.nome }}?</span>
+                <button
+                  #botaoConfirmarRemocao
+                  type="button"
+                  class="admin__botao-perigo"
+                  [disabled]="processandoRemocao()"
+                  (click)="confirmarRemocao()"
+                >
+                  {{ processandoRemocao() ? 'Removendo…' : 'Confirmar' }}
+                </button>
+                <button type="button" class="botao-secundario" (click)="cancelarRemocao()">Cancelar</button>
+              </div>
+            } @else {
+              <button
+                type="button"
+                class="botao-secundario"
+                [attr.aria-label]="'Remover ' + membro.nome"
+                (click)="pedirRemocao(membro)"
+              >
+                Remover
+              </button>
+            }
+          }
+        </li>
+      }
+    </ul>
+  </div>
+
+  <div class="admin__bloco admin__bloco--perigo">
+    <h3 class="admin__subtitulo">Excluir comunidade</h3>
+    <p class="admin__ajuda">A comunidade some das listagens e deixa de aceitar publicações. Não dá para desfazer.</p>
+
+    @if (erroExclusao(); as mensagem) {
+      <p class="admin__erro" role="alert">{{ mensagem }}</p>
+    }
+
+    @if (confirmandoExclusao()) {
+      <div class="admin__confirmacao" role="group" aria-label="Confirmar exclusão da comunidade">
+        <span class="admin__confirmacao-texto">Excluir {{ comunidade().nome }}?</span>
+        <button
+          #botaoConfirmarExclusao
+          type="button"
+          class="admin__botao-perigo"
+          [disabled]="excluindo()"
+          (click)="confirmarExclusao()"
+        >
+          {{ excluindo() ? 'Excluindo…' : 'Confirmar exclusão' }}
+        </button>
+        <button type="button" class="botao-secundario" (click)="cancelarExclusao()">Cancelar</button>
+      </div>
+    } @else {
+      <button type="button" class="admin__botao-perigo" (click)="pedirExclusao()">Excluir comunidade</button>
+    }
+  </div>
+</section>

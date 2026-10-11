@@ -302,8 +302,116 @@ paths:
           $ref: '#/components/responses/NaoAutenticado'
         '404':
           $ref: '#/components/responses/NaoEncontrado'
+    patch:
+      operationId: editarComunidade
+      summary: Edita nome/descrição da comunidade — só administrador dela (Story 2.6, RF30)
+      tags: [Comunidades]
+      description: >
+        Edição parcial: campo ausente (ou null) não é alterado. O corpo não aceita "tipo"
+        de propósito: o tipo (CURSO/ABERTA) é imutável desde a criação (RF21.1).
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ComunidadeEdicaoRequest'
+      responses:
+        '200':
+          description: Comunidade atualizada.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ComunidadeResponse'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        # 403: não é administrador da comunidade. 409: nome já usado por outra comunidade.
+        # 422: nome enviado em branco (RF22).
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Conflito'
+        '422':
+          $ref: '#/components/responses/ErroValidacao'
+    delete:
+      operationId: excluirComunidade
+      summary: Exclui (logicamente) a comunidade — só administrador dela (Story 2.6, RF31)
+      tags: [Comunidades]
+      description: >
+        Exclusão lógica: a comunidade some das listagens e do detalhe (404) e não aceita mais
+        interações; os dados são preservados.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '204':
+          description: Comunidade excluída.
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
 
   /comunidades/{id}/membros:
+    get:
+      operationId: listarMembrosDaComunidade
+      summary: Lista os membros da comunidade, paginado — só para membros dela (Story 2.6, RF29)
+      tags: [Comunidades]
+      description: >
+        Administradores primeiro, depois por data de entrada. Nome e curso vêm de
+        identidade.UsuarioConsulta (AD-3). Quem não é membro recebe 403, para a lista de
+        participantes não ficar exposta.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: pagina
+          in: query
+          schema:
+            type: integer
+            format: int32
+            minimum: 0
+            default: 0
+        - name: tamanho
+          in: query
+          schema:
+            type: integer
+            format: int32
+            minimum: 1
+            maximum: 100
+            default: 20
+      responses:
+        '200':
+          description: Página de membros.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MembroComunidadePageResponse'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        # 403: solicitante não é membro da comunidade.
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '422':
+          $ref: '#/components/responses/ErroValidacao'
     post:
       operationId: ingressarNaComunidade
       summary: Entra numa comunidade aberta (Story 2.4, RF24/RF25)
@@ -333,6 +441,9 @@ paths:
       operationId: sairDaComunidade
       summary: Sai de uma comunidade (Story 2.4, RF26)
       tags: [Comunidades]
+      description: >
+        O único administrador não pode sair (422), para a comunidade não ficar sem
+        administrador (Story 2.6): ele exclui a comunidade em vez de sair.
       parameters:
         - name: id
           in: path
@@ -347,6 +458,44 @@ paths:
           $ref: '#/components/responses/NaoAutenticado'
         '404':
           $ref: '#/components/responses/NaoEncontrado'
+        # 422: o solicitante é o único administrador da comunidade.
+        '422':
+          $ref: '#/components/responses/ErroValidacao'
+
+  /comunidades/{id}/membros/{usuarioId}:
+    delete:
+      operationId: removerMembroDaComunidade
+      summary: Remove um membro da comunidade — só administrador dela (Story 2.6, RF29)
+      tags: [Comunidades]
+      description: >
+        Só remove quem é membro comum; um administrador (inclusive o próprio solicitante)
+        não pode ser removido por aqui, para a comunidade não ficar sem administrador.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: usuarioId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '204':
+          description: Membro removido.
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        # 403: solicitante não é administrador da comunidade. 404: comunidade ou membro inexistente.
+        # 422: o usuário a remover é administrador da comunidade.
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '422':
+          $ref: '#/components/responses/ErroValidacao'
 
   /comunidades/{id}/publicacoes:
     post:
@@ -938,9 +1087,54 @@ components:
           description: >
             Se o usuário autenticado é membro desta comunidade (RF27.1) — presente só na
             consulta de uma comunidade específica, ausente nas listagens.
+        souAdministrador:
+          type: [boolean, 'null']
+          description: >
+            Se o usuário autenticado é administrador desta comunidade (Story 2.6) — o
+            frontend mostra as ações de editar, remover membro e excluir só quando true.
+            Mesma regra de presença de souMembro.
         criadoEm:
           type: string
           format: date-time
+
+    ComunidadeEdicaoRequest:
+      type: object
+      description: >
+        Corpo do PATCH (Story 2.6, RF30). Campo ausente ou null não é alterado; descricao
+        vazia ("") apaga a descrição; nome, quando enviado, não pode ficar em branco.
+      properties:
+        nome:
+          type: string
+        descricao:
+          type: string
+
+    MembroComunidadeResponse:
+      type: object
+      required: [usuarioId, nome, papel, membroDesde]
+      properties:
+        usuarioId:
+          type: integer
+          format: int64
+        nome:
+          type: string
+        curso:
+          type: [string, 'null']
+        papel:
+          type: string
+          enum: [ADMINISTRADOR, MEMBRO]
+        membroDesde:
+          type: string
+          format: date-time
+
+    MembroComunidadePageResponse:
+      allOf:
+        - $ref: '#/components/schemas/PageResponse'
+        - type: object
+          properties:
+            content:
+              type: array
+              items:
+                $ref: '#/components/schemas/MembroComunidadeResponse'
 
     ComunidadePageResponse:
       allOf:

@@ -14,6 +14,7 @@ const CRIADA: Comunidade = {
   descricao: 'Partidas às quintas',
   tipo: 'ABERTA',
   souMembro: null,
+  souAdministrador: null,
   criadoEm: '2026-10-05T12:00:00Z',
 };
 
