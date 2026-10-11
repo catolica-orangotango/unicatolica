@@ -11,7 +11,8 @@
  * auto-join (Story 2.3/RF24.1), criação de comunidade aberta (Story 2.2/RF21-23) e
  * entrar/sair/listar/filtrar (Stories 2.4/2.5, RF24-28) e administração pelo administrador
  * da comunidade — remover membro, editar e excluir logicamente (Story 2.6, RF29-31) — entrada
- * rápida desta fatia, ver {@code docs/decisoes/2026-08-modelo-epico-2-comunidades.md}.
+ * rápida desta fatia, ver {@code docs/decisoes/2026-08-modelo-epico-2-comunidades.md}. A lista de
+ * membros resolve nome e curso por {@code identidade.UsuarioConsulta}.
  * Comunidade excluída (coluna {@code ativa}) some das listagens e de
  * {@link ComunidadeConsulta#existe}, então os outros módulos deixam de aceitar interações nela.
  * Story 2.1 (endpoint de admin criar comunidade de curso) fica de fora, bloqueada pelo papel

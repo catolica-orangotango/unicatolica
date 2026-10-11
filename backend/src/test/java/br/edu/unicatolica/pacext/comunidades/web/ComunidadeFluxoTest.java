@@ -8,6 +8,7 @@ import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.hasItems;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.Matchers.nullValue;
 
 import br.edu.unicatolica.pacext.compartilhado.UsuarioDeTeste;
 import br.edu.unicatolica.pacext.compartilhado.UsuarioDeTeste.Sessao;
@@ -58,7 +59,8 @@ class ComunidadeFluxoTest {
                 new Rota(Method.DELETE, "/comunidades/1/membros/me"),
                 new Rota(Method.PATCH, "/comunidades/1"),
                 new Rota(Method.DELETE, "/comunidades/1"),
-                new Rota(Method.DELETE, "/comunidades/1/membros/2"));
+                new Rota(Method.DELETE, "/comunidades/1/membros/2"),
+                new Rota(Method.GET, "/comunidades/1/membros"));
     }
 
     @ParameterizedTest(name = "{0}")
@@ -449,6 +451,103 @@ class ComunidadeFluxoTest {
         aluno.autenticado().when().delete("/comunidades/{id}/membros/{usuarioId}", id, aluno.id())
                 .then().statusCode(422)
                 .body("error.code", equalTo("ADMIN_NAO_PODE_SER_REMOVIDO"));
+
+        aluno.autenticado().when().get("/comunidades/{id}", id)
+                .then().body("souMembro", equalTo(true));
+    }
+
+    @Test
+    void detalheEMinhasDizemQuemEAdministrador() {
+        Integer id = criar(aluno, prefixo);
+        Sessao membro = usuarioDeTeste.novo(CURSO);
+        membro.autenticado().when().post("/comunidades/{id}/membros", id).then().statusCode(201);
+
+        aluno.autenticado().when().get("/comunidades/{id}", id)
+                .then().statusCode(200)
+                .body("souAdministrador", equalTo(true));
+        membro.autenticado().when().get("/comunidades/{id}", id)
+                .then().statusCode(200)
+                .body("souMembro", equalTo(true))
+                .body("souAdministrador", equalTo(false));
+        aluno.autenticado().when().get("/comunidades/minhas")
+                .then().statusCode(200)
+                .body("find { it.id == " + id + " }.souAdministrador", equalTo(true));
+        membro.autenticado().when().get("/comunidades/minhas")
+                .then().statusCode(200)
+                .body("find { it.id == " + id + " }.souAdministrador", equalTo(false));
+    }
+
+    @Test
+    void editarSoONomeMantemADescricaoESoADescricaoMantemONome() {
+        Integer id = aluno.autenticado().contentType(JSON)
+                .body(Map.of("nome", prefixo, "descricao", "Descrição original"))
+                .when().post("/comunidades")
+                .then().statusCode(201)
+                .extract().path("id");
+
+        aluno.autenticado().contentType(JSON).body(Map.of("nome", prefixo + " novo"))
+                .when().patch("/comunidades/{id}", id)
+                .then().statusCode(200)
+                .body("nome", equalTo(prefixo + " novo"))
+                .body("descricao", equalTo("Descrição original"));
+
+        aluno.autenticado().contentType(JSON).body(Map.of("descricao", "Outra descrição"))
+                .when().patch("/comunidades/{id}", id)
+                .then().statusCode(200)
+                .body("nome", equalTo(prefixo + " novo"))
+                .body("descricao", equalTo("Outra descrição"));
+
+        aluno.autenticado().contentType(JSON).body(Map.of("descricao", ""))
+                .when().patch("/comunidades/{id}", id)
+                .then().statusCode(200)
+                .body("descricao", nullValue());
+    }
+
+    @Test
+    void membrosListaAdministradorPrimeiroComNomeECurso() {
+        Integer id = criar(aluno, prefixo);
+        Sessao membro = usuarioDeTeste.novo(CURSO);
+        membro.autenticado().when().post("/comunidades/{id}/membros", id).then().statusCode(201);
+
+        membro.autenticado().when().get("/comunidades/{id}/membros", id)
+                .then().statusCode(200)
+                .body("totalElements", equalTo(2))
+                .body("content[0].usuarioId", equalTo((int) aluno.id()))
+                .body("content[0].papel", equalTo("ADMINISTRADOR"))
+                .body("content[0].nome", notNullValue())
+                .body("content[0].curso", equalTo(CURSO))
+                .body("content[0].membroDesde", notNullValue())
+                .body("content[1].usuarioId", equalTo((int) membro.id()))
+                .body("content[1].papel", equalTo("MEMBRO"));
+
+        aluno.autenticado().queryParam("tamanho", 1).queryParam("pagina", 1)
+                .when().get("/comunidades/{id}/membros", id)
+                .then().statusCode(200)
+                .body("content.size()", equalTo(1))
+                .body("content[0].usuarioId", equalTo((int) membro.id()))
+                .body("totalPages", equalTo(2));
+    }
+
+    @Test
+    void membrosDeQuemNaoEMembroDa403EDeComunidadeInexistenteDa404() {
+        Integer id = criar(aluno, prefixo);
+        Sessao estranho = usuarioDeTeste.novo(CURSO);
+
+        estranho.autenticado().when().get("/comunidades/{id}/membros", id)
+                .then().statusCode(403)
+                .body("error.code", equalTo("NAO_E_MEMBRO"));
+        aluno.autenticado().when().get("/comunidades/{id}/membros", INEXISTENTE)
+                .then().statusCode(404)
+                .body("error.code", equalTo("COMUNIDADE_NAO_ENCONTRADA"));
+    }
+
+    @Test
+    void unicoAdministradorNaoSaiDa422() {
+        Integer id = criar(aluno, prefixo);
+
+        aluno.autenticado().when().delete("/comunidades/{id}/membros/me", id)
+                .then().statusCode(422)
+                .body("error.code", equalTo("ULTIMO_ADMINISTRADOR"));
 
         aluno.autenticado().when().get("/comunidades/{id}", id)
                 .then().body("souMembro", equalTo(true));

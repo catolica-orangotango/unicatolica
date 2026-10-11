@@ -2,12 +2,17 @@ package br.edu.unicatolica.pacext.comunidades.web;
 
 import br.edu.unicatolica.pacext.comunidades.dominio.Comunidade;
 import br.edu.unicatolica.pacext.comunidades.aplicacao.ComunidadeService;
+import br.edu.unicatolica.pacext.comunidades.dominio.ComunidadeMembro;
+import br.edu.unicatolica.pacext.comunidades.dominio.PapelMembro;
 import br.edu.unicatolica.pacext.comunidades.dominio.TipoComunidade;
 import br.edu.unicatolica.pacext.compartilhado.seguranca.UsuarioAutenticado;
 import br.edu.unicatolica.pacext.compartilhado.erro.ApiException;
 import br.edu.unicatolica.pacext.compartilhado.paginacao.PageResponse;
+import br.edu.unicatolica.pacext.identidade.UsuarioConsulta;
+import br.edu.unicatolica.pacext.identidade.UsuarioResumo;
 import jakarta.inject.Inject;
 import java.util.List;
+import java.util.Map;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.GET;
@@ -34,6 +39,9 @@ public class ComunidadeResource {
     @Inject
     UsuarioAutenticado usuarioAutenticado;
 
+    @Inject
+    UsuarioConsulta usuarioConsulta;
+
     /** Story 2.2 — cria comunidade aberta; criador vira administrador dela (RF21, RF22, RF23). */
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
@@ -42,7 +50,7 @@ public class ComunidadeResource {
         Comunidade comunidade = comunidadeService.criarComunidadeAberta(usuarioAutenticado.id(), request.nome(),
                 request.descricao());
         return Response.status(Response.Status.CREATED)
-                .entity(ComunidadeResponse.de(comunidade, true))
+                .entity(ComunidadeResponse.de(comunidade, true, true))
                 .build();
     }
 
@@ -70,7 +78,8 @@ public class ComunidadeResource {
     @Produces(MediaType.APPLICATION_JSON)
     public List<ComunidadeResponse> minhas() {
         return comunidadeService.minhasComunidades(usuarioAutenticado.id()).stream()
-                .map(comunidade -> ComunidadeResponse.de(comunidade, true))
+                .map(membro -> ComunidadeResponse.de(membro.comunidade, true,
+                        membro.papelNaComunidade == PapelMembro.ADMINISTRADOR))
                 .toList();
     }
 
@@ -84,18 +93,19 @@ public class ComunidadeResource {
     public ComunidadeResponse obter(@PathParam("id") Long id) {
         Comunidade comunidade = comunidadeService.buscarOuFalhar(id);
         boolean souMembro = comunidadeService.souMembro(comunidade, usuarioAutenticado.id());
-        return ComunidadeResponse.de(comunidade, souMembro);
+        boolean souAdministrador = comunidadeService.souAdministrador(comunidade, usuarioAutenticado.id());
+        return ComunidadeResponse.de(comunidade, souMembro, souAdministrador);
     }
 
-    /** Story 2.6 — edita nome/descrição; o corpo não tem "tipo" de propósito (RF30, imutável). */
+    /** Story 2.6 — edição parcial de nome/descrição; o corpo não tem "tipo" de propósito (RF30, imutável). */
     @PATCH
     @Path("/{id}")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public ComunidadeResponse editar(@PathParam("id") Long id, ComunidadeRequest request) {
+    public ComunidadeResponse editar(@PathParam("id") Long id, ComunidadeEdicaoRequest request) {
         Comunidade comunidade = comunidadeService.editar(usuarioAutenticado.id(), id, request.nome(),
                 request.descricao());
-        return ComunidadeResponse.de(comunidade, true);
+        return ComunidadeResponse.de(comunidade, true, true);
     }
 
     /** Story 2.6 — exclusão lógica da comunidade (RF31). */
@@ -112,6 +122,23 @@ public class ComunidadeResource {
     public Response removerMembro(@PathParam("id") Long id, @PathParam("usuarioId") Long usuarioId) {
         comunidadeService.removerMembro(usuarioAutenticado.id(), id, usuarioId);
         return Response.noContent().build();
+    }
+
+    /** Story 2.6 — membros da comunidade, administradores primeiro (RF29). */
+    @GET
+    @Path("/{id}/membros")
+    @Produces(MediaType.APPLICATION_JSON)
+    public PageResponse<MembroComunidadeResponse> listarMembros(
+            @PathParam("id") Long id,
+            @QueryParam("pagina") @jakarta.ws.rs.DefaultValue("0") int pagina,
+            @QueryParam("tamanho") @jakarta.ws.rs.DefaultValue("20") int tamanho) {
+        PageResponse<ComunidadeMembro> resultado = comunidadeService.listarMembros(usuarioAutenticado.id(), id,
+                pagina, tamanho);
+        List<Long> usuarioIds = resultado.content().stream().map(membro -> membro.usuarioId).toList();
+        Map<Long, UsuarioResumo> usuarios = usuarioConsulta.buscarResumos(usuarioIds);
+        return new PageResponse<>(resultado.content().stream()
+                .map(membro -> MembroComunidadeResponse.de(membro, usuarios.get(membro.usuarioId)))
+                .toList(), resultado.page(), resultado.size(), resultado.totalElements(), resultado.totalPages());
     }
 
     /** Story 2.4 — entrar numa comunidade aberta (RF24, RF25). */

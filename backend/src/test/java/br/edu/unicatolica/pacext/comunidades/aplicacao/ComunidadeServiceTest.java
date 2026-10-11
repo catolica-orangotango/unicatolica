@@ -167,17 +167,69 @@ class ComunidadeServiceTest {
     }
 
     @Test
-    void minhasComunidadesExtraiComunidadeDeCadaAssociacao() {
+    void minhasComunidadesDevolveAsAssociacoesDoUsuario() {
         Comunidade comunidade = comunidadeAberta();
         ComunidadeMembro membro = new ComunidadeMembro();
         membro.comunidade = comunidade;
         membro.usuarioId = USUARIO_ID;
         when(comunidadeMembroRepository.listarPorUsuario(USUARIO_ID)).thenReturn(List.of(membro));
 
-        List<Comunidade> resultado = service.minhasComunidades(USUARIO_ID);
+        List<ComunidadeMembro> resultado = service.minhasComunidades(USUARIO_ID);
 
         assertEquals(1, resultado.size());
-        assertEquals(comunidade, resultado.get(0));
+        assertEquals(comunidade, resultado.get(0).comunidade);
+    }
+
+    @Test
+    void unicoAdministradorNaoSai() {
+        Comunidade comunidade = comunidadeAberta();
+        when(comunidadeRepository.buscarAtivaPorId(1L)).thenReturn(Optional.of(comunidade));
+        when(comunidadeMembroRepository.ehAdministrador(comunidade, USUARIO_ID)).thenReturn(true);
+        when(comunidadeMembroRepository.contarAdministradores(comunidade)).thenReturn(1L);
+
+        ApiException erro = assertThrows(ApiException.class, () -> service.sair(USUARIO_ID, 1L));
+
+        assertEquals("ULTIMO_ADMINISTRADOR", erro.getCode());
+        verify(comunidadeMembroRepository, never()).removerAssociacao(any(Comunidade.class), any());
+    }
+
+    @Test
+    void administradorSaiQuandoHaOutroAdministrador() {
+        Comunidade comunidade = comunidadeAberta();
+        when(comunidadeRepository.buscarAtivaPorId(1L)).thenReturn(Optional.of(comunidade));
+        when(comunidadeMembroRepository.ehAdministrador(comunidade, USUARIO_ID)).thenReturn(true);
+        when(comunidadeMembroRepository.contarAdministradores(comunidade)).thenReturn(2L);
+
+        service.sair(USUARIO_ID, 1L);
+
+        verify(comunidadeMembroRepository).removerAssociacao(comunidade, USUARIO_ID);
+    }
+
+    @Test
+    void listarMembrosExigeSerMembro() {
+        Comunidade comunidade = comunidadeAberta();
+        when(comunidadeRepository.buscarAtivaPorId(1L)).thenReturn(Optional.of(comunidade));
+        when(comunidadeMembroRepository.existeAssociacao(comunidade, USUARIO_ID)).thenReturn(false);
+
+        ApiException erro = assertThrows(ApiException.class, () -> service.listarMembros(USUARIO_ID, 1L, 0, 20));
+
+        assertEquals("NAO_E_MEMBRO", erro.getCode());
+        assertEquals(403, erro.getStatus());
+    }
+
+    @Test
+    void listarMembrosTrazPaginaETamanhoParaDentroDaFaixa() {
+        Comunidade comunidade = comunidadeAberta();
+        when(comunidadeRepository.buscarAtivaPorId(1L)).thenReturn(Optional.of(comunidade));
+        when(comunidadeMembroRepository.existeAssociacao(comunidade, USUARIO_ID)).thenReturn(true);
+        when(comunidadeMembroRepository.listarPorComunidade(comunidade, 0, 100)).thenReturn(List.of());
+        when(comunidadeMembroRepository.contarMembros(comunidade)).thenReturn(3L);
+
+        PageResponse<ComunidadeMembro> resposta = service.listarMembros(USUARIO_ID, 1L, -1, 500);
+
+        assertEquals(0, resposta.page());
+        assertEquals(100, resposta.size());
+        assertEquals(3L, resposta.totalElements());
     }
 
     @Test
@@ -191,6 +243,44 @@ class ComunidadeServiceTest {
         assertEquals("Xadrez Clube", editada.nome);
         assertEquals("Nova descrição", editada.descricao);
         assertEquals(TipoComunidade.ABERTA, editada.tipo);
+    }
+
+    @Test
+    void edicaoSoComNomeMantemADescricao() {
+        Comunidade comunidade = comunidadeAberta();
+        comunidade.descricao = "Descrição original";
+        when(comunidadeRepository.buscarAtivaPorId(1L)).thenReturn(Optional.of(comunidade));
+        when(comunidadeMembroRepository.ehAdministrador(comunidade, USUARIO_ID)).thenReturn(true);
+
+        Comunidade editada = service.editar(USUARIO_ID, 1L, "Xadrez Clube", null);
+
+        assertEquals("Xadrez Clube", editada.nome);
+        assertEquals("Descrição original", editada.descricao);
+    }
+
+    @Test
+    void edicaoSoComDescricaoMantemONomeENaoConsultaConflito() {
+        Comunidade comunidade = comunidadeAberta();
+        when(comunidadeRepository.buscarAtivaPorId(1L)).thenReturn(Optional.of(comunidade));
+        when(comunidadeMembroRepository.ehAdministrador(comunidade, USUARIO_ID)).thenReturn(true);
+
+        Comunidade editada = service.editar(USUARIO_ID, 1L, null, "Só a descrição");
+
+        assertEquals("Xadrez", editada.nome);
+        assertEquals("Só a descrição", editada.descricao);
+        verify(comunidadeRepository, never()).existePorNomeEDiferente(any(), any());
+    }
+
+    @Test
+    void edicaoComDescricaoEmBrancoApagaADescricao() {
+        Comunidade comunidade = comunidadeAberta();
+        comunidade.descricao = "Descrição original";
+        when(comunidadeRepository.buscarAtivaPorId(1L)).thenReturn(Optional.of(comunidade));
+        when(comunidadeMembroRepository.ehAdministrador(comunidade, USUARIO_ID)).thenReturn(true);
+
+        Comunidade editada = service.editar(USUARIO_ID, 1L, null, "");
+
+        assertEquals(null, editada.descricao);
     }
 
     @Test

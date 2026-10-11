@@ -39,4 +39,15 @@ public class ComunidadeMembroRepository implements PanacheRepository<ComunidadeM
     public long contarMembros(Comunidade comunidade) {
         return count("comunidade = ?1", comunidade);
     }
+
+    /** Story 2.6 (RF29) — administradores primeiro (ordem alfabética do enum), depois por entrada. */
+    public List<ComunidadeMembro> listarPorComunidade(Comunidade comunidade, int pagina, int tamanho) {
+        return find("comunidade = ?1 order by papelNaComunidade, entrouEm, id", comunidade)
+                .page(pagina, tamanho)
+                .list();
+    }
+
+    public long contarAdministradores(Comunidade comunidade) {
+        return count("comunidade = ?1 and papelNaComunidade = ?2", comunidade, PapelMembro.ADMINISTRADOR);
+    }
 }
