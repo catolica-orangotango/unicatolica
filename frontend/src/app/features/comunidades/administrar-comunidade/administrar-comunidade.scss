@@ -1,0 +1,154 @@
+// Mesmo formulário de criar-comunidade.scss; ação destrutiva em vermelho de erro, sempre com texto.
+:host {
+  display: block;
+}
+
+.admin {
+  display: flex;
+  flex-direction: column;
+  gap: var(--uc-space-section-gap);
+}
+
+.admin__titulo {
+  margin: 0;
+  font-size: var(--uc-font-size-question);
+  font-weight: var(--uc-font-weight-semibold);
+  color: var(--uc-color-ink);
+}
+
+.admin__bloco {
+  display: flex;
+  flex-direction: column;
+  background: var(--uc-color-surface);
+  border: 1px solid var(--uc-color-border);
+  border-radius: var(--uc-radius-md);
+  padding: var(--uc-space-card-padding);
+}
+
+.admin__bloco--perigo {
+  border-color: var(--uc-color-error);
+}
+
+.admin__subtitulo {
+  margin: 0 0 calc(var(--uc-space-unit) * 3);
+  font-size: var(--uc-font-size-body);
+  font-weight: var(--uc-font-weight-semibold);
+  color: var(--uc-color-ink);
+}
+
+.admin__label {
+  margin-bottom: calc(var(--uc-space-unit) / 2);
+  font-size: var(--uc-font-size-meta);
+  font-weight: var(--uc-font-weight-semibold);
+  color: var(--uc-color-ink);
+}
+
+.admin__campo {
+  margin-bottom: calc(var(--uc-space-unit) * 4);
+  padding: calc(var(--uc-space-unit) * 2) calc(var(--uc-space-unit) * 2.5);
+  border: 1px solid var(--uc-color-border);
+  border-radius: var(--uc-radius-default);
+  background: var(--uc-color-surface);
+  color: var(--uc-color-ink);
+  font-family: var(--uc-font-family-base);
+  font-size: var(--uc-font-size-body);
+}
+
+.admin__campo[aria-invalid='true'] {
+  border-color: var(--uc-color-error);
+  margin-bottom: 0;
+}
+
+.admin__descricao {
+  resize: vertical;
+}
+
+.admin__erro-campo {
+  margin: 0 0 calc(var(--uc-space-unit) * 4);
+  padding-top: var(--uc-space-unit);
+  color: var(--uc-color-error);
+  font-size: var(--uc-font-size-meta);
+}
+
+.admin__erro,
+.admin__ajuda {
+  margin: 0 0 calc(var(--uc-space-unit) * 3);
+  font-size: var(--uc-font-size-meta);
+}
+
+.admin__erro {
+  color: var(--uc-color-error);
+}
+
+.admin__ajuda {
+  color: var(--uc-color-ink-soft);
+}
+
+.admin__acoes {
+  display: flex;
+  gap: calc(var(--uc-space-unit) * 3);
+}
+
+.admin__membros {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.admin__membro {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: calc(var(--uc-space-unit) * 2);
+  padding: calc(var(--uc-space-unit) * 2.5) 0;
+  border-bottom: 1px solid var(--uc-color-border);
+}
+
+.admin__membro:last-child {
+  border-bottom: none;
+}
+
+.admin__membro-dados {
+  display: flex;
+  flex-direction: column;
+}
+
+.admin__membro-nome {
+  font-size: var(--uc-font-size-body);
+  color: var(--uc-color-ink);
+}
+
+.admin__membro-meta {
+  font-size: var(--uc-font-size-meta);
+  color: var(--uc-color-ink-soft);
+}
+
+.admin__confirmacao {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: calc(var(--uc-space-unit) * 2);
+}
+
+.admin__confirmacao-texto {
+  font-size: var(--uc-font-size-body);
+  color: var(--uc-color-ink);
+}
+
+.admin__botao-perigo {
+  align-self: flex-start;
+  border: 1px solid var(--uc-color-error);
+  background: transparent;
+  color: var(--uc-color-error);
+  border-radius: var(--uc-radius-full);
+  padding: var(--uc-space-unit) calc(var(--uc-space-unit) * 4);
+  font-family: var(--uc-font-family-base);
+  font-size: var(--uc-font-size-body);
+  cursor: pointer;
+}
+
+.admin__botao-perigo:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

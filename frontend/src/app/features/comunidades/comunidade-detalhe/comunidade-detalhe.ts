@@ -1,9 +1,10 @@
 import { DatePipe } from '@angular/common';
 import { Component, inject, signal } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { Comunidade, ComunidadesService } from '../comunidades.service';
-import { UcButton, UcMemberIndicator } from '../../../ui';
+import { ToastService, UcButton, UcMemberIndicator } from '../../../ui';
 import { FeedComunidade } from '../../publicacoes/feed-comunidade/feed-comunidade';
+import { AdministrarComunidade } from '../administrar-comunidade/administrar-comunidade';
 
 /**
  * "Home" de uma comunidade — mesmo padrão de tela pra qualquer uma (curso ou
@@ -14,13 +15,15 @@ import { FeedComunidade } from '../../publicacoes/feed-comunidade/feed-comunidad
  */
 @Component({
   selector: 'app-comunidade-detalhe',
-  imports: [DatePipe, FeedComunidade, UcButton, UcMemberIndicator],
+  imports: [AdministrarComunidade, DatePipe, FeedComunidade, UcButton, UcMemberIndicator],
   templateUrl: './comunidade-detalhe.html',
   styleUrl: './comunidade-detalhe.scss',
 })
 export class ComunidadeDetalhe {
   private readonly route = inject(ActivatedRoute);
   private readonly comunidadesService = inject(ComunidadesService);
+  private readonly toastService = inject(ToastService);
+  private readonly router = inject(Router);
 
   protected readonly carregando = signal(true);
   protected readonly erro = signal<string | null>(null);
@@ -67,6 +70,17 @@ export class ComunidadeDetalhe {
         this.carregar(comunidade.id);
       },
     });
+  }
+
+  /** Story 2.6 — o PATCH devolve a comunidade inteira, com os mesmos flags do usuário. */
+  protected aoAtualizar(comunidade: Comunidade): void {
+    this.comunidade.set(comunidade);
+    this.toastService.mostrar('Comunidade atualizada');
+  }
+
+  protected aoExcluir(): void {
+    this.toastService.mostrar(`Comunidade ${this.comunidade()?.nome} excluída`);
+    this.router.navigate(['/comunidades']);
   }
 
   /** Story 2.4 (RF26). */

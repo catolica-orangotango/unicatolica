@@ -78,6 +78,7 @@ describe('Feed', () => {
       descricao: null,
       tipo: 'CURSO',
       souMembro: true,
+      souAdministrador: false,
       criadoEm: '2026-01-01T00:00:00Z',
     };
     await montar([comunidadeCurso]);
@@ -94,6 +95,7 @@ describe('Feed', () => {
       descricao: null,
       tipo: 'CURSO',
       souMembro: true,
+      souAdministrador: false,
       criadoEm: '2026-01-01T00:00:00Z',
     };
     await montar([comunidadeCurso]);

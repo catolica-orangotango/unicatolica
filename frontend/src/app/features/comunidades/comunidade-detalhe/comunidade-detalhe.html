@@ -12,7 +12,8 @@
       </p>
 
       <div class="detalhe__acao">
-        @if (c.souMembro && c.tipo === 'ABERTA') {
+        <!-- Sem "Sair" para o administrador: o único admin não sai, exclui a comunidade (Story 2.6). -->
+        @if (c.souMembro && c.tipo === 'ABERTA' && !c.souAdministrador) {
           <button type="button" class="detalhe__botao-sair" [disabled]="processando()" (click)="sair()">
             {{ processando() ? 'Saindo…' : 'Sair' }}
           </button>
@@ -20,11 +21,22 @@
           <button type="button" uc-button [disabled]="processando()" (click)="ingressar()">
             {{ processando() ? 'Entrando…' : 'Participar' }}
           </button>
+        } @else if (c.souAdministrador) {
+          <uc-member-indicator label="Você administra" />
         } @else if (c.souMembro) {
           <uc-member-indicator label="Você é membro" />
         }
       </div>
     </header>
+
+    @if (c.souAdministrador) {
+      <app-administrar-comunidade
+        class="detalhe__admin"
+        [comunidade]="c"
+        (atualizada)="aoAtualizar($event)"
+        (excluida)="aoExcluir()"
+      />
+    }
 
     <app-feed-comunidade
       class="detalhe__feed"

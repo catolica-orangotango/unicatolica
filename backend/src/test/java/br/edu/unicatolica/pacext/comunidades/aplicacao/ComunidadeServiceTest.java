@@ -7,6 +7,7 @@ import br.edu.unicatolica.pacext.comunidades.dominio.ComunidadeRepository;
 import br.edu.unicatolica.pacext.comunidades.dominio.PapelMembro;
 import br.edu.unicatolica.pacext.comunidades.dominio.TipoComunidade;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -30,7 +31,7 @@ import org.mockito.ArgumentCaptor;
 
 /**
  * Testa {@link ComunidadeService} isoladamente com Mockito — critérios das Stories 2.2,
- * 2.4 e 2.5. Entrada rápida desta fatia (ver docs/decisoes/2026-08-modelo-epico-2-comunidades.md).
+ * 2.4, 2.5 e 2.6. Entrada rápida desta fatia (ver docs/decisoes/2026-08-modelo-epico-2-comunidades.md).
  */
 class ComunidadeServiceTest {
 
@@ -93,7 +94,7 @@ class ComunidadeServiceTest {
     @Test
     void ingressaEmComunidadeAbertaComSucesso() {
         Comunidade comunidade = comunidadeAberta();
-        when(comunidadeRepository.findByIdOptional(1L)).thenReturn(Optional.of(comunidade));
+        when(comunidadeRepository.buscarAtivaPorId(1L)).thenReturn(Optional.of(comunidade));
         when(comunidadeMembroRepository.existeAssociacao(comunidade, USUARIO_ID)).thenReturn(false);
 
         service.ingressar(USUARIO_ID, 1L);
@@ -106,7 +107,7 @@ class ComunidadeServiceTest {
     @Test
     void rejeitaIngressoDuplicado() {
         Comunidade comunidade = comunidadeAberta();
-        when(comunidadeRepository.findByIdOptional(1L)).thenReturn(Optional.of(comunidade));
+        when(comunidadeRepository.buscarAtivaPorId(1L)).thenReturn(Optional.of(comunidade));
         when(comunidadeMembroRepository.existeAssociacao(comunidade, USUARIO_ID)).thenReturn(true);
 
         ApiException erro = assertThrows(ApiException.class, () -> service.ingressar(USUARIO_ID, 1L));
@@ -118,7 +119,7 @@ class ComunidadeServiceTest {
     void rejeitaIngressoEmComunidadeDeCurso() {
         Comunidade comunidade = comunidadeAberta();
         comunidade.tipo = TipoComunidade.CURSO;
-        when(comunidadeRepository.findByIdOptional(1L)).thenReturn(Optional.of(comunidade));
+        when(comunidadeRepository.buscarAtivaPorId(1L)).thenReturn(Optional.of(comunidade));
 
         ApiException erro = assertThrows(ApiException.class, () -> service.ingressar(USUARIO_ID, 1L));
 
@@ -127,7 +128,7 @@ class ComunidadeServiceTest {
 
     @Test
     void rejeitaIngressoEmComunidadeInexistente() {
-        when(comunidadeRepository.findByIdOptional(99L)).thenReturn(Optional.empty());
+        when(comunidadeRepository.buscarAtivaPorId(99L)).thenReturn(Optional.empty());
 
         ApiException erro = assertThrows(ApiException.class, () -> service.ingressar(USUARIO_ID, 99L));
 
@@ -137,7 +138,7 @@ class ComunidadeServiceTest {
     @Test
     void sairRemoveAssociacao() {
         Comunidade comunidade = comunidadeAberta();
-        when(comunidadeRepository.findByIdOptional(1L)).thenReturn(Optional.of(comunidade));
+        when(comunidadeRepository.buscarAtivaPorId(1L)).thenReturn(Optional.of(comunidade));
 
         service.sair(USUARIO_ID, 1L);
 
@@ -166,17 +167,254 @@ class ComunidadeServiceTest {
     }
 
     @Test
-    void minhasComunidadesExtraiComunidadeDeCadaAssociacao() {
+    void minhasComunidadesDevolveAsAssociacoesDoUsuario() {
         Comunidade comunidade = comunidadeAberta();
         ComunidadeMembro membro = new ComunidadeMembro();
         membro.comunidade = comunidade;
         membro.usuarioId = USUARIO_ID;
         when(comunidadeMembroRepository.listarPorUsuario(USUARIO_ID)).thenReturn(List.of(membro));
 
-        List<Comunidade> resultado = service.minhasComunidades(USUARIO_ID);
+        List<ComunidadeMembro> resultado = service.minhasComunidades(USUARIO_ID);
 
         assertEquals(1, resultado.size());
-        assertEquals(comunidade, resultado.get(0));
+        assertEquals(comunidade, resultado.get(0).comunidade);
+    }
+
+    @Test
+    void unicoAdministradorNaoSai() {
+        Comunidade comunidade = comunidadeAberta();
+        when(comunidadeRepository.buscarAtivaPorId(1L)).thenReturn(Optional.of(comunidade));
+        when(comunidadeMembroRepository.ehAdministrador(comunidade, USUARIO_ID)).thenReturn(true);
+        when(comunidadeMembroRepository.contarAdministradores(comunidade)).thenReturn(1L);
+
+        ApiException erro = assertThrows(ApiException.class, () -> service.sair(USUARIO_ID, 1L));
+
+        assertEquals("ULTIMO_ADMINISTRADOR", erro.getCode());
+        verify(comunidadeMembroRepository, never()).removerAssociacao(any(Comunidade.class), any());
+    }
+
+    @Test
+    void administradorSaiQuandoHaOutroAdministrador() {
+        Comunidade comunidade = comunidadeAberta();
+        when(comunidadeRepository.buscarAtivaPorId(1L)).thenReturn(Optional.of(comunidade));
+        when(comunidadeMembroRepository.ehAdministrador(comunidade, USUARIO_ID)).thenReturn(true);
+        when(comunidadeMembroRepository.contarAdministradores(comunidade)).thenReturn(2L);
+
+        service.sair(USUARIO_ID, 1L);
+
+        verify(comunidadeMembroRepository).removerAssociacao(comunidade, USUARIO_ID);
+    }
+
+    @Test
+    void listarMembrosExigeSerMembro() {
+        Comunidade comunidade = comunidadeAberta();
+        when(comunidadeRepository.buscarAtivaPorId(1L)).thenReturn(Optional.of(comunidade));
+        when(comunidadeMembroRepository.existeAssociacao(comunidade, USUARIO_ID)).thenReturn(false);
+
+        ApiException erro = assertThrows(ApiException.class, () -> service.listarMembros(USUARIO_ID, 1L, 0, 20));
+
+        assertEquals("NAO_E_MEMBRO", erro.getCode());
+        assertEquals(403, erro.getStatus());
+    }
+
+    @Test
+    void listarMembrosTrazPaginaETamanhoParaDentroDaFaixa() {
+        Comunidade comunidade = comunidadeAberta();
+        when(comunidadeRepository.buscarAtivaPorId(1L)).thenReturn(Optional.of(comunidade));
+        when(comunidadeMembroRepository.existeAssociacao(comunidade, USUARIO_ID)).thenReturn(true);
+        when(comunidadeMembroRepository.listarPorComunidade(comunidade, 0, 100)).thenReturn(List.of());
+        when(comunidadeMembroRepository.contarMembros(comunidade)).thenReturn(3L);
+
+        PageResponse<ComunidadeMembro> resposta = service.listarMembros(USUARIO_ID, 1L, -1, 500);
+
+        assertEquals(0, resposta.page());
+        assertEquals(100, resposta.size());
+        assertEquals(3L, resposta.totalElements());
+    }
+
+    @Test
+    void administradorEditaNomeEDescricaoSemAlterarOTipo() {
+        Comunidade comunidade = comunidadeAberta();
+        when(comunidadeRepository.buscarAtivaPorId(1L)).thenReturn(Optional.of(comunidade));
+        when(comunidadeMembroRepository.ehAdministrador(comunidade, USUARIO_ID)).thenReturn(true);
+
+        Comunidade editada = service.editar(USUARIO_ID, 1L, " Xadrez Clube ", "Nova descrição");
+
+        assertEquals("Xadrez Clube", editada.nome);
+        assertEquals("Nova descrição", editada.descricao);
+        assertEquals(TipoComunidade.ABERTA, editada.tipo);
+    }
+
+    @Test
+    void edicaoSoComNomeMantemADescricao() {
+        Comunidade comunidade = comunidadeAberta();
+        comunidade.descricao = "Descrição original";
+        when(comunidadeRepository.buscarAtivaPorId(1L)).thenReturn(Optional.of(comunidade));
+        when(comunidadeMembroRepository.ehAdministrador(comunidade, USUARIO_ID)).thenReturn(true);
+
+        Comunidade editada = service.editar(USUARIO_ID, 1L, "Xadrez Clube", null);
+
+        assertEquals("Xadrez Clube", editada.nome);
+        assertEquals("Descrição original", editada.descricao);
+    }
+
+    @Test
+    void edicaoSoComDescricaoMantemONomeENaoConsultaConflito() {
+        Comunidade comunidade = comunidadeAberta();
+        when(comunidadeRepository.buscarAtivaPorId(1L)).thenReturn(Optional.of(comunidade));
+        when(comunidadeMembroRepository.ehAdministrador(comunidade, USUARIO_ID)).thenReturn(true);
+
+        Comunidade editada = service.editar(USUARIO_ID, 1L, null, "Só a descrição");
+
+        assertEquals("Xadrez", editada.nome);
+        assertEquals("Só a descrição", editada.descricao);
+        verify(comunidadeRepository, never()).existePorNomeEDiferente(any(), any());
+    }
+
+    @Test
+    void edicaoComDescricaoEmBrancoApagaADescricao() {
+        Comunidade comunidade = comunidadeAberta();
+        comunidade.descricao = "Descrição original";
+        when(comunidadeRepository.buscarAtivaPorId(1L)).thenReturn(Optional.of(comunidade));
+        when(comunidadeMembroRepository.ehAdministrador(comunidade, USUARIO_ID)).thenReturn(true);
+
+        Comunidade editada = service.editar(USUARIO_ID, 1L, null, "");
+
+        assertEquals(null, editada.descricao);
+    }
+
+    @Test
+    void naoAdministradorNaoEditaComunidade() {
+        Comunidade comunidade = comunidadeAberta();
+        when(comunidadeRepository.buscarAtivaPorId(1L)).thenReturn(Optional.of(comunidade));
+        when(comunidadeMembroRepository.ehAdministrador(comunidade, USUARIO_ID)).thenReturn(false);
+
+        ApiException erro = assertThrows(ApiException.class, () -> service.editar(USUARIO_ID, 1L, "Novo", null));
+
+        assertEquals("SEM_PERMISSAO_ADMINISTRAR", erro.getCode());
+        assertEquals("Xadrez", comunidade.nome);
+    }
+
+    @Test
+    void edicaoRejeitaNomeVazio() {
+        Comunidade comunidade = comunidadeAberta();
+        when(comunidadeRepository.buscarAtivaPorId(1L)).thenReturn(Optional.of(comunidade));
+        when(comunidadeMembroRepository.ehAdministrador(comunidade, USUARIO_ID)).thenReturn(true);
+
+        ApiException erro = assertThrows(ApiException.class, () -> service.editar(USUARIO_ID, 1L, " ", null));
+
+        assertEquals("CAMPO_OBRIGATORIO", erro.getCode());
+    }
+
+    @Test
+    void edicaoRejeitaNomeUsadoPorOutraComunidade() {
+        Comunidade comunidade = comunidadeAberta();
+        when(comunidadeRepository.buscarAtivaPorId(1L)).thenReturn(Optional.of(comunidade));
+        when(comunidadeMembroRepository.ehAdministrador(comunidade, USUARIO_ID)).thenReturn(true);
+        when(comunidadeRepository.existePorNomeEDiferente("Damas", 1L)).thenReturn(true);
+
+        ApiException erro = assertThrows(ApiException.class, () -> service.editar(USUARIO_ID, 1L, "Damas", null));
+
+        assertEquals("COMUNIDADE_NOME_EM_USO", erro.getCode());
+        assertEquals("Xadrez", comunidade.nome);
+    }
+
+    @Test
+    void administradorExcluiComunidadeLogicamente() {
+        Comunidade comunidade = comunidadeAberta();
+        when(comunidadeRepository.buscarAtivaPorId(1L)).thenReturn(Optional.of(comunidade));
+        when(comunidadeMembroRepository.ehAdministrador(comunidade, USUARIO_ID)).thenReturn(true);
+
+        service.excluir(USUARIO_ID, 1L);
+
+        assertFalse(comunidade.ativa);
+    }
+
+    @Test
+    void naoAdministradorNaoExcluiComunidade() {
+        Comunidade comunidade = comunidadeAberta();
+        when(comunidadeRepository.buscarAtivaPorId(1L)).thenReturn(Optional.of(comunidade));
+        when(comunidadeMembroRepository.ehAdministrador(comunidade, USUARIO_ID)).thenReturn(false);
+
+        ApiException erro = assertThrows(ApiException.class, () -> service.excluir(USUARIO_ID, 1L));
+
+        assertEquals("SEM_PERMISSAO_ADMINISTRAR", erro.getCode());
+        assertTrue(comunidade.ativa);
+    }
+
+    @Test
+    void comunidadeExcluidaNaoEEncontradaNemAceitaInteracoes() {
+        when(comunidadeRepository.buscarAtivaPorId(1L)).thenReturn(Optional.empty());
+
+        ApiException erro = assertThrows(ApiException.class, () -> service.ingressar(USUARIO_ID, 1L));
+
+        assertEquals("COMUNIDADE_NAO_ENCONTRADA", erro.getCode());
+    }
+
+    @Test
+    void administradorRemoveMembro() {
+        Comunidade comunidade = comunidadeAberta();
+        when(comunidadeRepository.buscarAtivaPorId(1L)).thenReturn(Optional.of(comunidade));
+        when(comunidadeMembroRepository.ehAdministrador(comunidade, USUARIO_ID)).thenReturn(true);
+        when(comunidadeMembroRepository.existeAssociacao(comunidade, 7L)).thenReturn(true);
+
+        service.removerMembro(USUARIO_ID, 1L, 7L);
+
+        verify(comunidadeMembroRepository).removerAssociacao(comunidade, 7L);
+    }
+
+    @Test
+    void naoAdministradorNaoRemoveMembro() {
+        Comunidade comunidade = comunidadeAberta();
+        when(comunidadeRepository.buscarAtivaPorId(1L)).thenReturn(Optional.of(comunidade));
+        when(comunidadeMembroRepository.ehAdministrador(comunidade, USUARIO_ID)).thenReturn(false);
+
+        ApiException erro = assertThrows(ApiException.class, () -> service.removerMembro(USUARIO_ID, 1L, 7L));
+
+        assertEquals("SEM_PERMISSAO_ADMINISTRAR", erro.getCode());
+        verify(comunidadeMembroRepository, never()).removerAssociacao(any(), any());
+    }
+
+    @Test
+    void remocaoRejeitaUsuarioQueNaoEMembro() {
+        Comunidade comunidade = comunidadeAberta();
+        when(comunidadeRepository.buscarAtivaPorId(1L)).thenReturn(Optional.of(comunidade));
+        when(comunidadeMembroRepository.ehAdministrador(comunidade, USUARIO_ID)).thenReturn(true);
+        when(comunidadeMembroRepository.existeAssociacao(comunidade, 7L)).thenReturn(false);
+
+        ApiException erro = assertThrows(ApiException.class, () -> service.removerMembro(USUARIO_ID, 1L, 7L));
+
+        assertEquals("MEMBRO_NAO_ENCONTRADO", erro.getCode());
+    }
+
+    @Test
+    void administradorNaoRemoveOutroAdministrador() {
+        Comunidade comunidade = comunidadeAberta();
+        when(comunidadeRepository.buscarAtivaPorId(1L)).thenReturn(Optional.of(comunidade));
+        when(comunidadeMembroRepository.ehAdministrador(comunidade, USUARIO_ID)).thenReturn(true);
+        when(comunidadeMembroRepository.existeAssociacao(comunidade, 7L)).thenReturn(true);
+        when(comunidadeMembroRepository.ehAdministrador(comunidade, 7L)).thenReturn(true);
+
+        ApiException erro = assertThrows(ApiException.class, () -> service.removerMembro(USUARIO_ID, 1L, 7L));
+
+        assertEquals("ADMIN_NAO_PODE_SER_REMOVIDO", erro.getCode());
+        assertEquals(422, erro.getStatus());
+        verify(comunidadeMembroRepository, never()).removerAssociacao(any(), any());
+    }
+
+    @Test
+    void administradorNaoRemoveASiMesmo() {
+        Comunidade comunidade = comunidadeAberta();
+        when(comunidadeRepository.buscarAtivaPorId(1L)).thenReturn(Optional.of(comunidade));
+        when(comunidadeMembroRepository.ehAdministrador(comunidade, USUARIO_ID)).thenReturn(true);
+        when(comunidadeMembroRepository.existeAssociacao(comunidade, USUARIO_ID)).thenReturn(true);
+
+        ApiException erro = assertThrows(ApiException.class,
+                () -> service.removerMembro(USUARIO_ID, 1L, USUARIO_ID));
+
+        assertEquals("ADMIN_NAO_PODE_SER_REMOVIDO", erro.getCode());
+        assertEquals(422, erro.getStatus());
+        verify(comunidadeMembroRepository, never()).removerAssociacao(any(), any());
     }
 
     private Comunidade comunidadeAberta() {

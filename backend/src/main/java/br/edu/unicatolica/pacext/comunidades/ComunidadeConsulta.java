@@ -7,8 +7,12 @@ package br.edu.unicatolica.pacext.comunidades;
  */
 public interface ComunidadeConsulta {
 
+    /** Se a comunidade existe e está ativa: comunidade excluída (Story 2.6, RF31) conta como inexistente. */
     boolean existe(Long comunidadeId);
 
-    /** Se o usuário é membro da comunidade (RF27.1) — base de "só membro publica" (Story 3.1). */
+    /**
+     * Se o usuário é membro da comunidade (RF27.1) — base de "só membro publica" (Story 3.1).
+     * Sempre falso para comunidade excluída.
+     */
     boolean ehMembro(Long comunidadeId, Long usuarioId);
 }
