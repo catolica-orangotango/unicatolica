@@ -445,3 +445,70 @@ export async function mockCriarComunidade(
   );
   return recebidas;
 }
+
+/** Membro no formato de `MembroComunidadeResponse` do `openapi.yaml`. */
+export interface MembroMock {
+  usuarioId: number;
+  nome: string;
+  curso: string | null;
+  papel: 'ADMINISTRADOR' | 'MEMBRO';
+  membroDesde: string;
+}
+
+/**
+ * Administração da comunidade (Story 2.6) com estado: `GET`/`PATCH`/`DELETE /comunidades/{id}`,
+ * `GET /comunidades/{id}/membros` e `DELETE /comunidades/{id}/membros/{usuarioId}`. Devolve as
+ * chamadas recebidas. Registrar depois de `mockComunidadeComFeed`, que cobre o feed.
+ */
+export async function mockAdministrarComunidade(
+  page: Page,
+  opcoes: { id: number; nome: string; descricao: string | null; membros: MembroMock[] },
+): Promise<{ metodo: string; caminho: string; corpo: unknown }[]> {
+  const chamadas: { metodo: string; caminho: string; corpo: unknown }[] = [];
+  const comunidade = {
+    id: opcoes.id,
+    nome: opcoes.nome,
+    descricao: opcoes.descricao,
+    tipo: 'ABERTA',
+    souMembro: true,
+    souAdministrador: true,
+    criadoEm: '2026-08-01T00:00:00Z',
+  };
+  let membros = [...opcoes.membros];
+  const base = `/comunidades/${opcoes.id}`;
+
+  await page.route(
+    (url) => ehApi(url) && (url.pathname === base || url.pathname.startsWith(`${base}/membros`)),
+    (route) => {
+      const request = route.request();
+      const caminho = new URL(request.url()).pathname;
+      if (request.method() === 'OPTIONS') {
+        return route.fulfill({ status: 204, headers: CORS });
+      }
+      if (request.method() !== 'GET') {
+        chamadas.push({ metodo: request.method(), caminho, corpo: request.postDataJSON() });
+      }
+      if (caminho === base && request.method() === 'PATCH') {
+        const corpo = request.postDataJSON() as { nome?: string; descricao?: string };
+        if (corpo.nome !== undefined) comunidade.nome = corpo.nome;
+        if (corpo.descricao !== undefined) comunidade.descricao = corpo.descricao || null;
+        return route.fulfill(json(200, comunidade));
+      }
+      if (caminho === base && request.method() === 'DELETE') {
+        return route.fulfill({ status: 204, headers: CORS });
+      }
+      if (caminho === base) {
+        return route.fulfill(json(200, comunidade));
+      }
+      if (caminho === `${base}/membros` && request.method() === 'GET') {
+        return route.fulfill(
+          json(200, { content: membros, page: 0, size: 100, totalElements: membros.length, totalPages: 1 }),
+        );
+      }
+      const usuarioId = Number(caminho.split('/').pop());
+      membros = membros.filter((m) => m.usuarioId !== usuarioId);
+      return route.fulfill({ status: 204, headers: CORS });
+    },
+  );
+  return chamadas;
+}

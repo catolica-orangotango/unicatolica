@@ -140,8 +140,16 @@ Decisões da implementação:
   não o da plataforma — por isso a 2.6 não depende da 2.1.
 - Administrador não pode ser removido pelo `DELETE .../membros/{usuarioId}` (nem a si mesmo):
   422 `ADMIN_NAO_PODE_SER_REMOVIDO`, para a comunidade não ficar sem administrador. Para
-  encerrá-la, o administrador a exclui. (O `DELETE .../membros/me` da 2.4 ainda deixa o único
-  administrador sair; fica como pendência.)
+  encerrá-la, o administrador a exclui. Pelo mesmo motivo, o único administrador não sai pelo
+  `DELETE .../membros/me` da 2.4: 422 `ULTIMO_ADMINISTRADOR`.
+- `GET /comunidades/{id}/membros` lista os membros (administradores primeiro), só para quem é
+  membro: 403 `NAO_E_MEMBRO` para os demais. É de onde a tela tira o `usuarioId` para remover.
+- `souAdministrador` no `ComunidadeResponse` (detalhe, "minhas", criar, editar) decide se a tela
+  mostra as ações de administração.
+- O `PATCH` é parcial: campo ausente não muda, e `descricao` vazia apaga a descrição.
+- Tela: seção "Administração" no detalhe `/comunidades/:id`, só para o administrador, com
+  confirmação em dois passos antes de remover membro e de excluir. A lista de membros da tela
+  mostra a primeira página (até 100), suficiente para as comunidades desta fase.
 - Comunidade excluída é inexistente para todos: `buscarAtivaPorId` (404 nas rotas de
   Comunidades), `ComunidadeConsulta.existe`/`ehMembro` (Publicações responde 404 ao postar ou
   listar o feed), `/comunidades/minhas` e o auto-join de curso.

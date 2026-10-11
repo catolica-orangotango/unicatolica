@@ -147,6 +147,52 @@ describe('ComunidadeDetalhe', () => {
 
     expect((f.nativeElement as HTMLElement).querySelector('[role="alert"]')).toBeTruthy();
   });
+
+  it('administrador vê a seção de administração e não vê o botão Sair', async () => {
+    const f = await montar('27');
+
+    httpMock.expectOne(`${API_BASE_URL}/comunidades/27`).flush({
+      id: 27,
+      nome: 'Clube de Xadrez',
+      descricao: null,
+      tipo: 'ABERTA',
+      souMembro: true,
+      souAdministrador: true,
+      criadoEm: '2026-01-01T00:00:00Z',
+    });
+    f.detectChanges();
+    httpMock
+      .expectOne((r) => r.url === `${API_BASE_URL}/comunidades/27/membros`)
+      .flush({ content: [], page: 0, size: 100, totalElements: 0, totalPages: 0 });
+    responderFeed(27);
+    f.detectChanges();
+
+    const compiled = f.nativeElement as HTMLElement;
+    expect(compiled.querySelector('app-administrar-comunidade')).not.toBeNull();
+    expect(compiled.querySelector('.detalhe__botao-sair')).toBeNull();
+    expect(compiled.textContent).toContain('Você administra');
+  });
+
+  it('membro comum não vê a seção de administração', async () => {
+    const f = await montar('27');
+
+    httpMock.expectOne(`${API_BASE_URL}/comunidades/27`).flush({
+      id: 27,
+      nome: 'Clube de Xadrez',
+      descricao: null,
+      tipo: 'ABERTA',
+      souMembro: true,
+      souAdministrador: false,
+      criadoEm: '2026-01-01T00:00:00Z',
+    });
+    f.detectChanges();
+    responderFeed(27);
+    f.detectChanges();
+
+    const compiled = f.nativeElement as HTMLElement;
+    expect(compiled.querySelector('app-administrar-comunidade')).toBeNull();
+    expect(compiled.querySelector('.detalhe__botao-sair')).not.toBeNull();
+  });
 });
 
 // jsdom does not compute styles from an external stylesheet, so this screen's
