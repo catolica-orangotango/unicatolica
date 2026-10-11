@@ -162,4 +162,5 @@ Sem nada instalado além do Docker, `docker-compose up` continua subindo tudo ju
 | Testes do backend | `cd backend && ./mvnw test` |
 | Testes do frontend | `cd frontend && npx ng test --watch=false` |
 | E2E (Playwright) | `cd frontend && npm run e2e` |
+| E2E com Quarkus real | ver `AGENTS.md` (Running and verifying): `quarkus:dev` com mailbox mock e `E2E_BACKEND=1 npx playwright test --grep @backend` |
 | Lint do contrato | `npx --yes @redocly/cli lint openapi.yaml` |

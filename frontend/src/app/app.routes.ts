@@ -53,6 +53,12 @@ export const routes: Routes = [
           import('./features/moderacao/fila-denuncias/fila-denuncias').then((m) => m.FilaDenuncias),
       },
       {
+        // Criar comunidade (Story 2.2). Fica antes de ':id', senão 'nova' casa como id.
+        path: 'comunidades/nova',
+        loadComponent: () =>
+          import('./features/comunidades/criar-comunidade/criar-comunidade').then((m) => m.CriarComunidade),
+      },
+      {
         // Mesmo padrão de "Home" pra qualquer comunidade — curso ou aberta (ver
         // ComunidadeDetalhe). Vem depois de 'comunidades' na lista, mas isso não
         // importa pro Router: segmentos diferentes ('comunidades' vs 'comunidades/:id'),

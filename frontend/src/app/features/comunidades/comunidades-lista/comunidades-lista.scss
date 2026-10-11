@@ -13,10 +13,19 @@
   max-width: 960px;
 }
 
+.lista__topo {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: calc(var(--uc-space-unit) * 3);
+  margin-bottom: var(--uc-space-section-gap);
+}
+
 .lista h1 {
   font-size: var(--uc-font-size-greeting);
   font-weight: var(--uc-font-weight-semibold);
-  margin: 0 0 var(--uc-space-section-gap);
+  margin: 0;
 }
 
 .lista__filtros {

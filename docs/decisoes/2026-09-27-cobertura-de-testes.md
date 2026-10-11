@@ -57,7 +57,7 @@ flowchart LR
 | T0 | Esta decisão; regra acima no checklist de `como-funciona.md` e no `AGENTS.md`; exemplo de `@QuarkusTest` corrigido para `AutenticacaoFluxoTest` | 8 | Concluído (#32) |
 | T1 | `@QuarkusTest` de `/comunidades` | 1 | Em andamento |
 | T2 | `@QuarkusTest` da confirmação de e-mail e do fluxo cadastro → login | 2 | Pendente |
-| T3 | Job E2E no CI (mockado) e job E2E com backend real | 3 | Pendente |
+| T3 | Job E2E no CI (mockado) e job E2E com backend real | 3 | Em andamento (KAN-68) |
 | T4 | Validação de toda resposta dos `@QuarkusTest` contra o `openapi.yaml` | 4 | Pendente |
 | T5 | JaCoCo e coverage do Vitest, com gate que não deixa a cobertura cair | 5 | Pendente |
 | T6 | `@axe-core/playwright` nos e2e das telas | 6 | Pendente |

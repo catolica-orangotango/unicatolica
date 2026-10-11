@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject, signal } from '@angular/core';
-import { Observable, map, switchMap, tap } from 'rxjs';
+import { Observable, catchError, map, of, switchMap, tap } from 'rxjs';
 import { ToastService } from '../../ui';
 import { AuthService } from '../../core/auth/auth.service';
 import { API_BASE_URL } from '../../core/config/api.config';
@@ -24,11 +24,13 @@ export interface Pagina<T> {
   totalPages: number;
 }
 
+/** Tamanho da coluna `comunidade.nome`; o backend ainda não valida (DT-5). */
+export const LIMITE_NOME_COMUNIDADE = 150;
+
 /**
  * Fala com o módulo Comunidades do Epic 2 (protótipo, ver
- * docs/decisoes/2026-08-modelo-epico-2-comunidades.md) — listar/filtrar, "minhas comunidades" e
- * entrar/sair. Criação de comunidade aberta (Story 2.2) fica pra quando a tela de
- * criação existir.
+ * docs/decisoes/2026-08-modelo-epico-2-comunidades.md) — criar comunidade aberta,
+ * listar/filtrar, "minhas comunidades" e entrar/sair.
  *
  * `minhasComunidades` é uma cache compartilhada (signal): o `Shell` (sidebar,
  * "Suas comunidades"), a Home e a lista de descoberta leem todos do mesmo lugar, e
@@ -62,6 +64,22 @@ export class ComunidadesService {
     return this.http.get<Comunidade>(`${API_BASE_URL}/comunidades/${id}`, {
       headers: this.authService.obterCabecalhoAutorizacao(),
     });
+  }
+
+  /** `POST /comunidades` (Story 2.2) — recarrega a sidebar; falha só na recarga não desfaz a criação. */
+  criar(dados: { nome: string; descricao: string | null }): Observable<Comunidade> {
+    return this.http
+      .post<Comunidade>(`${API_BASE_URL}/comunidades`, dados, {
+        headers: this.authService.obterCabecalhoAutorizacao(),
+      })
+      .pipe(
+        switchMap((comunidade) =>
+          this.carregarMinhas().pipe(
+            catchError(() => of([])),
+            map(() => comunidade),
+          ),
+        ),
+      );
   }
 
   /** `GET /comunidades` (Story 2.5, RF27/RF28) — lista/filtra, paginado. */
