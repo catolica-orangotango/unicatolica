@@ -17,6 +17,10 @@
 // role, three screens had already hardcoded #B3261E, and Story 14.7 escalated
 // it back into the DESIGN.md `colors` frontmatter before adding it here.
 //
+// --uc-color-orange and --uc-color-ink-faint were darkened in KAN-71 (was
+// #EA6A2E / #A2A29C) to reach WCAG 2.2 AA 4.5:1 on bg, surface and
+// orange-tint; docs/produto/ux-design.md was updated to match.
+//
 // No dark-mode / `prefers-color-scheme` block: dark mode is out of the MVP.
 
 // prettier-ignore
@@ -27,9 +31,9 @@
   --uc-color-border: #EAEAE6;
   --uc-color-ink: #1C1C1A;
   --uc-color-ink-soft: #6B6B66;
-  --uc-color-ink-faint: #A2A29C;
+  --uc-color-ink-faint: #6E6E68;
   --uc-color-maroon: #7A1F2B;
-  --uc-color-orange: #EA6A2E;
+  --uc-color-orange: #BC4913;
   --uc-color-orange-tint: #FDEEE6;
   --uc-color-green-ok: #3A7D5C;
   --uc-color-error: #B3261E;
