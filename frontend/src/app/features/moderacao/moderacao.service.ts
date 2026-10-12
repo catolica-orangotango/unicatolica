@@ -61,7 +61,7 @@ export class ModeracaoService {
     );
   }
 
-  /** `GET /moderacao/denuncias` (Story 12.4) — mais antiga primeiro. Só MODERADOR. */
+  /** `GET /moderacao/denuncias` (Story 12.4) — mais antiga primeiro. Só MODERADOR ou ADMINISTRADOR. */
   listar(situacao: SituacaoDenuncia, pagina = 0, tamanho = 20): Observable<Pagina<Denuncia>> {
     return this.http
       .get<Pagina<Denuncia>>(`${API_BASE_URL}/moderacao/denuncias`, {

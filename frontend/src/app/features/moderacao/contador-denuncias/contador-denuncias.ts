@@ -5,7 +5,7 @@ import { ModeracaoService } from '../moderacao.service';
 /**
  * Contador de denúncias pendentes no item "Denúncias" da sidebar (UJ-2, passo 1;
  * key-denuncias.html). Lê o mesmo signal que a fila atualiza depois de cada ação, então
- * cai sem recarregar a página. Só busca para MODERADOR — o backend daria 403 a outros.
+ * cai sem recarregar a página. Só busca para MODERADOR ou ADMINISTRADOR; o backend daria 403 a outros.
  */
 @Component({
   selector: 'app-contador-denuncias',
@@ -20,7 +20,8 @@ export class ContadorDenuncias {
   protected readonly pendentes = this.moderacaoService.pendentes;
 
   constructor() {
-    if (inject(AuthService).possuiPerfil('MODERADOR')) {
+    const auth = inject(AuthService);
+    if (auth.possuiPerfil('MODERADOR') || auth.possuiPerfil('ADMINISTRADOR')) {
       this.moderacaoService.atualizarPendentes();
     }
   }
