@@ -68,6 +68,22 @@ class ModeracaoFluxoTest {
     }
 
     @Test
+    void administradorListaAFilaEOculta() {
+        String administrador = login("Administrador Teste", "ADMINISTRADOR");
+        Integer denuncia = denunciar(denunciante, "spam");
+
+        como(administrador).queryParam("tamanho", 100)
+                .when().get("/moderacao/denuncias")
+                .then().statusCode(200)
+                .body("content.id", hasItem(denuncia));
+        como(administrador).contentType(JSON).body(Map.of("motivo", "Conteúdo ofensivo."))
+                .when().post("/moderacao/denuncias/{id}/ocultacao", denuncia)
+                .then().statusCode(200)
+                .body("conteudo.situacao", equalTo("OCULTO"));
+        como(denunciante).when().get("/moderacao/denuncias").then().statusCode(403);
+    }
+
+    @Test
     void denunciaOcultaERestaura() {
         Integer denuncia = denunciar(denunciante, "spam");
         Integer outra = denunciar(outroDenunciante, "ofensivo");

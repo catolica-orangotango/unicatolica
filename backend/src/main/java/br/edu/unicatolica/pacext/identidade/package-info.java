@@ -26,6 +26,11 @@
  * (login/emissão de JWT), Story 1.5 (bloqueio de acesso/restrição por perfil, via
  * {@code UsuarioAutenticado} + {@code /usuarios/me}/{@code /usuarios/{id}}) e Story 1.6
  * (logout), e a renovação da sessão por inatividade ({@code POST /auth/refresh}, KAN-78).
+ * O perfil de plataforma
+ * {@code ADMINISTRADOR} (constantes em {@code compartilhado.seguranca.Perfis}; regra de
+ * autorização em {@code UsuarioAutenticado.podeModerar/exigirModerador/exigirAdministrador})
+ * tem a rota base {@code GET /admin/painel} ({@code AdminResource}/{@code AdminService}) e o
+ * usuário de teste {@code admin.teste@catolicasc.edu.br}, semeado só no contexto {@code dev}.
  * Também a lista de cursos ({@code GET /cursos}, público só para leitura), usada
  * pelo select do cadastro; cadastro de cursos pelo administrador no KAN-44.</p>
  */
