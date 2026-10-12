@@ -18,7 +18,7 @@ import jakarta.ws.rs.core.MediaType;
 import java.util.List;
 import java.util.Map;
 
-/** Stories 12.4 e 12.5 — fila do moderador e ações sobre a denúncia. Perfil MODERADOR ou ADMINISTRADOR. */
+/** Stories 12.4 e 12.5: fila do moderador e ações sobre a denúncia. Perfil MODERADOR ou ADMINISTRADOR. */
 @Path("/moderacao/denuncias")
 @Produces(MediaType.APPLICATION_JSON)
 public class ModeracaoResource {

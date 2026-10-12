@@ -32,7 +32,7 @@ public class Usuario {
     @Column(name = "senha_hash", nullable = false, length = 100)
     public String senhaHash;
 
-    /** Perfil global do usuário (RF13) — ex.: "ALUNO", "MODERADOR", "ADMINISTRADOR" (ver {@code Perfis}). */
+    /** Perfil global do usuário (RF13), ex.: "ALUNO", "MODERADOR", "ADMINISTRADOR" (ver {@code Perfis}). */
     @Column(name = "perfil", nullable = false, length = 30)
     public String perfil;
 
