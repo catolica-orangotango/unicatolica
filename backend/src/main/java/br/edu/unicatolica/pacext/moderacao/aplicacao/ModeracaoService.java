@@ -22,14 +22,11 @@ import java.util.Set;
 
 /**
  * Stories 12.4 (fila e análise, RF77/RF77.1) e 12.5 (ocultar/restaurar, RF78/RF78.1), mais o
- * descarte de denúncia improcedente. Só perfil {@code MODERADOR}; o administrador de
- * plataforma entra com o KAN-44. Toda ação vai para {@code acao_moderacao} e para o
- * {@code log_auditoria} (AD-11).
+ * descarte de denúncia improcedente. Perfil {@code MODERADOR} ou {@code ADMINISTRADOR}. Toda ação vai para
+ * {@code acao_moderacao} e para o {@code log_auditoria} (AD-11).
  */
 @ApplicationScoped
 public class ModeracaoService {
-
-    static final String PERFIL_MODERADOR = "MODERADOR";
 
     static final int TAMANHO_MAXIMO_PAGINA = 100;
 
@@ -54,7 +51,7 @@ public class ModeracaoService {
 
     /** Fila (Story 12.4) — situação ausente é PENDENTE; paginação fora da faixa é trazida para dentro. */
     public PageResponse<DenunciaEmAnalise> listar(String situacao, int pagina, int tamanho) {
-        exigirModerador();
+        usuarioAutenticado.exigirModerador();
         SituacaoDenuncia filtro = validarSituacao(situacao);
         int paginaValida = Math.max(pagina, 0);
         int tamanhoValido = Math.clamp(tamanho, 1, TAMANHO_MAXIMO_PAGINA);
@@ -68,7 +65,7 @@ public class ModeracaoService {
     }
 
     public DenunciaEmAnalise obter(Long denunciaId) {
-        exigirModerador();
+        usuarioAutenticado.exigirModerador();
         return emAnalise(buscar(denunciaId));
     }
 
@@ -78,7 +75,7 @@ public class ModeracaoService {
      */
     @Transactional
     public DenunciaEmAnalise ocultar(Long denunciaId, String motivo) {
-        exigirModerador();
+        usuarioAutenticado.exigirModerador();
         Denuncia denuncia = buscar(denunciaId);
         String texto = Motivo.obrigatorio(motivo, "Informe o motivo da ocultação.");
         exigirPendente(denuncia);
@@ -99,7 +96,7 @@ public class ModeracaoService {
     /** Story 12.5 (RF78.1) — qualquer moderador, não só quem ocultou. A denúncia continua RESOLVIDA. */
     @Transactional
     public DenunciaEmAnalise restaurar(Long denunciaId) {
-        exigirModerador();
+        usuarioAutenticado.exigirModerador();
         Denuncia denuncia = buscar(denunciaId);
         boolean oculta = publicacaoModeracao.buscar(denuncia.conteudoId).map(PublicacaoModeravel::oculta).orElse(false);
         if (denuncia.situacao != SituacaoDenuncia.RESOLVIDA || !oculta) {
@@ -117,7 +114,7 @@ public class ModeracaoService {
     /** Encerra só esta denúncia, sem mexer no conteúdo; motivo opcional, só para o histórico. */
     @Transactional
     public DenunciaEmAnalise descartar(Long denunciaId, String motivo) {
-        exigirModerador();
+        usuarioAutenticado.exigirModerador();
         Denuncia denuncia = buscar(denunciaId);
         String texto = Motivo.opcional(motivo);
         exigirPendente(denuncia);
@@ -132,12 +129,6 @@ public class ModeracaoService {
     }
 
     /** 403 em vez de 404: a fila existe para todo mundo, só não é de qualquer um (AD-5). */
-    private void exigirModerador() {
-        if (!usuarioAutenticado.possuiPerfil(PERFIL_MODERADOR)) {
-            throw ApiException.semPermissao("ACESSO_NEGADO", "Você não tem permissão para executar esta ação.", null);
-        }
-    }
-
     private Denuncia buscar(Long denunciaId) {
         return denunciaRepository.findByIdOptional(denunciaId)
                 .orElseThrow(() -> ApiException.naoEncontrado("DENUNCIA_NAO_ENCONTRADA", "Denúncia não encontrada.", null));

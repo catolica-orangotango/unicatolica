@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Administrador semente para teste manual do painel /admin e da moderação: sem ele,
+    o perfil ADMINISTRADOR só era obtido alterando o perfil de um usuário direto no banco.
+    Mesma senha do aluno.teste (identidade-002): "Senha123!". Só contexto "dev", nunca
+    roda em produção.
+-->
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="identidade-008-seed-admin-teste" author="pacext" context="dev">
+        <insert tableName="usuario">
+            <column name="nome" value="Administrador Teste"/>
+            <column name="email" value="admin.teste@catolicasc.edu.br"/>
+            <column name="senha_hash" value="$2b$10$HBRjYZYGl7EqrU1DA9coJ.ugYuaB/mT5uZ9DljMjP8HUrLSc8yRWi"/>
+            <column name="perfil" value="ADMINISTRADOR"/>
+            <column name="email_confirmado" valueBoolean="true"/>
+            <column name="criado_em" valueComputed="now()"/>
+        </insert>
+    </changeSet>
+
+</databaseChangeLog>

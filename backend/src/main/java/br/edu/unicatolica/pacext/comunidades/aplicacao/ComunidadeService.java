@@ -19,8 +19,8 @@ import java.util.List;
  * Regras de negócio das Stories 2.2 (criar comunidade aberta), 2.4 (entrar/sair), 2.5
  * (listar/filtrar/visualizar) e 2.6 (administrar: remover membro, editar, excluir) do Epic 2.
  * Entrada rápida (protótipo desta fatia, ver docs/decisoes/2026-08-modelo-epico-2-comunidades.md) —
- * Story 2.1 (endpoint de admin criar comunidade de curso) fica de fora por depender do papel
- * ADMINISTRADOR de plataforma, que ainda não existe em Identidade. Na 2.6 o administrador é o
+ * Story 2.1 (endpoint de admin criar comunidade de curso) fica de fora por falta do endpoint
+ * (o papel ADMINISTRADOR de plataforma já existe em Identidade). Na 2.6 o administrador é o
  * papel {@code ADMINISTRADOR} <em>dentro da comunidade</em>, não o da plataforma.
  */
 @ApplicationScoped
@@ -41,7 +41,7 @@ public class ComunidadeService {
      * Story 2.2 (RF21, RF22, RF23). Toda comunidade criada por aqui é {@code ABERTA} —
      * o tipo {@code CURSO} só existe hoje via seed de migration (Story 2.1, protótipo);
      * o endpoint não aceita tipo no corpo de propósito, para não abrir brecha da RF21.2
-     * (aluno não pode criar comunidade de curso) antes do papel ADMINISTRADOR existir.
+     * (aluno não pode criar comunidade de curso) antes de existir o endpoint de administrador.
      */
     @Transactional
     public Comunidade criarComunidadeAberta(Long usuarioId, String nome, String descricao) {

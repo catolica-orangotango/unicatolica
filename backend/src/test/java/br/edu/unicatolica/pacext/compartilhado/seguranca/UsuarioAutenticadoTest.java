@@ -14,6 +14,7 @@ import io.smallrye.jwt.util.KeyUtils;
 import java.security.KeyPair;
 import java.security.PrivateKey;
 import java.security.PublicKey;
+import java.util.List;
 import java.util.Set;
 import org.eclipse.microprofile.jwt.JsonWebToken;
 import org.junit.jupiter.api.BeforeAll;
@@ -92,5 +93,40 @@ class UsuarioAutenticadoTest {
         ApiException erro = assertThrows(ApiException.class, usuarioAutenticado::id);
         assertEquals(401, erro.getStatus());
         assertEquals("NAO_AUTENTICADO", erro.getCode());
+    }
+
+    @Test
+    void podeModerarAceitaModeradorEAdministradorMasNaoAluno() throws Exception {
+        assertTrue(usuarioAutenticadoPara("1", Set.of(Perfis.MODERADOR)).podeModerar());
+        assertTrue(usuarioAutenticadoPara("1", Set.of(Perfis.ADMINISTRADOR)).podeModerar());
+        assertFalse(usuarioAutenticadoPara("1", Set.of(Perfis.ALUNO)).podeModerar());
+        assertFalse(usuarioAutenticadoPara("1", Set.of()).podeModerar());
+    }
+
+    @Test
+    void exigirModeradorLiberaModeradorEAdministrador() throws Exception {
+        usuarioAutenticadoPara("1", Set.of(Perfis.MODERADOR)).exigirModerador();
+        usuarioAutenticadoPara("1", Set.of(Perfis.ADMINISTRADOR)).exigirModerador();
+    }
+
+    @Test
+    void exigirModeradorLanca403ParaAlunoESemPerfil() throws Exception {
+        for (Set<String> roles : List.of(Set.of(Perfis.ALUNO), Set.<String>of())) {
+            UsuarioAutenticado usuario = usuarioAutenticadoPara("1", roles);
+            ApiException erro = assertThrows(ApiException.class, usuario::exigirModerador);
+            assertEquals(403, erro.getStatus());
+            assertEquals("ACESSO_NEGADO", erro.getCode());
+        }
+    }
+
+    @Test
+    void exigirAdministradorLiberaSoAdministrador() throws Exception {
+        usuarioAutenticadoPara("1", Set.of(Perfis.ADMINISTRADOR)).exigirAdministrador();
+        for (Set<String> roles : List.of(Set.of(Perfis.ALUNO), Set.of(Perfis.MODERADOR), Set.<String>of())) {
+            UsuarioAutenticado usuario = usuarioAutenticadoPara("1", roles);
+            ApiException erro = assertThrows(ApiException.class, usuario::exigirAdministrador);
+            assertEquals(403, erro.getStatus());
+            assertEquals("ACESSO_NEGADO", erro.getCode());
+        }
     }
 }

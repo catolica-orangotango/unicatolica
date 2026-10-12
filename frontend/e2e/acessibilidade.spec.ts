@@ -178,6 +178,15 @@ test('moderador: fila e análise da denúncia', async ({ page }) => {
   await esperarSemViolacoes(page);
 });
 
+test('administrador: painel de administração', async ({ page }) => {
+  await mockFeedOk(page);
+  await plantarToken(page, ['ADMINISTRADOR']);
+  await page.goto('/admin');
+  await expect(page.getByRole('heading', { level: 1, name: 'Administração' })).toBeVisible();
+  await expect(page).toHaveTitle('Administração — UniCatólica');
+  await esperarSemViolacoes(page);
+});
+
 /** `GET /notificacoes/me` com o aviso de onboarding não lido (Story 4.3). */
 async function mockNotificacoes(page: Page): Promise<void> {
   const pagina = {

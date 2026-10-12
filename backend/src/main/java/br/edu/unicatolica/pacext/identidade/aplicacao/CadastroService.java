@@ -1,5 +1,6 @@
 package br.edu.unicatolica.pacext.identidade.aplicacao;
 
+import br.edu.unicatolica.pacext.compartilhado.seguranca.Perfis;
 import br.edu.unicatolica.pacext.identidade.UsuarioCadastrado;
 import br.edu.unicatolica.pacext.identidade.dominio.Curso;
 import br.edu.unicatolica.pacext.identidade.dominio.GeradorTokenConfirmacao;
@@ -89,7 +90,7 @@ public class CadastroService {
         usuario.cursoId = curso.id;
         usuario.curso = curso.nome;
         usuario.emailConfirmado = false;
-        usuario.perfil = "ALUNO";
+        usuario.perfil = Perfis.ALUNO;
         usuario.criadoEm = Instant.now();
         usuario.tokenConfirmacaoEmail = geradorTokenConfirmacao.gerar();
         usuario.tokenConfirmacaoExpiraEm = Instant.now().plus(tokenValidadeHoras, ChronoUnit.HOURS);

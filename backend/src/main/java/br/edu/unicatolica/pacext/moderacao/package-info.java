@@ -13,7 +13,7 @@
  * e a análise do moderador (Story 12.4, {@code GET /moderacao/denuncias[/{id}]}), ocultar e
  * restaurar (Story 12.5) e descartar denúncia improcedente
  * ({@code POST /moderacao/denuncias/{id}/ocultacao|restauracao|descarte}), só para perfil
- * {@code MODERADOR}. A postagem é lida e ocultada/restaurada por
+ * {@code MODERADOR} ou {@code ADMINISTRADOR}. A postagem é lida e ocultada/restaurada por
  * {@code publicacoes.PublicacaoModeracao}; o autor, por {@code identidade.UsuarioConsulta}.
  * Notificação ao autor (RF78.2) espera o módulo Notificações. Triagem pelo agente de IA
  * (Story 12.2, RF75.1–RF75.3) segue DEFERRED; remover (12.6), restringir (12.7) e escalonar

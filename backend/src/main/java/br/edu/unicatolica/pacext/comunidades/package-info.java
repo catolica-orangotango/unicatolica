@@ -15,8 +15,8 @@
  * membros resolve nome e curso por {@code identidade.UsuarioConsulta}.
  * Comunidade excluída (coluna {@code ativa}) some das listagens e de
  * {@link ComunidadeConsulta#existe}, então os outros módulos deixam de aceitar interações nela.
- * Story 2.1 (endpoint de admin criar comunidade de curso) fica de fora, bloqueada pelo papel
- * {@code ADMINISTRADOR} de plataforma, que ainda não existe em Identidade; os 26 cursos da
+ * Story 2.1 (endpoint de admin criar comunidade de curso) fica de fora (o papel
+ * {@code ADMINISTRADOR} de plataforma já existe em Identidade, falta o endpoint); os 26 cursos da
  * instituição já estão pré-carregados via seed (changelog
  * {@code comunidades-002-seed-comunidades-curso.xml}).</p>
  */

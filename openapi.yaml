@@ -188,6 +188,26 @@ paths:
         '404':
           $ref: '#/components/responses/NaoEncontrado'
 
+  /admin/painel:
+    get:
+      operationId: obterPainelAdmin
+      summary: Painel de administração da plataforma, somente perfil ADMINISTRADOR
+      tags: [Administracao]
+      description: >
+        Rota base da área /admin. Perfil ADMINISTRADOR de plataforma, distinto do papel
+        ADMINISTRADOR dentro de uma comunidade.
+      responses:
+        '200':
+          description: Perfil com o qual o painel foi liberado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PainelAdminResponse'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+
   /comunidades:
     post:
       operationId: criarComunidade
@@ -725,8 +745,7 @@ paths:
       summary: Fila de denúncias do moderador, mais antiga primeiro, paginado (Story 12.4, RF77)
       tags: [Moderacao]
       description: >
-        Só perfil MODERADOR (RF13); o administrador de plataforma entra quando o papel
-        existir (KAN-44). Nenhum item tem campo com a identidade do denunciante (RF77.1).
+        Perfil MODERADOR ou ADMINISTRADOR (RF13). Nenhum item tem campo com a identidade do denunciante (RF77.1).
         Uma denúncia por item: o mesmo conteúdo denunciado por várias pessoas aparece
         várias vezes, cada uma com o próprio motivo. Ordem: criadoEm crescente, id
         crescente no empate. Com situacao=RESOLVIDA o moderador acha o conteúdo oculto
@@ -771,7 +790,7 @@ paths:
       operationId: obterDenuncia
       summary: Denúncia para a tela de análise, sem identidade do denunciante (Story 12.4, RF77.1)
       tags: [Moderacao]
-      description: Só perfil MODERADOR.
+      description: Perfil MODERADOR ou ADMINISTRADOR.
       parameters:
         - $ref: '#/components/parameters/DenunciaId'
       responses:
@@ -794,7 +813,7 @@ paths:
       summary: Oculta o conteúdo denunciado, de forma reversível (Story 12.5, RF78)
       tags: [Moderacao]
       description: >
-        Só perfil MODERADOR. O conteúdo sai do feed e para de aceitar interações (inclusive
+        Perfil MODERADOR ou ADMINISTRADOR. O conteúdo sai do feed e para de aceitar interações (inclusive
         novas denúncias), mas é preservado (RF78). Resolve esta denúncia e todas as outras
         pendentes do mesmo conteúdo. Registra a ação em acao_moderacao e no log de
         auditoria (AD-11). O motivo é o que o autor recebe (RF78.2, sem identidade do
@@ -833,7 +852,7 @@ paths:
       summary: Restaura o conteúdo ocultado a partir desta denúncia (Story 12.5, RF78.1)
       tags: [Moderacao]
       description: >
-        Qualquer MODERADOR, não só quem ocultou (RF78.1). O conteúdo volta a aparecer
+        Qualquer MODERADOR ou ADMINISTRADOR, não só quem ocultou (RF78.1). O conteúdo volta a aparecer
         normalmente no feed. A denúncia continua RESOLVIDA; a restauração fica no histórico
         (acao_moderacao) e no log de auditoria. Sem corpo.
       parameters:
@@ -861,7 +880,7 @@ paths:
       summary: Encerra a denúncia sem ação sobre o conteúdo (Story 12.4)
       tags: [Moderacao]
       description: >
-        Só perfil MODERADOR. Para quando o moderador não vê violação: a denúncia sai da
+        Perfil MODERADOR ou ADMINISTRADOR. Para quando o moderador não vê violação: a denúncia sai da
         fila de pendentes e o conteúdo não muda. Só esta denúncia — as outras do mesmo
         conteúdo seguem na fila, cada uma com o próprio motivo. Motivo opcional, só para o
         histórico; ninguém é notificado.
@@ -948,6 +967,13 @@ components:
         format: int64
 
   schemas:
+    PainelAdminResponse:
+      type: object
+      required: [perfil]
+      properties:
+        perfil:
+          type: string
+          example: ADMINISTRADOR
     LoginRequest:
       type: object
       required: [email, senha]

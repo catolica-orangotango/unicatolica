@@ -18,8 +18,9 @@ class AuthStub {
   encerrarSessaoLocal(): void {
     this.token = null;
   }
-  possuiPerfil(): boolean {
-    return false;
+  perfis: string[] = [];
+  possuiPerfil(perfil?: string): boolean {
+    return perfil !== undefined && this.perfis.includes(perfil);
   }
   logout(): void {}
   // Épico 2: Shell agora injeta ComunidadesService, que chama isto pra montar o
@@ -65,5 +66,27 @@ describe('app.routes - wiring do auth guard sobre a tabela real de rotas', () =>
     const shell = harness.fixture.nativeElement.querySelector('app-shell');
     expect(shell).toBeTruthy();
     expect(shell.querySelector('app-feed')).toBeTruthy();
+  });
+
+  it('/admin: ADMINISTRADOR abre o painel dentro da casca', async () => {
+    auth.token = 'token-fake';
+    auth.perfis = ['ADMINISTRADOR'];
+    const harness = await RouterTestingHarness.create();
+
+    await harness.navigateByUrl('/admin');
+    harness.detectChanges();
+
+    expect(TestBed.inject(Router).url).toBe('/admin');
+    expect(harness.fixture.nativeElement.querySelector('app-painel-admin')).toBeTruthy();
+  });
+
+  it.each(['ALUNO', 'MODERADOR'])('/admin: %s volta para /feed', async (perfil) => {
+    auth.token = 'token-fake';
+    auth.perfis = [perfil];
+    const harness = await RouterTestingHarness.create();
+
+    await harness.navigateByUrl('/admin');
+
+    expect(TestBed.inject(Router).url).toBe('/feed');
   });
 });

@@ -26,6 +26,12 @@ describe('moderadorGuard', () => {
     expect(rodar()).toBe(true);
   });
 
+  it('libera o ADMINISTRADOR', () => {
+    perfis = ['ADMINISTRADOR'];
+
+    expect(rodar()).toBe(true);
+  });
+
   it('manda o aluno de volta para o Início', () => {
     perfis = ['ALUNO'];
 
