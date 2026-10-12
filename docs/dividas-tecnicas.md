@@ -36,3 +36,14 @@ Problemas conhecidos que ainda não têm história nem PR. Quando um item virar 
   2. `ComunidadeService` lança `ApiException.validacao` (422) acima de 150, com teste unitário e `@QuarkusTest` pelo HTTP.
   3. O `LIMITE_NOME_COMUNIDADE` do `comunidades.service.ts` continua igual ao do backend.
 - **Prazo:** antes de liberar a criação de comunidade em produção para os alunos.
+
+## DT-6. Produção sem administrador e checklist do primeiro deploy
+
+- **Hoje:** o usuário `admin.teste@catolicasc.edu.br` é semeado só no contexto Liquibase `dev` (`identidade-008`). Em produção (`%prod...contexts=prod`) nenhum usuário tem o perfil `ADMINISTRADOR`, então `/admin` fica inalcançável. O Render ainda não foi configurado.
+- **Decisão:** o primeiro administrador é promovido à mão, uma única vez, sem código novo. Um changeset ou um bootstrap por variável de ambiente deixaria um caminho permanente de elevação de privilégio ou dependeria da conta já existir na hora da migration.
+- **Correção esperada (no primeiro deploy):**
+  1. Não definir `QUARKUS_LIQUIBASE_CONTEXTS` no Render. A variável vence o `application.properties` e, com `dev`, o seed com senha pública rodaria em produção.
+  2. Depois do primeiro deploy, conferir no banco que não existem `aluno.teste`, `moderador.teste` nem `admin.teste` (`SELECT email FROM usuario WHERE email LIKE '%.teste@%'`). Se existirem, apagar.
+  3. A pessoa responsável se cadastra pela tela normal e confirma o e-mail. Depois, no console do Neon: `UPDATE usuario SET perfil = 'ADMINISTRADOR' WHERE email = '<e-mail dela>';`. O perfil vale no próximo login.
+  4. Daí em diante, outros perfis passam a ser alterados pela tela de usuários (KAN-83).
+- **Prazo:** antes de abrir o sistema em produção.
