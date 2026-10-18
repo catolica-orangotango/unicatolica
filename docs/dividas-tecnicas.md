@@ -11,11 +11,11 @@ Problemas conhecidos que ainda não têm história nem PR. Quando um item virar 
 ## DT-3. Lista de cursos ainda não é mantida pelo administrador
 
 - **Hoje:** desde a decisão de 2026-09-30, o curso é a entidade `Curso` do módulo Identidade (migration `identidade-005`). O cadastro usa um `select` carregado de `GET /cursos`, público, e grava `usuario.curso_id`. Falta:
-  - **Cadastro de cursos:** a lista são os 26 cursos do seed, e ninguém cadastra, renomeia nem desativa curso, porque o papel ADMINISTRADOR ainda não existe no backend.
+  - **Cadastro de cursos:** a lista são os 26 cursos do seed, e ninguém cadastra, renomeia nem desativa curso, porque ainda não há endpoint de administração de cursos (o papel ADMINISTRADOR e a rota `/admin` já existem).
   - **Coluna antiga:** `usuario.curso` (texto) continua gravada com o nome oficial do curso, para quem só lê o nome (`UsuarioResumo`, Home, auto-join) não mudar. Renomear um curso deixaria essa cópia desatualizada.
   - **Vínculo com a comunidade:** o auto-join ainda casa curso e comunidade pelo nome, não pelo id.
 - **Correção esperada (KAN-44):**
-  - Papel ADMINISTRADOR e `POST`/`PUT /cursos`.
+  - `POST`/`PUT /cursos` para o ADMINISTRADOR, dentro de `/admin`.
   - Evento `CursoCadastrado`, que cria a comunidade de curso (Story 2.1).
   - Vínculo curso → comunidade pelo id.
   - Remoção da coluna `usuario.curso`.
@@ -36,3 +36,14 @@ Problemas conhecidos que ainda não têm história nem PR. Quando um item virar 
   2. `ComunidadeService` lança `ApiException.validacao` (422) acima de 150, com teste unitário e `@QuarkusTest` pelo HTTP.
   3. O `LIMITE_NOME_COMUNIDADE` do `comunidades.service.ts` continua igual ao do backend.
 - **Prazo:** antes de liberar a criação de comunidade em produção para os alunos.
+
+## DT-6. Produção sem administrador e checklist do primeiro deploy
+
+- **Hoje:** o usuário `admin.teste@catolicasc.edu.br` é semeado só no contexto Liquibase `dev` (`identidade-008`). Em produção (`%prod...contexts=prod`) nenhum usuário tem o perfil `ADMINISTRADOR`, então `/admin` fica inalcançável. O Render ainda não foi configurado.
+- **Decisão:** o primeiro administrador é promovido à mão, uma única vez, sem código novo. Um changeset ou um bootstrap por variável de ambiente deixaria um caminho permanente de elevação de privilégio ou dependeria da conta já existir na hora da migration.
+- **Correção esperada (no primeiro deploy):**
+  1. Não definir `QUARKUS_LIQUIBASE_CONTEXTS` no Render. A variável vence o `application.properties` e, com `dev`, o seed com senha pública rodaria em produção.
+  2. Depois do primeiro deploy, conferir no banco que não existem `aluno.teste`, `moderador.teste` nem `admin.teste` (`SELECT email FROM usuario WHERE email LIKE '%.teste@%'`). Se existirem, apagar.
+  3. A pessoa responsável se cadastra pela tela normal e confirma o e-mail. Depois, no console do Neon: `UPDATE usuario SET perfil = 'ADMINISTRADOR' WHERE email = '<e-mail dela>';`. O perfil vale no próximo login.
+  4. Daí em diante, outros perfis passam a ser alterados pela tela de usuários (KAN-83).
+- **Prazo:** antes de abrir o sistema em produção.

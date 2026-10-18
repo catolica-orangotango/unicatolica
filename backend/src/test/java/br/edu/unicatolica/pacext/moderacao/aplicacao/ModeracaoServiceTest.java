@@ -18,7 +18,9 @@ import static org.mockito.Mockito.when;
 import br.edu.unicatolica.pacext.compartilhado.auditoria.AuditoriaService;
 import br.edu.unicatolica.pacext.compartilhado.erro.ApiException;
 import br.edu.unicatolica.pacext.compartilhado.paginacao.PageResponse;
+import br.edu.unicatolica.pacext.compartilhado.seguranca.Perfis;
 import br.edu.unicatolica.pacext.compartilhado.seguranca.UsuarioAutenticado;
+import br.edu.unicatolica.pacext.compartilhado.seguranca.UsuariosDeTeste;
 import br.edu.unicatolica.pacext.moderacao.dominio.AcaoModeracao;
 import br.edu.unicatolica.pacext.moderacao.dominio.AcaoModeracaoRepository;
 import br.edu.unicatolica.pacext.moderacao.dominio.Denuncia;
@@ -58,15 +60,13 @@ class ModeracaoServiceTest {
         acaoRepository = mock(AcaoModeracaoRepository.class);
         publicacaoModeracao = mock(PublicacaoModeracao.class);
         auditoriaService = mock(AuditoriaService.class);
-        usuarioAutenticado = mock(UsuarioAutenticado.class);
+        usuarioAutenticado = UsuariosDeTeste.comPerfis(MODERADOR, Perfis.MODERADOR);
         service.denunciaRepository = denunciaRepository;
         service.acaoModeracaoRepository = acaoRepository;
         service.publicacaoModeracao = publicacaoModeracao;
         service.auditoriaService = auditoriaService;
         service.usuarioAutenticado = usuarioAutenticado;
 
-        when(usuarioAutenticado.possuiPerfil("MODERADOR")).thenReturn(true);
-        when(usuarioAutenticado.id()).thenReturn(MODERADOR);
         denuncia = denuncia(DENUNCIA);
         when(denunciaRepository.findByIdOptional(DENUNCIA)).thenReturn(Optional.of(denuncia));
         when(publicacaoModeracao.buscar(PUBLICACAO)).thenReturn(Optional.of(publicacao(false)));
@@ -104,13 +104,22 @@ class ModeracaoServiceTest {
 
     @Test
     void naoModeradorDa403EmTodaOperacao() {
-        when(usuarioAutenticado.possuiPerfil("MODERADOR")).thenReturn(false);
+        service.usuarioAutenticado = UsuariosDeTeste.comPerfis(MODERADOR, Perfis.ALUNO);
 
         assertCodigo(403, "ACESSO_NEGADO", () -> service.listar(null, 0, 20));
         assertCodigo(403, "ACESSO_NEGADO", () -> service.obter(DENUNCIA));
         assertCodigo(403, "ACESSO_NEGADO", () -> service.ocultar(DENUNCIA, "ofensivo"));
         assertCodigo(403, "ACESSO_NEGADO", () -> service.restaurar(DENUNCIA));
         assertCodigo(403, "ACESSO_NEGADO", () -> service.descartar(DENUNCIA, null));
+    }
+
+    @Test
+    void administradorPassaPelaChecagemEmTodaOperacao() {
+        service.usuarioAutenticado = UsuariosDeTeste.comPerfis(MODERADOR, Perfis.ADMINISTRADOR);
+        when(denunciaRepository.listarPorSituacao(any(), anyInt(), anyInt())).thenReturn(List.of());
+
+        assertEquals(0, service.listar(null, 0, 20).content().size());
+        assertEquals(DENUNCIA, service.obter(DENUNCIA).denuncia().id);
     }
 
     @Test

@@ -8,6 +8,7 @@ import br.edu.unicatolica.pacext.identidade.dominio.Usuario;
 import br.edu.unicatolica.pacext.identidade.dominio.UsuarioRepository;
 import br.edu.unicatolica.pacext.compartilhado.auditoria.AuditoriaService;
 import br.edu.unicatolica.pacext.compartilhado.erro.ApiException;
+import br.edu.unicatolica.pacext.compartilhado.seguranca.Perfis;
 import io.smallrye.jwt.build.Jwt;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.Event;
@@ -85,7 +86,7 @@ public class AuthService {
         usuario.totalLogins++;
         // Só ALUNO tem "perfil acadêmico" a completar (Story 4.3) — login de
         // MODERADOR/ADMINISTRADOR não dispara o gatilho de onboarding.
-        if ("ALUNO".equals(usuario.perfil)) {
+        if (Perfis.ALUNO.equals(usuario.perfil)) {
             loginRealizado.fire(new LoginRealizado(usuario.id, usuario.totalLogins));
         }
 

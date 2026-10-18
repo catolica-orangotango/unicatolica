@@ -12,6 +12,8 @@ interface NavItem {
   path: string | null;
   /** Só aparece para MODERADOR / ADMINISTRADOR. */
   privileged?: boolean;
+  /** Só aparece para ADMINISTRADOR. */
+  somenteAdministrador?: boolean;
   /** Só true no item "Suas comunidades" — expande a lista dinâmica logo abaixo dele. */
   expandeComunidades?: boolean;
   /** Só true em "Denúncias" — mostra o contador de pendentes (UJ-2, passo 1). */
@@ -21,9 +23,10 @@ interface NavItem {
 }
 
 /**
- * Itens da sidebar, na ordem exata da tabela "Navegação global" de
- * EXPERIENCE.md: Denúncias e Solicitações de fixação ficam entre "Criar
- * enquete" e "Suas comunidades", e só aparecem para MODERADOR / ADMINISTRADOR.
+ * Itens da sidebar, na ordem da tabela "Navegação global" de EXPERIENCE.md:
+ * Denúncias e Solicitações de fixação ficam entre "Criar enquete" e "Suas
+ * comunidades", e só aparecem para MODERADOR / ADMINISTRADOR. "Administração"
+ * fica no fim e só aparece para ADMINISTRADOR.
  * "Início", "Descobrir comunidades" (Epic 2) e "Denúncias" (Epic 12) têm rota; o resto entra
  * conforme cada epic aterrissa. "Suas comunidades" não vira rota própria —
  * é só o cabeçalho da lista dinâmica (ver {@link Shell.minhasComunidades}).
@@ -38,6 +41,7 @@ const NAV_ITENS: readonly NavItem[] = [
   { label: 'Solicitações de fixação', path: null, privileged: true },
   { label: 'Suas comunidades', path: null, expandeComunidades: true },
   { label: 'Descobrir comunidades', path: '/comunidades' },
+  { label: 'Administração', path: '/admin', somenteAdministrador: true },
 ];
 
 @Component({
@@ -86,6 +90,8 @@ export class Shell {
   protected readonly ehPrivilegiado = computed(
     () => this.auth.possuiPerfil('MODERADOR') || this.auth.possuiPerfil('ADMINISTRADOR'),
   );
+
+  protected readonly ehAdministrador = computed(() => this.auth.possuiPerfil('ADMINISTRADOR'));
 
   constructor() {
     // Best-effort: a sidebar não é o lugar de mostrar erro de rede — em caso de
