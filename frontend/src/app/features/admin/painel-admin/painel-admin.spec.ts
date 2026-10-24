@@ -25,4 +25,11 @@ describe('PainelAdmin', () => {
     const link = el.querySelector('a[href="/admin/cursos"]');
     expect(link?.textContent?.trim()).toBe('Cursos');
   });
+
+  it('oferece o atalho para a tela de usuários', async () => {
+    const el = await montar();
+
+    const atalho = el.querySelector('a[href="/admin/usuarios"]');
+    expect(atalho?.textContent?.trim()).toBe('Usuários');
+  });
 });

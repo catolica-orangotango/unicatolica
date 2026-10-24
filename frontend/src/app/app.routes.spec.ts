@@ -23,6 +23,9 @@ class AuthStub {
     return perfil !== undefined && this.perfis.includes(perfil);
   }
   logout(): void {}
+  usuarioId(): number | null {
+    return null;
+  }
   // Épico 2: Shell agora injeta ComunidadesService, que chama isto pra montar o
   // header de toda chamada autenticada — sem o stub aqui, o Shell nem instancia.
   obterCabecalhoAutorizacao(): Record<string, string> {
@@ -78,6 +81,28 @@ describe('app.routes - wiring do auth guard sobre a tabela real de rotas', () =>
 
     expect(TestBed.inject(Router).url).toBe('/admin');
     expect(harness.fixture.nativeElement.querySelector('app-painel-admin')).toBeTruthy();
+  });
+
+  it('/admin/usuarios: ADMINISTRADOR abre a tela de usuários dentro da casca', async () => {
+    auth.token = 'token-fake';
+    auth.perfis = ['ADMINISTRADOR'];
+    const harness = await RouterTestingHarness.create();
+
+    await harness.navigateByUrl('/admin/usuarios');
+    harness.detectChanges();
+
+    expect(TestBed.inject(Router).url).toBe('/admin/usuarios');
+    expect(harness.fixture.nativeElement.querySelector('app-usuarios')).toBeTruthy();
+  });
+
+  it.each(['ALUNO', 'MODERADOR'])('/admin/usuarios: %s volta para /feed', async (perfil) => {
+    auth.token = 'token-fake';
+    auth.perfis = [perfil];
+    const harness = await RouterTestingHarness.create();
+
+    await harness.navigateByUrl('/admin/usuarios');
+
+    expect(TestBed.inject(Router).url).toBe('/feed');
   });
 
   it.each(['ALUNO', 'MODERADOR'])('/admin: %s volta para /feed', async (perfil) => {
