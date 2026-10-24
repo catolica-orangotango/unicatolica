@@ -73,7 +73,7 @@ Revisão humana **não é obrigatória** para merge (decisão do time, AD-8) —
 | [`docs/produto/contexto-pacext.md`](docs/produto/contexto-pacext.md) | Relatório do PAC Extensionista — 80 requisitos funcionais, 9 não funcionais, riscos, C4 |
 | [`docs/produto/prd.md`](docs/produto/prd.md) | PRD — visão, personas, jornadas de usuário, métricas de sucesso |
 | [`docs/arquitetura.md`](docs/arquitetura.md) | Decisões de arquitetura, stack, convenções, diagramas |
-| [`docs/produto/ux-experiencia.md`](docs/produto/ux-experiencia.md) / [`ux-design.md`](docs/produto/ux-design.md) | Fluxos de UX e sistema de design (Campus Clean) |
+| [`docs/produto/ux-experiencia.md`](docs/produto/ux-experiencia.md) / [`DESIGN.md`](DESIGN.md) | Fluxos de UX e sistema de design (Campus Clean) |
 | [`docs/produto/artefatos-visuais.md`](docs/produto/artefatos-visuais.md) | Links para os protótipos e decks interativos |
 | [`_bmad-output/planning-artifacts/epics.md`](_bmad-output/planning-artifacts/epics.md) | Épicos e histórias, com corte de escopo da semana 1 |
 

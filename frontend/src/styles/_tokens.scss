@@ -1,11 +1,10 @@
 // UniCatolica - Campus Clean design tokens (Story 14.1).
 //
 // Single source of truth for palette, type scale, spacing and radius.
-// Every value is copied verbatim from
-// _bmad-output/planning-artifacts/ux-designs/ux-unicatolica-2026-08-17/DESIGN.md
-// (frontmatter `colors` / `typography` / `rounded` / `spacing`), except
-// --uc-shadow-overlay, which comes from that doc's prose section
-// "Elevation & Depth" and is canonicalized here.
+// Every value mirrors the root DESIGN.md (frontmatter `colors` /
+// `typography` / `rounded` / `spacing`), except --uc-shadow-overlay, which
+// comes from that doc's prose section "Elevation & Depth". The original
+// planning copy lived in _bmad-output/.../ux-unicatolica-2026-08-17/DESIGN.md.
 //
 // Names mirror the DESIGN.md role names with no translation layer. Consumers
 // (Stories 14.2 / 14.7 and later feature epics) read these via `var(--uc-*)`

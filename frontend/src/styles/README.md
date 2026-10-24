@@ -2,8 +2,8 @@
 
 Esta pasta e a **fonte unica** de valores de design do frontend: paleta, escala
 tipografica, espacamento, raio e a sombra de overlay. Tudo vem, verbatim, do
-`DESIGN.md` do UX ("Campus Clean"):
-`_bmad-output/planning-artifacts/ux-designs/ux-unicatolica-2026-08-17/DESIGN.md`.
+`DESIGN.md` da raiz do repositorio ("Campus Clean"), a fonte unica do sistema
+visual. Mudou um valor la, muda aqui no mesmo PR.
 
 ## Arquivos
 

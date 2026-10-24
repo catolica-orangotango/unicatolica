@@ -1,0 +1,339 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-24T19:08:26+00:00",
+  "title": "Design System: UniCatólica (Campus Clean)",
+  "extensions": {
+    "colorMeta": {
+      "bg": {
+        "role": "neutral",
+        "displayName": "Papel",
+        "canonical": "oklch(98.5% 0.003 106.4)",
+        "tonalRamp": [
+          "#0B0B0A",
+          "#242423",
+          "#40403E",
+          "#5E5E5C",
+          "#7D7D7B",
+          "#9E9E9D",
+          "#C4C4C2",
+          "#EEEEEC"
+        ]
+      },
+      "surface": {
+        "role": "neutral",
+        "displayName": "Branco Card",
+        "canonical": "oklch(100.0% 0.000 89.9)",
+        "tonalRamp": [
+          "#0B0B0B",
+          "#242424",
+          "#404040",
+          "#5D5D5D",
+          "#7D7D7D",
+          "#9E9E9E",
+          "#C4C4C4",
+          "#EEEEEE"
+        ]
+      },
+      "border": {
+        "role": "neutral",
+        "displayName": "Linha Fina",
+        "canonical": "oklch(93.6% 0.005 106.5)",
+        "tonalRamp": [
+          "#0B0B09",
+          "#242421",
+          "#40403D",
+          "#5E5E5A",
+          "#7D7D7A",
+          "#9F9F9B",
+          "#C4C4C0",
+          "#EFEFEB"
+        ]
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Tinta",
+        "canonical": "oklch(22.6% 0.004 106.7)",
+        "tonalRamp": [
+          "#0B0B09",
+          "#242422",
+          "#40403E",
+          "#5E5E5B",
+          "#7D7D7B",
+          "#9E9E9C",
+          "#C4C4C1",
+          "#EFEFEC"
+        ]
+      },
+      "ink-soft": {
+        "role": "neutral",
+        "displayName": "Tinta Suave",
+        "canonical": "oklch(52.6% 0.008 106.7)",
+        "tonalRamp": [
+          "#0B0B08",
+          "#242420",
+          "#40403B",
+          "#5E5E59",
+          "#7E7E78",
+          "#9F9F99",
+          "#C4C4BF",
+          "#EFEFE9"
+        ]
+      },
+      "ink-faint": {
+        "role": "neutral",
+        "displayName": "Tinta Leve",
+        "canonical": "oklch(53.6% 0.009 106.7)",
+        "tonalRamp": [
+          "#0C0B07",
+          "#24241F",
+          "#40403B",
+          "#5E5E58",
+          "#7E7E78",
+          "#9F9F98",
+          "#C4C5BE",
+          "#EFEFE8"
+        ]
+      },
+      "maroon": {
+        "role": "secondary",
+        "displayName": "Bordô Católica",
+        "canonical": "oklch(39.1% 0.125 17.9)",
+        "tonalRamp": [
+          "#1E0003",
+          "#490210",
+          "#731826",
+          "#973A42",
+          "#BC5B61",
+          "#E17C81",
+          "#FFA9AC",
+          "#FEE9E9"
+        ]
+      },
+      "orange": {
+        "role": "primary",
+        "displayName": "Laranja Tijolo",
+        "canonical": "oklch(55.4% 0.160 41.3)",
+        "tonalRamp": [
+          "#1A0400",
+          "#411301",
+          "#6B2708",
+          "#9D3905",
+          "#C85423",
+          "#EF7748",
+          "#FFAD8F",
+          "#FEEAE2"
+        ]
+      },
+      "orange-tint": {
+        "role": "primary",
+        "displayName": "Pêssego Suave",
+        "canonical": "oklch(95.9% 0.020 50.2)",
+        "tonalRamp": [
+          "#120905",
+          "#2C211C",
+          "#493D37",
+          "#675B54",
+          "#877A73",
+          "#A99B94",
+          "#CFC1B9",
+          "#FAEBE3"
+        ]
+      },
+      "green-ok": {
+        "role": "tertiary",
+        "displayName": "Verde Confirmação",
+        "canonical": "oklch(53.6% 0.087 160.0)",
+        "tonalRamp": [
+          "#000F07",
+          "#022C1A",
+          "#0B4C31",
+          "#286C4C",
+          "#4B8D6B",
+          "#6CAF8C",
+          "#92D6B1",
+          "#C6FEDE"
+        ]
+      },
+      "error": {
+        "role": "tertiary",
+        "displayName": "Vermelho Alerta",
+        "canonical": "oklch(50.1% 0.178 28.7)",
+        "tonalRamp": [
+          "#1F0000",
+          "#4B0101",
+          "#7A0907",
+          "#AC1D17",
+          "#D2463A",
+          "#F96A5B",
+          "#FCADA1",
+          "#FEE9E5"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "greeting": {
+        "displayName": "Greeting",
+        "purpose": "Saudação do Início e título de tela."
+      },
+      "question": {
+        "displayName": "Question",
+        "purpose": "Título de card, pergunta de enquete, título de seção."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Corpo de postagem, campos, navegação, botão primário."
+      },
+      "meta": {
+        "displayName": "Meta",
+        "purpose": "Timestamps, contagens, labels, badges, botão secundário."
+      },
+      "label-caps": {
+        "displayName": "Label Caps",
+        "purpose": "Rótulos de seção em caixa alta; único uso do peso 700."
+      }
+    },
+    "shadows": [
+      {
+        "name": "overlay",
+        "value": "0 8px 24px rgba(0, 0, 0, 0.08)",
+        "purpose": "Dropdown do avatar, painel de notificações e toast."
+      }
+    ],
+    "motion": [
+      {
+        "name": "fade-150",
+        "value": "150ms ease-out",
+        "purpose": "Entrada de dropdown, painel e toast; desligada em prefers-reduced-motion."
+      },
+      {
+        "name": "toast-duration",
+        "value": "4000ms",
+        "purpose": "Tempo até o toast sumir sozinho (TOAST_DURACAO_MS)."
+      }
+    ],
+    "breakpoints": []
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "A única ação forte da tela: Participar, Publicar, Entrar.",
+      "html": "<button class=\"ds-btn-primary\" type=\"button\">Participar</button>",
+      "css": ".ds-btn-primary { border: 0; border-radius: var(--uc-radius-full, 9999px); background: var(--uc-color-orange, #BC4913); color: var(--uc-color-surface, #FFFFFF); padding: 4px 16px; font-family: var(--uc-font-family-base, -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif); font-size: var(--uc-font-size-body, 13.5px); font-weight: 600; cursor: pointer; } .ds-btn-primary:focus-visible { outline: 2px solid var(--uc-color-maroon, #7A1F2B); outline-offset: 2px; } .ds-btn-primary:disabled { opacity: .5; cursor: not-allowed; }"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Ação secundária: pill de borda, nunca uma segunda cor preenchida.",
+      "html": "<button class=\"ds-btn-secondary\" type=\"button\">Cancelar</button>",
+      "css": ".ds-btn-secondary { border: 1px solid var(--uc-color-border, #EAEAE6); border-radius: var(--uc-radius-full, 9999px); background: transparent; color: var(--uc-color-ink, #1C1C1A); padding: 8px 16px; font-family: var(--uc-font-family-base, -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif); font-size: var(--uc-font-size-meta, 12px); font-weight: 600; cursor: pointer; } .ds-btn-secondary:hover { background: var(--uc-color-surface, #FFFFFF); } .ds-btn-secondary:focus-visible { outline: 2px solid var(--uc-color-maroon, #7A1F2B); outline-offset: 2px; } .ds-btn-secondary:disabled { opacity: .6; cursor: not-allowed; }"
+    },
+    {
+      "name": "Text Field",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Campo de formulário com label acima.",
+      "html": "<label class=\"ds-field\"><span class=\"ds-field__label\">E-mail institucional</span><input class=\"ds-field__input\" placeholder=\"nome@catolicasc.edu.br\"></label>",
+      "css": ".ds-field { display: flex; flex-direction: column; gap: 2px; font-family: var(--uc-font-family-base, -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif); } .ds-field__label { font-size: var(--uc-font-size-meta, 12px); font-weight: 600; color: var(--uc-color-ink, #1C1C1A); } .ds-field__input { padding: 8px 10px; border: 1px solid var(--uc-color-border, #EAEAE6); border-radius: var(--uc-radius-default, 8px); background: var(--uc-color-surface, #FFFFFF); color: var(--uc-color-ink, #1C1C1A); font: inherit; font-size: var(--uc-font-size-body, 13.5px); } .ds-field__input::placeholder { color: var(--uc-color-ink-soft, #6B6B66); } .ds-field__input:focus-visible { outline: 2px solid var(--uc-color-maroon, #7A1F2B); outline-offset: 2px; }"
+    },
+    {
+      "name": "Sidebar Navigation",
+      "kind": "nav",
+      "refersTo": "nav-item-active",
+      "description": "Itens da navegação global: padrão, ativo e comunidade de curso.",
+      "html": "<nav class=\"ds-nav\"><a class=\"ds-nav__item ds-nav__item--active\" href=\"#\">Início</a><a class=\"ds-nav__item\" href=\"#\">Buscar</a><a class=\"ds-nav__item\" href=\"#\">Denúncias</a><a class=\"ds-nav__com\" href=\"#\"><span class=\"ds-nav__dot\"></span>Engenharia de Software</a></nav>",
+      "css": ".ds-nav { display: flex; flex-direction: column; gap: 2px; width: 220px; padding: 12px; background: var(--uc-color-bg, #FAFAF8); font-family: var(--uc-font-family-base, -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif); } .ds-nav__item { padding: 8px 10px; border-radius: var(--uc-radius-default, 8px); color: var(--uc-color-ink-soft, #6B6B66); font-size: var(--uc-font-size-body, 13.5px); text-decoration: none; } .ds-nav__item:hover { background: var(--uc-color-orange-tint, #FDEEE6); } .ds-nav__item--active { background: var(--uc-color-orange-tint, #FDEEE6); color: var(--uc-color-orange, #BC4913); font-weight: 600; } .ds-nav__item:focus-visible, .ds-nav__com:focus-visible { outline: 2px solid var(--uc-color-maroon, #7A1F2B); outline-offset: 2px; } .ds-nav__com { display: flex; align-items: center; gap: 10px; padding: 6px 10px; border-radius: var(--uc-radius-sm, 6px); color: var(--uc-color-ink-soft, #6B6B66); font-size: var(--uc-font-size-meta, 12px); text-decoration: none; } .ds-nav__com:hover { background: var(--uc-color-orange-tint, #FDEEE6); } .ds-nav__dot { width: 8px; height: 8px; border-radius: 9999px; background: var(--uc-color-maroon, #7A1F2B); }"
+    },
+    {
+      "name": "Community Badges",
+      "kind": "chip",
+      "refersTo": "badge-course",
+      "description": "Badge de comunidade de curso (bordô) e aberta (laranja); nunca as duas cores juntas.",
+      "html": "<span class=\"ds-badge ds-badge--course\">Curso</span> <span class=\"ds-badge ds-badge--open\">Aberta</span>",
+      "css": ".ds-badge { display: inline-block; border-radius: var(--uc-radius-full, 9999px); background: var(--uc-color-orange-tint, #FDEEE6); padding: 2px 8px; font-family: var(--uc-font-family-base, -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif); font-size: var(--uc-font-size-meta, 12px); font-weight: 600; } .ds-badge--course { color: var(--uc-color-maroon, #7A1F2B); } .ds-badge--open { color: var(--uc-color-orange, #BC4913); }"
+    },
+    {
+      "name": "Content Card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "Card genérico de postagem: borda, nunca sombra.",
+      "html": "<article class=\"ds-card\"><p class=\"ds-card__meta\">Luis · Engenharia de Software · há 2 h</p><h3 class=\"ds-card__title\">Alguém tem o resumo de Estruturas de Dados?</h3><p class=\"ds-card__body\">Prova semana que vem, queria revisar listas encadeadas.</p></article>",
+      "css": ".ds-card { max-width: 480px; background: var(--uc-color-surface, #FFFFFF); border: 1px solid var(--uc-color-border, #EAEAE6); border-radius: var(--uc-radius-md, 12px); padding: var(--uc-space-card-padding, 18px); font-family: var(--uc-font-family-base, -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif); color: var(--uc-color-ink, #1C1C1A); } .ds-card__meta { margin: 0 0 6px; font-size: var(--uc-font-size-meta, 12px); color: var(--uc-color-ink-soft, #6B6B66); } .ds-card__title { margin: 0 0 4px; font-size: var(--uc-font-size-question, 15px); font-weight: 600; } .ds-card__body { margin: 0; font-size: var(--uc-font-size-body, 13.5px); line-height: 1.5; }"
+    },
+    {
+      "name": "Member Indicator",
+      "kind": "custom",
+      "refersTo": "member-indicator",
+      "description": "Substitui o Participar depois que o usuário entra; texto e ícone, sem fundo.",
+      "html": "<span class=\"ds-member\"><svg viewBox=\"0 0 16 16\" width=\"13\" height=\"13\" aria-hidden=\"true\"><path d=\"M3 8.5l3 3 7-7\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/></svg>Membro</span>",
+      "css": ".ds-member { display: inline-flex; align-items: center; gap: 6px; color: var(--uc-color-green-ok, #3A7D5C); font-family: var(--uc-font-family-base, -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif); font-size: var(--uc-font-size-meta, 12px); font-weight: 600; }"
+    },
+    {
+      "name": "Toast",
+      "kind": "custom",
+      "refersTo": "toast",
+      "description": "Confirmação que some sozinha em 4 s, no canto inferior direito.",
+      "html": "<div class=\"ds-toast\" role=\"status\"><svg viewBox=\"0 0 16 16\" width=\"13\" height=\"13\" aria-hidden=\"true\"><path d=\"M3 8.5l3 3 7-7\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/></svg>Você entrou em Atlética de Engenharia</div>",
+      "css": ".ds-toast { display: inline-flex; align-items: center; gap: 8px; padding: 12px 16px; max-width: 360px; background: var(--uc-color-surface, #FFFFFF); border: 1px solid var(--uc-color-border, #EAEAE6); border-radius: var(--uc-radius-md, 12px); box-shadow: var(--uc-shadow-overlay, 0 8px 24px rgba(0,0,0,.08)); color: var(--uc-color-ink, #1C1C1A); font-family: var(--uc-font-family-base, -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif); font-size: var(--uc-font-size-body, 13.5px); animation: ds-toast-in 150ms ease-out; } .ds-toast svg { color: var(--uc-color-green-ok, #3A7D5C); flex: none; } @keyframes ds-toast-in { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } } @media (prefers-reduced-motion: reduce) { .ds-toast { animation: none; } }"
+    }
+  ],
+  "narrative": {
+    "northStar": "Produtividade Calma",
+    "overview": "**Creative North Star: \"Produtividade Calma\"**\n\nA UniCatólica parece um app de produtividade sereno, não um portal de notícias nem uma rede social barulhenta. O aluno entra entre uma aula e outra para ver o que a turma postou, votar numa enquete ou achar um material, e a interface sai do caminho: canvas quase branco, cards de baixo contraste delimitados por borda fina, uma única cor de ação usada com parcimônia. O moderador, que volta todo dia para a fila de denúncias, encontra a mesma calma, e decide com clareza porque nada na tela grita.\n\nA hierarquia vem de tamanho, peso e espaço, nunca de caixa-alta pesada, cor de fundo ou sombra. A identidade da CatólicaSC está presente, mas em traços: o marcador da marca, o ponto de uma comunidade de curso, o anel de foco. Essa é a principal ruptura com o protótipo Figma original, que usava o bordô como fundo dominante de tela, no estilo de portal de notícias; o sistema abandonou isso de propósito, assim como as formas orgânicas desfocadas do fundo do login antigo.\n\nA densidade é média e o texto é pequeno (corpo de 13.5px): é uma ferramenta de leitura rápida e recorrente, não uma página de leitura longa. Modo escuro está fora do MVP.",
+    "keyCharacteristics": [
+      "Canvas quase branco e cards brancos com borda de 1px, sem sombra.",
+      "Uma cor de ação (Laranja Tijolo), no máximo uma vez por tela.",
+      "Bordô Católica só como traço ou ícone, nunca como fundo de bloco.",
+      "Pilha de fontes do sistema, pesos 400 e 600 apenas (700 só em label em caixa alta).",
+      "Formas em pill para ações e badges; cantos moderados para cards e campos.",
+      "Contraste mínimo de 4.5:1 em todo texto (WCAG 2.2 AA), verificado por axe no CI."
+    ],
+    "rules": [
+      {
+        "name": "The One Orange Rule",
+        "body": "Laranja Tijolo aparece em no máximo uma ação por tela. Se duas coisas disputam \"este é o botão importante\", uma delas está errada e vira botão secundário ou link.",
+        "section": "colors"
+      },
+      {
+        "name": "The Trace Rule",
+        "body": "Bordô Católica é traço, nunca parede. Nenhum bloco maior que um avatar recebe bordô de fundo.",
+        "section": "colors"
+      },
+      {
+        "name": "The 4.5 Rule",
+        "body": "Todo texto tem razão de contraste de pelo menos 4.5:1 sobre `bg`, `surface` e `orange-tint`. Nenhuma cor fora dos tokens entra numa tela; o `scss-guard.spec.ts` quebra o build com um hex literal.",
+        "section": "colors"
+      },
+      {
+        "name": "The Two Weights Rule",
+        "body": "Ênfase é 600, todo o resto é 400. O 700 existe só para `label-caps`, e nada passa de 700. Peso pesado e caixa-alta em título eram a assinatura do protótipo antigo.",
+        "section": "typography"
+      },
+      {
+        "name": "The Border-Not-Shadow Rule",
+        "body": "Conteúdo em repouso usa borda, não sombra. Sombra é só para o que está por cima de outra coisa, e nunca mais de um elemento com sombra na mesma tela ao mesmo tempo.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do consumir só `var(--uc-*)` e as classes `.uc-text-*`; um valor novo entra primeiro neste arquivo e em `_tokens.scss`, nunca como literal na tela.",
+      "Do usar Laranja Tijolo para no máximo uma ação por tela, e botão secundário ou link para o resto.",
+      "Do manter Bordô Católica como traço, ponto, ícone ou anel de foco.",
+      "Do usar Verde Confirmação para qualquer confirmação positiva, sempre com texto ao lado.",
+      "Do separar superfícies com borda de 1px em Linha Fina e a troca de Papel para Branco Card.",
+      "Do dar a toda animação um fallback em `prefers-reduced-motion` e manter a duração em 150ms.",
+      "Do adicionar a tela nova ao teste de axe em `frontend/e2e/acessibilidade.spec.ts`."
+    ],
+    "donts": [
+      "Don't usar bordô (ou qualquer cor saturada) como fundo dominante de tela; é o que o sistema rejeitou do protótipo original.",
+      "Don't usar caixa-alta pesada, tipografia condensada ou peso acima de 600 em títulos.",
+      "Don't pôr sombra em card de conteúdo nem empilhar mais de um elemento com sombra na mesma tela.",
+      "Don't preencher um bloco de vermelho para erro; erro é texto e borda.",
+      "Don't usar Pêssego Suave como cor de texto, nem Tinta Leve para texto que precisa ser lido com atenção.",
+      "Don't reintroduzir as formas orgânicas desfocadas do fundo do login antigo ou outros elementos gráficos decorativos.",
+      "Don't criar token de modo escuro sem renegociar o escopo do MVP."
+    ]
+  }
+}
