@@ -8,6 +8,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.time.Instant;
 import java.time.LocalDate;
+import org.hibernate.annotations.Formula;
 
 /**
  * Usuário do módulo Identidade e Acesso (RF05-RF13) — dono exclusivo da tabela
@@ -40,22 +41,18 @@ public class Usuario {
     @Column(name = "email_confirmado", nullable = false)
     public boolean emailConfirmado;
 
-    /**
-     * Texto informado no cadastro (Story 1.2, RF24.1) — casado em runtime pelo módulo
-     * Comunidades contra {@code comunidade.nome} onde {@code tipo='CURSO'}. Coluna
-     * adicionada em {@code identidade-003-add-cadastro-fields.xml} (a tabela original,
-     * identidade-001, não a tinha).
-     */
     /** Id de {@code curso} (mesmo módulo) — fonte de verdade do curso do aluno desde {@code identidade-005}. */
     @Column(name = "curso_id")
     public Long cursoId;
 
     /**
-     * Nome oficial do curso de {@link #cursoId}, mantido junto para quem só lê o nome
-     * ({@code UsuarioResumo}, Home, auto-join por nome). Remoção no KAN-44.
+     * Nome atual do curso de {@link #cursoId}, lido do banco junto com o usuário (só leitura:
+     * a cópia em texto saiu na {@code identidade-010}, então renomear o curso vale para todos).
+     * A fórmula só é calculada ao carregar; depois de mudar {@link #cursoId} na mesma
+     * transação, quem muda atribui este campo à mão.
      */
-    @Column(name = "curso", length = 150)
-    public String curso;
+    @Formula("(select c.nome from curso c where c.id = curso_id)")
+    public String cursoNome;
 
     /** Usado para validar idade mínima no cadastro (Story 1.2, RF01.1). */
     @Column(name = "data_nascimento")

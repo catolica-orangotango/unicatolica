@@ -7,9 +7,9 @@ package br.edu.unicatolica.pacext.identidade;
  *
  * <p>Observer síncrono roda na mesma transação: uma exceção nele desfaz a alteração.</p>
  *
- * @param usuarioId     id do usuário
- * @param cursoAnterior nome do curso anterior, ou {@code null} se o usuário não tinha curso
- * @param cursoNovo     nome do novo curso
+ * @param usuarioId       id do usuário
+ * @param cursoAnteriorId id do curso anterior, ou {@code null} se o usuário não tinha curso
+ * @param cursoNovoId     id do novo curso
  */
-public record CursoDoUsuarioAlterado(Long usuarioId, String cursoAnterior, String cursoNovo) {
+public record CursoDoUsuarioAlterado(Long usuarioId, Long cursoAnteriorId, Long cursoNovoId) {
 }

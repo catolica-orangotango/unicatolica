@@ -61,6 +61,14 @@ export const routes: Routes = [
           import('./features/admin/painel-admin/painel-admin').then((m) => m.PainelAdmin),
       },
       {
+        // Tela "Cursos" da administração (KAN-44): cadastrar, renomear e desativar cursos.
+        path: 'admin/cursos',
+        title: 'Cursos',
+        canActivate: [adminGuard],
+        loadComponent: () =>
+          import('./features/admin/cursos-admin/cursos-admin').then((m) => m.CursosAdmin),
+      },
+      {
         // Fila de denúncias do moderador (Stories 12.4/12.5) — URL do mockup key-denuncias.
         path: 'moderacao/denuncias',
         title: 'Denúncias',

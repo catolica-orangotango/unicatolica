@@ -4,21 +4,8 @@ Problemas conhecidos que ainda não têm história nem PR. Quando um item virar 
 
 | # | Dívida | Estado |
 |---|---|---|
-| DT-3 | Lista de cursos ainda não é mantida pelo administrador | KAN-44 |
 | DT-4 | E-mail de confirmação do cadastro não chega ao usuário | Código pronto; falta configurar a Brevo no Render |
 | DT-5 | Nome de comunidade sem limite de tamanho no backend | Aberta |
-
-## DT-3. Lista de cursos ainda não é mantida pelo administrador
-
-- **Hoje:** desde a decisão de 2026-09-30, o curso é a entidade `Curso` do módulo Identidade (migration `identidade-005`). O cadastro usa um `select` carregado de `GET /cursos`, público, e grava `usuario.curso_id`. Falta:
-  - **Cadastro de cursos:** a lista são os 26 cursos do seed, e ninguém cadastra, renomeia nem desativa curso, porque ainda não há endpoint de administração de cursos (o papel ADMINISTRADOR e a rota `/admin` já existem).
-  - **Coluna antiga:** `usuario.curso` (texto) continua gravada com o nome oficial do curso, para quem só lê o nome (`UsuarioResumo`, Home, auto-join) não mudar. Renomear um curso deixaria essa cópia desatualizada.
-  - **Vínculo com a comunidade:** o auto-join ainda casa curso e comunidade pelo nome, não pelo id.
-- **Correção esperada (KAN-44):**
-  - `POST`/`PUT /cursos` para o ADMINISTRADOR, dentro de `/admin`.
-  - Evento `CursoCadastrado`, que cria a comunidade de curso (Story 2.1).
-  - Vínculo curso → comunidade pelo id.
-  - Remoção da coluna `usuario.curso`.
 
 ## DT-4. E-mail de confirmação do cadastro não chega ao usuário
 

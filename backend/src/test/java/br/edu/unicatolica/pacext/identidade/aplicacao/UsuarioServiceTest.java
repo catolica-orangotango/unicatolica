@@ -41,7 +41,7 @@ class UsuarioServiceTest {
         Usuario usuario = new Usuario();
         usuario.id = id;
         usuario.nome = nome;
-        usuario.curso = curso;
+        usuario.cursoNome = curso;
         return usuario;
     }
 

@@ -55,7 +55,7 @@ public class UsuarioService implements UsuarioConsulta, SessaoConsulta {
             return Map.of();
         }
         return usuarioRepository.buscarPorIds(ids).stream()
-                .map(u -> new UsuarioResumo(u.id, u.nome, u.curso))
+                .map(u -> new UsuarioResumo(u.id, u.nome, u.cursoNome))
                 .collect(Collectors.toMap(UsuarioResumo::id, Function.identity()));
     }
 

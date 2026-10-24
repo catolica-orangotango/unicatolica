@@ -19,10 +19,15 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
-/** Testa {@link AutoJoinCursoServiceImpl} isoladamente com Mockito — critérios da Story 2.3 (RF24.1). */
+/**
+ * Testa {@link AutoJoinCursoServiceImpl} isoladamente com Mockito — critérios da Story 2.3
+ * (RF24.1). Desde o KAN-44 a comunidade de curso é achada pelo id do curso, não pelo nome.
+ */
 class AutoJoinCursoServiceImplTest {
 
     private static final Long USUARIO_ID = 42L;
+    private static final Long CURSO_ADMINISTRACAO = 1L;
+    private static final Long CURSO_ENGENHARIA = 14L;
 
     private AutoJoinCursoServiceImpl service;
     private ComunidadeRepository comunidadeRepository;
@@ -37,22 +42,22 @@ class AutoJoinCursoServiceImplTest {
         service.comunidadeMembroRepository = comunidadeMembroRepository;
     }
 
-    private Comunidade comunidadeCurso(String nome) {
+    private Comunidade comunidadeCurso(String nome, Long cursoId) {
         Comunidade comunidade = new Comunidade();
         comunidade.id = 1L;
         comunidade.nome = nome;
         comunidade.tipo = TipoComunidade.CURSO;
+        comunidade.cursoId = cursoId;
         return comunidade;
     }
 
     @Test
     void associaAoDefinirCursoPelaPrimeiraVez() {
-        Comunidade comunidade = comunidadeCurso("Engenharia de Software");
-        when(comunidadeRepository.buscarPorTipoENome(TipoComunidade.CURSO, "Engenharia de Software"))
-                .thenReturn(Optional.of(comunidade));
+        Comunidade comunidade = comunidadeCurso("Engenharia de Software", CURSO_ENGENHARIA);
+        when(comunidadeRepository.buscarAtivaPorCursoId(CURSO_ENGENHARIA)).thenReturn(Optional.of(comunidade));
         when(comunidadeMembroRepository.existeAssociacao(comunidade, USUARIO_ID)).thenReturn(false);
 
-        service.sincronizarCursoDoAluno(USUARIO_ID, null, "Engenharia de Software");
+        service.sincronizarCursoDoAluno(USUARIO_ID, null, CURSO_ENGENHARIA);
 
         ArgumentCaptor<ComunidadeMembro> captor = ArgumentCaptor.forClass(ComunidadeMembro.class);
         verify(comunidadeMembroRepository).persist(captor.capture());
@@ -63,37 +68,33 @@ class AutoJoinCursoServiceImplTest {
 
     @Test
     void naoDuplicaAssociacaoQuandoJaEMembro() {
-        Comunidade comunidade = comunidadeCurso("Engenharia de Software");
-        when(comunidadeRepository.buscarPorTipoENome(TipoComunidade.CURSO, "Engenharia de Software"))
-                .thenReturn(Optional.of(comunidade));
+        Comunidade comunidade = comunidadeCurso("Engenharia de Software", CURSO_ENGENHARIA);
+        when(comunidadeRepository.buscarAtivaPorCursoId(CURSO_ENGENHARIA)).thenReturn(Optional.of(comunidade));
         when(comunidadeMembroRepository.existeAssociacao(comunidade, USUARIO_ID)).thenReturn(true);
 
-        service.sincronizarCursoDoAluno(USUARIO_ID, null, "Engenharia de Software");
+        service.sincronizarCursoDoAluno(USUARIO_ID, null, CURSO_ENGENHARIA);
 
         verify(comunidadeMembroRepository, never()).persist(any(ComunidadeMembro.class));
     }
 
     @Test
-    void naoFalhaQuandoComunidadeDeCursoAindaNaoExiste() {
-        when(comunidadeRepository.buscarPorTipoENome(TipoComunidade.CURSO, "Curso Inexistente"))
-                .thenReturn(Optional.empty());
+    void naoFalhaQuandoCursoAindaNaoTemComunidade() {
+        when(comunidadeRepository.buscarAtivaPorCursoId(999L)).thenReturn(Optional.empty());
 
-        service.sincronizarCursoDoAluno(USUARIO_ID, null, "Curso Inexistente");
+        service.sincronizarCursoDoAluno(USUARIO_ID, null, 999L);
 
         verify(comunidadeMembroRepository, never()).persist(any(ComunidadeMembro.class));
     }
 
     @Test
     void trocaDeComunidadeAoAlterarCurso() {
-        Comunidade cursoAntigo = comunidadeCurso("Administração");
-        Comunidade cursoNovo = comunidadeCurso("Engenharia de Software");
-        when(comunidadeRepository.buscarPorTipoENome(TipoComunidade.CURSO, "Administração"))
-                .thenReturn(Optional.of(cursoAntigo));
-        when(comunidadeRepository.buscarPorTipoENome(TipoComunidade.CURSO, "Engenharia de Software"))
-                .thenReturn(Optional.of(cursoNovo));
+        Comunidade cursoAntigo = comunidadeCurso("Administração", CURSO_ADMINISTRACAO);
+        Comunidade cursoNovo = comunidadeCurso("Engenharia de Software", CURSO_ENGENHARIA);
+        when(comunidadeRepository.buscarAtivaPorCursoId(CURSO_ADMINISTRACAO)).thenReturn(Optional.of(cursoAntigo));
+        when(comunidadeRepository.buscarAtivaPorCursoId(CURSO_ENGENHARIA)).thenReturn(Optional.of(cursoNovo));
         when(comunidadeMembroRepository.existeAssociacao(cursoNovo, USUARIO_ID)).thenReturn(false);
 
-        service.sincronizarCursoDoAluno(USUARIO_ID, "Administração", "Engenharia de Software");
+        service.sincronizarCursoDoAluno(USUARIO_ID, CURSO_ADMINISTRACAO, CURSO_ENGENHARIA);
 
         verify(comunidadeMembroRepository).removerAssociacao(cursoAntigo, USUARIO_ID);
         verify(comunidadeMembroRepository).persist(any(ComunidadeMembro.class));
@@ -101,9 +102,9 @@ class AutoJoinCursoServiceImplTest {
 
     @Test
     void naoFazNadaQuandoCursoNaoMudou() {
-        service.sincronizarCursoDoAluno(USUARIO_ID, "Engenharia de Software", "Engenharia de Software");
+        service.sincronizarCursoDoAluno(USUARIO_ID, CURSO_ENGENHARIA, CURSO_ENGENHARIA);
 
-        verify(comunidadeRepository, never()).buscarPorTipoENome(any(), any());
+        verify(comunidadeRepository, never()).buscarAtivaPorCursoId(any());
         verify(comunidadeMembroRepository, never()).persist(any(ComunidadeMembro.class));
         verify(comunidadeMembroRepository, never()).removerAssociacao(any(), anyLong());
     }

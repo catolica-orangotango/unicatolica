@@ -512,3 +512,71 @@ export async function mockAdministrarComunidade(
   );
   return chamadas;
 }
+
+/** Curso no formato de `CursoAdmin` do `openapi.yaml` (KAN-44). */
+export interface CursoAdminMock {
+  id: number;
+  nome: string;
+  ativo: boolean;
+}
+
+/**
+ * Administração de cursos (KAN-44) com estado em memória: `GET /admin/cursos` (todos),
+ * `POST /cursos`, `PUT /cursos/{id}` e `GET /cursos` (só os ativos, como o backend; é o que o
+ * cadastro de aluno carrega). Devolve as chamadas de escrita recebidas. Registrar depois de
+ * `mockFeedOk`.
+ */
+export async function mockCursosAdmin(
+  page: Page,
+  inicial: CursoAdminMock[],
+): Promise<{ metodo: string; caminho: string; corpo: unknown }[]> {
+  const chamadas: { metodo: string; caminho: string; corpo: unknown }[] = [];
+  const cursos = inicial.map((c) => ({ ...c }));
+  let proximoId = Math.max(0, ...cursos.map((c) => c.id)) + 1;
+  const ordenados = () => [...cursos].sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
+  const erro = (status: number, code: string, message: string) =>
+    json(status, { error: { code, message, details: null } });
+
+  await page.route(
+    (url) => ehApi(url) && (url.pathname === '/admin/cursos' || url.pathname.startsWith('/cursos')),
+    (route) => {
+      const request = route.request();
+      const caminho = new URL(request.url()).pathname;
+      if (request.method() === 'OPTIONS') {
+        return route.fulfill({
+          status: 204,
+          headers: { ...CORS, 'access-control-allow-methods': 'GET,POST,PUT,OPTIONS' },
+        });
+      }
+      if (request.method() !== 'GET') {
+        chamadas.push({ metodo: request.method(), caminho, corpo: request.postDataJSON() });
+      }
+      if (caminho === '/admin/cursos') {
+        return route.fulfill(json(200, ordenados()));
+      }
+      if (caminho === '/cursos' && request.method() === 'GET') {
+        return route.fulfill(
+          json(200, ordenados().filter((c) => c.ativo).map(({ id, nome }) => ({ id, nome }))),
+        );
+      }
+      if (caminho === '/cursos' && request.method() === 'POST') {
+        const { nome } = request.postDataJSON() as { nome: string };
+        if (cursos.some((c) => c.nome.toLowerCase() === nome.toLowerCase())) {
+          return route.fulfill(erro(409, 'CURSO_NOME_EM_USO', 'Já existe um curso com esse nome.'));
+        }
+        const criado = { id: proximoId++, nome, ativo: true };
+        cursos.push(criado);
+        return route.fulfill(json(201, criado));
+      }
+      const curso = cursos.find((c) => c.id === Number(caminho.split('/').pop()));
+      if (!curso) {
+        return route.fulfill(erro(404, 'CURSO_NAO_ENCONTRADO', 'Curso não encontrado.'));
+      }
+      const corpo = request.postDataJSON() as { nome: string; ativo: boolean };
+      curso.nome = corpo.nome;
+      curso.ativo = corpo.ativo;
+      return route.fulfill(json(200, curso));
+    },
+  );
+  return chamadas;
+}
