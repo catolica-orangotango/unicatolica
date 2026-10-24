@@ -25,7 +25,7 @@
       [attr.aria-describedby]="form.controls.nome.touched && form.controls.nome.invalid ? 'erro-nome' : null"
     />
     @if (form.controls.nome.touched && form.controls.nome.invalid) {
-      <span class="campo-erro" id="erro-nome">Informe seu nome.</span>
+      <span class="campo-erro" role="alert" id="erro-nome">Informe seu nome.</span>
     }
 
     <label class="meu-perfil__label" for="cursoId">Curso</label>
@@ -42,7 +42,7 @@
       }
     </select>
     @if (form.controls.cursoId.touched && form.controls.cursoId.invalid) {
-      <span class="campo-erro" id="erro-cursoId">Escolha seu curso.</span>
+      <span class="campo-erro" role="alert" id="erro-cursoId">Escolha seu curso.</span>
     }
 
     <label class="meu-perfil__label" for="periodo">Período</label>
@@ -59,7 +59,7 @@
       }
     </select>
     @if (form.controls.periodo.touched && form.controls.periodo.invalid) {
-      <span class="campo-erro" id="erro-periodo">Escolha seu período.</span>
+      <span class="campo-erro" role="alert" id="erro-periodo">Escolha seu período.</span>
     }
 
     <label class="meu-perfil__label" for="novoInteresse">Interesses</label>
