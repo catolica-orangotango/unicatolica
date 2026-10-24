@@ -80,6 +80,19 @@ describe('ComunidadesLista', () => {
     expect(compiled.querySelector('.lista__botao-sair')).toBeTruthy();
   });
 
+  it('depois de entrar, o card mostra "Você é membro" em texto, além do toast (KAN-37)', async () => {
+    await montar(paginaUnica);
+    const compiled = fixture.nativeElement as HTMLElement;
+    expect(compiled.querySelector('uc-member-indicator')).toBeNull();
+
+    (compiled.querySelector('.lista__botao-participar') as HTMLButtonElement).click();
+    httpMock.expectOne(`${API_BASE_URL}/comunidades/2/membros`).flush(null);
+    httpMock.expectOne(`${API_BASE_URL}/comunidades/minhas`).flush([{ ...paginaUnica.content[1], souMembro: true }]);
+    fixture.detectChanges();
+
+    expect(compiled.querySelector('uc-member-indicator')?.textContent).toContain('Você é membro');
+  });
+
   it('mostra o toast "Você entrou em {comunidade}" ao ingressar (Story 2.4)', async () => {
     await montar(paginaUnica);
     const toastService = TestBed.inject(ToastService);

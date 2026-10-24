@@ -84,6 +84,26 @@ describe('ComunidadeDetalhe', () => {
     expect(compiled.querySelector('.detalhe__botao-sair')).toBeNull();
   });
 
+  it('membro de comunidade aberta vê "Você é membro" em texto ao lado do botão Sair (KAN-37)', async () => {
+    const f = await montar('27');
+
+    httpMock.expectOne(`${API_BASE_URL}/comunidades/27`).flush({
+      id: 27,
+      nome: 'Clube de Xadrez',
+      descricao: null,
+      tipo: 'ABERTA',
+      souMembro: true,
+      criadoEm: '2026-01-01T00:00:00Z',
+    });
+    f.detectChanges();
+    responderFeed(27);
+    f.detectChanges();
+
+    const compiled = f.nativeElement as HTMLElement;
+    expect(compiled.querySelector('.detalhe__acao uc-member-indicator')?.textContent).toContain('Você é membro');
+    expect(compiled.querySelector('.detalhe__botao-sair')).toBeTruthy();
+  });
+
   it('sai de uma comunidade aberta e atualiza o cabeçalho pra "Participar"', async () => {
     const f = await montar('27');
 

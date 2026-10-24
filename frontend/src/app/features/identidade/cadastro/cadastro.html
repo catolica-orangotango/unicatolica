@@ -60,7 +60,7 @@
         "
       />
       @if (form.controls.nome.touched && form.controls.nome.invalid) {
-        <span class="campo-erro" id="erro-nome">Informe seu nome.</span>
+        <span class="campo-erro" role="alert" id="erro-nome">Informe seu nome.</span>
       }
 
       <label class="cadastro__label" for="email">E-mail institucional</label>
@@ -79,7 +79,7 @@
         "
       />
       @if (form.controls.email.touched && form.controls.email.invalid) {
-        <span class="campo-erro" id="erro-email">Informe um e-mail institucional válido.</span>
+        <span class="campo-erro" role="alert" id="erro-email">Informe um e-mail institucional válido.</span>
       }
 
       <label class="cadastro__label" for="senha">Senha</label>
@@ -129,7 +129,7 @@
         </button>
       </div>
       @if (form.controls.senha.touched && form.controls.senha.invalid) {
-        <span class="campo-erro" id="erro-senha">
+        <span class="campo-erro" role="alert" id="erro-senha">
           {{
             form.controls.senha.hasError('required')
               ? 'Informe uma senha.'
@@ -164,7 +164,7 @@
         [attr.aria-describedby]="mensagemErroConfirmarSenha() ? 'erro-confirmarSenha' : null"
       />
       @if (mensagemErroConfirmarSenha()) {
-        <span class="campo-erro" id="erro-confirmarSenha">{{ mensagemErroConfirmarSenha() }}</span>
+        <span class="campo-erro" role="alert" id="erro-confirmarSenha">{{ mensagemErroConfirmarSenha() }}</span>
       }
 
       <label class="cadastro__label" for="cursoId">Curso</label>
@@ -185,7 +185,7 @@
         }
       </select>
       @if (form.controls.cursoId.touched && form.controls.cursoId.invalid) {
-        <span class="campo-erro" id="erro-cursoId">
+        <span class="campo-erro" role="alert" id="erro-cursoId">
           {{ erroCursos() ? 'Não foi possível carregar os cursos. Recarregue a página.' : 'Escolha seu curso.' }}
         </span>
       } @else if (erroCursos()) {
@@ -210,7 +210,7 @@
         "
       />
       @if (form.controls.dataNascimento.touched && form.controls.dataNascimento.invalid) {
-        <span class="campo-erro" id="erro-dataNascimento">Informe sua data de nascimento.</span>
+        <span class="campo-erro" role="alert" id="erro-dataNascimento">Informe sua data de nascimento.</span>
       }
 
       <button uc-button class="cadastro__enviar" type="submit" [disabled]="enviando()">
