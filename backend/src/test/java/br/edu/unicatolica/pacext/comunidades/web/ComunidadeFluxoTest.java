@@ -238,6 +238,18 @@ class ComunidadeFluxoTest {
     }
 
     @Test
+    void sairDaComunidadeDeCursoDa403EOAlunoContinuaMembro() {
+        Integer id = comunidadeDoCurso();
+
+        aluno.autenticado().when().delete("/comunidades/{id}/membros/me", id)
+                .then().statusCode(403)
+                .body("error.code", equalTo("COMUNIDADE_TIPO_INVALIDO"));
+
+        aluno.autenticado().when().get("/comunidades/minhas")
+                .then().body("id", hasItem(id));
+    }
+
+    @Test
     void saiDaComunidadeEElaSomeDeMinhas() {
         Integer id = criar(usuarioDeTeste.novo(CURSO), prefixo);
         aluno.autenticado().when().post("/comunidades/{id}/membros", id)
