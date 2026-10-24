@@ -10,7 +10,7 @@
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
 
-    <changeSet id="identidade-009-add-ativo" author="pacext">
+    <changeSet id="identidade-011-add-ativo" author="pacext">
         <addColumn tableName="usuario">
             <column name="ativo" type="BOOLEAN" defaultValueBoolean="true">
                 <constraints nullable="false"/>

@@ -2,6 +2,7 @@ package br.edu.unicatolica.pacext.identidade.web;
 
 import br.edu.unicatolica.pacext.compartilhado.paginacao.PageResponse;
 import br.edu.unicatolica.pacext.identidade.aplicacao.AdminService;
+import br.edu.unicatolica.pacext.identidade.aplicacao.CursoService;
 import br.edu.unicatolica.pacext.identidade.aplicacao.UsuarioAdminService;
 import br.edu.unicatolica.pacext.identidade.dominio.Usuario;
 import jakarta.inject.Inject;
@@ -17,6 +18,7 @@ import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import java.util.List;
 
 /** Área de administração; a autorização é decidida nos services ({@link AdminService}, {@link UsuarioAdminService}). */
 @Path("/admin")
@@ -26,7 +28,18 @@ public class AdminResource {
     AdminService adminService;
 
     @Inject
+    CursoService cursoService;
+
+    @Inject
     UsuarioAdminService usuarioAdminService;
+
+    /** Base da tela "Cursos" (KAN-44): todos os cursos, com os desativados. Só ADMINISTRADOR. */
+    @GET
+    @Path("/cursos")
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<CursoAdminResponse> cursos() {
+        return cursoService.listarTodos().stream().map(CursoAdminResponse::de).toList();
+    }
 
     @GET
     @Path("/painel")

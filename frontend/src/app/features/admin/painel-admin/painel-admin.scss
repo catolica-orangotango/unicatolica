@@ -10,15 +10,19 @@
   display: flex;
   flex-wrap: wrap;
   gap: calc(var(--uc-space-unit) * 3);
-  margin-top: var(--uc-space-section-gap);
+  margin: var(--uc-space-section-gap) 0 0;
+  padding: 0;
+  list-style: none;
 }
 
 .painel__atalho {
+  display: inline-block;
   padding: calc(var(--uc-space-unit) * 3) calc(var(--uc-space-unit) * 5);
   border: 1px solid var(--uc-color-border);
   border-radius: var(--uc-radius-md);
   background: var(--uc-color-surface);
   color: var(--uc-color-ink);
+  font-size: var(--uc-font-size-body);
   font-weight: var(--uc-font-weight-semibold);
   text-decoration: none;
 }

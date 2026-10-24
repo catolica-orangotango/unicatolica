@@ -7,7 +7,7 @@ public record UsuarioAdminResponse(Long id, String nomeCompleto, String email, S
         boolean ativo) {
 
     public static UsuarioAdminResponse de(Usuario usuario) {
-        return new UsuarioAdminResponse(usuario.id, usuario.nome, usuario.email, usuario.curso, usuario.perfil,
+        return new UsuarioAdminResponse(usuario.id, usuario.nome, usuario.email, usuario.cursoNome, usuario.perfil,
                 usuario.ativo);
     }
 }

@@ -417,6 +417,78 @@ class ComunidadeServiceTest {
         verify(comunidadeMembroRepository, never()).removerAssociacao(any(), any());
     }
 
+    // ---- Story 2.1 / KAN-44: comunidade de curso nasce e é renomeada com o curso ----
+
+    @Test
+    void criaComunidadeDeCursoLigadaAoCursoPorId() {
+        service.criarComunidadeDeCurso(14L, " Curso Teste ", 9L);
+
+        ArgumentCaptor<Comunidade> captor = ArgumentCaptor.forClass(Comunidade.class);
+        verify(comunidadeRepository).persist(captor.capture());
+        Comunidade criada = captor.getValue();
+        assertEquals("Curso Teste", criada.nome);
+        assertEquals(TipoComunidade.CURSO, criada.tipo);
+        assertEquals(14L, criada.cursoId);
+        assertEquals(9L, criada.criadoPorUsuarioId);
+        verify(comunidadeMembroRepository, never()).persist(any(ComunidadeMembro.class));
+    }
+
+    @Test
+    void comunidadeDeCursoComNomeJaUsadoDa409() {
+        when(comunidadeRepository.existePorNome(" Xadrez ")).thenReturn(true);
+
+        ApiException erro = assertThrows(ApiException.class, () -> service.criarComunidadeDeCurso(14L, " Xadrez ", 9L));
+
+        assertEquals("COMUNIDADE_NOME_EM_USO", erro.getCode());
+        assertEquals(409, erro.getStatus());
+        verify(comunidadeRepository, never()).persist(any(Comunidade.class));
+    }
+
+    @Test
+    void naoCriaSegundaComunidadeParaOMesmoCurso() {
+        when(comunidadeRepository.existePorCursoId(14L)).thenReturn(true);
+
+        service.criarComunidadeDeCurso(14L, "Curso Teste", 9L);
+
+        verify(comunidadeRepository, never()).persist(any(Comunidade.class));
+    }
+
+    @Test
+    void renomearOCursoRenomeiaAComunidadeSemTrocarMembros() {
+        Comunidade comunidade = comunidadeAberta();
+        comunidade.tipo = TipoComunidade.CURSO;
+        comunidade.cursoId = 14L;
+        when(comunidadeRepository.buscarAtivaPorCursoId(14L)).thenReturn(Optional.of(comunidade));
+
+        service.renomearComunidadeDeCurso(14L, " Curso Teste 2 ");
+
+        assertEquals("Curso Teste 2", comunidade.nome);
+        assertEquals(14L, comunidade.cursoId);
+        verify(comunidadeMembroRepository, never()).removerAssociacao(any(), any());
+    }
+
+    @Test
+    void renomearParaNomeDeOutraComunidadeDa409() {
+        Comunidade comunidade = comunidadeAberta();
+        comunidade.cursoId = 14L;
+        when(comunidadeRepository.buscarAtivaPorCursoId(14L)).thenReturn(Optional.of(comunidade));
+        when(comunidadeRepository.existePorNomeEDiferente("Damas", 1L)).thenReturn(true);
+
+        ApiException erro = assertThrows(ApiException.class, () -> service.renomearComunidadeDeCurso(14L, "Damas"));
+
+        assertEquals("COMUNIDADE_NOME_EM_USO", erro.getCode());
+        assertEquals("Xadrez", comunidade.nome);
+    }
+
+    @Test
+    void renomearCursoSemComunidadeNaoFazNada() {
+        when(comunidadeRepository.buscarAtivaPorCursoId(99L)).thenReturn(Optional.empty());
+
+        service.renomearComunidadeDeCurso(99L, "Qualquer");
+
+        verify(comunidadeRepository, never()).existePorNomeEDiferente(any(), any());
+    }
+
     private Comunidade comunidadeAberta() {
         Comunidade comunidade = new Comunidade();
         comunidade.id = 1L;

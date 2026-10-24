@@ -94,9 +94,9 @@ class CadastroServiceTest {
         assertEquals("ALUNO", usuario.perfil);
         assertNotNull(usuario.tokenConfirmacaoEmail);
         assertEquals(CURSO_ID, usuario.cursoId);
-        assertEquals("Engenharia de Software", usuario.curso); // nome oficial, não o texto digitado
+        assertEquals("Engenharia de Software", usuario.cursoNome);
 
-        verify(usuarioCadastrado).fire(new UsuarioCadastrado(42L, "Engenharia de Software"));
+        verify(usuarioCadastrado).fire(new UsuarioCadastrado(42L, CURSO_ID));
         verify(emailService).enviarConfirmacaoCadastro(eq(EMAIL_INSTITUCIONAL), anyString(), anyString());
         verify(auditoriaService).registrar(eq(42L), eq("identidade"), eq("CADASTRO_REALIZADO"), eq("Usuario"),
                 eq(42L), isNull());

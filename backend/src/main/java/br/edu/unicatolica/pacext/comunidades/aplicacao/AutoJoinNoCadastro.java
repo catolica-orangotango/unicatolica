@@ -17,6 +17,6 @@ class AutoJoinNoCadastro {
     AutoJoinCursoService autoJoinCursoService;
 
     void aoCadastrar(@Observes UsuarioCadastrado evento) {
-        autoJoinCursoService.sincronizarCursoDoAluno(evento.usuarioId(), null, evento.curso());
+        autoJoinCursoService.sincronizarCursoDoAluno(evento.usuarioId(), null, evento.cursoId());
     }
 }

@@ -16,8 +16,12 @@
  * {@code compartilhado.seguranca.SessaoConsulta}, usada pelo filtro de logout.</p>
  *
  * <p><b>Eventos que dispara</b> (CDI, síncronos, na transação de quem dispara):
- * {@link br.edu.unicatolica.pacext.identidade.UsuarioCadastrado} ao fim do cadastro e
- * {@link br.edu.unicatolica.pacext.identidade.CursoDoUsuarioAlterado} quando o curso muda.</p>
+ * {@link br.edu.unicatolica.pacext.identidade.UsuarioCadastrado} ao fim do cadastro,
+ * {@link br.edu.unicatolica.pacext.identidade.CursoDoUsuarioAlterado} quando o curso do
+ * aluno muda (os dois levam o id do curso), e, quando o administrador mexe na lista de
+ * cursos, {@link br.edu.unicatolica.pacext.identidade.CursoCadastrado} e
+ * {@link br.edu.unicatolica.pacext.identidade.CursoRenomeado}, que Comunidades escuta para
+ * criar e renomear a comunidade de curso.</p>
  *
  * <p><b>Dependências:</b> só {@code compartilhado} (módulo folha, verificado por
  * {@code ArquiteturaTest}).</p>
@@ -37,6 +41,9 @@
  * administrador ativo. Conta desativada ({@code usuario.ativo = false}) não faz login
  * ({@code ContaDesativadaException}, 401 {@code CONTA_DESATIVADA}).
  * Também a lista de cursos ({@code GET /cursos}, público só para leitura), usada
- * pelo select do cadastro; cadastro de cursos pelo administrador no KAN-44.</p>
+ * pelo select do cadastro, e a manutenção dela pelo administrador (KAN-44):
+ * {@code POST /cursos}, {@code PUT /cursos/{id}} (renomear, ativar/desativar) e
+ * {@code GET /admin/cursos} (todos, com os desativados). O curso do usuário é só o
+ * {@code curso_id}; o nome vem de {@code curso.nome} ({@code Usuario.cursoNome}).</p>
  */
 package br.edu.unicatolica.pacext.identidade;

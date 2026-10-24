@@ -5,6 +5,7 @@ import {
   mockComunidadeComFeed,
   mockConfirmacaoOk,
   mockCursosOk,
+  mockCursosAdmin,
   mockFeedOk,
   mockMeuPerfil,
   mockModeracao,
@@ -206,6 +207,19 @@ test('administrador: usuários, lista e confirmação de alteração', async ({ 
 
   await page.getByRole('button', { name: 'Cancelar' }).click();
   await page.getByRole('button', { name: 'Desativar conta de Ana Aluna' }).click();
+  await esperarSemViolacoes(page);
+});
+
+test('administrador: tela de cursos', async ({ page }) => {
+  await mockFeedOk(page);
+  await mockCursosAdmin(page, [
+    { id: 1, nome: 'Administração', ativo: true },
+    { id: 2, nome: 'Direito', ativo: false },
+  ]);
+  await plantarToken(page, ['ADMINISTRADOR']);
+  await page.goto('/admin/cursos');
+  await expect(page.getByRole('heading', { level: 1, name: 'Cursos' })).toBeVisible();
+  await expect(page).toHaveTitle('Cursos — UniCatólica');
   await esperarSemViolacoes(page);
 });
 
