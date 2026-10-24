@@ -55,6 +55,7 @@ O que um grupo de WhatsApp ou o AVA não conseguem oferecer:
 - Voz (de `docs/produto/ux-experiencia.md`): direta, de igual para igual, tratando por "você", sem jargão corporativo. Erros explicam o que houve e o que fazer, sem culpar o usuário. Estados vazios convidam a agir, sem forçar humor.
 - Interface, campos e copy em português do Brasil.
 - Identidade visual vigente (Campus Clean) documentada em `DESIGN.md`; não é repetida aqui.
+- Redesign da KAN-84 (decidido em 24/10/2026): o UniCatólica deve parecer um app moderno de verdade, no nível de acabamento de Threads/Bluesky (rede social leve, centrada em texto e pessoas) e Notion/Linear (precisão e polimento). O bordô continua como cor de marca. Direções que imitam objetos impressos (cartaz, caderneta, agenda) ou cantos retos e "quadrados" foram testadas e recusadas.
 
 ## Evidence on Hand
 
