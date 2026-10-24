@@ -1,6 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 import { esperarSemViolacoes } from './support/acessibilidade';
 import {
+  mockAdminUsuarios,
   mockComunidadeComFeed,
   mockConfirmacaoOk,
   mockCursosOk,
@@ -184,6 +185,27 @@ test('administrador: painel de administração', async ({ page }) => {
   await page.goto('/admin');
   await expect(page.getByRole('heading', { level: 1, name: 'Administração' })).toBeVisible();
   await expect(page).toHaveTitle('Administração — UniCatólica');
+  await esperarSemViolacoes(page);
+});
+
+test('administrador: usuários, lista e confirmação de alteração', async ({ page }) => {
+  await mockFeedOk(page);
+  await mockAdminUsuarios(page, [
+    { id: 2, nomeCompleto: 'Ana Aluna', email: 'ana@catolicasc.edu.br', curso: 'Administração', perfil: 'ALUNO', ativo: true },
+    { id: 3, nomeCompleto: 'Beto Bloqueado', email: 'beto@catolicasc.edu.br', curso: null, perfil: 'MODERADOR', ativo: false },
+  ]);
+  await plantarToken(page, ['ADMINISTRADOR']);
+  await page.goto('/admin/usuarios');
+  await expect(page.getByRole('heading', { level: 1, name: 'Usuários' })).toBeVisible();
+  await expect(page).toHaveTitle('Usuários — UniCatólica');
+  await esperarSemViolacoes(page);
+
+  await page.getByRole('button', { name: 'Alterar perfil de Ana Aluna' }).click();
+  await expect(page.getByRole('button', { name: 'Confirmar alteração' })).toBeFocused();
+  await esperarSemViolacoes(page);
+
+  await page.getByRole('button', { name: 'Cancelar' }).click();
+  await page.getByRole('button', { name: 'Desativar conta de Ana Aluna' }).click();
   await esperarSemViolacoes(page);
 });
 

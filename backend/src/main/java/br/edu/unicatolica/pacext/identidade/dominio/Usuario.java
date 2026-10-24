@@ -76,6 +76,14 @@ public class Usuario {
     public Instant sessaoValidaDesde;
 
     /**
+     * Situação da conta (KAN-83): {@code false} quando o administrador a desativou. Conta
+     * desativada não faz login e a sessão ativa cai na próxima requisição (ver
+     * {@code UsuarioAdminService}); os dados continuam, e reativar devolve o acesso.
+     */
+    @Column(name = "ativo", nullable = false)
+    public boolean ativo = true;
+
+    /**
      * Quantas vezes este usuário já fez login (Story 4.3, RF20.1) — incrementado em
      * {@code AuthService.autenticar}. Único consumidor hoje é o gatilho da notificação de
      * onboarding progressivo, que dispara a partir do 2º login.

@@ -45,5 +45,5 @@ Problemas conhecidos que ainda não têm história nem PR. Quando um item virar 
   1. Não definir `QUARKUS_LIQUIBASE_CONTEXTS` no Render. A variável vence o `application.properties` e, com `dev`, o seed com senha pública rodaria em produção.
   2. Depois do primeiro deploy, conferir no banco que não existem `aluno.teste`, `moderador.teste` nem `admin.teste` (`SELECT email FROM usuario WHERE email LIKE '%.teste@%'`). Se existirem, apagar.
   3. A pessoa responsável se cadastra pela tela normal e confirma o e-mail. Depois, no console do Neon: `UPDATE usuario SET perfil = 'ADMINISTRADOR' WHERE email = '<e-mail dela>';`. O perfil vale no próximo login.
-  4. Daí em diante, outros perfis passam a ser alterados pela tela de usuários (KAN-83).
+  4. Daí em diante, outros perfis passam a ser alterados pela tela de usuários (`/admin/usuarios`, KAN-83). O administrador não altera o próprio perfil, então o primeiro continua sendo promovido à mão.
 - **Prazo:** antes de abrir o sistema em produção.

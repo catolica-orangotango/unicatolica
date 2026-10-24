@@ -512,3 +512,69 @@ export async function mockAdministrarComunidade(
   );
   return chamadas;
 }
+
+/** Usuário no formato de `UsuarioAdminResponse` do `openapi.yaml` (KAN-83). */
+export interface UsuarioAdminMock {
+  id: number;
+  nomeCompleto: string;
+  email: string;
+  curso: string | null;
+  perfil: 'ALUNO' | 'MODERADOR' | 'ADMINISTRADOR';
+  ativo: boolean;
+}
+
+/**
+ * `/admin/usuarios` com estado em memória (KAN-83): `GET` filtra por `busca` (nome ou e-mail) e
+ * `perfil`; `PUT .../perfil` e `PUT .../ativo` alteram o usuário, como o backend. Devolve as
+ * chamadas de escrita para o teste conferir. Registrar depois de `mockFeedOk`.
+ */
+export async function mockAdminUsuarios(
+  page: Page,
+  usuarios: UsuarioAdminMock[],
+): Promise<{ metodo: string; caminho: string; corpo: unknown }[]> {
+  const chamadas: { metodo: string; caminho: string; corpo: unknown }[] = [];
+  const cors = { ...CORS, 'access-control-allow-methods': 'GET,PUT,OPTIONS' };
+  const resposta = (status: number, corpo: unknown) => ({
+    status,
+    headers: { ...cors, 'content-type': 'application/json' },
+    body: JSON.stringify(corpo),
+  });
+
+  await page.route(
+    (url) => ehApi(url) && url.pathname.startsWith('/admin/usuarios'),
+    (route) => {
+      const request = route.request();
+      const url = new URL(request.url());
+      if (request.method() === 'OPTIONS') {
+        return route.fulfill({ status: 204, headers: cors });
+      }
+
+      if (request.method() === 'GET') {
+        const busca = (url.searchParams.get('busca') ?? '').toLowerCase();
+        const perfil = url.searchParams.get('perfil');
+        const filtrados = usuarios.filter(
+          (u) =>
+            (!busca || u.nomeCompleto.toLowerCase().includes(busca) || u.email.toLowerCase().includes(busca)) &&
+            (!perfil || u.perfil === perfil),
+        );
+        return route.fulfill(
+          resposta(200, { content: filtrados, page: 0, size: 20, totalElements: filtrados.length, totalPages: 1 }),
+        );
+      }
+
+      const corpo = request.postDataJSON() as { perfil?: UsuarioAdminMock['perfil']; ativo?: boolean };
+      chamadas.push({ metodo: request.method(), caminho: url.pathname, corpo });
+      const [, , , id, campo] = url.pathname.split('/');
+      const usuario = usuarios.find((u) => u.id === Number(id));
+      if (!usuario) {
+        return route.fulfill(
+          resposta(404, { error: { code: 'USUARIO_NAO_ENCONTRADO', message: 'Usuário não encontrado.', details: null } }),
+        );
+      }
+      if (campo === 'perfil' && corpo.perfil) usuario.perfil = corpo.perfil;
+      if (campo === 'ativo' && corpo.ativo !== undefined) usuario.ativo = corpo.ativo;
+      return route.fulfill(resposta(200, usuario));
+    },
+  );
+  return chamadas;
+}

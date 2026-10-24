@@ -79,7 +79,7 @@ Implementação de interface da raiz e observer de evento de outro módulo ficam
 
 | Módulo | Estado |
 |---|---|
-| `identidade` | Cadastro (curso escolhido de `GET /cursos`), confirmação de e-mail, login, logout, `GET /usuarios/me` e `/usuarios/{id}`, perfil de plataforma `ADMINISTRADOR` e painel `/admin` (`GET /admin/painel`, tela `features/admin/painel-admin`) |
+| `identidade` | Cadastro (curso escolhido de `GET /cursos`), confirmação de e-mail, login, logout, `GET /usuarios/me` e `/usuarios/{id}`, perfil de plataforma `ADMINISTRADOR` e painel `/admin` (`GET /admin/painel`, tela `features/admin/painel-admin`), gestão de usuários pelo administrador (`GET /admin/usuarios`, `PUT /admin/usuarios/{id}/perfil`, `PUT /admin/usuarios/{id}/ativo`; tela `/admin/usuarios`), com conta desativável (`usuario.ativo`; login bloqueado com 401 `CONTA_DESATIVADA`) |
 | `comunidades` | Auto-join por curso, criar comunidade aberta, entrar/sair, listar/filtrar. O administrador da comunidade vê os membros (`GET /comunidades/{id}/membros`), remove membro (`DELETE /comunidades/{id}/membros/{usuarioId}`), edita nome/descrição (`PATCH /comunidades/{id}`, parcial) e exclui logicamente (`DELETE /comunidades/{id}`), pela seção "Administração" do detalhe `/comunidades/:id`; comunidade excluída vira inexistente também para `ComunidadeConsulta` (Publicações responde 404) |
 | `publicacoes` | Criar postagem e feed da comunidade (`POST`/`GET /comunidades/{id}/publicacoes`); tela no feed de `/comunidades/:id`. Postagem oculta pela Moderação sai do feed |
 | `perfil` | Criar/editar e consultar o próprio perfil (`GET`/`PUT /perfil/me`, tela `/perfil`) e ver o de outro usuário (`GET /usuarios/{id}/perfil`, tela `/usuarios/:id`, aberta pelo autor da postagem) |

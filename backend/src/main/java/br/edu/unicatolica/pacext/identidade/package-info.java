@@ -31,6 +31,11 @@
  * autorização em {@code UsuarioAutenticado.podeModerar/exigirModerador/exigirAdministrador})
  * tem a rota base {@code GET /admin/painel} ({@code AdminResource}/{@code AdminService}) e o
  * usuário de teste {@code admin.teste@catolicasc.edu.br}, semeado só no contexto {@code dev}.
+ * A gestão de usuários (KAN-83, {@code UsuarioAdminService}) lista, altera o perfil e
+ * desativa/reativa contas em {@code /admin/usuarios}: as duas alterações derrubam a sessão
+ * do usuário (mesmo mecanismo do logout), vão para a auditoria, e o sistema nunca fica sem
+ * administrador ativo. Conta desativada ({@code usuario.ativo = false}) não faz login
+ * ({@code ContaDesativadaException}, 401 {@code CONTA_DESATIVADA}).
  * Também a lista de cursos ({@code GET /cursos}, público só para leitura), usada
  * pelo select do cadastro; cadastro de cursos pelo administrador no KAN-44.</p>
  */

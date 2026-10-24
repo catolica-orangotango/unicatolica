@@ -61,6 +61,12 @@ export const routes: Routes = [
           import('./features/admin/painel-admin/painel-admin').then((m) => m.PainelAdmin),
       },
       {
+        path: 'admin/usuarios',
+        title: 'Usuários',
+        canActivate: [adminGuard],
+        loadComponent: () => import('./features/admin/usuarios/usuarios').then((m) => m.Usuarios),
+      },
+      {
         // Fila de denúncias do moderador (Stories 12.4/12.5) — URL do mockup key-denuncias.
         path: 'moderacao/denuncias',
         title: 'Denúncias',

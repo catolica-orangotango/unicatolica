@@ -98,6 +98,29 @@ describe('Login', () => {
     expect(navigateSpy).toHaveBeenCalledWith('/feed');
   });
 
+  it('mostra a mensagem da API quando a conta foi desativada pelo administrador', () => {
+    const compiled = fixture.nativeElement as HTMLElement;
+    const emailInput = compiled.querySelector('input[type="email"]') as HTMLInputElement;
+    const senhaInput = compiled.querySelector('input[type="password"]') as HTMLInputElement;
+
+    emailInput.value = 'aluno@catolicasc.edu.br';
+    emailInput.dispatchEvent(new Event('input'));
+    senhaInput.value = 'Senha123!';
+    senhaInput.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+
+    (compiled.querySelector('button[type="submit"]') as HTMLButtonElement).click();
+
+    httpMock.expectOne('http://localhost:8080/auth/login').flush(
+      { error: { code: 'CONTA_DESATIVADA', message: 'Sua conta está desativada. Procure a administração da plataforma.', details: null } },
+      { status: 401, statusText: 'Unauthorized' },
+    );
+    fixture.detectChanges();
+
+    expect(compiled.querySelector('[role="alert"]')?.textContent).toContain('Sua conta está desativada.');
+    expect(compiled.textContent).not.toContain('E-mail ou senha inválidos.');
+  });
+
   it('mostra mensagem de erro quando as credenciais são inválidas', () => {
     const compiled = fixture.nativeElement as HTMLElement;
     const emailInput = compiled.querySelector('input[type="email"]') as HTMLInputElement;
