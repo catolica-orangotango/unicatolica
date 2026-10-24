@@ -9,14 +9,15 @@ package br.edu.unicatolica.pacext.comunidades;
 public interface AutoJoinCursoService {
 
     /**
-     * Sincroniza a associação do usuário à comunidade de curso correspondente ao texto de
-     * curso informado. Idempotente por definição (RF24.1) — não passa pela checagem de
-     * ingresso duplicado de RF25.
+     * Sincroniza a associação do usuário à comunidade do curso informado. A comunidade de
+     * curso é encontrada pelo id do curso (KAN-44), então renomear o curso não quebra o
+     * vínculo. Idempotente por definição (RF24.1) — não passa pela checagem de ingresso
+     * duplicado de RF25.
      *
-     * @param usuarioId     id do aluno
-     * @param cursoAnterior nome do curso anterior, ou {@code null} se for a primeira definição
-     *                      (cadastro, Story 1.2)
-     * @param cursoNovo     nome do curso recém-definido/alterado
+     * @param usuarioId       id do aluno
+     * @param cursoAnteriorId id do curso anterior, ou {@code null} se for a primeira definição
+     *                        (cadastro, Story 1.2)
+     * @param cursoNovoId     id do curso recém-definido/alterado
      */
-    void sincronizarCursoDoAluno(Long usuarioId, String cursoAnterior, String cursoNovo);
+    void sincronizarCursoDoAluno(Long usuarioId, Long cursoAnteriorId, Long cursoNovoId);
 }

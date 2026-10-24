@@ -88,7 +88,7 @@ public class CadastroService {
         usuario.senhaHash = passwordHasher.gerarHash(senha);
         usuario.dataNascimento = dataNascimento;
         usuario.cursoId = curso.id;
-        usuario.curso = curso.nome;
+        usuario.cursoNome = curso.nome;
         usuario.emailConfirmado = false;
         usuario.perfil = Perfis.ALUNO;
         usuario.criadoEm = Instant.now();
@@ -99,7 +99,7 @@ public class CadastroService {
 
         // RF24.1 — Comunidades escuta e faz o auto-join na mesma transação. Nenhuma sessão é
         // gerada aqui (RF01.2).
-        usuarioCadastrado.fire(new UsuarioCadastrado(usuario.id, usuario.curso));
+        usuarioCadastrado.fire(new UsuarioCadastrado(usuario.id, usuario.cursoId));
 
         String linkConfirmacao = frontendUrl + "/confirmar-email?token=" + usuario.tokenConfirmacaoEmail;
         emailService.enviarConfirmacaoCadastro(usuario.email, usuario.nome, linkConfirmacao);

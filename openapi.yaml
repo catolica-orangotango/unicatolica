@@ -208,6 +208,29 @@ paths:
         '403':
           $ref: '#/components/responses/SemPermissao'
 
+  /admin/cursos:
+    get:
+      operationId: listarCursosAdmin
+      summary: Lista todos os cursos, ativos e inativos, somente perfil ADMINISTRADOR (KAN-44)
+      tags: [Administracao]
+      description: >
+        Base da tela "Cursos" de /admin: ao contrário de GET /cursos (público, só ativos),
+        traz também os desativados, com o campo ativo, para o administrador reativá-los.
+        Ordem alfabética, sem paginação (a lista tem poucas dezenas de itens).
+      responses:
+        '200':
+          description: Todos os cursos.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CursoAdmin'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+
   /comunidades:
     post:
       operationId: criarComunidade
@@ -215,9 +238,9 @@ paths:
       tags: [Comunidades]
       description: >
         Toda comunidade criada por aqui é do tipo ABERTA — o corpo não aceita "tipo"
-        de propósito (RF21.2: só administrador de plataforma cria comunidade de curso,
-        endpoint fora desta fatia, ver docs/decisoes/2026-08-modelo-epico-2-comunidades.md). O criador
-        vira administrador da comunidade automaticamente (RF23).
+        de propósito (RF21.2: a comunidade de curso nasce com o cadastro do curso por um
+        administrador de plataforma, POST /cursos). O criador vira administrador da
+        comunidade automaticamente (RF23).
       requestBody:
         required: true
         content:
@@ -611,7 +634,8 @@ paths:
         Rota pública (allowlist AD-2): a tela de cadastro precisa da lista antes do
         login. Sem paginação de propósito, como GET /comunidades/minhas — é a lista de um
         select, com poucas dezenas de itens. Cadastro e edição de cursos pelo
-        administrador ficam fora deste contrato.
+        administrador são POST /cursos e PUT /cursos/{id}; a lista com os inativos é
+        GET /admin/cursos.
       security: []
       responses:
         '200':
@@ -622,6 +646,79 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Curso'
+    post:
+      operationId: cadastrarCurso
+      summary: Cadastra um curso, somente perfil ADMINISTRADOR (KAN-44, Story 2.1)
+      tags: [Administracao]
+      description: >
+        Cria o curso ativo e, na mesma transação, a comunidade de curso (tipo CURSO)
+        correspondente (RF21.2). O nome é único sem diferença de maiúsculas; se já existe
+        curso ou comunidade com esse nome, nada é criado e a resposta é 409.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CursoRequest'
+      responses:
+        '201':
+          description: Curso criado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CursoAdmin'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        # 403: não é ADMINISTRADOR. 409: nome já usado por outro curso ou comunidade.
+        # 422: nome não informado ou com mais de 150 caracteres.
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '409':
+          $ref: '#/components/responses/Conflito'
+        '422':
+          $ref: '#/components/responses/ErroValidacao'
+
+  /cursos/{id}:
+    put:
+      operationId: atualizarCurso
+      summary: Renomeia, ativa ou desativa um curso, somente perfil ADMINISTRADOR (KAN-44)
+      tags: [Administracao]
+      description: >
+        Renomear o curso renomeia a comunidade de curso dele (o vínculo é pelo id). Curso
+        desativado some de GET /cursos e do cadastro, mas continua no perfil de quem já o
+        tem, e a comunidade dele não é alterada.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CursoAtualizacaoRequest'
+      responses:
+        '200':
+          description: Curso atualizado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CursoAdmin'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        # 403: não é ADMINISTRADOR. 409: nome já usado por outro curso ou comunidade.
+        # 422: nome não informado ou com mais de 150 caracteres.
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Conflito'
+        '422':
+          $ref: '#/components/responses/ErroValidacao'
 
   /perfil/me:
     get:
@@ -1261,7 +1358,8 @@ components:
       type: object
       description: >
         Curso da instituição, cadastrado por administrador (a lista inicial vem das 26
-        comunidades de curso do seed). O nome casa com a comunidade de curso no auto-join.
+        comunidades de curso do seed). A comunidade de curso é ligada ao curso pelo id
+        (o auto-join casa por id, não por nome).
       required: [id, nome]
       properties:
         id:
@@ -1269,6 +1367,38 @@ components:
           format: int64
         nome:
           type: string
+
+    CursoAdmin:
+      type: object
+      description: O mesmo de Curso, mais a situação (ativo), como o administrador enxerga.
+      required: [id, nome, ativo]
+      properties:
+        id:
+          type: integer
+          format: int64
+        nome:
+          type: string
+        ativo:
+          type: boolean
+
+    CursoRequest:
+      type: object
+      required: [nome]
+      properties:
+        nome:
+          type: string
+          maxLength: 150
+
+    CursoAtualizacaoRequest:
+      type: object
+      description: Renomear e ativar/desativar na mesma chamada; os dois campos são obrigatórios.
+      required: [nome, ativo]
+      properties:
+        nome:
+          type: string
+          maxLength: 150
+        ativo:
+          type: boolean
 
     PerfilRequest:
       type: object

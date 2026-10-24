@@ -15,8 +15,8 @@ class AutoJoinNaTrocaDeCursoTest {
         AutoJoinNaTrocaDeCurso observer = new AutoJoinNaTrocaDeCurso();
         observer.autoJoinCursoService = mock(AutoJoinCursoService.class);
 
-        observer.aoTrocarCurso(new CursoDoUsuarioAlterado(42L, "Administração", "Direito"));
+        observer.aoTrocarCurso(new CursoDoUsuarioAlterado(42L, 1L, 7L));
 
-        verify(observer.autoJoinCursoService).sincronizarCursoDoAluno(42L, "Administração", "Direito");
+        verify(observer.autoJoinCursoService).sincronizarCursoDoAluno(42L, 1L, 7L);
     }
 }

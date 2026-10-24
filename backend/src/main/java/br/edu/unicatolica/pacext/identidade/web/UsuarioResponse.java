@@ -6,6 +6,6 @@ import br.edu.unicatolica.pacext.identidade.dominio.Usuario;
 public record UsuarioResponse(Long id, String nome, String email, String perfil, String curso) {
 
     public static UsuarioResponse de(Usuario usuario) {
-        return new UsuarioResponse(usuario.id, usuario.nome, usuario.email, usuario.perfil, usuario.curso);
+        return new UsuarioResponse(usuario.id, usuario.nome, usuario.email, usuario.perfil, usuario.cursoNome);
     }
 }

@@ -1,0 +1,179 @@
+// Mesmo desenho de administrar-comunidade.scss: blocos em card, ação destrutiva em vermelho
+// de erro, sempre com texto (cor nunca é a única pista).
+:host {
+  display: block;
+}
+
+.cursos {
+  display: flex;
+  flex-direction: column;
+  gap: var(--uc-space-section-gap);
+}
+
+.cursos__titulo,
+.cursos__texto {
+  margin: 0;
+}
+
+.cursos__bloco {
+  display: flex;
+  flex-direction: column;
+  background: var(--uc-color-surface);
+  border: 1px solid var(--uc-color-border);
+  border-radius: var(--uc-radius-md);
+  padding: var(--uc-space-card-padding);
+}
+
+.cursos__subtitulo {
+  margin: 0 0 calc(var(--uc-space-unit) * 3);
+  font-size: var(--uc-font-size-body);
+  font-weight: var(--uc-font-weight-semibold);
+  color: var(--uc-color-ink);
+}
+
+.cursos__label {
+  margin-bottom: calc(var(--uc-space-unit) / 2);
+  font-size: var(--uc-font-size-meta);
+  font-weight: var(--uc-font-weight-semibold);
+  color: var(--uc-color-ink);
+}
+
+.cursos__campo {
+  margin-bottom: calc(var(--uc-space-unit) * 4);
+  padding: calc(var(--uc-space-unit) * 2) calc(var(--uc-space-unit) * 2.5);
+  border: 1px solid var(--uc-color-border);
+  border-radius: var(--uc-radius-default);
+  background: var(--uc-color-surface);
+  color: var(--uc-color-ink);
+  font-family: var(--uc-font-family-base);
+  font-size: var(--uc-font-size-body);
+}
+
+.cursos__campo[aria-invalid='true'] {
+  border-color: var(--uc-color-error);
+  margin-bottom: 0;
+}
+
+.cursos__campo--linha {
+  flex: 1 1 14rem;
+  margin-bottom: 0;
+}
+
+.cursos__erro-campo {
+  margin: 0 0 calc(var(--uc-space-unit) * 4);
+  padding-top: var(--uc-space-unit);
+  color: var(--uc-color-error);
+  font-size: var(--uc-font-size-meta);
+}
+
+.cursos__erro,
+.cursos__ajuda {
+  margin: 0 0 calc(var(--uc-space-unit) * 3);
+  font-size: var(--uc-font-size-meta);
+}
+
+.cursos__erro {
+  color: var(--uc-color-error);
+}
+
+.cursos__ajuda {
+  color: var(--uc-color-ink-soft);
+}
+
+.cursos__acoes {
+  display: flex;
+  gap: calc(var(--uc-space-unit) * 3);
+}
+
+.cursos__lista {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.cursos__item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: calc(var(--uc-space-unit) * 2);
+  padding: calc(var(--uc-space-unit) * 2.5) 0;
+  border-bottom: 1px solid var(--uc-color-border);
+}
+
+.cursos__item:last-child {
+  border-bottom: none;
+}
+
+.cursos__dados {
+  display: flex;
+  flex-direction: column;
+}
+
+.cursos__nome {
+  font-size: var(--uc-font-size-body);
+  color: var(--uc-color-ink);
+}
+
+.cursos__situacao {
+  font-size: var(--uc-font-size-meta);
+  color: var(--uc-color-ink-soft);
+}
+
+.cursos__situacao--inativo {
+  font-weight: var(--uc-font-weight-semibold);
+}
+
+.cursos__acoes-item,
+.cursos__confirmacao {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: calc(var(--uc-space-unit) * 2);
+}
+
+.cursos__edicao {
+  display: flex;
+  flex: 1 1 100%;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: calc(var(--uc-space-unit) * 2);
+}
+
+.cursos__confirmacao-texto {
+  font-size: var(--uc-font-size-body);
+  color: var(--uc-color-ink);
+}
+
+.cursos__botao-perigo {
+  border: 1px solid var(--uc-color-error);
+  background: transparent;
+  color: var(--uc-color-error);
+  border-radius: var(--uc-radius-full);
+  padding: var(--uc-space-unit) calc(var(--uc-space-unit) * 4);
+  font-family: var(--uc-font-family-base);
+  font-size: var(--uc-font-size-body);
+  cursor: pointer;
+}
+
+.cursos__botao-perigo:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.botao-secundario {
+  padding: calc(var(--uc-space-unit) * 2) calc(var(--uc-space-unit) * 4);
+  border: 1px solid var(--uc-color-border);
+  border-radius: var(--uc-radius-full);
+  background: transparent;
+  color: var(--uc-color-ink);
+  font-family: var(--uc-font-family-base);
+  font-size: var(--uc-font-size-meta);
+  font-weight: var(--uc-font-weight-semibold);
+  cursor: pointer;
+}
+
+.botao-secundario:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
