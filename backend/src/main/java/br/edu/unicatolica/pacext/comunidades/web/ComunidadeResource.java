@@ -26,9 +26,10 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
 /**
- * Endpoints do Epic 2 (Stories 2.2, 2.4, 2.5, 2.6) — entrada rápida desta fatia (ver
- * docs/decisoes/2026-08-modelo-epico-2-comunidades.md); Story 2.1 (endpoint de admin) fica de fora
- * (o papel ADMINISTRADOR de plataforma já existe, falta o endpoint).
+ * Endpoints do Epic 2 (Stories 2.2, 2.4, 2.5, 2.6) — ver
+ * docs/decisoes/2026-08-modelo-epico-2-comunidades.md. A Story 2.1 não tem rota aqui: a
+ * comunidade de curso nasce com o cadastro do curso pelo administrador ({@code POST /cursos},
+ * KAN-44), por isso este recurso só cria comunidade {@code ABERTA}.
  */
 @Path("/comunidades")
 public class ComunidadeResource {

@@ -69,8 +69,8 @@ risco já registrado em `modelo-dados-semana-1.md`). É mudança só no frontend
 
 ## ⚠️ Dependência cruzada com Identidade (precisa do Vynicyus)
 
-1. **Papel `ADMINISTRADOR` não existe** — hoje `usuario.perfil` só aceita `ALUNO`/`MODERADOR`
-   (Story 2.1 exige distinguir administrador da plataforma, RF21.2).
+1. ~~**Papel `ADMINISTRADOR` não existe**~~ — **resolvido** (KAN-82): `usuario.perfil` aceita
+   `ADMINISTRADOR`, que a Story 2.1 usa para distinguir o administrador da plataforma (RF21.2).
 2. **Campo `modalidade` no cadastro** — você pediu que o aluno selecione a modalidade de
    ensino no cadastro. Isso é um campo novo em `usuario` (Identidade), não em `comunidade`
    — like `curso`, mas não afeta o auto-join. Precisa de uma migration nova
@@ -81,8 +81,8 @@ risco já registrado em `modelo-dados-semana-1.md`). É mudança só no frontend
    como contexto; não faz parte do modelo de Comunidades em si.
 
 Nenhum desses 3 pontos bloqueia começar 2.1/2.2 — só a *seed* de comunidades de curso e o
-dropdown do cadastro dependem deles indiretamente (item 1 bloqueia só o endpoint de criar
-comunidade de curso via API; a seed via migration não precisa do papel existir).
+dropdown do cadastro dependem deles indiretamente (o item 1 bloqueava só o endpoint de criar
+comunidade de curso via API, hoje entregue; a seed via migration nunca precisou do papel).
 
 ## Modelo por história
 
@@ -93,10 +93,16 @@ comunidade de curso via API; a seed via migration não precisa do papel existir)
   (`tipo='CURSO'`), com `criado_por_usuario_id` apontando a um valor reservado (`0`,
   documentado como "sistema/seed", já que nenhum usuário administrador existe ainda).
   Isso já destrava o auto-join (2.3) de verdade.
-- **Endpoint (depende do papel ADMINISTRADOR existir em Identidade):**
-  `POST /comunidades` com `tipo=CURSO` — só aceita se `usuarioAutenticado.possuiPerfil("ADMINISTRADOR")`,
-  senão 403 (RF21.2). Serve para cursos novos que a instituição abrir depois do go-live.
-- Critério de validação de campo obrigatório (RF22) reaproveitado pela 2.2 também.
+- **Endpoint: entregue pelo KAN-44, em Identidade (atualizado em 2026-10-25).** O papel
+  `ADMINISTRADOR` existe (KAN-82), e a comunidade de curso passou a nascer junto com o curso:
+  `POST /cursos` (só administrador, 403 para os demais) dispara `CursoCadastrado`, e Comunidades
+  cria a comunidade `tipo=CURSO` ligada pelo `curso_id`. Não existe `POST /comunidades` com
+  `tipo=CURSO`, de propósito: criar comunidade de curso sem `Curso` quebraria o auto-join por id e
+  duplicaria o cadastro de cursos. Aluno só cria comunidade `ABERTA` (RF21.2) e não entra em
+  comunidade de curso (sem botão "participar", RF21.1). Ver
+  `2026-10-19-cursos-mantidos-pelo-administrador.md`.
+- Critério de validação de campo obrigatório (RF22): nome em branco no `POST /cursos` (e no
+  `POST /comunidades`) devolve 422 por campo.
 
 ### Story 2.2 — Criação de comunidade aberta (KAN-22)
 
@@ -163,7 +169,7 @@ Decisões da implementação:
 2. Story 2.2 (comunidade aberta)                 — sem bloqueio, pode começar já
 3. Story 2.4 (entrar/sair)                       — depende só da 2.2
 4. Story 2.5 (listar/filtrar/visualizar)         — depende de 2.1 (seed) + 2.2
-5. Story 2.1 endpoint (admin cria curso novo)    — depende do papel ADMINISTRADOR (Vynicyus)
+5. Story 2.1 endpoint (admin cria curso novo)    — feito no KAN-44 (`POST /cursos` cria a comunidade)
 6. Story 2.6 (administrar)                       — depende de 2.2, mais a coluna ativa
 ```
 

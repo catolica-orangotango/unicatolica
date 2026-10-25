@@ -17,12 +17,14 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * Regras de negócio das Stories 2.2 (criar comunidade aberta), 2.4 (entrar/sair), 2.5
- * (listar/filtrar/visualizar) e 2.6 (administrar: remover membro, editar, excluir) do Epic 2.
- * Entrada rápida (protótipo desta fatia, ver docs/decisoes/2026-08-modelo-epico-2-comunidades.md) —
- * Story 2.1 (endpoint de admin criar comunidade de curso) fica de fora por falta do endpoint
- * (o papel ADMINISTRADOR de plataforma já existe em Identidade). Na 2.6 o administrador é o
- * papel {@code ADMINISTRADOR} <em>dentro da comunidade</em>, não o da plataforma.
+ * Regras de negócio das Stories 2.1 (comunidade de curso criada e renomeada com o curso),
+ * 2.2 (criar comunidade aberta), 2.4 (entrar/sair), 2.5 (listar/filtrar/visualizar) e 2.6
+ * (administrar: remover membro, editar, excluir) do Epic 2 (ver
+ * docs/decisoes/2026-08-modelo-epico-2-comunidades.md). Na 2.1 não há endpoint de criação aqui:
+ * o administrador de plataforma cadastra o curso ({@code POST /cursos}, Identidade, KAN-44) e
+ * este módulo cria a comunidade ao escutar {@code CursoCadastrado}
+ * ({@link #criarComunidadeDeCurso}). Na 2.6 o administrador é o papel {@code ADMINISTRADOR}
+ * <em>dentro da comunidade</em>, não o da plataforma.
  */
 @ApplicationScoped
 public class ComunidadeService {

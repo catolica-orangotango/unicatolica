@@ -2,8 +2,8 @@ package br.edu.unicatolica.pacext.comunidades.web;
 
 /**
  * Corpo de {@code POST /comunidades} (Story 2.2). Sem campo {@code tipo} de propósito —
- * toda comunidade criada por aqui é ABERTA (RF21.2); tipo CURSO só existe via seed
- * (Story 2.1, protótipo — ver docs/decisoes/2026-08-modelo-epico-2-comunidades.md).
+ * toda comunidade criada por aqui é ABERTA (RF21.2); a de tipo CURSO só nasce com o cadastro do
+ * curso pelo administrador ({@code POST /cursos}, Story 2.1/KAN-44) ou pelo seed inicial.
  */
 public record ComunidadeRequest(String nome, String descricao) {
 }

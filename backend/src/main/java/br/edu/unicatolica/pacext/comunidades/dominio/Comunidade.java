@@ -11,9 +11,9 @@ import jakarta.persistence.Table;
 import java.time.Instant;
 
 /**
- * Entidade {@code comunidade} — módulo Comunidades. Nesta fatia, só é criada/consultada
- * como alvo do auto-join (Story 2.3); os fluxos de criação (Story 2.1/2.2) não fazem
- * parte desta implementação.
+ * Entidade {@code comunidade} — módulo Comunidades. Tipo {@code CURSO}: criada com o cadastro do
+ * curso (Story 2.1) e alvo do auto-join (Story 2.3), sem botão "participar"; tipo {@code ABERTA}:
+ * criada por qualquer aluno (Story 2.2).
  */
 @Entity
 @Table(name = "comunidade")
