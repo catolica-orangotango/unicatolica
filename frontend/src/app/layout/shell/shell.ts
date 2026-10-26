@@ -58,10 +58,14 @@ export class Shell {
 
   private readonly avatar = viewChild<ElementRef<HTMLButtonElement>>('avatar');
   private readonly sininho = viewChild<ElementRef<HTMLButtonElement>>('sininho');
+  private readonly botaoNav = viewChild<ElementRef<HTMLButtonElement>>('botaoNav');
+  private readonly sidebarNav = viewChild<ElementRef<HTMLElement>>('sidebarNav');
 
   protected readonly navItens = NAV_ITENS;
   protected readonly menuAberto = signal(false);
   protected readonly notificacoesAbertas = signal(false);
+  /** Gaveta de navegação mobile (Story 14.4) - sem efeito acima do breakpoint, onde a sidebar já é visível. */
+  protected readonly navAberto = signal(false);
   /**
    * "Suas comunidades" (Epic 2) — cache compartilhada do `ComunidadesService`
    * (ver lá): entrar/sair numa comunidade em qualquer tela atualiza isto aqui
@@ -104,7 +108,43 @@ export class Shell {
     // menu no mesmo gesto que o abriu.
     evento.stopPropagation();
     this.notificacoesAbertas.set(false);
+    this.navAberto.set(false);
     this.menuAberto.update((aberto) => !aberto);
+  }
+
+  /** Story 14.4 - abre/fecha a gaveta de navegação mobile (abaixo do breakpoint). */
+  protected alternarNav(evento: Event): void {
+    evento.stopPropagation();
+    this.menuAberto.set(false);
+    this.notificacoesAbertas.set(false);
+    this.navAberto.update((aberto) => !aberto);
+  }
+
+  /**
+   * Prende o foco dentro da gaveta enquanto ela está aberta (Story 14.4,
+   * WCAG 2.2 AA) - Tab no último item volta ao primeiro, Shift+Tab no
+   * primeiro vai ao último. Sem efeito acima do breakpoint: lá a gaveta nunca
+   * abre (o botão "Menu" fica `display: none`), então `navAberto()` só vira
+   * `true` por um clique que, nesse layout, não existe.
+   */
+  protected aoTeclarNaGaveta(evento: KeyboardEvent): void {
+    if (evento.key !== 'Tab' || !this.navAberto()) {
+      return;
+    }
+    const nav = this.sidebarNav()?.nativeElement;
+    const focaveis = nav ? [...nav.querySelectorAll<HTMLElement>('a, button')] : [];
+    if (focaveis.length === 0) {
+      return;
+    }
+    const primeiro = focaveis[0];
+    const ultimo = focaveis[focaveis.length - 1];
+    if (evento.shiftKey && document.activeElement === primeiro) {
+      evento.preventDefault();
+      ultimo.focus();
+    } else if (!evento.shiftKey && document.activeElement === ultimo) {
+      evento.preventDefault();
+      primeiro.focus();
+    }
   }
 
   /** Story 10.1 — abre/fecha o painel de notificações; recarrega ao abrir. */
@@ -131,6 +171,10 @@ export class Shell {
     if (this.notificacoesAbertas()) {
       this.notificacoesAbertas.set(false);
       this.sininho()?.nativeElement.focus();
+    }
+    if (this.navAberto()) {
+      this.navAberto.set(false);
+      this.botaoNav()?.nativeElement.focus();
     }
   }
 

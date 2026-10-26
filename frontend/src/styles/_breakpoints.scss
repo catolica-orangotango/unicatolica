@@ -1,0 +1,11 @@
+// Breakpoints (Story 14.4).
+//
+// A CSS custom property (`--uc-*`) can't be read inside an `@media` feature
+// condition - that's a CSS platform limitation, not a choice - so this single
+// value lives as a Sass variable instead of a `_tokens.scss` entry. A
+// stylesheet that needs it imports this partial with `@use` and reads
+// `bp.$uc-breakpoint-nav`. Nothing here compiles to CSS output on its own.
+//
+// Decision log: 2026-10-07 prep for Sprint 2 (Story 14.4) - sidebar becomes an
+// overlay drawer below this width; nothing above it changes.
+$uc-breakpoint-nav: 1024px;

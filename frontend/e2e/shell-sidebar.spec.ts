@@ -129,3 +129,101 @@ test('sem token, acessar /feed redireciona para /login e a shell não renderiza'
   await expect(page).toHaveURL(/\/login$/);
   await expect(page.getByRole('navigation', { name: 'Navegação principal' })).toHaveCount(0);
 });
+
+/**
+ * Comportamento responsivo da navegação (Story 14.4). Abaixo do breakpoint
+ * (1024px, `styles/_breakpoints.scss`) a sidebar vira gaveta sobreposta,
+ * aberta por um botão "Menu" na topbar; acima dele nada muda (cobertura das
+ * suítes acima, que rodam no viewport "Desktop Chrome" padrão do projeto).
+ */
+test.describe('gaveta de navegação mobile (360×800)', () => {
+  test.use({ viewport: { width: 360, height: 800 } });
+
+  function botaoMenu(page: import('@playwright/test').Page) {
+    return page.getByRole('button', { name: 'Menu', exact: true });
+  }
+
+  test('a gaveta começa fechada e o botão Menu a controla', async ({ page }) => {
+    await plantarToken(page, ['ALUNO']);
+    await page.goto('/feed');
+
+    await expect(botaoMenu(page)).toHaveAttribute('aria-expanded', 'false');
+    await expect(nav(page)).not.toBeVisible();
+
+    await botaoMenu(page).click();
+
+    await expect(botaoMenu(page)).toHaveAttribute('aria-expanded', 'true');
+    await expect(nav(page)).toBeVisible();
+  });
+
+  test('Escape fecha a gaveta e devolve o foco ao botão Menu', async ({ page }) => {
+    await plantarToken(page, ['ALUNO']);
+    await page.goto('/feed');
+    await botaoMenu(page).click();
+    await expect(nav(page)).toBeVisible();
+
+    await page.keyboard.press('Escape');
+
+    await expect(nav(page)).not.toBeVisible();
+    await expect(botaoMenu(page)).toBeFocused();
+  });
+
+  test('escolher "Descobrir comunidades" fecha a gaveta e navega', async ({ page }) => {
+    await plantarToken(page, ['ALUNO']);
+    await page.goto('/feed');
+    await botaoMenu(page).click();
+
+    await nav(page).getByRole('link', { name: 'Descobrir comunidades' }).click();
+
+    await expect(page).toHaveURL(/\/comunidades$/);
+    await expect(nav(page)).not.toBeVisible();
+  });
+
+  test('moderador: "Denúncias" aparece na gaveta, com o contador de pendentes', async ({
+    page,
+  }) => {
+    await plantarToken(page, ['MODERADOR']);
+    await page.goto('/feed');
+
+    await botaoMenu(page).click();
+
+    await expect(nav(page).getByRole('link', { name: /Denúncias/ })).toBeVisible();
+  });
+
+  test('o foco não escapa da gaveta aberta via Tab (foco preso)', async ({ page }) => {
+    await plantarToken(page, ['ALUNO']);
+    await page.goto('/feed');
+    await botaoMenu(page).click();
+
+    const focaveis = nav(page).locator('a, button');
+    const total = await focaveis.count();
+    await focaveis.nth(total - 1).focus();
+
+    await page.keyboard.press('Tab');
+
+    await expect(focaveis.first()).toBeFocused();
+  });
+
+  test('sem rolagem horizontal da página com a gaveta fechada', async ({ page }) => {
+    await plantarToken(page, ['ALUNO']);
+    await page.goto('/feed');
+
+    const temRolagemHorizontal = await page.evaluate(
+      () => document.documentElement.scrollWidth > document.documentElement.clientWidth,
+    );
+    expect(temRolagemHorizontal).toBe(false);
+  });
+});
+
+/** Acima do breakpoint nada muda: o botão Menu some, a sidebar fica fixa como sempre. */
+test.describe('acima do breakpoint (1280×800)', () => {
+  test.use({ viewport: { width: 1280, height: 800 } });
+
+  test('o botão Menu não aparece e a sidebar é sempre visível', async ({ page }) => {
+    await plantarToken(page, ['ALUNO']);
+    await page.goto('/feed');
+
+    await expect(page.getByRole('button', { name: 'Menu', exact: true })).toBeHidden();
+    await expect(nav(page)).toBeVisible();
+  });
+});
