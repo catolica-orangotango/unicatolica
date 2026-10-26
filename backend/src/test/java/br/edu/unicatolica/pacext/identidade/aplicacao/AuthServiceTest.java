@@ -220,6 +220,42 @@ class AuthServiceTest {
     }
 
     @Test
+    void rejeitaContaDesativadaQuandoCredencialEstaCorreta() {
+        Usuario usuario = usuarioConfirmado("Senha123!");
+        usuario.ativo = false;
+        when(usuarioRepository.buscarPorEmail(usuario.email)).thenReturn(Optional.of(usuario));
+
+        ApiException erro = assertThrows(ApiException.class,
+                () -> authService.autenticar(usuario.email, "Senha123!"));
+
+        assertEquals(401, erro.getStatus());
+        assertEquals("CONTA_DESATIVADA", erro.getCode());
+        verify(auditoriaService, never()).registrar(any(), any(), any(), any());
+    }
+
+    @Test
+    void contaDesativadaComSenhaErradaCaiEmCredenciaisInvalidas() {
+        // Mesma regra do e-mail não confirmado: só quem acerta a senha descobre a situação da conta.
+        Usuario usuario = usuarioConfirmado("Senha123!");
+        usuario.ativo = false;
+        when(usuarioRepository.buscarPorEmail(usuario.email)).thenReturn(Optional.of(usuario));
+
+        assertThrows(CredenciaisInvalidasException.class,
+                () -> authService.autenticar(usuario.email, "senha-errada"));
+    }
+
+    @Test
+    void naoRenovaASessaoDeContaDesativada() {
+        Usuario usuario = usuarioConfirmado("Senha123!");
+        usuario.ativo = false;
+        when(usuarioRepository.findByIdOptional(usuario.id)).thenReturn(Optional.of(usuario));
+
+        ApiException erro = assertThrows(ApiException.class, () -> authService.renovar(usuario.id));
+
+        assertEquals(401, erro.getStatus());
+    }
+
+    @Test
     void rejeitaComCredenciaisInvalidasQuandoSenhaErradaMesmoComEmailNaoConfirmado() {
         // Senha errada nunca deve revelar que o e-mail existe mas está pendente de
         // confirmação — sempre CredenciaisInvalidasException (RF07/anti-enumeração).

@@ -1,0 +1,154 @@
+<div class="usuarios">
+  <a class="usuarios__voltar" routerLink="/admin">&larr; Administração</a>
+  <h1 class="usuarios__titulo">Usuários</h1>
+
+  <form class="usuarios__filtros" (ngSubmit)="aplicarFiltro(buscaDigitada.value, perfilSelecionado.value)">
+    <div class="usuarios__grupo">
+      <label class="usuarios__rotulo" for="usuarios-busca">Buscar por nome ou e-mail</label>
+      <input #buscaDigitada id="usuarios-busca" class="usuarios__campo" type="text" [value]="filtroBusca()" />
+    </div>
+
+    <div class="usuarios__grupo">
+      <label class="usuarios__rotulo" for="usuarios-perfil">Perfil</label>
+      <select #perfilSelecionado id="usuarios-perfil" class="usuarios__campo" [value]="filtroPerfil()">
+        <option value="">Todos os perfis</option>
+        @for (perfil of perfis; track perfil) {
+          <option [value]="perfil">{{ rotulo[perfil] }}</option>
+        }
+      </select>
+    </div>
+
+    <button type="submit" uc-button>Filtrar</button>
+  </form>
+
+  @if (erroAcao(); as mensagem) {
+    <p class="usuarios__erro" role="alert">{{ mensagem }}</p>
+  }
+
+  @if (carregando()) {
+    <p class="usuarios__estado">Carregando usuários…</p>
+  } @else if (erro(); as mensagem) {
+    <div class="usuarios__estado usuarios__estado--erro" role="alert">{{ mensagem }}</div>
+  } @else if (pagina(); as resultado) {
+    @if (resultado.content.length === 0) {
+      <p class="usuarios__estado">Nenhum usuário encontrado com esse filtro.</p>
+    } @else {
+      <div class="usuarios__rolagem" role="region" aria-label="Lista de usuários" tabindex="0">
+        <table class="usuarios__tabela">
+          <thead>
+            <tr>
+              <th scope="col">Nome</th>
+              <th scope="col">E-mail</th>
+              <th scope="col">Curso</th>
+              <th scope="col">Perfil</th>
+              <th scope="col">Situação</th>
+              <th scope="col">Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (usuario of resultado.content; track usuario.id) {
+              <tr>
+                <th scope="row" class="usuarios__nome">{{ usuario.nomeCompleto }}</th>
+                <td>{{ usuario.email }}</td>
+                <td>{{ usuario.curso ?? 'Sem curso' }}</td>
+                <td>{{ rotulo[usuario.perfil] }}</td>
+                <td>
+                  <span class="usuarios__situacao" [class.usuarios__situacao--desativada]="!usuario.ativo">
+                    {{ usuario.ativo ? 'Ativa' : 'Desativada' }}
+                  </span>
+                </td>
+                <td>
+                  <div class="usuarios__acoes">
+                  @if (usuario.id === meuId) {
+                    <span class="usuarios__ajuda">Esta é a sua conta</span>
+                  } @else if (confirmando(usuario, 'perfil')) {
+                    <div class="usuarios__confirmacao" role="group" [attr.aria-label]="'Alterar perfil de ' + usuario.nomeCompleto">
+                      <label class="usuarios__rotulo" [attr.for]="'perfil-novo-' + usuario.id">Novo perfil</label>
+                      <select
+                        class="usuarios__campo"
+                        [id]="'perfil-novo-' + usuario.id"
+                        [value]="novoPerfil()"
+                        (change)="escolherPerfil($any($event.target).value)"
+                      >
+                        @for (perfil of perfis; track perfil) {
+                          <option [value]="perfil" [selected]="perfil === novoPerfil()">{{ rotulo[perfil] }}</option>
+                        }
+                      </select>
+                      <p class="usuarios__ajuda">{{ usuario.nomeCompleto }} precisará entrar de novo.</p>
+                      <button
+                        #botaoConfirmar
+                        type="button"
+                        class="usuarios__botao-perigo"
+                        [disabled]="processandoId() === usuario.id"
+                        (click)="confirmar()"
+                      >
+                        {{ processandoId() === usuario.id ? 'Alterando…' : 'Confirmar alteração' }}
+                      </button>
+                      <button type="button" class="usuarios__botao" (click)="cancelar()">Cancelar</button>
+                    </div>
+                  } @else if (confirmando(usuario, 'desativar')) {
+                    <div class="usuarios__confirmacao" role="group" [attr.aria-label]="'Desativar conta de ' + usuario.nomeCompleto">
+                      <p class="usuarios__ajuda">Desativar {{ usuario.nomeCompleto }}? A sessão atual cai e o login fica bloqueado.</p>
+                      <button
+                        #botaoConfirmar
+                        type="button"
+                        class="usuarios__botao-perigo"
+                        [disabled]="processandoId() === usuario.id"
+                        (click)="confirmar()"
+                      >
+                        {{ processandoId() === usuario.id ? 'Desativando…' : 'Confirmar desativação' }}
+                      </button>
+                      <button type="button" class="usuarios__botao" (click)="cancelar()">Cancelar</button>
+                    </div>
+                  } @else {
+                    <button
+                      type="button"
+                      class="usuarios__botao"
+                      [attr.aria-label]="'Alterar perfil de ' + usuario.nomeCompleto"
+                      [disabled]="processandoId() === usuario.id"
+                      (click)="pedirAlteracaoDePerfil(usuario)"
+                    >
+                      Alterar perfil
+                    </button>
+                    @if (usuario.ativo) {
+                      <button
+                        type="button"
+                        class="usuarios__botao"
+                        [attr.aria-label]="'Desativar conta de ' + usuario.nomeCompleto"
+                        [disabled]="processandoId() === usuario.id"
+                        (click)="pedirDesativacao(usuario)"
+                      >
+                        Desativar
+                      </button>
+                    } @else {
+                      <button
+                        type="button"
+                        class="usuarios__botao"
+                        [attr.aria-label]="'Reativar conta de ' + usuario.nomeCompleto"
+                        [disabled]="processandoId() === usuario.id"
+                        (click)="reativar(usuario)"
+                      >
+                        {{ processandoId() === usuario.id ? 'Reativando…' : 'Reativar' }}
+                      </button>
+                    }
+                  }
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      @if (resultado.totalPages > 1) {
+        <div class="usuarios__paginacao">
+          <button type="button" [disabled]="resultado.page === 0" (click)="irParaPagina(resultado.page - 1)">&larr; Anterior</button>
+          <span>Página {{ resultado.page + 1 }} de {{ resultado.totalPages }}</span>
+          <button type="button" [disabled]="resultado.page + 1 >= resultado.totalPages" (click)="irParaPagina(resultado.page + 1)">
+            Próxima &rarr;
+          </button>
+        </div>
+      }
+    }
+  }
+</div>

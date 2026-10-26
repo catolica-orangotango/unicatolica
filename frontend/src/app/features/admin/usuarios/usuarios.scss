@@ -1,0 +1,175 @@
+// Tela "Usuários" de /admin (KAN-83). Só tokens --uc-*; a situação e o perfil sempre saem em texto.
+:host {
+  display: block;
+}
+
+.usuarios {
+  // layout-literal: largura da tabela de gestão; DESIGN.md defere larguras de coluna para a implementacao.
+  max-width: 1100px;
+}
+
+.usuarios__voltar {
+  display: inline-block;
+  margin-bottom: calc(var(--uc-space-unit) * 2);
+  color: var(--uc-color-ink-soft);
+  font-size: var(--uc-font-size-meta);
+}
+
+.usuarios__titulo {
+  margin: 0 0 var(--uc-space-section-gap);
+  font-size: var(--uc-font-size-greeting);
+  font-weight: var(--uc-font-weight-semibold);
+  color: var(--uc-color-ink);
+}
+
+.usuarios__filtros {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: calc(var(--uc-space-unit) * 2.5);
+  margin-bottom: var(--uc-space-section-gap);
+}
+
+.usuarios__grupo {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--uc-space-unit) / 2);
+}
+
+.usuarios__rotulo {
+  font-size: var(--uc-font-size-meta);
+  font-weight: var(--uc-font-weight-semibold);
+  color: var(--uc-color-ink);
+}
+
+.usuarios__campo {
+  border: 1px solid var(--uc-color-border);
+  border-radius: var(--uc-radius-default);
+  background: var(--uc-color-surface);
+  color: var(--uc-color-ink);
+  padding: calc(var(--uc-space-unit) * 2) calc(var(--uc-space-unit) * 3);
+  font-family: var(--uc-font-family-base);
+  font-size: var(--uc-font-size-body);
+}
+
+.usuarios__erro,
+.usuarios__estado--erro {
+  color: var(--uc-color-error);
+}
+
+.usuarios__erro {
+  margin: 0 0 calc(var(--uc-space-unit) * 3);
+  font-size: var(--uc-font-size-meta);
+}
+
+.usuarios__estado {
+  padding: calc(var(--uc-space-unit) * 8) 0;
+  text-align: center;
+  color: var(--uc-color-ink-soft);
+}
+
+.usuarios__rolagem {
+  overflow-x: auto;
+  background: var(--uc-color-surface);
+  border: 1px solid var(--uc-color-border);
+  border-radius: var(--uc-radius-md);
+}
+
+.usuarios__tabela {
+  // layout-literal: a tabela ocupa a largura do contêiner; DESIGN.md não define largura de tabela.
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--uc-font-size-body);
+  color: var(--uc-color-ink);
+  text-align: left;
+}
+
+.usuarios__tabela th,
+.usuarios__tabela td {
+  padding: calc(var(--uc-space-unit) * 2.5) calc(var(--uc-space-unit) * 3);
+  border-bottom: 1px solid var(--uc-color-border);
+  vertical-align: top;
+}
+
+.usuarios__tabela thead th {
+  font-size: var(--uc-font-size-meta);
+  font-weight: var(--uc-font-weight-semibold);
+  color: var(--uc-color-ink-soft);
+}
+
+.usuarios__tabela tbody tr:last-child th,
+.usuarios__tabela tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.usuarios__nome {
+  font-weight: var(--uc-font-weight-semibold);
+}
+
+.usuarios__situacao {
+  display: inline-block;
+  padding: calc(var(--uc-space-unit) / 2) calc(var(--uc-space-unit) * 2);
+  border: 1px solid var(--uc-color-border);
+  border-radius: var(--uc-radius-full);
+  font-size: var(--uc-font-size-meta);
+  color: var(--uc-color-ink);
+}
+
+.usuarios__situacao--desativada {
+  border-color: var(--uc-color-error);
+  color: var(--uc-color-error);
+}
+
+.usuarios__acoes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: calc(var(--uc-space-unit) * 2);
+}
+
+.usuarios__confirmacao {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: calc(var(--uc-space-unit) * 2);
+}
+
+.usuarios__ajuda {
+  margin: 0;
+  font-size: var(--uc-font-size-meta);
+  color: var(--uc-color-ink-soft);
+}
+
+.usuarios__botao,
+.usuarios__botao-perigo,
+.usuarios__paginacao button {
+  border: 1px solid var(--uc-color-border);
+  background: var(--uc-color-surface);
+  color: var(--uc-color-ink);
+  border-radius: var(--uc-radius-full);
+  padding: var(--uc-space-unit) calc(var(--uc-space-unit) * 4);
+  font-family: var(--uc-font-family-base);
+  font-size: var(--uc-font-size-body);
+  cursor: pointer;
+}
+
+.usuarios__botao-perigo {
+  border-color: var(--uc-color-error);
+  background: transparent;
+  color: var(--uc-color-error);
+}
+
+.usuarios__botao:disabled,
+.usuarios__botao-perigo:disabled,
+.usuarios__paginacao button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.usuarios__paginacao {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: calc(var(--uc-space-unit) * 4);
+  margin-top: var(--uc-space-section-gap);
+  font-size: var(--uc-font-size-body);
+}

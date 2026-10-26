@@ -9,9 +9,10 @@ import jakarta.persistence.Table;
 import java.time.Instant;
 
 /**
- * Entidade {@code curso} — curso da instituição (RF16). Cadastrado por administrador
- * (KAN-44); a lista inicial vem da migration {@code identidade-005}. O nome casa com a
- * comunidade de curso no auto-join (RF24.1).
+ * Entidade {@code curso} — curso da instituição (RF16). Cadastrado, renomeado e
+ * ativado/desativado por administrador (KAN-44); a lista inicial vem da migration
+ * {@code identidade-005}. A comunidade de curso é ligada a ele pelo id ({@code comunidade.curso_id}),
+ * e o auto-join (RF24.1) casa por esse id.
  */
 @Entity
 @Table(name = "curso")

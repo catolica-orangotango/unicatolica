@@ -150,4 +150,13 @@ test.describe('administração da comunidade', () => {
     await expect(page.getByRole('heading', { name: 'Administração' })).toHaveCount(0);
     await expect(page.getByRole('button', { name: 'Sair' })).toBeVisible();
   });
+
+  test('comunidade de curso não tem botão Sair (KAN-73)', async ({ page }) => {
+    await mockComunidadeComFeed(page, { id: 43, nome: 'Engenharia de Software', tipo: 'CURSO', souMembro: true });
+    await page.goto('/comunidades/43');
+
+    await expect(page.getByRole('heading', { name: 'Engenharia de Software' })).toBeVisible();
+    await expect(page.getByText('Comunidade de curso · associação automática')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Sair' })).toHaveCount(0);
+  });
 });

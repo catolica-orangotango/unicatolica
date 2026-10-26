@@ -4,21 +4,8 @@ Problemas conhecidos que ainda não têm história nem PR. Quando um item virar 
 
 | # | Dívida | Estado |
 |---|---|---|
-| DT-3 | Lista de cursos ainda não é mantida pelo administrador | KAN-44 |
 | DT-4 | E-mail de confirmação do cadastro não chega ao usuário | Código pronto; falta configurar a Brevo no Render |
 | DT-5 | Nome de comunidade sem limite de tamanho no backend | Aberta |
-
-## DT-3. Lista de cursos ainda não é mantida pelo administrador
-
-- **Hoje:** desde a decisão de 2026-09-30, o curso é a entidade `Curso` do módulo Identidade (migration `identidade-005`). O cadastro usa um `select` carregado de `GET /cursos`, público, e grava `usuario.curso_id`. Falta:
-  - **Cadastro de cursos:** a lista são os 26 cursos do seed, e ninguém cadastra, renomeia nem desativa curso, porque ainda não há endpoint de administração de cursos (o papel ADMINISTRADOR e a rota `/admin` já existem).
-  - **Coluna antiga:** `usuario.curso` (texto) continua gravada com o nome oficial do curso, para quem só lê o nome (`UsuarioResumo`, Home, auto-join) não mudar. Renomear um curso deixaria essa cópia desatualizada.
-  - **Vínculo com a comunidade:** o auto-join ainda casa curso e comunidade pelo nome, não pelo id.
-- **Correção esperada (KAN-44):**
-  - `POST`/`PUT /cursos` para o ADMINISTRADOR, dentro de `/admin`.
-  - Evento `CursoCadastrado`, que cria a comunidade de curso (Story 2.1).
-  - Vínculo curso → comunidade pelo id.
-  - Remoção da coluna `usuario.curso`.
 
 ## DT-4. E-mail de confirmação do cadastro não chega ao usuário
 
@@ -45,5 +32,5 @@ Problemas conhecidos que ainda não têm história nem PR. Quando um item virar 
   1. Não definir `QUARKUS_LIQUIBASE_CONTEXTS` no Render. A variável vence o `application.properties` e, com `dev`, o seed com senha pública rodaria em produção.
   2. Depois do primeiro deploy, conferir no banco que não existem `aluno.teste`, `moderador.teste` nem `admin.teste` (`SELECT email FROM usuario WHERE email LIKE '%.teste@%'`). Se existirem, apagar.
   3. A pessoa responsável se cadastra pela tela normal e confirma o e-mail. Depois, no console do Neon: `UPDATE usuario SET perfil = 'ADMINISTRADOR' WHERE email = '<e-mail dela>';`. O perfil vale no próximo login.
-  4. Daí em diante, outros perfis passam a ser alterados pela tela de usuários (KAN-83).
+  4. Daí em diante, outros perfis passam a ser alterados pela tela de usuários (`/admin/usuarios`, KAN-83). O administrador não altera o próprio perfil, então o primeiro continua sendo promovido à mão.
 - **Prazo:** antes de abrir o sistema em produção.

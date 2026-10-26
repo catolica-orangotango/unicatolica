@@ -35,6 +35,14 @@ public class Comunidade {
     @Column(name = "tipo", nullable = false, length = 10)
     public TipoComunidade tipo;
 
+    /**
+     * Id do {@code curso} (Identidade) de uma comunidade de curso — sem FK nem relação JPA
+     * (AD-3); {@code null} nas comunidades abertas. O auto-join casa por este id, então
+     * renomear o curso não solta o vínculo (KAN-44).
+     */
+    @Column(name = "curso_id")
+    public Long cursoId;
+
     /** Id de {@code usuario} — sem relação JPA cruzando módulo (AD-3). */
     @Column(name = "criado_por_usuario_id", nullable = false)
     public Long criadoPorUsuarioId;

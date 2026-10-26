@@ -15,8 +15,8 @@ class AutoJoinNoCadastroTest {
         AutoJoinNoCadastro observer = new AutoJoinNoCadastro();
         observer.autoJoinCursoService = mock(AutoJoinCursoService.class);
 
-        observer.aoCadastrar(new UsuarioCadastrado(42L, "Administração"));
+        observer.aoCadastrar(new UsuarioCadastrado(42L, 1L));
 
-        verify(observer.autoJoinCursoService).sincronizarCursoDoAluno(42L, null, "Administração");
+        verify(observer.autoJoinCursoService).sincronizarCursoDoAluno(42L, null, 1L);
     }
 }
