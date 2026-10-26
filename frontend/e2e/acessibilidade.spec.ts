@@ -4,6 +4,7 @@ import {
   mockComunidadeComFeed,
   mockConfirmacaoOk,
   mockCursosOk,
+  mockCursosAdmin,
   mockFeedOk,
   mockMeuPerfil,
   mockModeracao,
@@ -175,6 +176,28 @@ test('moderador: fila e análise da denúncia', async ({ page }) => {
   await page.goto('/moderacao/denuncias');
   await expect(page.locator('app-analise-denuncia')).toBeVisible();
   await expect(page).toHaveTitle('Denúncias — UniCatólica');
+  await esperarSemViolacoes(page);
+});
+
+test('administrador: painel de administração', async ({ page }) => {
+  await mockFeedOk(page);
+  await plantarToken(page, ['ADMINISTRADOR']);
+  await page.goto('/admin');
+  await expect(page.getByRole('heading', { level: 1, name: 'Administração' })).toBeVisible();
+  await expect(page).toHaveTitle('Administração — UniCatólica');
+  await esperarSemViolacoes(page);
+});
+
+test('administrador: tela de cursos', async ({ page }) => {
+  await mockFeedOk(page);
+  await mockCursosAdmin(page, [
+    { id: 1, nome: 'Administração', ativo: true },
+    { id: 2, nome: 'Direito', ativo: false },
+  ]);
+  await plantarToken(page, ['ADMINISTRADOR']);
+  await page.goto('/admin/cursos');
+  await expect(page.getByRole('heading', { level: 1, name: 'Cursos' })).toBeVisible();
+  await expect(page).toHaveTitle('Cursos — UniCatólica');
   await esperarSemViolacoes(page);
 });
 

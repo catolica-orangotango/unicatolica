@@ -35,8 +35,34 @@ public class UsuarioAutenticado {
         }
     }
 
-    /** @return {@code true} se a claim {@code roles} do token contém o perfil informado. */
+    /**
+     * @return {@code true} se a claim {@code roles} do token contém o perfil informado
+     *     (correspondência exata; para a regra de moderação use {@link #podeModerar()}).
+     */
     public boolean possuiPerfil(String perfil) {
         return jsonWebToken.getGroups() != null && jsonWebToken.getGroups().contains(perfil);
+    }
+
+    /** @return {@code true} para {@code MODERADOR} ou {@code ADMINISTRADOR}: o administrador tem as permissões de moderador. */
+    public boolean podeModerar() {
+        return possuiPerfil(Perfis.MODERADOR) || possuiPerfil(Perfis.ADMINISTRADOR);
+    }
+
+    /** @throws ApiException 403 {@code ACESSO_NEGADO} se o usuário não pode moderar. */
+    public void exigirModerador() {
+        if (!podeModerar()) {
+            throw acessoNegado();
+        }
+    }
+
+    /** @throws ApiException 403 {@code ACESSO_NEGADO} se o usuário não é {@code ADMINISTRADOR}. */
+    public void exigirAdministrador() {
+        if (!possuiPerfil(Perfis.ADMINISTRADOR)) {
+            throw acessoNegado();
+        }
+    }
+
+    private static ApiException acessoNegado() {
+        return ApiException.semPermissao("ACESSO_NEGADO", "Você não tem permissão para executar esta ação.", null);
     }
 }

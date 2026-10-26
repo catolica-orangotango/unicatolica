@@ -14,7 +14,7 @@ const TOKEN_KEY = 'pacext.token';
 
 const ITENS_MODERACAO = ['Denúncias', 'Solicitações de fixação'];
 
-/** Ordem exata da tabela "Navegação global" de EXPERIENCE.md. */
+/** Ordem da tabela "Navegação global" de EXPERIENCE.md, como o moderador a enxerga. */
 const ORDEM_COMPLETA = [
   'Início',
   'Buscar',
@@ -26,6 +26,9 @@ const ORDEM_COMPLETA = [
   'Suas comunidades',
   'Descobrir comunidades',
 ];
+
+/** A ordem do administrador: a do moderador mais "Administração" no fim. */
+const ORDEM_ADMINISTRADOR = [...ORDEM_COMPLETA, 'Administração'];
 
 /** A mesma ordem, sem os dois itens de moderação (o que um aluno enxerga). */
 const ITENS_COMUNS = ORDEM_COMPLETA.filter((label) => !ITENS_MODERACAO.includes(label));
@@ -168,10 +171,19 @@ describe('Shell', () => {
     expect(labelsDeNav(f)).toEqual(ORDEM_COMPLETA);
   });
 
-  it('administrador: mesma ordem completa do moderador', async () => {
+  it('administrador: ordem do moderador mais "Administração" no fim', async () => {
     const f = await montar(tokenComPerfis(['ADMINISTRADOR']));
 
-    expect(labelsDeNav(f)).toEqual(ORDEM_COMPLETA);
+    expect(labelsDeNav(f)).toEqual(ORDEM_ADMINISTRADOR);
+  });
+
+  it('aluno e moderador não veem "Administração"', async () => {
+    for (const perfil of ['ALUNO', 'MODERADOR']) {
+      TestBed.resetTestingModule();
+      const f = await montar(tokenComPerfis([perfil]));
+
+      expect(labelsDeNav(f)).not.toContain('Administração');
+    }
   });
 
   it('token malformado: itens de moderação escondidos, sem lançar', async () => {

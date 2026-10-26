@@ -1,5 +1,6 @@
 package br.edu.unicatolica.pacext.identidade.aplicacao;
 
+import br.edu.unicatolica.pacext.compartilhado.seguranca.Perfis;
 import br.edu.unicatolica.pacext.identidade.UsuarioCadastrado;
 import br.edu.unicatolica.pacext.identidade.dominio.Curso;
 import br.edu.unicatolica.pacext.identidade.dominio.GeradorTokenConfirmacao;
@@ -87,9 +88,9 @@ public class CadastroService {
         usuario.senhaHash = passwordHasher.gerarHash(senha);
         usuario.dataNascimento = dataNascimento;
         usuario.cursoId = curso.id;
-        usuario.curso = curso.nome;
+        usuario.cursoNome = curso.nome;
         usuario.emailConfirmado = false;
-        usuario.perfil = "ALUNO";
+        usuario.perfil = Perfis.ALUNO;
         usuario.criadoEm = Instant.now();
         usuario.tokenConfirmacaoEmail = geradorTokenConfirmacao.gerar();
         usuario.tokenConfirmacaoExpiraEm = Instant.now().plus(tokenValidadeHoras, ChronoUnit.HOURS);
@@ -98,7 +99,7 @@ public class CadastroService {
 
         // RF24.1 — Comunidades escuta e faz o auto-join na mesma transação. Nenhuma sessão é
         // gerada aqui (RF01.2).
-        usuarioCadastrado.fire(new UsuarioCadastrado(usuario.id, usuario.curso));
+        usuarioCadastrado.fire(new UsuarioCadastrado(usuario.id, usuario.cursoId));
 
         String linkConfirmacao = frontendUrl + "/confirmar-email?token=" + usuario.tokenConfirmacaoEmail;
         emailService.enviarConfirmacaoCadastro(usuario.email, usuario.nome, linkConfirmacao);

@@ -1,0 +1,19 @@
+:host {
+  display: block;
+}
+
+.painel__titulo {
+  margin-bottom: var(--uc-space-section-gap);
+}
+
+.painel__atalhos {
+  margin: var(--uc-space-section-gap) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.painel__atalho {
+  color: var(--uc-color-ink);
+  font-size: var(--uc-font-size-body);
+  font-weight: var(--uc-font-weight-semibold);
+}

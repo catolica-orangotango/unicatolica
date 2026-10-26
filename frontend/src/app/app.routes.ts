@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './core/auth/auth.guard';
+import { adminGuard } from './core/auth/admin.guard';
 import { moderadorGuard } from './core/auth/moderador.guard';
 
 export const routes: Routes = [
@@ -51,6 +52,21 @@ export const routes: Routes = [
         title: 'Perfil',
         loadComponent: () =>
           import('./features/perfil/perfil-usuario/perfil-usuario').then((m) => m.PerfilUsuario),
+      },
+      {
+        path: 'admin',
+        title: 'Administração',
+        canActivate: [adminGuard],
+        loadComponent: () =>
+          import('./features/admin/painel-admin/painel-admin').then((m) => m.PainelAdmin),
+      },
+      {
+        // Tela "Cursos" da administração (KAN-44): cadastrar, renomear e desativar cursos.
+        path: 'admin/cursos',
+        title: 'Cursos',
+        canActivate: [adminGuard],
+        loadComponent: () =>
+          import('./features/admin/cursos-admin/cursos-admin').then((m) => m.CursosAdmin),
       },
       {
         // Fila de denúncias do moderador (Stories 12.4/12.5) — URL do mockup key-denuncias.

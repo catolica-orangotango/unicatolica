@@ -18,7 +18,9 @@
 
   <ul class="shell__nav-list">
     @for (item of navItens; track item.label) {
-      @if (!item.privileged || ehPrivilegiado()) {
+      @if (
+        (!item.privileged || ehPrivilegiado()) && (!item.somenteAdministrador || ehAdministrador())
+      ) {
         <li>
           @if (item.path) {
             <a

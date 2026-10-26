@@ -1,6 +1,7 @@
 package br.edu.unicatolica.pacext.identidade.aplicacao;
 
 import br.edu.unicatolica.pacext.compartilhado.erro.ApiException;
+import br.edu.unicatolica.pacext.compartilhado.seguranca.Perfis;
 import br.edu.unicatolica.pacext.compartilhado.seguranca.SessaoConsulta;
 import br.edu.unicatolica.pacext.compartilhado.seguranca.UsuarioAutenticado;
 import br.edu.unicatolica.pacext.identidade.UsuarioConsulta;
@@ -42,7 +43,7 @@ public class UsuarioService implements UsuarioConsulta, SessaoConsulta {
      * oculta (AD-5).
      */
     public Usuario buscarPorId(Long id) {
-        if (!usuarioAutenticado.possuiPerfil("MODERADOR")) {
+        if (!usuarioAutenticado.possuiPerfil(Perfis.MODERADOR)) {
             throw new AcessoNegadoException();
         }
         return buscar(id);
@@ -54,7 +55,7 @@ public class UsuarioService implements UsuarioConsulta, SessaoConsulta {
             return Map.of();
         }
         return usuarioRepository.buscarPorIds(ids).stream()
-                .map(u -> new UsuarioResumo(u.id, u.nome, u.curso))
+                .map(u -> new UsuarioResumo(u.id, u.nome, u.cursoNome))
                 .collect(Collectors.toMap(UsuarioResumo::id, Function.identity()));
     }
 

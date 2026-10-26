@@ -188,6 +188,49 @@ paths:
         '404':
           $ref: '#/components/responses/NaoEncontrado'
 
+  /admin/painel:
+    get:
+      operationId: obterPainelAdmin
+      summary: Painel de administração da plataforma, somente perfil ADMINISTRADOR
+      tags: [Administracao]
+      description: >
+        Rota base da área /admin. Perfil ADMINISTRADOR de plataforma, distinto do papel
+        ADMINISTRADOR dentro de uma comunidade.
+      responses:
+        '200':
+          description: Perfil com o qual o painel foi liberado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PainelAdminResponse'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+
+  /admin/cursos:
+    get:
+      operationId: listarCursosAdmin
+      summary: Lista todos os cursos, ativos e inativos, somente perfil ADMINISTRADOR (KAN-44)
+      tags: [Administracao]
+      description: >
+        Base da tela "Cursos" de /admin: ao contrário de GET /cursos (público, só ativos),
+        traz também os desativados, com o campo ativo, para o administrador reativá-los.
+        Ordem alfabética, sem paginação (a lista tem poucas dezenas de itens).
+      responses:
+        '200':
+          description: Todos os cursos.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CursoAdmin'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+
   /comunidades:
     post:
       operationId: criarComunidade
@@ -195,9 +238,9 @@ paths:
       tags: [Comunidades]
       description: >
         Toda comunidade criada por aqui é do tipo ABERTA — o corpo não aceita "tipo"
-        de propósito (RF21.2: só administrador de plataforma cria comunidade de curso,
-        endpoint fora desta fatia, ver docs/decisoes/2026-08-modelo-epico-2-comunidades.md). O criador
-        vira administrador da comunidade automaticamente (RF23).
+        de propósito (RF21.2: a comunidade de curso nasce com o cadastro do curso por um
+        administrador de plataforma, POST /cursos). O criador vira administrador da
+        comunidade automaticamente (RF23).
       requestBody:
         required: true
         content:
@@ -591,7 +634,8 @@ paths:
         Rota pública (allowlist AD-2): a tela de cadastro precisa da lista antes do
         login. Sem paginação de propósito, como GET /comunidades/minhas — é a lista de um
         select, com poucas dezenas de itens. Cadastro e edição de cursos pelo
-        administrador ficam fora deste contrato.
+        administrador são POST /cursos e PUT /cursos/{id}; a lista com os inativos é
+        GET /admin/cursos.
       security: []
       responses:
         '200':
@@ -602,6 +646,79 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Curso'
+    post:
+      operationId: cadastrarCurso
+      summary: Cadastra um curso, somente perfil ADMINISTRADOR (KAN-44, Story 2.1)
+      tags: [Administracao]
+      description: >
+        Cria o curso ativo e, na mesma transação, a comunidade de curso (tipo CURSO)
+        correspondente (RF21.2). O nome é único sem diferença de maiúsculas; se já existe
+        curso ou comunidade com esse nome, nada é criado e a resposta é 409.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CursoRequest'
+      responses:
+        '201':
+          description: Curso criado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CursoAdmin'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        # 403: não é ADMINISTRADOR. 409: nome já usado por outro curso ou comunidade.
+        # 422: nome não informado ou com mais de 150 caracteres.
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '409':
+          $ref: '#/components/responses/Conflito'
+        '422':
+          $ref: '#/components/responses/ErroValidacao'
+
+  /cursos/{id}:
+    put:
+      operationId: atualizarCurso
+      summary: Renomeia, ativa ou desativa um curso, somente perfil ADMINISTRADOR (KAN-44)
+      tags: [Administracao]
+      description: >
+        Renomear o curso renomeia a comunidade de curso dele (o vínculo é pelo id). Curso
+        desativado some de GET /cursos e do cadastro, mas continua no perfil de quem já o
+        tem, e a comunidade dele não é alterada.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CursoAtualizacaoRequest'
+      responses:
+        '200':
+          description: Curso atualizado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CursoAdmin'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        # 403: não é ADMINISTRADOR. 409: nome já usado por outro curso ou comunidade.
+        # 422: nome não informado ou com mais de 150 caracteres.
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Conflito'
+        '422':
+          $ref: '#/components/responses/ErroValidacao'
 
   /perfil/me:
     get:
@@ -725,8 +842,7 @@ paths:
       summary: Fila de denúncias do moderador, mais antiga primeiro, paginado (Story 12.4, RF77)
       tags: [Moderacao]
       description: >
-        Só perfil MODERADOR (RF13); o administrador de plataforma entra quando o papel
-        existir (KAN-44). Nenhum item tem campo com a identidade do denunciante (RF77.1).
+        Perfil MODERADOR ou ADMINISTRADOR (RF13). Nenhum item tem campo com a identidade do denunciante (RF77.1).
         Uma denúncia por item: o mesmo conteúdo denunciado por várias pessoas aparece
         várias vezes, cada uma com o próprio motivo. Ordem: criadoEm crescente, id
         crescente no empate. Com situacao=RESOLVIDA o moderador acha o conteúdo oculto
@@ -771,7 +887,7 @@ paths:
       operationId: obterDenuncia
       summary: Denúncia para a tela de análise, sem identidade do denunciante (Story 12.4, RF77.1)
       tags: [Moderacao]
-      description: Só perfil MODERADOR.
+      description: Perfil MODERADOR ou ADMINISTRADOR.
       parameters:
         - $ref: '#/components/parameters/DenunciaId'
       responses:
@@ -794,7 +910,7 @@ paths:
       summary: Oculta o conteúdo denunciado, de forma reversível (Story 12.5, RF78)
       tags: [Moderacao]
       description: >
-        Só perfil MODERADOR. O conteúdo sai do feed e para de aceitar interações (inclusive
+        Perfil MODERADOR ou ADMINISTRADOR. O conteúdo sai do feed e para de aceitar interações (inclusive
         novas denúncias), mas é preservado (RF78). Resolve esta denúncia e todas as outras
         pendentes do mesmo conteúdo. Registra a ação em acao_moderacao e no log de
         auditoria (AD-11). O motivo é o que o autor recebe (RF78.2, sem identidade do
@@ -833,7 +949,7 @@ paths:
       summary: Restaura o conteúdo ocultado a partir desta denúncia (Story 12.5, RF78.1)
       tags: [Moderacao]
       description: >
-        Qualquer MODERADOR, não só quem ocultou (RF78.1). O conteúdo volta a aparecer
+        Qualquer MODERADOR ou ADMINISTRADOR, não só quem ocultou (RF78.1). O conteúdo volta a aparecer
         normalmente no feed. A denúncia continua RESOLVIDA; a restauração fica no histórico
         (acao_moderacao) e no log de auditoria. Sem corpo.
       parameters:
@@ -861,7 +977,7 @@ paths:
       summary: Encerra a denúncia sem ação sobre o conteúdo (Story 12.4)
       tags: [Moderacao]
       description: >
-        Só perfil MODERADOR. Para quando o moderador não vê violação: a denúncia sai da
+        Perfil MODERADOR ou ADMINISTRADOR. Para quando o moderador não vê violação: a denúncia sai da
         fila de pendentes e o conteúdo não muda. Só esta denúncia — as outras do mesmo
         conteúdo seguem na fila, cada uma com o próprio motivo. Motivo opcional, só para o
         histórico; ninguém é notificado.
@@ -948,6 +1064,13 @@ components:
         format: int64
 
   schemas:
+    PainelAdminResponse:
+      type: object
+      required: [perfil]
+      properties:
+        perfil:
+          type: string
+          example: ADMINISTRADOR
     LoginRequest:
       type: object
       required: [email, senha]
@@ -1235,7 +1358,8 @@ components:
       type: object
       description: >
         Curso da instituição, cadastrado por administrador (a lista inicial vem das 26
-        comunidades de curso do seed). O nome casa com a comunidade de curso no auto-join.
+        comunidades de curso do seed). A comunidade de curso é ligada ao curso pelo id
+        (o auto-join casa por id, não por nome).
       required: [id, nome]
       properties:
         id:
@@ -1243,6 +1367,38 @@ components:
           format: int64
         nome:
           type: string
+
+    CursoAdmin:
+      type: object
+      description: O mesmo de Curso, mais a situação (ativo), como o administrador enxerga.
+      required: [id, nome, ativo]
+      properties:
+        id:
+          type: integer
+          format: int64
+        nome:
+          type: string
+        ativo:
+          type: boolean
+
+    CursoRequest:
+      type: object
+      required: [nome]
+      properties:
+        nome:
+          type: string
+          maxLength: 150
+
+    CursoAtualizacaoRequest:
+      type: object
+      description: Renomear e ativar/desativar na mesma chamada; os dois campos são obrigatórios.
+      required: [nome, ativo]
+      properties:
+        nome:
+          type: string
+          maxLength: 150
+        ativo:
+          type: boolean
 
     PerfilRequest:
       type: object

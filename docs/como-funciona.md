@@ -39,7 +39,7 @@ Passo a passo:
 
 ### Quem é o usuário da requisição?
 
-Injete `UsuarioAutenticado` e use `id()` e `possuiPerfil("MODERADOR")`. A autorização fina ("só o criador pode editar") é decidida no módulo, nunca no filtro.
+Injete `UsuarioAutenticado` e use `id()`, `possuiPerfil(Perfis.X)`, `podeModerar()` (MODERADOR ou ADMINISTRADOR) e `exigirModerador()`/`exigirAdministrador()` (403 `ACESSO_NEGADO`). Os nomes dos perfis ficam em `compartilhado.seguranca.Perfis`. A autorização fina ("só o criador pode editar") é decidida no módulo, nunca no filtro.
 
 Fica em `compartilhado/seguranca/UsuarioAutenticado`. Se a claim `sub` não puder ser lida, `id()` lança `ApiException` 401 `NAO_AUTENTICADO`.
 
@@ -79,11 +79,11 @@ Implementação de interface da raiz e observer de evento de outro módulo ficam
 
 | Módulo | Estado |
 |---|---|
-| `identidade` | Cadastro (curso escolhido de `GET /cursos`), confirmação de e-mail, login, logout, `GET /usuarios/me` e `/usuarios/{id}` |
-| `comunidades` | Auto-join por curso, criar comunidade aberta, entrar/sair, listar/filtrar. O administrador da comunidade vê os membros (`GET /comunidades/{id}/membros`), remove membro (`DELETE /comunidades/{id}/membros/{usuarioId}`), edita nome/descrição (`PATCH /comunidades/{id}`, parcial) e exclui logicamente (`DELETE /comunidades/{id}`), pela seção "Administração" do detalhe `/comunidades/:id`; comunidade excluída vira inexistente também para `ComunidadeConsulta` (Publicações responde 404) |
+| `identidade` | Cadastro (curso escolhido de `GET /cursos`), confirmação de e-mail, login, logout, `GET /usuarios/me` e `/usuarios/{id}`, perfil de plataforma `ADMINISTRADOR` e painel `/admin` (`GET /admin/painel`, tela `features/admin/painel-admin`). O administrador mantém a lista de cursos: cadastra (`POST /cursos`), renomeia e ativa/desativa (`PUT /cursos/{id}`) e vê todos, inclusive os inativos (`GET /admin/cursos`), pela tela `/admin/cursos` (`features/admin/cursos-admin`). O curso do usuário é só `usuario.curso_id`; o nome vem de `curso.nome` |
+| `comunidades` | Auto-join por curso (casa pelo id do curso, `comunidade.curso_id`), comunidade de curso criada e renomeada junto com o curso (eventos `identidade.CursoCadastrado` e `CursoRenomeado`), criar comunidade aberta, entrar/sair, listar/filtrar. O administrador da comunidade vê os membros (`GET /comunidades/{id}/membros`), remove membro (`DELETE /comunidades/{id}/membros/{usuarioId}`), edita nome/descrição (`PATCH /comunidades/{id}`, parcial) e exclui logicamente (`DELETE /comunidades/{id}`), pela seção "Administração" do detalhe `/comunidades/:id`; comunidade excluída vira inexistente também para `ComunidadeConsulta` (Publicações responde 404) |
 | `publicacoes` | Criar postagem e feed da comunidade (`POST`/`GET /comunidades/{id}/publicacoes`); tela no feed de `/comunidades/:id`. Postagem oculta pela Moderação sai do feed |
 | `perfil` | Criar/editar e consultar o próprio perfil (`GET`/`PUT /perfil/me`, tela `/perfil`) e ver o de outro usuário (`GET /usuarios/{id}/perfil`, tela `/usuarios/:id`, aberta pelo autor da postagem) |
-| `moderacao` | Denunciar postagem (`POST /denuncias`), fila e análise do moderador sem identidade do denunciante (`GET /moderacao/denuncias[/{id}]`), ocultar/restaurar/descartar (`POST /moderacao/denuncias/{id}/ocultacao\|restauracao\|descarte`), só perfil `MODERADOR`; oculta/restaura a postagem por `publicacoes.PublicacaoModeracao`. Telas: "Denunciar" no card da postagem e fila `/moderacao/denuncias` (menu "Denúncias" com contador, só MODERADOR). Remover, restringir e escalonar pendentes |
+| `moderacao` | Denunciar postagem (`POST /denuncias`), fila e análise do moderador sem identidade do denunciante (`GET /moderacao/denuncias[/{id}]`), ocultar/restaurar/descartar (`POST /moderacao/denuncias/{id}/ocultacao\|restauracao\|descarte`), perfil `MODERADOR` ou `ADMINISTRADOR`; oculta/restaura a postagem por `publicacoes.PublicacaoModeracao`. Telas: "Denunciar" no card da postagem e fila `/moderacao/denuncias` (menu "Denúncias" com contador, MODERADOR ou ADMINISTRADOR). Remover, restringir e escalonar pendentes |
 | `discussoes`, `filtro`, `materiais`, `enquetes`, `busca`, `notificacoes`, `mensagens` | Previstos na AD-3, ainda sem pacote. A primeira história de cada um cria `<modulo>/` no formato acima, com `package-info.java` |
 
 ## 4. As regras que mantêm os módulos separados
@@ -148,12 +148,13 @@ cd frontend && npm ci && npm start      # Angular :4200
 
 O Postgres sobe sozinho pelo Quarkus Dev Services, tanto no `quarkus:dev` quanto no `./mvnw test`. O banco de dev é descartado ao parar o Quarkus, e o seed do contexto `dev` recria os dados de teste a cada subida. Para usar um banco persistente (ex.: o `db` do compose), defina `QUARKUS_DATASOURCE_JDBC_URL=jdbc:postgresql://localhost:5432/pacext` no `.env`.
 
-Usuários de teste criados pelo seed (só em dev, senha `Senha123!` para os dois):
+Usuários de teste criados pelo seed (só em dev, senha `Senha123!` para todos):
 
 | E-mail | Perfil | Para quê |
 |---|---|---|
 | `aluno.teste@catolicasc.edu.br` | `ALUNO` | Login, comunidades, publicações, perfil |
 | `moderador.teste@catolicasc.edu.br` | `MODERADOR` | Fila de denúncias, ocultar/restaurar/descartar |
+| `admin.teste@catolicasc.edu.br` | `ADMINISTRADOR` | Painel `/admin`, fila de denúncias |
 
 Sem nada instalado além do Docker, `docker-compose up` continua subindo tudo junto (Postgres :5432, Quarkus :8080, Angular :4200), só que mais devagar.
 

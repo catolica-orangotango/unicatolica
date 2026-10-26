@@ -60,16 +60,26 @@ test('aluno vê exatamente os 7 itens comuns, sem os de moderação', async ({ p
   }
 });
 
-for (const perfil of ['MODERADOR', 'ADMINISTRADOR']) {
-  test(`${perfil} vê os 9 itens, com moderação entre "Criar enquete" e "Suas comunidades"`, async ({
-    page,
-  }) => {
-    await plantarToken(page, [perfil]);
-    await page.goto('/feed');
+test('MODERADOR vê os 9 itens, com moderação entre "Criar enquete" e "Suas comunidades"', async ({
+  page,
+}) => {
+  await plantarToken(page, ['MODERADOR']);
+  await page.goto('/feed');
 
-    await expect(itensSidebar(page)).toHaveText(ITENS_PRIVILEGIADOS);
-  });
-}
+  await expect(itensSidebar(page)).toHaveText(ITENS_PRIVILEGIADOS);
+  await expect(nav(page).getByRole('link', { name: 'Administração' })).toHaveCount(0);
+});
+
+test('ADMINISTRADOR vê os 10 itens, com "Administração" no fim', async ({ page }) => {
+  await plantarToken(page, ['ADMINISTRADOR']);
+  await page.goto('/feed');
+
+  await expect(itensSidebar(page)).toHaveText([...ITENS_PRIVILEGIADOS, 'Administração']);
+  await expect(nav(page).getByRole('link', { name: 'Administração' })).toHaveAttribute(
+    'href',
+    '/admin',
+  );
+});
 
 test('token malformado: shell renderiza, itens de moderação escondidos, sem erro de console', async ({
   page,

@@ -18,6 +18,6 @@ class AutoJoinNaTrocaDeCurso {
     AutoJoinCursoService autoJoinCursoService;
 
     void aoTrocarCurso(@Observes CursoDoUsuarioAlterado evento) {
-        autoJoinCursoService.sincronizarCursoDoAluno(evento.usuarioId(), evento.cursoAnterior(), evento.cursoNovo());
+        autoJoinCursoService.sincronizarCursoDoAluno(evento.usuarioId(), evento.cursoAnteriorId(), evento.cursoNovoId());
     }
 }
