@@ -402,6 +402,198 @@ describe('Shell', () => {
   });
 });
 
+describe('Shell - gaveta de navegação mobile (Story 14.4)', () => {
+  let fixture: ComponentFixture<Shell> | undefined;
+
+  async function montar(): Promise<ComponentFixture<Shell>> {
+    localStorage.clear();
+    localStorage.setItem(TOKEN_KEY, tokenComPerfis(['ALUNO']));
+
+    await TestBed.configureTestingModule({
+      imports: [Shell],
+      providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        provideRouter([
+          {
+            path: 'feed',
+            loadComponent: () => import('../../features/feed/feed').then((m) => m.Feed),
+          },
+        ]),
+      ],
+    }).compileComponents();
+
+    const criado = TestBed.createComponent(Shell);
+    document.body.appendChild(criado.nativeElement);
+    criado.detectChanges();
+    await criado.whenStable();
+    criado.detectChanges();
+    fixture = criado;
+    return criado;
+  }
+
+  function botaoNav(f: ComponentFixture<Shell>): HTMLButtonElement {
+    return f.nativeElement.querySelector('.shell__menu-toggle') as HTMLButtonElement;
+  }
+
+  function sidebarNav(f: ComponentFixture<Shell>): HTMLElement {
+    return f.nativeElement.querySelector('.shell__sidebar') as HTMLElement;
+  }
+
+  function abrirNav(f: ComponentFixture<Shell>): void {
+    botaoNav(f).click();
+    f.detectChanges();
+  }
+
+  afterEach(() => {
+    fixture?.nativeElement.remove();
+    fixture = undefined;
+    localStorage.clear();
+    vi.restoreAllMocks();
+  });
+
+  it('o botão Menu começa fechado, com aria-controls apontando para a sidebar', async () => {
+    const f = await montar();
+    const botao = botaoNav(f);
+
+    expect(botao.getAttribute('aria-expanded')).toBe('false');
+    expect(botao.getAttribute('aria-controls')).toBe('shell-sidebar-nav');
+    expect(sidebarNav(f).id).toBe('shell-sidebar-nav');
+    expect(sidebarNav(f).classList.contains('shell__sidebar--aberta')).toBe(false);
+  });
+
+  it('clicar no botão Menu abre a gaveta e marca aria-expanded="true"', async () => {
+    const f = await montar();
+
+    abrirNav(f);
+
+    expect(botaoNav(f).getAttribute('aria-expanded')).toBe('true');
+    expect(sidebarNav(f).classList.contains('shell__sidebar--aberta')).toBe(true);
+  });
+
+  it('clicar de novo fecha a gaveta', async () => {
+    const f = await montar();
+    abrirNav(f);
+
+    abrirNav(f);
+
+    expect(botaoNav(f).getAttribute('aria-expanded')).toBe('false');
+    expect(sidebarNav(f).classList.contains('shell__sidebar--aberta')).toBe(false);
+  });
+
+  it('Escape fecha a gaveta e devolve o foco ao botão Menu', async () => {
+    const f = await montar();
+    abrirNav(f);
+
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+    f.detectChanges();
+
+    expect(botaoNav(f).getAttribute('aria-expanded')).toBe('false');
+    expect(document.activeElement).toBe(botaoNav(f));
+  });
+
+  it('clique fora fecha a gaveta e devolve o foco ao botão Menu', async () => {
+    const f = await montar();
+    abrirNav(f);
+
+    document.body.click();
+    f.detectChanges();
+
+    expect(botaoNav(f).getAttribute('aria-expanded')).toBe('false');
+    expect(document.activeElement).toBe(botaoNav(f));
+  });
+
+  it('escolher um item de navegação fecha a gaveta e navega', async () => {
+    const f = await montar();
+    abrirNav(f);
+
+    const inicio = [...f.nativeElement.querySelectorAll('a.shell__nav-item')].find(
+      (el) => (el.textContent ?? '').trim() === 'Início',
+    ) as HTMLAnchorElement;
+    inicio.click();
+    f.detectChanges();
+
+    expect(botaoNav(f).getAttribute('aria-expanded')).toBe('false');
+    expect(sidebarNav(f).classList.contains('shell__sidebar--aberta')).toBe(false);
+  });
+
+  it('abrir a gaveta fecha o dropdown de conta e o painel de notificações', async () => {
+    const f = await montar();
+    (f.nativeElement.querySelector('.shell__avatar') as HTMLButtonElement).click();
+    f.detectChanges();
+    expect(f.nativeElement.querySelector('#shell-menu')).toBeTruthy();
+
+    abrirNav(f);
+
+    expect(f.nativeElement.querySelector('#shell-menu')).toBeNull();
+    expect(botaoNav(f).getAttribute('aria-expanded')).toBe('true');
+  });
+
+  it('abrir o dropdown de conta fecha a gaveta', async () => {
+    const f = await montar();
+    abrirNav(f);
+
+    (f.nativeElement.querySelector('.shell__avatar') as HTMLButtonElement).click();
+    f.detectChanges();
+
+    expect(botaoNav(f).getAttribute('aria-expanded')).toBe('false');
+    expect(f.nativeElement.querySelector('#shell-menu')).toBeTruthy();
+  });
+
+  it('Tab no último item focável da gaveta volta para o primeiro (foco preso)', async () => {
+    const f = await montar();
+    abrirNav(f);
+
+    const focaveis = [...sidebarNav(f).querySelectorAll('a, button')] as HTMLElement[];
+    const primeiro = focaveis[0];
+    const ultimo = focaveis[focaveis.length - 1];
+    ultimo.focus();
+
+    const evento = new KeyboardEvent('keydown', { key: 'Tab', bubbles: true, cancelable: true });
+    const preventDefault = vi.spyOn(evento, 'preventDefault');
+    sidebarNav(f).dispatchEvent(evento);
+
+    expect(preventDefault).toHaveBeenCalled();
+    expect(document.activeElement).toBe(primeiro);
+  });
+
+  it('Shift+Tab no primeiro item focável da gaveta vai para o último (foco preso)', async () => {
+    const f = await montar();
+    abrirNav(f);
+
+    const focaveis = [...sidebarNav(f).querySelectorAll('a, button')] as HTMLElement[];
+    const primeiro = focaveis[0];
+    const ultimo = focaveis[focaveis.length - 1];
+    primeiro.focus();
+
+    const evento = new KeyboardEvent('keydown', {
+      key: 'Tab',
+      shiftKey: true,
+      bubbles: true,
+      cancelable: true,
+    });
+    const preventDefault = vi.spyOn(evento, 'preventDefault');
+    sidebarNav(f).dispatchEvent(evento);
+
+    expect(preventDefault).toHaveBeenCalled();
+    expect(document.activeElement).toBe(ultimo);
+  });
+
+  it('Tab dentro da gaveta fechada não prende o foco (nada a fazer)', async () => {
+    const f = await montar();
+
+    const focaveis = [...sidebarNav(f).querySelectorAll('a, button')] as HTMLElement[];
+    const ultimo = focaveis[focaveis.length - 1];
+    ultimo.focus();
+
+    const evento = new KeyboardEvent('keydown', { key: 'Tab', bubbles: true, cancelable: true });
+    const preventDefault = vi.spyOn(evento, 'preventDefault');
+    sidebarNav(f).dispatchEvent(evento);
+
+    expect(preventDefault).not.toHaveBeenCalled();
+  });
+});
+
 describe('Shell - painel de notificações (Story 10.1)', () => {
   let fixture: ComponentFixture<Shell> | undefined;
 

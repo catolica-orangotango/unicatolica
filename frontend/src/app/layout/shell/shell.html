@@ -3,7 +3,14 @@
   A <nav> é ela própria o landmark da sidebar - não um <nav> dentro de <aside>
   (que seria anunciado como landmark complementar, não de navegação).
 -->
-<nav class="shell__sidebar" aria-label="Navegação principal">
+<nav
+  #sidebarNav
+  id="shell-sidebar-nav"
+  class="shell__sidebar"
+  [class.shell__sidebar--aberta]="navAberto()"
+  aria-label="Navegação principal"
+  (keydown)="aoTeclarNaGaveta($event)"
+>
   <div class="shell__brand">
     <span class="shell__brand-mark" aria-hidden="true"></span>
     <span class="shell__brand-name">UniCatólica</span>
@@ -112,6 +119,18 @@
 </nav>
 
 <header class="shell__topbar">
+  <button
+    #botaoNav
+    type="button"
+    class="shell__menu-toggle"
+    aria-label="Menu"
+    aria-controls="shell-sidebar-nav"
+    [attr.aria-expanded]="navAberto() ? 'true' : 'false'"
+    (click)="alternarNav($event)"
+  >
+    Menu
+  </button>
+
   <div class="shell__avatar-area">
     <button
       #avatar

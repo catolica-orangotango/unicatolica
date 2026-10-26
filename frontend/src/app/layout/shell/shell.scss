@@ -9,8 +9,13 @@
 // no-hardcode guard (src/styles/scss-guard.spec.ts) recognises. Comment-only
 // change: no declaration and no rendered pixel moved.
 //
-// Right-hand discovery panel and responsive collapse are out of scope
-// (Story 14.4). No new --uc-* token is introduced here.
+// Story 14.4 adds the responsive collapse below styles/_breakpoints.scss'
+// $uc-breakpoint-nav: the sidebar becomes a fixed-position overlay drawer,
+// toggled by .shell__menu-toggle ("Menu") and the navAberto() signal. The
+// feed's discovery panel needs no change of its own - it was already a
+// stacked <section>, not a side column, so it falls into place once the
+// sidebar stops reserving a grid column below the breakpoint.
+@use '../../../styles/breakpoints' as bp;
 
 :host {
   display: grid;
@@ -19,11 +24,30 @@
   grid-template-rows: auto 1fr;
   min-height: 100vh; // layout-literal: fallback de viewport para navegadores sem dvh
   min-height: 100dvh; // layout-literal: altura de viewport dinamica, nao e um espacamento de design
+  // Abaixo do breakpoint a sidebar vira position: fixed e desliza a partir de
+  // translateX(-100%) - sem isto, a barra de rolagem horizontal aparece
+  // mesmo com o conteudo visivel encaixado (Story 14.4, criterio do painel
+  // de descoberta sem rolagem horizontal em 360px).
+  overflow-x: hidden;
   background: var(--uc-color-bg);
   color: var(--uc-color-ink);
   font-family: var(--uc-font-family-base);
   font-size: var(--uc-font-size-body);
   line-height: var(--uc-line-height-body);
+}
+
+@media (max-width: bp.$uc-breakpoint-nav) {
+  :host {
+    grid-template-columns: 1fr;
+  }
+
+  // Só 1 coluna explícita abaixo do breakpoint - sem isto, grid-column: 2
+  // (o valor de desktop) cairia numa coluna implícita fora da área visível e
+  // escondia a topbar/o conteúdo principal inteiros.
+  .shell__topbar,
+  .shell__main {
+    grid-column: 1;
+  }
 }
 
 // -- Sidebar: the <nav> landmark itself ---------------------------------
@@ -44,6 +68,36 @@
   padding: var(--uc-space-section-gap) var(--uc-space-card-padding);
   background: var(--uc-color-bg);
   border-right: 1px solid var(--uc-color-border);
+}
+
+// -- Gaveta mobile (Story 14.4) ------------------------------------------
+@media (max-width: bp.$uc-breakpoint-nav) {
+  .shell__sidebar {
+    position: fixed;
+    inset: 0;
+    grid-column: auto;
+    grid-row: auto;
+    z-index: 2; // acima do shell__topbar (z-index: 1)
+    visibility: hidden;
+    transform: translateX(-100%);
+    // O delay na visibility espera o slide terminar antes de tirar a gaveta
+    // da arvore de foco/leitura - fechar e imediato (sem delay), abrir
+    // "escorrega" (Story 14.4, criterio de acessibilidade).
+    transition: transform 200ms ease-out, visibility 0s linear 200ms;
+  }
+
+  .shell__sidebar--aberta {
+    visibility: visible;
+    transform: translateX(0);
+    transition: transform 200ms ease-out;
+  }
+}
+
+@media (max-width: bp.$uc-breakpoint-nav) and (prefers-reduced-motion: reduce) {
+  .shell__sidebar,
+  .shell__sidebar--aberta {
+    transition: none;
+  }
 }
 
 .shell__brand {
@@ -238,6 +292,36 @@
   padding: 0 var(--uc-space-page-margin);
   background: var(--uc-color-bg);
   border-bottom: 1px solid var(--uc-color-border);
+}
+
+// Toggle da gaveta mobile (Story 14.4) - escondido acima do breakpoint, onde
+// a sidebar já é a coluna fixa de sempre.
+.shell__menu-toggle {
+  display: none;
+  align-items: center;
+  // `auto`, não um comprimento - empurra o avatar para a direita sem mudar o
+  // justify-content (flex-end) do shell__topbar, que precisa continuar
+  // valendo quando este botão não está no layout (acima do breakpoint).
+  margin-right: auto;
+  padding: calc(var(--uc-space-unit) * 2) calc(var(--uc-space-unit) * 3);
+  border: 1px solid var(--uc-color-border);
+  border-radius: var(--uc-radius-default);
+  background: transparent;
+  color: var(--uc-color-ink);
+  font: inherit;
+  font-size: var(--uc-font-size-body);
+  cursor: pointer;
+}
+
+.shell__menu-toggle:focus-visible {
+  outline: 2px solid var(--uc-color-maroon);
+  outline-offset: 2px;
+}
+
+@media (max-width: bp.$uc-breakpoint-nav) {
+  .shell__menu-toggle {
+    display: inline-flex;
+  }
 }
 
 .shell__avatar-area {
