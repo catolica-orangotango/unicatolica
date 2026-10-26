@@ -149,10 +149,13 @@ public class ComunidadeService {
         comunidadeMembroRepository.persist(membro);
     }
 
-    /** Story 2.4 (RF26). O único administrador não sai (Story 2.6): a comunidade ficaria sem administrador. */
+    /**
+     * Story 2.4 (RF26). Só comunidade aberta: a de curso é vínculo institucional e o aluno não sai
+     * dela (KAN-73). O único administrador não sai (Story 2.6): a comunidade ficaria sem administrador.
+     */
     @Transactional
     public void sair(Long usuarioId, Long comunidadeId) {
-        Comunidade comunidade = buscarOuFalhar(comunidadeId);
+        Comunidade comunidade = buscarAbertaOuFalhar(comunidadeId);
         if (comunidadeMembroRepository.ehAdministrador(comunidade, usuarioId)
                 && comunidadeMembroRepository.contarAdministradores(comunidade) == 1) {
             throw ApiException.validacao("ULTIMO_ADMINISTRADOR",
