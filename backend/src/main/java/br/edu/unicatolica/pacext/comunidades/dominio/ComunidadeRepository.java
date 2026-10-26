@@ -11,12 +11,17 @@ import java.util.Optional;
 public class ComunidadeRepository implements PanacheRepository<Comunidade> {
 
     /**
-     * Busca case-insensitive — o texto de curso vem digitado livremente no cadastro (Story 1.2).
+     * Comunidade de curso pelo id do curso (KAN-44) — o auto-join casa por aqui, não por nome.
      * Ignora comunidade excluída (Story 2.6, RF31): o auto-join não entra nela.
      */
-    public Optional<Comunidade> buscarPorTipoENome(TipoComunidade tipo, String nome) {
-        return find("ativa = true and tipo = ?1 and lower(nome) = ?2", tipo, nome.toLowerCase())
+    public Optional<Comunidade> buscarAtivaPorCursoId(Long cursoId) {
+        return find("ativa = true and tipo = ?1 and cursoId = ?2", TipoComunidade.CURSO, cursoId)
                 .firstResultOptional();
+    }
+
+    /** Qualquer comunidade ligada ao curso, ativa ou não: evita criar uma segunda para o mesmo curso. */
+    public boolean existePorCursoId(Long cursoId) {
+        return count("cursoId = ?1", cursoId) > 0;
     }
 
     /** Conta também as excluídas: o nome é {@code unique} no banco, então continua reservado (Story 2.6). */

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Remove a coluna de texto usuario.curso (KAN-44). Desde identidade-005 o curso do aluno é
+    usuario.curso_id; o texto era uma cópia do nome mantida só por segurança e ficaria velha
+    ao renomear o curso. O nome agora é lido de curso.nome (Usuario.cursoNome).
+-->
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="identidade-010-drop-usuario-curso" author="pacext">
+        <dropColumn tableName="usuario" columnName="curso"/>
+        <rollback>
+            <addColumn tableName="usuario">
+                <column name="curso" type="VARCHAR(150)"/>
+            </addColumn>
+            <sql>UPDATE usuario u SET curso = c.nome FROM curso c WHERE u.curso_id = c.id</sql>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

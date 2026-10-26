@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Vínculo comunidade de curso -> curso por id (KAN-44, Story 2.1). Antes o auto-join casava
+    pelo nome, e renomear o curso soltava o vínculo. A coluna guarda só o id, sem FK (AD-3:
+    curso é do módulo Identidade). Nula nas comunidades abertas. O preenchimento das 26
+    comunidades do seed está em identidade-009, porque num banco novo este arquivo roda antes
+    de a tabela curso existir.
+-->
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="comunidades-004-add-curso-id" author="pacext">
+        <addColumn tableName="comunidade">
+            <column name="curso_id" type="BIGINT"/>
+        </addColumn>
+        <!-- No máximo uma comunidade por curso; as abertas (curso_id nulo) ficam de fora. -->
+        <sql>CREATE UNIQUE INDEX uk_comunidade_curso_id ON comunidade (curso_id) WHERE curso_id IS NOT NULL</sql>
+        <rollback>
+            <sql>DROP INDEX IF EXISTS uk_comunidade_curso_id</sql>
+            <dropColumn tableName="comunidade" columnName="curso_id"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

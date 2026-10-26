@@ -3,11 +3,14 @@ package br.edu.unicatolica.pacext.compartilhado;
 import static io.restassured.RestAssured.given;
 import static io.restassured.http.ContentType.JSON;
 
+import br.edu.unicatolica.pacext.identidade.dominio.PasswordHasher;
+import br.edu.unicatolica.pacext.identidade.dominio.Usuario;
 import br.edu.unicatolica.pacext.identidade.dominio.UsuarioRepository;
 import io.quarkus.narayana.jta.QuarkusTransaction;
 import io.restassured.specification.RequestSpecification;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import java.time.Instant;
 import java.util.Map;
 
 /**
@@ -24,6 +27,9 @@ public class UsuarioDeTeste {
 
     @Inject
     UsuarioRepository usuarioRepository;
+
+    @Inject
+    PasswordHasher passwordHasher;
 
     public Sessao novo(String nomeDoCurso) {
         String email = "teste." + System.nanoTime() + "@catolicasc.edu.br";
@@ -45,6 +51,33 @@ public class UsuarioDeTeste {
                 .extract().path("token");
 
         return new Sessao(id.longValue(), email, token);
+    }
+
+    /**
+     * Cria direto no banco um usuário com o perfil global pedido ({@code ADMINISTRADOR},
+     * {@code MODERADOR}...), sem curso, e faz login. Para testar rotas restritas por perfil.
+     */
+    public Sessao comPerfil(String perfil) {
+        String email = "perfil." + System.nanoTime() + "@catolicasc.edu.br";
+        Long id = QuarkusTransaction.requiringNew().call(() -> {
+            Usuario usuario = new Usuario();
+            usuario.nome = "Usuário " + perfil;
+            usuario.email = email;
+            usuario.senhaHash = passwordHasher.gerarHash(SENHA);
+            usuario.perfil = perfil;
+            usuario.emailConfirmado = true;
+            usuario.criadoEm = Instant.now();
+            usuarioRepository.persist(usuario);
+            return usuario.id;
+        });
+
+        String token = given().contentType(JSON)
+                .body(Map.of("email", email, "senha", SENHA))
+                .when().post("/auth/login")
+                .then().statusCode(200)
+                .extract().path("token");
+
+        return new Sessao(id, email, token);
     }
 
     public static Integer idDoCurso(String nome) {
