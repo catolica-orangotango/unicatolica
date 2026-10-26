@@ -34,6 +34,34 @@ test('pela lista de descoberta, cria uma comunidade aberta e cai na Home dela', 
   expect(recebidas).toEqual([{ nome: 'Clube de Xadrez', descricao: 'Partidas às quintas' }]);
 });
 
+test('cria a comunidade só pelo teclado, com foco visível em cada controle (KAN-37)', async ({ page }) => {
+  const recebidas = await mockCriarComunidade(page, { id: 42 });
+  await mockComunidadeComFeed(page, { id: 42, nome: 'Clube de Xadrez', tipo: 'ABERTA', souMembro: true });
+  await page.goto('/comunidades/nova');
+
+  const nome = page.getByLabel('Nome');
+  const descricao = page.getByLabel('Descrição');
+  const criar = page.getByRole('button', { name: 'Criar comunidade' });
+  await nome.focus();
+
+  for (const controle of [nome, descricao, criar]) {
+    await expect(controle).toBeFocused();
+    const outline = await controle.evaluate((el) => {
+      const s = getComputedStyle(el);
+      return { estilo: s.outlineStyle, largura: s.outlineWidth };
+    });
+    expect(outline.estilo !== 'none' && outline.largura !== '0px').toBe(true);
+    if (controle === nome) await page.keyboard.type('Clube de Xadrez');
+    if (controle === descricao) await page.keyboard.type('Partidas às quintas');
+    if (controle !== criar) await page.keyboard.press('Tab');
+  }
+
+  await page.keyboard.press('Enter');
+
+  await expect(page).toHaveURL(/\/comunidades\/42$/);
+  expect(recebidas).toEqual([{ nome: 'Clube de Xadrez', descricao: 'Partidas às quintas' }]);
+});
+
 test('nome já em uso mostra o aviso e continua no formulário', async ({ page }) => {
   await mockCriarComunidade(page, { id: 42, nomesEmUso: ['Clube de Xadrez'] });
   await page.goto('/comunidades/nova');

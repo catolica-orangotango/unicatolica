@@ -46,7 +46,8 @@ test.describe('Login', () => {
     await page.getByRole('button', { name: 'Entrar' }).click();
 
     await expect(page).toHaveURL(/\/login$/);
-    await expect(page.getByRole('alert')).toHaveCount(0);
+    // Só os erros por campo (KAN-37); o aviso de credencial inválida não aparece.
+    await expect(page.locator('.login__erro')).toHaveCount(0);
   });
 
   test('foco de teclado percorre e-mail, senha, Entrar com indicador visível', async ({ page }) => {
@@ -66,6 +67,23 @@ test.describe('Login', () => {
       expect(outline.style !== 'none' || outline.width !== '0px').toBe(true);
       await page.keyboard.press('Tab');
     }
+  });
+});
+
+test.describe('Login, erro por campo (KAN-37)', () => {
+  test('enviar vazio aponta cada campo, com o erro ligado a ele e anunciado', async ({ page }) => {
+    await page.goto('/login');
+    await expect(page.locator('.login__campo-erro')).toHaveCount(0);
+
+    await page.getByRole('button', { name: 'Entrar' }).click();
+
+    const email = page.getByLabel('E-mail');
+    const senha = page.getByLabel('Senha');
+    await expect(email).toHaveAttribute('aria-invalid', 'true');
+    await expect(email).toHaveAccessibleDescription('Informe um e-mail válido.');
+    await expect(senha).toHaveAttribute('aria-invalid', 'true');
+    await expect(senha).toHaveAccessibleDescription('Informe sua senha.');
+    await expect(page.getByRole('alert')).toHaveText(['Informe um e-mail válido.', 'Informe sua senha.']);
   });
 });
 
