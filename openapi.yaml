@@ -607,8 +607,10 @@ paths:
       summary: Sai de uma comunidade (Story 2.4, RF26)
       tags: [Comunidades]
       description: >
-        O único administrador não pode sair (422), para a comunidade não ficar sem
-        administrador (Story 2.6): ele exclui a comunidade em vez de sair.
+        Só comunidades abertas: a comunidade de curso é vínculo institucional e o aluno
+        não sai dela (403 COMUNIDADE_TIPO_INVALIDO, KAN-73). O único administrador não
+        pode sair (422), para a comunidade não ficar sem administrador (Story 2.6): ele
+        exclui a comunidade em vez de sair.
       parameters:
         - name: id
           in: path
@@ -621,6 +623,9 @@ paths:
           description: Associação removida.
         '401':
           $ref: '#/components/responses/NaoAutenticado'
+        # 403: a comunidade não é aberta (COMUNIDADE_TIPO_INVALIDO).
+        '403':
+          $ref: '#/components/responses/SemPermissao'
         '404':
           $ref: '#/components/responses/NaoEncontrado'
         # 422: o solicitante é o único administrador da comunidade.
