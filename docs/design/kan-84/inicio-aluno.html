@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>KAN-84 · Início do aluno · redesign</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="base.css"></head>
+<body>
+<i id="anotacoes" hidden></i>
+<div class="legenda" aria-hidden="true"><i></i>Tracejado: depende de backend</div>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+ <symbol id="i-home" viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></symbol>
+ <symbol id="i-users" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.7-3.4 3.3-5.5 6.5-5.5s5.8 2.1 6.5 5.5"/><path d="M16 4.6a3.5 3.5 0 0 1 0 6.8M18 14.8c2 .7 3.2 2.5 3.5 5.2"/></symbol>
+ <symbol id="i-bell" viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.9 1.9 0 0 0 3.4 0"/></symbol>
+ <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4.3-6 8-6s7 2 8 6"/></symbol>
+ <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></symbol>
+ <symbol id="i-msg" viewBox="0 0 24 24"><path d="M21 12a8.5 8.5 0 0 1-12.6 7.4L3 21l1.6-5.4A8.5 8.5 0 1 1 21 12z"/></symbol>
+ <symbol id="i-dots" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="19" cy="12" r="1.2"/></symbol>
+ <symbol id="i-img" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="4"/><circle cx="9" cy="9" r="2"/><path d="m21 15-4.5-4.5L6 21"/></symbol>
+ <symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 17v5M9 10.8V5h6v5.8l3 3.2H6z"/></symbol>
+ <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+</svg>
+<header class="mtop"><span class="mark">U</span>UniCatólica<a class="tap" href="#" aria-label="Seu perfil"><span class="av a1 sm">JM</span></a></header>
+<div class="app">
+ <nav class="side" aria-label="Principal">
+  <a class="brand" href="#"><span class="mark">U</span>UniCatólica</a>
+  <a class="nl on" href="#" aria-current="page"><svg class="ic"><use href="#i-home"/></svg>Início</a>
+  <a class="nl" href="#"><svg class="ic"><use href="#i-users"/></svg>Comunidades</a>
+  <a class="nl" href="#"><svg class="ic"><use href="#i-bell"/></svg>Notificações<span class="badge" aria-label="3 novas">3</span></a>
+  <a class="nl" href="#"><svg class="ic"><use href="#i-user"/></svg>Perfil</a>
+  <div class="nh">Suas comunidades</div>
+  <a class="cm" href="#"><span class="sq es">ES</span>Engenharia de Software</a>
+  <a class="cm" href="#"><span class="sq ae">AE</span>Atlética de Engenharia</a>
+  <div class="nh">Em breve</div>
+  <div class="soon"><svg class="ic"><use href="#i-search"/></svg>Busca</div>
+  <div class="soon"><svg class="ic"><use href="#i-msg"/></svg>Mensagens</div>
+  <a class="me" href="#"><span class="av a1 sm">JM</span><span><b>Julia Martins</b><small>1º período</small></span><svg class="ic s"><use href="#i-dots"/></svg></a>
+ </nav>
+
+ <main class="col">
+  <header class="ch">
+   <div class="ch-top">
+    <div class="ch-av" aria-hidden="true">ES</div>
+    <div><h1>Engenharia de Software</h1><p>Comunidade do seu curso</p></div>
+    <a class="btn btn-o" href="#">Membros</a>
+   </div>
+   <div class="faces"><span class="av a2">RS</span><span class="av a3">AL</span><span class="av a4">PH</span><span class="av a5">MC</span><span class="av a1">TR</span><span><b>214 membros</b><span class="dep-i">, 12 do seu período</span></span></div>
+  </header>
+  <section class="wk-strip dep" aria-label="Esta semana">
+   <h2>Esta semana</h2>
+   <div class="strip">
+    <div class="day today"><div class="dt"><b>27</b><small>ter</small></div><div><p>Inscrições da Semana Acadêmica terminam</p><div class="m">Aviso da coordenação</div></div></div>
+    <div class="day"><div class="dt"><b>29</b><small>qui</small></div><div><p>Horário da biblioteca aos sábados</p><div class="m">Enquete · 132 votos</div></div></div>
+    <div class="day"><div class="dt"><b>30</b><small>sex</small></div><div><p>Prova de Algoritmos, sala 204</p><div class="m">Fixado por Rafael Souza</div></div></div>
+   </div>
+  </section>
+  <div class="tabs" role="tablist"><a class="tab on" role="tab" aria-selected="true" href="#">Publicações</a><a class="tab dep-i" role="tab" href="#">Fixados</a></div>
+
+  <div class="comp">
+   <span class="av a1">JM</span>
+   <span class="ph">Pergunte algo à sua turma…</span>
+   <span class="tools"><span class="more" aria-label="Anexar imagem (em breve)"><svg class="ic s"><use href="#i-img"/></svg></span></span>
+   <button class="btn btn-p">Publicar</button>
+  </div>
+
+  <div class="since dep">Novas desde quinta</div>
+
+  <article class="post">
+   <span class="av a2">RS</span>
+   <div>
+    <div class="ph-row"><b>Rafael Souza</b><span class="role">Representante</span><span class="m">5º período · 6 h</span><span class="dot" aria-label="Nova"></span>
+     <button class="more" aria-label="Mais opções da publicação de Rafael Souza"><svg class="ic s"><use href="#i-dots"/></svg></button></div>
+    <p>Pessoal do 1º período: a prova de Algoritmos é sexta, sala 204. A professora deixa consultar uma folha A4 escrita à mão. Vale muito a pena fazer!</p>
+    <div class="acts"><a class="act dep-i" href="#"><svg class="ic s"><use href="#i-msg"/></svg>Responder</a></div>
+   </div>
+  </article>
+
+  <article class="post">
+   <span class="av a3">AL</span>
+   <div>
+    <div class="ph-row"><b>Ana Beatriz Lima</b><span class="m">3º período · 9 h</span><span class="dot" aria-label="Nova"></span>
+     <button class="more" aria-label="Mais opções da publicação de Ana Beatriz Lima"><svg class="ic s"><use href="#i-dots"/></svg></button></div>
+    <p>Alguém tem o resumo de Estruturas de Dados? Queria revisar listas encadeadas antes da prova.</p>
+    <div class="acts"><a class="act dep-i" href="#"><svg class="ic s"><use href="#i-msg"/></svg>Responder</a></div>
+   </div>
+  </article>
+
+  <article class="post">
+   <span class="av a4">PH</span>
+   <div>
+    <div class="ph-row"><b>Pedro Henrique Albuquerque</b><span class="m">7º período · ontem</span>
+     <button class="more" aria-label="Mais opções da publicação de Pedro Henrique Albuquerque"><svg class="ic s"><use href="#i-dots"/></svg></button></div>
+    <p>Dica de veterano: façam as listas de Cálculo na semana em que o professor passa, não na véspera. Ele reaproveita os exercícios na prova.</p>
+    <div class="acts"><a class="act dep-i" href="#"><svg class="ic s"><use href="#i-msg"/></svg>Responder</a></div>
+   </div>
+  </article>
+
+  <article class="post">
+   <span class="av a5">MC</span>
+   <div>
+    <div class="ph-row"><b>Marina Costa</b><span class="m">1º período · qua</span>
+     <button class="more" aria-label="Mais opções da publicação de Marina Costa"><svg class="ic s"><use href="#i-dots"/></svg></button></div>
+    <p>Alguém do 1º período quer montar grupo de estudo para Lógica? Pensei em terça depois da aula, na biblioteca.</p>
+    <div class="acts"><a class="act dep-i" href="#"><svg class="ic s"><use href="#i-msg"/></svg>Responder</a></div>
+   </div>
+  </article>
+ </main>
+
+ <aside aria-label="Complementar">
+  <section class="card dep">
+   <h2>Esta semana <small>26 a 30 out</small></h2>
+   <div class="day today"><div class="dt"><b>27</b><small>ter</small></div><div><p>Inscrições da Semana Acadêmica terminam</p><div class="m">Aviso da coordenação</div></div></div>
+   <div class="day"><div class="dt"><b>29</b><small>qui</small></div><div><p>Horário da biblioteca aos sábados</p><div class="m">Enquete · 132 votos</div></div></div>
+   <div class="day"><div class="dt"><b>30</b><small>sex</small></div><div><p>Prova de Algoritmos, sala 204</p><div class="m">Fixado por Rafael Souza</div></div></div>
+  </section>
+  <section class="card">
+   <h2>Outras comunidades</h2>
+   <div class="oc"><span class="sq ca">CA</span><div><b>Estudos de Cálculo I</b><small>38 membros</small></div><button class="btn btn-o">Participar</button></div>
+   <div class="oc"><span class="sq hk">HJ</span><div><b>Hackathon Joinville 2026</b><small>61 membros</small></div><button class="btn btn-o">Participar</button></div>
+  </section>
+  <div class="foot"><a href="#">Privacidade</a><a href="#">Termos de uso</a><a href="#">Ajuda</a><span>CatólicaSC · Campus Joinville</span></div>
+ </aside>
+</div>
+<nav class="tabbar" aria-label="Principal">
+ <a class="on" href="#" aria-current="page"><svg class="ic"><use href="#i-home"/></svg>Início</a>
+ <a href="#"><svg class="ic"><use href="#i-users"/></svg>Comunidades</a>
+ <a href="#"><svg class="ic"><use href="#i-bell"/></svg><span class="badge" aria-label="3 novas">3</span>Notificações</a>
+ <a href="#"><svg class="ic"><use href="#i-user"/></svg>Perfil</a>
+</nav>
+</body></html>

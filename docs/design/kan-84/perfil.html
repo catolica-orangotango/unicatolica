@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>KAN-84 · Perfil · redesign</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="base.css">
+</head>
+<body>
+<i id="anotacoes" hidden></i>
+<div class="legenda" aria-hidden="true"><i></i>Tracejado: depende de backend</div>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+ <symbol id="i-home" viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></symbol>
+ <symbol id="i-users" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.7-3.4 3.3-5.5 6.5-5.5s5.8 2.1 6.5 5.5"/><path d="M16 4.6a3.5 3.5 0 0 1 0 6.8M18 14.8c2 .7 3.2 2.5 3.5 5.2"/></symbol>
+ <symbol id="i-bell" viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.9 1.9 0 0 0 3.4 0"/></symbol>
+ <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4.3-6 8-6s7 2 8 6"/></symbol>
+ <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></symbol>
+ <symbol id="i-msg" viewBox="0 0 24 24"><path d="M21 12a8.5 8.5 0 0 1-12.6 7.4L3 21l1.6-5.4A8.5 8.5 0 1 1 21 12z"/></symbol>
+ <symbol id="i-dots" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="19" cy="12" r="1.2"/></symbol>
+ <symbol id="i-flag" viewBox="0 0 24 24"><path d="M5 21V4M5 4h11l-2 4 2 4H5"/></symbol>
+ <symbol id="i-eyeoff" viewBox="0 0 24 24"><path d="M10.6 5.1A10 10 0 0 1 12 5c6 0 9.5 7 9.5 7a17 17 0 0 1-2.6 3.4M6.6 6.6C3.9 8.4 2.5 12 2.5 12S6 19 12 19a9.6 9.6 0 0 0 5.4-1.6M3 3l18 18M9.9 9.9a3 3 0 0 0 4.2 4.2"/></symbol>
+ <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></symbol>
+ <symbol id="i-up" viewBox="0 0 24 24"><path d="M7 17 17 7M8 7h9v9"/></symbol>
+ <symbol id="i-img" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="4"/><circle cx="9" cy="9" r="2"/><path d="m21 15-4.5-4.5L6 21"/></symbol>
+ <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+ <symbol id="i-mail" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="m4 7 8 6 8-6"/></symbol>
+ <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></symbol>
+ <symbol id="i-alert" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v5.5M12 16.5v.01"/></symbol>
+ <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5.5M12 7.5v.01"/></symbol>
+ <symbol id="i-left" viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></symbol>
+ <symbol id="i-down" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+ <symbol id="i-trash" viewBox="0 0 24 24"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></symbol>
+ <symbol id="i-mega" viewBox="0 0 24 24"><path d="M3 11v2a1 1 0 0 0 1 1h3l6 4V6L7 10H4a1 1 0 0 0-1 1zM17 9a4 4 0 0 1 0 6"/></symbol>
+ <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3 4.5 6v6c0 4.5 3.2 7.8 7.5 9 4.3-1.2 7.5-4.5 7.5-9V6z"/></symbol>
+ <symbol id="i-edit" viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16z"/></symbol>
+ <symbol id="i-lock" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2.5"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></symbol>
+ <symbol id="i-cal" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/></symbol>
+</svg>
+<header class="mtop"><span class="mark">U</span>UniCatólica<a class="tap" href="#" aria-label="Seu perfil"><span class="av a1 sm">JM</span></a></header>
+<div class="app">
+ <nav class="side" aria-label="Principal">
+  <a class="brand" href="#"><span class="mark">U</span>UniCatólica</a>
+  <a class="nl" href="#"><svg class="ic"><use href="#i-home"/></svg>Início</a>
+  <a class="nl" href="#"><svg class="ic"><use href="#i-users"/></svg>Comunidades</a>
+  <a class="nl" href="#"><svg class="ic"><use href="#i-bell"/></svg>Notificações<span class="badge" aria-label="3 novas">3</span></a>
+  <a class="nl on" href="#" aria-current="page"><svg class="ic"><use href="#i-user"/></svg>Perfil</a>
+  <div class="nh">Suas comunidades</div>
+  <a class="cm" href="#"><span class="sq es">ES</span>Engenharia de Software</a>
+  <a class="cm" href="#"><span class="sq ca">CA</span>Estudos de Cálculo I</a>
+  <div class="nh">Em breve</div>
+  <div class="soon"><svg class="ic"><use href="#i-search"/></svg>Busca</div>
+  <div class="soon"><svg class="ic"><use href="#i-msg"/></svg>Mensagens</div>
+  <a class="me" href="#"><span class="av a1 sm">JM</span><span><b>Julia Martins</b><small>1º período</small></span><svg class="ic s"><use href="#i-dots"/></svg></a>
+ </nav>
+ <main class="col">
+  <header class="ch" style="padding-bottom:4px">
+   <div class="ch-top" style="align-items:flex-start">
+    <div><h1 style="font-size:26px">Julia Martins</h1><p style="font-size:15px">Engenharia de Software · 1º período</p></div>
+    <span class="av a1" style="width:80px;height:80px;font-size:26px;margin-left:auto">JM</span>
+   </div>
+   <div class="chips" style="margin-top:16px" aria-label="Interesses"><span>Programação</span><span>Robótica</span><span>Jogos digitais</span></div>
+   <div style="display:flex;gap:10px;margin-top:18px"><a class="btn btn-o btn-w" href="#" style="flex:1"><svg class="ic s"><use href="#i-edit"/></svg>Editar perfil</a></div>
+  </header>
+  <div class="tabs" role="tablist"><a class="tab on" role="tab" aria-selected="true" href="#">Publicações</a><a class="tab" role="tab" href="#">Comunidades</a></div>
+  <article class="post">
+   <span class="av a1">JM</span>
+   <div>
+    <div class="ph-row"><b>Julia Martins</b><span class="m">em Engenharia de Software · ontem</span></div>
+    <p>Alguém do 1º período quer dividir o livro de Algoritmos? Achei um usado na biblioteca, mas só tem um exemplar.</p>
+   </div>
+  </article>
+  <article class="post">
+   <span class="av a1">JM</span>
+   <div>
+    <div class="ph-row"><b>Julia Martins</b><span class="m">em Estudos de Cálculo I · seg</span></div>
+    <p>Valeu pelo resumo de limites, salvou minha semana.</p>
+   </div>
+  </article>
+ </main>
+ <aside aria-label="Editar perfil">
+  <section class="card" style="padding-bottom:18px">
+   <h2>Editar perfil</h2>
+   <p style="font-size:14px;color:var(--soft);margin-bottom:14px">Conte seu curso, período e interesses para os colegas te encontrarem.</p>
+   <div class="field"><label>Nome</label><div class="in">Julia Martins</div></div>
+   <div class="field"><label>Curso</label><div class="in sel">Engenharia de Software<svg class="ic s"><use href="#i-down"/></svg></div></div>
+   <div class="field"><label>Período</label><div class="in sel">1º período<svg class="ic s"><use href="#i-down"/></svg></div></div>
+   <div class="field"><label>Interesses</label>
+    <div style="display:flex;gap:8px"><div class="in focus">Inteligência artificial</div><button class="btn btn-o" style="height:44px">Adicionar</button></div>
+    <div class="chips"><span>Programação<button class="x" aria-label="Remover Programação"><svg class="ic s"><use href="#i-x"/></svg></button></span><span>Robótica<button class="x" aria-label="Remover Robótica"><svg class="ic s"><use href="#i-x"/></svg></button></span><span>Jogos digitais<button class="x" aria-label="Remover Jogos digitais"><svg class="ic s"><use href="#i-x"/></svg></button></span></div></div>
+   <div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn btn-o">Cancelar</button><button class="btn btn-p">Salvar</button></div>
+  </section>
+  <div class="note warn"><svg class="ic s"><use href="#i-info"/></svg><div><b>Trocar de curso muda sua comunidade de curso.</b><div>Você sai de Engenharia de Software e entra na comunidade do novo curso.</div></div></div>
+ </aside>
+</div>
+<nav class="tabbar" aria-label="Principal">
+ <a href="#"><svg class="ic"><use href="#i-home"/></svg>Início</a>
+ <a href="#"><svg class="ic"><use href="#i-users"/></svg>Comunidades</a>
+ <a href="#"><svg class="ic"><use href="#i-bell"/></svg><span class="badge" aria-label="3 novas">3</span>Notificações</a>
+ <a class="on" aria-current="page" href="#"><svg class="ic"><use href="#i-user"/></svg>Perfil</a>
+</nav>
+</body></html>

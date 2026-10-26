@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>KAN-84 · Administração · redesign</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="base.css">
+<style>
+.cols2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:20px;align-items:start}
+.panel{border:1px solid var(--bd);border-radius:20px;padding:20px}
+.panel h2{font-size:17px;font-weight:700;letter-spacing:-.01em;display:flex;align-items:center;gap:10px}
+.panel>p{font-size:14px;color:var(--soft);margin:2px 0 16px}
+.panel h2 .qic{width:32px;height:32px;border-radius:10px;background:var(--tint);color:var(--mar);display:grid;place-items:center}
+.cr{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:12px;padding:12px 0;border-top:1px solid var(--bd)}
+.cr b{font-weight:600;font-size:14px;display:block}.cr small{font-size:13px;color:var(--soft)}
+.stat{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:#2F6141}
+.stat.no{color:#8A5A00}
+.sent{padding:10px 0;border-top:1px solid var(--bd);font-size:14px}.sent small{display:block;color:var(--soft);font-size:13px}
+@media (max-width:1180px){.cols2{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<i id="anotacoes" hidden></i>
+<div class="legenda" aria-hidden="true"><i></i>Tracejado: depende de backend</div>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+ <symbol id="i-home" viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></symbol>
+ <symbol id="i-users" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.7-3.4 3.3-5.5 6.5-5.5s5.8 2.1 6.5 5.5"/><path d="M16 4.6a3.5 3.5 0 0 1 0 6.8M18 14.8c2 .7 3.2 2.5 3.5 5.2"/></symbol>
+ <symbol id="i-bell" viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.9 1.9 0 0 0 3.4 0"/></symbol>
+ <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4.3-6 8-6s7 2 8 6"/></symbol>
+ <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></symbol>
+ <symbol id="i-msg" viewBox="0 0 24 24"><path d="M21 12a8.5 8.5 0 0 1-12.6 7.4L3 21l1.6-5.4A8.5 8.5 0 1 1 21 12z"/></symbol>
+ <symbol id="i-dots" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="19" cy="12" r="1.2"/></symbol>
+ <symbol id="i-flag" viewBox="0 0 24 24"><path d="M5 21V4M5 4h11l-2 4 2 4H5"/></symbol>
+ <symbol id="i-eyeoff" viewBox="0 0 24 24"><path d="M10.6 5.1A10 10 0 0 1 12 5c6 0 9.5 7 9.5 7a17 17 0 0 1-2.6 3.4M6.6 6.6C3.9 8.4 2.5 12 2.5 12S6 19 12 19a9.6 9.6 0 0 0 5.4-1.6M3 3l18 18M9.9 9.9a3 3 0 0 0 4.2 4.2"/></symbol>
+ <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></symbol>
+ <symbol id="i-up" viewBox="0 0 24 24"><path d="M7 17 17 7M8 7h9v9"/></symbol>
+ <symbol id="i-img" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="4"/><circle cx="9" cy="9" r="2"/><path d="m21 15-4.5-4.5L6 21"/></symbol>
+ <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+ <symbol id="i-mail" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="m4 7 8 6 8-6"/></symbol>
+ <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></symbol>
+ <symbol id="i-alert" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v5.5M12 16.5v.01"/></symbol>
+ <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5.5M12 7.5v.01"/></symbol>
+ <symbol id="i-left" viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></symbol>
+ <symbol id="i-down" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+ <symbol id="i-trash" viewBox="0 0 24 24"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></symbol>
+ <symbol id="i-mega" viewBox="0 0 24 24"><path d="M3 11v2a1 1 0 0 0 1 1h3l6 4V6L7 10H4a1 1 0 0 0-1 1zM17 9a4 4 0 0 1 0 6"/></symbol>
+ <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3 4.5 6v6c0 4.5 3.2 7.8 7.5 9 4.3-1.2 7.5-4.5 7.5-9V6z"/></symbol>
+ <symbol id="i-edit" viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16z"/></symbol>
+ <symbol id="i-lock" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2.5"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></symbol>
+ <symbol id="i-cal" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/></symbol>
+</svg>
+<header class="mtop"><span class="mark">U</span>UniCatólica<a class="tap" href="#" aria-label="Seu perfil"><span class="av a5 sm">CP</span></a></header>
+<div class="app wide">
+ <nav class="side" aria-label="Principal">
+  <a class="brand" href="#"><span class="mark">U</span>UniCatólica</a>
+  <a class="nl" href="#"><svg class="ic"><use href="#i-home"/></svg>Início</a>
+  <a class="nl on" href="#" aria-current="page"><svg class="ic"><use href="#i-shield"/></svg>Administração</a>
+  <a class="nl" href="#"><svg class="ic"><use href="#i-users"/></svg>Comunidades</a>
+  <a class="nl" href="#"><svg class="ic"><use href="#i-bell"/></svg>Notificações</a>
+  <a class="nl" href="#"><svg class="ic"><use href="#i-user"/></svg>Perfil</a>
+  <div class="nh">Suas comunidades</div>
+  <a class="cm" href="#"><span class="sq es">ES</span>Engenharia de Software</a>
+  <div class="nh">Em breve</div>
+  <div class="soon"><svg class="ic"><use href="#i-search"/></svg>Busca</div>
+  <div class="soon"><svg class="ic"><use href="#i-msg"/></svg>Mensagens</div>
+  <a class="me" href="#"><span class="av a5 sm">CP</span><span><b>Carla Prado</b><small>Administradora</small></span><svg class="ic s"><use href="#i-dots"/></svg></a>
+ </nav>
+ <main class="col">
+  <div class="pg">
+   <div class="pg-h"><div><h1>Administração da plataforma</h1><p>Avisos para os alunos e comunidades oficiais dos cursos.</p></div></div>
+   <div class="cols2">
+    <section class="panel dep" aria-labelledby="av">
+     <h2 id="av"><span class="qic"><svg class="ic s"><use href="#i-mega"/></svg></span>Publicar aviso</h2>
+     <p>Aparece em “Esta semana” no Início de quem você escolher.</p>
+     <div class="field"><label>Título</label><div class="in">Inscrições da Semana Acadêmica terminam terça</div></div>
+     <div class="field"><label>Mensagem</label><div class="in ta">As inscrições para as oficinas da Semana Acadêmica vão até terça, 27/10, às 23h59, pelo portal do aluno.</div></div>
+     <div class="row2">
+      <div class="field"><label>Para quem</label><div class="in sel">Todos os cursos<svg class="ic s"><use href="#i-down"/></svg></div></div>
+      <div class="field"><label>Data em destaque</label><div class="in">27/10/2026</div></div>
+     </div>
+     <div style="display:flex;justify-content:flex-end"><button class="btn btn-p btn-l">Publicar aviso</button></div>
+     <div class="grp" style="padding-top:20px">Enviados recentemente</div>
+     <div class="sent">Finados: sem aula na segunda<small>Todos os cursos · 22/10</small></div>
+     <div class="sent">Horário da biblioteca aos sábados (enquete)<small>Todos os cursos · 20/10</small></div>
+    </section>
+    <section class="panel dep" aria-labelledby="cc">
+     <h2 id="cc"><span class="qic"><svg class="ic s"><use href="#i-users"/></svg></span>Comunidades de curso</h2>
+     <p>Crie a comunidade oficial antes dos alunos chegarem; quem se cadastra no curso entra sozinho.</p>
+     <div class="search" style="margin-bottom:8px"><svg class="ic s"><use href="#i-search"/></svg>Buscar curso</div>
+     <div class="cr"><div><b>Engenharia de Software</b><small>214 alunos</small></div><span class="stat"><svg class="ic s"><use href="#i-check"/></svg>Criada</span></div>
+     <div class="cr"><div><b>Arquitetura e Urbanismo</b><small>176 alunos</small></div><span class="stat"><svg class="ic s"><use href="#i-check"/></svg>Criada</span></div>
+     <div class="cr"><div><b>Engenharia Mecânica</b><small>Sem alunos ainda</small></div><button class="btn btn-o">Pré-criar</button></div>
+     <div class="cr"><div><b>Psicologia</b><small>Sem alunos ainda</small></div><button class="btn btn-o">Pré-criar</button></div>
+     <div class="cr"><div><b>Direito</b><small>3 alunos sem comunidade</small></div><button class="btn btn-o">Pré-criar</button></div>
+    </section>
+   </div>
+  </div>
+ </main>
+</div>
+<nav class="tabbar" aria-label="Principal">
+ <a href="#"><svg class="ic"><use href="#i-home"/></svg>Início</a>
+ <a class="on" aria-current="page" href="#"><svg class="ic"><use href="#i-shield"/></svg>Admin</a>
+ <a href="#"><svg class="ic"><use href="#i-users"/></svg>Comunidades</a>
+ <a href="#"><svg class="ic"><use href="#i-user"/></svg>Perfil</a>
+</nav>
+</body></html>
