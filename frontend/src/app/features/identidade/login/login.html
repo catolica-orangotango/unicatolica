@@ -14,7 +14,12 @@
       type="email"
       formControlName="email"
       autocomplete="email"
+      [attr.aria-invalid]="form.controls.email.touched && form.controls.email.invalid ? 'true' : null"
+      [attr.aria-describedby]="form.controls.email.touched && form.controls.email.invalid ? 'erro-email' : null"
     />
+    @if (form.controls.email.touched && form.controls.email.invalid) {
+      <span class="login__campo-erro" role="alert" id="erro-email">Informe um e-mail válido.</span>
+    }
 
     <label class="login__label" for="senha">Senha</label>
     <input
@@ -23,7 +28,12 @@
       type="password"
       formControlName="senha"
       autocomplete="current-password"
+      [attr.aria-invalid]="form.controls.senha.touched && form.controls.senha.invalid ? 'true' : null"
+      [attr.aria-describedby]="form.controls.senha.touched && form.controls.senha.invalid ? 'erro-senha' : null"
     />
+    @if (form.controls.senha.touched && form.controls.senha.invalid) {
+      <span class="login__campo-erro" role="alert" id="erro-senha">Informe sua senha.</span>
+    }
 
     <!--
       O submit fecha a ordem de tabulação e-mail -> senha -> Entrar que a suíte

@@ -58,6 +58,29 @@ test.describe('backend real', { tag: '@backend' }, () => {
     await expect(page.getByRole('button', { name: 'Participar' })).toBeVisible();
     await expect(page.getByRole('list', { name: 'Suas comunidades' })).not.toContainText(nome);
   });
+
+  test('administrador cadastra, renomeia e desativa um curso pela tela (KAN-88)', async ({ page }) => {
+    const nome = `E2E curso ${Date.now()}`;
+    const renomeado = `${nome} B`;
+
+    await entrar(page, 'admin.teste@catolicasc.edu.br');
+    await page.goto('/admin/cursos');
+    await expect(page.getByRole('heading', { level: 1, name: 'Cursos' })).toBeVisible();
+    await expect(page.getByText('Não foi possível carregar os cursos agora.')).toHaveCount(0);
+
+    await page.getByRole('textbox', { name: 'Nome do curso' }).fill(nome);
+    await page.getByRole('button', { name: 'Cadastrar curso' }).click();
+    await expect(page.getByText(`Curso ${nome} cadastrado`)).toBeVisible();
+
+    await page.getByRole('button', { name: `Renomear ${nome}` }).click();
+    await page.getByRole('textbox', { name: `Novo nome de ${nome}` }).fill(renomeado);
+    await page.getByRole('button', { name: 'Salvar' }).click();
+    await expect(page.getByText(`Curso renomeado para ${renomeado}`)).toBeVisible();
+
+    await page.getByRole('button', { name: `Desativar ${renomeado}` }).click();
+    await page.getByRole('button', { name: 'Confirmar' }).click();
+    await expect(page.getByText(`Curso ${renomeado} desativado`)).toBeVisible();
+  });
 });
 
 async function entrar(page: Page, email: string): Promise<void> {

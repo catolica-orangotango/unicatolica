@@ -146,6 +146,18 @@ class ComunidadeServiceTest {
     }
 
     @Test
+    void rejeitaSaidaDeComunidadeDeCurso() {
+        Comunidade comunidade = comunidadeAberta();
+        comunidade.tipo = TipoComunidade.CURSO;
+        when(comunidadeRepository.buscarAtivaPorId(1L)).thenReturn(Optional.of(comunidade));
+
+        ApiException erro = assertThrows(ApiException.class, () -> service.sair(USUARIO_ID, 1L));
+
+        assertEquals("COMUNIDADE_TIPO_INVALIDO", erro.getCode());
+        verify(comunidadeMembroRepository, never()).removerAssociacao(any(Comunidade.class), any());
+    }
+
+    @Test
     void listarDelegaParaRepositoryEMontaPageResponse() {
         Comunidade comunidade = comunidadeAberta();
         when(comunidadeRepository.listar(TipoComunidade.ABERTA, "xa", 0, 20)).thenReturn(List.of(comunidade));
