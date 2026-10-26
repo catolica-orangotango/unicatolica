@@ -1,0 +1,133 @@
+<section class="cursos" aria-labelledby="cursos-titulo">
+  <h1 class="uc-text-greeting cursos__titulo" id="cursos-titulo">Cursos</h1>
+  <p class="uc-text-body cursos__texto">
+    Cadastrar um curso cria a comunidade dele. Desativar tira o curso do cadastro, mas quem já o tem continua com ele.
+  </p>
+
+  <form class="cursos__bloco" [formGroup]="formNovo" (ngSubmit)="cadastrar()" novalidate>
+    <h2 class="cursos__subtitulo">Novo curso</h2>
+
+    <label class="cursos__label" for="curso-novo-nome">Nome do curso</label>
+    <input
+      id="curso-novo-nome"
+      class="cursos__campo"
+      type="text"
+      formControlName="nome"
+      [attr.maxlength]="limiteNome"
+      [attr.aria-invalid]="formNovo.controls.nome.touched && formNovo.controls.nome.invalid ? 'true' : null"
+      [attr.aria-describedby]="formNovo.controls.nome.touched && formNovo.controls.nome.invalid ? 'erro-curso-novo-nome' : null"
+    />
+    @if (formNovo.controls.nome.touched && formNovo.controls.nome.invalid) {
+      <span class="cursos__erro-campo" id="erro-curso-novo-nome">Informe o nome do curso.</span>
+    }
+
+    @if (erroCadastro(); as mensagem) {
+      <p class="cursos__erro" role="alert">{{ mensagem }}</p>
+    }
+
+    <div class="cursos__acoes">
+      <button type="submit" uc-button [disabled]="cadastrando()">
+        {{ cadastrando() ? 'Cadastrando…' : 'Cadastrar curso' }}
+      </button>
+    </div>
+  </form>
+
+  <div class="cursos__bloco">
+    <h2 class="cursos__subtitulo">Cursos cadastrados</h2>
+
+    @if (erroLista(); as mensagem) {
+      <p class="cursos__erro" role="alert">{{ mensagem }}</p>
+    }
+    @if (erroSituacao(); as mensagem) {
+      <p class="cursos__erro" role="alert">{{ mensagem }}</p>
+    }
+
+    @if (carregando()) {
+      <p class="cursos__ajuda">Carregando cursos…</p>
+    }
+
+    <ul class="cursos__lista">
+      @for (curso of cursos(); track curso.id) {
+        <li class="cursos__item">
+          @if (editando()?.id === curso.id) {
+            <form class="cursos__edicao" [formGroup]="formEdicao" (ngSubmit)="salvarEdicao()" novalidate>
+              <input
+                #campoEdicao
+                class="cursos__campo cursos__campo--linha"
+                type="text"
+                formControlName="nome"
+                [attr.maxlength]="limiteNome"
+                [attr.aria-label]="'Novo nome de ' + curso.nome"
+                [attr.aria-invalid]="formEdicao.controls.nome.touched && formEdicao.controls.nome.invalid ? 'true' : null"
+              />
+              <button type="submit" uc-button [disabled]="salvandoEdicao()">
+                {{ salvandoEdicao() ? 'Salvando…' : 'Salvar' }}
+              </button>
+              <button type="button" class="botao-secundario" (click)="cancelarEdicao()">Cancelar</button>
+              @if (formEdicao.controls.nome.touched && formEdicao.controls.nome.invalid) {
+                <span class="cursos__erro-campo">Informe o nome do curso.</span>
+              }
+              @if (erroEdicao(); as mensagem) {
+                <p class="cursos__erro" role="alert">{{ mensagem }}</p>
+              }
+            </form>
+          } @else {
+            <div class="cursos__dados">
+              <span class="cursos__nome">{{ curso.nome }}</span>
+              <span class="cursos__situacao" [class.cursos__situacao--inativo]="!curso.ativo">
+                {{ curso.ativo ? 'Ativo' : 'Inativo' }}
+              </span>
+            </div>
+
+            @if (desativando()?.id === curso.id) {
+              <div class="cursos__confirmacao" role="group" [attr.aria-label]="'Confirmar desativação de ' + curso.nome">
+                <span class="cursos__confirmacao-texto">Desativar {{ curso.nome }}?</span>
+                <button
+                  #botaoConfirmarDesativar
+                  type="button"
+                  class="cursos__botao-perigo"
+                  [disabled]="processandoSituacao()"
+                  (click)="confirmarDesativacao()"
+                >
+                  {{ processandoSituacao() ? 'Desativando…' : 'Confirmar' }}
+                </button>
+                <button type="button" class="botao-secundario" (click)="cancelarDesativacao()">Cancelar</button>
+              </div>
+            } @else {
+              <div class="cursos__acoes-item">
+                <button
+                  type="button"
+                  class="botao-secundario"
+                  [attr.aria-label]="'Renomear ' + curso.nome"
+                  (click)="pedirEdicao(curso)"
+                >
+                  Renomear
+                </button>
+                @if (curso.ativo) {
+                  <button
+                    type="button"
+                    class="botao-secundario"
+                    [attr.aria-label]="'Desativar ' + curso.nome"
+                    (click)="pedirDesativacao(curso)"
+                  >
+                    Desativar
+                  </button>
+                } @else {
+                  <button
+                    type="button"
+                    class="botao-secundario"
+                    [attr.aria-label]="'Reativar ' + curso.nome"
+                    [disabled]="processandoSituacao()"
+                    (click)="reativar(curso)"
+                  >
+                    Reativar
+                  </button>
+                }
+              </div>
+            }
+          }
+        </li>
+      }
+    </ul>
+  </div>
+</section>

@@ -44,7 +44,7 @@ class UsuarioCadastroImplTest {
         usuario.id = 42L;
         usuario.nome = "Ana";
         usuario.cursoId = 1L;
-        usuario.curso = "Administração";
+        usuario.cursoNome = "Administração";
         when(impl.usuarioRepository.findByIdOptional(42L)).thenReturn(Optional.of(usuario));
         when(cursoRepository.buscarAtivo(14L)).thenReturn(Optional.of(curso(14L, "Engenharia de Software")));
     }
@@ -55,9 +55,9 @@ class UsuarioCadastroImplTest {
 
         assertEquals("Ana Lima", usuario.nome);
         assertEquals(14L, usuario.cursoId);
-        assertEquals("Engenharia de Software", usuario.curso);
+        assertEquals("Engenharia de Software", usuario.cursoNome);
         assertEquals(new DadosCadastrais(42L, "Ana Lima", 14L, "Engenharia de Software"), dados);
-        verify(evento).fire(new CursoDoUsuarioAlterado(42L, "Administração", "Engenharia de Software"));
+        verify(evento).fire(new CursoDoUsuarioAlterado(42L, 1L, 14L));
     }
 
     @Test
@@ -67,17 +67,17 @@ class UsuarioCadastroImplTest {
 
         verify(cursoRepository, never()).buscarAtivo(any());
         verify(evento, never()).fire(any());
-        assertEquals("Administração", usuario.curso);
+        assertEquals("Administração", usuario.cursoNome);
     }
 
     @Test
     void contaSemCursoReconhecidoTrocaSemCursoAnterior() {
         usuario.cursoId = null;
-        usuario.curso = "texto antigo digitado";
+        usuario.cursoNome = null;
 
         impl.atualizarNomeECurso(42L, "Ana", 14L);
 
-        verify(evento).fire(new CursoDoUsuarioAlterado(42L, null, "Engenharia de Software"));
+        verify(evento).fire(new CursoDoUsuarioAlterado(42L, null, 14L));
     }
 
     @Test
@@ -101,7 +101,7 @@ class UsuarioCadastroImplTest {
     @Test
     void buscarDevolveCursoNuloParaContaSemCursoReconhecido() {
         usuario.cursoId = null;
-        usuario.curso = "texto antigo digitado";
+        usuario.cursoNome = "nome que sobrou em memória";
 
         assertEquals(new DadosCadastrais(42L, "Ana", null, null), impl.buscar(42L).orElseThrow());
     }

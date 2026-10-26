@@ -14,6 +14,7 @@ import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Regras de negócio das Stories 2.2 (criar comunidade aberta), 2.4 (entrar/sair), 2.5
@@ -38,10 +39,73 @@ public class ComunidadeService {
     AuditoriaService auditoriaService;
 
     /**
-     * Story 2.2 (RF21, RF22, RF23). Toda comunidade criada por aqui é {@code ABERTA} —
-     * o tipo {@code CURSO} só existe hoje via seed de migration (Story 2.1, protótipo);
+     * Story 2.1 (RF21.2) — comunidade do curso recém-cadastrado, sem membros: os alunos entram
+     * pelo auto-join. Chamada pelo observer de {@code CursoCadastrado}, na transação do
+     * cadastro do curso; nome já usado por outra comunidade devolve 409 e desfaz o cadastro.
+     * Idempotente: se já existe comunidade para o curso, não cria outra.
+     */
+    @Transactional
+    public void criarComunidadeDeCurso(Long cursoId, String nome, Long criadoPorUsuarioId) {
+        if (comunidadeRepository.existePorCursoId(cursoId)) {
+            return;
+        }
+        if (comunidadeRepository.existePorNome(nome)) {
+            throw nomeDeComunidadeEmUso();
+        }
+
+        Comunidade comunidade = novaComunidadeDeCurso(cursoId, nome, criadoPorUsuarioId);
+        comunidadeRepository.persist(comunidade);
+
+        auditoriaService.registrar(criadoPorUsuarioId, "comunidades", "COMUNIDADE_CURSO_CRIADA", "Comunidade",
+                comunidade.id, "cursoId=" + cursoId);
+    }
+
+    private static Comunidade novaComunidadeDeCurso(Long cursoId, String nome, Long criadoPorUsuarioId) {
+        Comunidade comunidade = new Comunidade();
+        comunidade.nome = nome.trim();
+        comunidade.tipo = TipoComunidade.CURSO;
+        comunidade.cursoId = cursoId;
+        comunidade.criadoPorUsuarioId = criadoPorUsuarioId;
+        comunidade.criadoEm = Instant.now();
+        return comunidade;
+    }
+
+    /**
+     * Story 2.1 / KAN-44 — o curso foi renomeado, a comunidade dele acompanha. Sem comunidade
+     * ligada ao curso, não há o que renomear. Nome já usado por outra comunidade devolve 409
+     * e desfaz a renomeação do curso.
+     */
+    @Transactional
+    public void renomearComunidadeDeCurso(Long cursoId, String nome) {
+        Optional<Comunidade> encontrada = comunidadeRepository.buscarAtivaPorCursoId(cursoId);
+        if (encontrada.isEmpty()) {
+            return;
+        }
+
+        Comunidade comunidade = encontrada.get();
+        String nomeLimpo = nome.trim();
+        if (comunidade.nome.equals(nomeLimpo)) {
+            return;
+        }
+        if (comunidadeRepository.existePorNomeEDiferente(nomeLimpo, comunidade.id)) {
+            throw nomeDeComunidadeEmUso();
+        }
+
+        comunidade.nome = nomeLimpo;
+        comunidade.atualizadoEm = Instant.now();
+        auditoriaService.registrar(null, "comunidades", "COMUNIDADE_CURSO_RENOMEADA", "Comunidade", comunidade.id,
+                "cursoId=" + cursoId);
+    }
+
+    private static ApiException nomeDeComunidadeEmUso() {
+        return ApiException.conflito("COMUNIDADE_NOME_EM_USO", "Já existe uma comunidade com esse nome.", null);
+    }
+
+    /**
+     * Story 2.2 (RF21, RF22, RF23). Toda comunidade criada por aqui é {@code ABERTA} — a
+     * comunidade de curso nasce com o cadastro do curso ({@link #criarComunidadeDeCurso});
      * o endpoint não aceita tipo no corpo de propósito, para não abrir brecha da RF21.2
-     * (aluno não pode criar comunidade de curso) antes de existir o endpoint de administrador.
+     * (aluno não pode criar comunidade de curso).
      */
     @Transactional
     public Comunidade criarComunidadeAberta(Long usuarioId, String nome, String descricao) {

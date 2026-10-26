@@ -3,7 +3,6 @@ package br.edu.unicatolica.pacext.comunidades;
 import br.edu.unicatolica.pacext.comunidades.dominio.Comunidade;
 import br.edu.unicatolica.pacext.comunidades.dominio.ComunidadeMembroRepository;
 import br.edu.unicatolica.pacext.comunidades.dominio.ComunidadeRepository;
-import br.edu.unicatolica.pacext.comunidades.dominio.TipoComunidade;
 import static io.restassured.RestAssured.given;
 import static io.restassured.http.ContentType.JSON;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -34,11 +33,14 @@ class CadastroAutoJoinFluxoTest {
     @Inject
     ComunidadeMembroRepository comunidadeMembroRepository;
 
+    /** Id do curso que faz o observer de teste falhar; só é definido no teste que precisa da falha. */
+    private static volatile Long cursoQueFalhaId;
+
     /** Observer só de teste: simula uma falha no auto-join para um curso específico. */
     @ApplicationScoped
     static class ObserverQueFalha {
         void aoCadastrar(@Observes UsuarioCadastrado evento) {
-            if (CURSO_QUE_FALHA.equals(evento.curso())) {
+            if (evento.cursoId().equals(cursoQueFalhaId)) {
                 throw new IllegalStateException("falha simulada no auto-join");
             }
         }
@@ -50,7 +52,8 @@ class CadastroAutoJoinFluxoTest {
                 .then().statusCode(201)
                 .extract().path("id");
 
-        Comunidade comunidade = comunidadeRepository.buscarPorTipoENome(TipoComunidade.CURSO, "Administração")
+        Comunidade comunidade = comunidadeRepository
+                .buscarAtivaPorCursoId(UsuarioDeTeste.idDoCurso("Administração").longValue())
                 .orElseThrow();
         assertTrue(comunidadeMembroRepository.existeAssociacao(comunidade, id.longValue()));
     }
@@ -58,6 +61,7 @@ class CadastroAutoJoinFluxoTest {
     @Test
     void falhaNoAutoJoinDesfazOCadastro() {
         String email = emailUnico();
+        cursoQueFalhaId = UsuarioDeTeste.idDoCurso(CURSO_QUE_FALHA).longValue();
 
         cadastrar(email, CURSO_QUE_FALHA).then().statusCode(500);
 

@@ -9,7 +9,7 @@ package br.edu.unicatolica.pacext.identidade;
  * desfaz o cadastro inteiro.</p>
  *
  * @param usuarioId id do usuário recém-criado
- * @param curso     curso informado no cadastro, já sem espaços nas pontas
+ * @param cursoId   id do curso escolhido no cadastro
  */
-public record UsuarioCadastrado(Long usuarioId, String curso) {
+public record UsuarioCadastrado(Long usuarioId, Long cursoId) {
 }

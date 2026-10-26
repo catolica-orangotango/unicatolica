@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Preenche comunidade.curso_id (criada em comunidades-004) para as comunidades de curso que
+    já existem, casando o nome da comunidade com o do curso uma única vez.
+
+    Exceção pontual ao AD-3 (cada módulo mexe só nas próprias tabelas): este changeset está na
+    pasta de Identidade de propósito. O includeAll roda os arquivos por ordem de caminho, então
+    num banco novo comunidades/ roda antes de identidade/, e só aqui as duas tabelas (comunidade
+    e curso) já existem. Depois desta migration o vínculo é sempre por id: o evento
+    CursoCadastrado cria a comunidade já com curso_id.
+-->
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="identidade-009-vincula-comunidade-ao-curso" author="pacext">
+        <sql>
+            UPDATE comunidade
+               SET curso_id = c.id
+              FROM curso c
+             WHERE comunidade.tipo = 'CURSO'
+               AND comunidade.curso_id IS NULL
+               AND lower(comunidade.nome) = lower(c.nome)
+        </sql>
+        <rollback>
+            <sql>UPDATE comunidade SET curso_id = NULL WHERE tipo = 'CURSO'</sql>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

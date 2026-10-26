@@ -45,10 +45,10 @@ class UsuarioCadastroImpl implements UsuarioCadastro {
         usuario.nome = nome.strip();
         if (!Objects.equals(usuario.cursoId, cursoId)) {
             Curso curso = cursoService.buscarAtivoOuFalhar(cursoId);
-            String cursoAnterior = usuario.cursoId == null ? null : usuario.curso;
+            Long cursoAnteriorId = usuario.cursoId;
             usuario.cursoId = curso.id;
-            usuario.curso = curso.nome;
-            cursoDoUsuarioAlterado.fire(new CursoDoUsuarioAlterado(usuario.id, cursoAnterior, curso.nome));
+            usuario.cursoNome = curso.nome;
+            cursoDoUsuarioAlterado.fire(new CursoDoUsuarioAlterado(usuario.id, cursoAnteriorId, curso.id));
         }
         usuario.atualizadoEm = Instant.now();
         return dados(usuario);
@@ -56,6 +56,6 @@ class UsuarioCadastroImpl implements UsuarioCadastro {
 
     private static DadosCadastrais dados(Usuario usuario) {
         return new DadosCadastrais(usuario.id, usuario.nome, usuario.cursoId,
-                usuario.cursoId == null ? null : usuario.curso);
+                usuario.cursoId == null ? null : usuario.cursoNome);
     }
 }
