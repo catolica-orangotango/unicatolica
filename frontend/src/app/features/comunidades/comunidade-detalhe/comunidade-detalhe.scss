@@ -57,6 +57,9 @@
   position: absolute;
   top: var(--uc-space-page-margin);
   right: var(--uc-space-page-margin);
+  display: flex;
+  align-items: center;
+  gap: calc(var(--uc-space-unit) * 3);
 }
 
 // uc-member-indicator é pensado pra fundo claro (texto --uc-color-green-ok) —

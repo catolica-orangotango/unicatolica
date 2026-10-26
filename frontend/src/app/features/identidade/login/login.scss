@@ -68,6 +68,20 @@
   color: var(--uc-color-ink-soft);
 }
 
+// Erro por campo (KAN-37): texto + `aria-invalid` no campo, nunca só a cor. Com o campo
+// inválido a margem de baixo passa para a mensagem, que fica colada nele.
+.login__campo[aria-invalid='true'] {
+  margin-bottom: 0;
+  border-color: var(--uc-color-error);
+}
+
+.login__campo-erro {
+  margin-bottom: calc(var(--uc-space-unit) * 4);
+  padding-top: var(--uc-space-unit);
+  color: var(--uc-color-error);
+  font-size: var(--uc-font-size-meta);
+}
+
 .login__enviar {
   align-self: flex-start;
   margin-top: calc(var(--uc-space-unit) * 2);

@@ -14,6 +14,8 @@
       <div class="detalhe__acao">
         <!-- Sem "Sair" para o administrador: o único admin não sai, exclui a comunidade (Story 2.6). -->
         @if (c.souMembro && c.tipo === 'ABERTA' && !c.souAdministrador) {
+          <!-- O toast "Você entrou em..." some; o estado de membro fica na tela (KAN-37). -->
+          <uc-member-indicator label="Você é membro" />
           <button type="button" class="detalhe__botao-sair" [disabled]="processando()" (click)="sair()">
             {{ processando() ? 'Saindo…' : 'Sair' }}
           </button>

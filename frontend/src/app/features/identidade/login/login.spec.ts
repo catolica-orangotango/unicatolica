@@ -78,6 +78,46 @@ describe('Login', () => {
     httpMock.expectNone('http://localhost:8080/auth/login');
   });
 
+  it('enviar vazio mostra o erro de cada campo, ligado a ele e anunciado (KAN-37)', () => {
+    const compiled = fixture.nativeElement as HTMLElement;
+    const email = compiled.querySelector('#email') as HTMLInputElement;
+    const senha = compiled.querySelector('#senha') as HTMLInputElement;
+
+    // Antes de o usuário interagir, nenhum erro aparece.
+    expect(compiled.querySelectorAll('.login__campo-erro')).toHaveLength(0);
+    expect(email.hasAttribute('aria-invalid')).toBe(false);
+
+    (compiled.querySelector('button[type="submit"]') as HTMLButtonElement).click();
+    fixture.detectChanges();
+
+    expect(email.getAttribute('aria-invalid')).toBe('true');
+    expect(email.getAttribute('aria-describedby')).toBe('erro-email');
+    expect(senha.getAttribute('aria-invalid')).toBe('true');
+    expect(senha.getAttribute('aria-describedby')).toBe('erro-senha');
+
+    const erroEmail = compiled.querySelector('#erro-email') as HTMLElement;
+    const erroSenha = compiled.querySelector('#erro-senha') as HTMLElement;
+    expect(erroEmail.textContent?.trim()).toBe('Informe um e-mail válido.');
+    expect(erroEmail.getAttribute('role')).toBe('alert');
+    expect(erroSenha.textContent?.trim()).toBe('Informe sua senha.');
+    expect(erroSenha.getAttribute('role')).toBe('alert');
+  });
+
+  it('o erro some quando o campo passa a ser válido', () => {
+    const compiled = fixture.nativeElement as HTMLElement;
+    (compiled.querySelector('button[type="submit"]') as HTMLButtonElement).click();
+    fixture.detectChanges();
+
+    const email = compiled.querySelector('#email') as HTMLInputElement;
+    email.value = 'aluno@catolicasc.edu.br';
+    email.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+
+    expect(compiled.querySelector('#erro-email')).toBeNull();
+    expect(email.hasAttribute('aria-invalid')).toBe(false);
+    expect(compiled.querySelector('#erro-senha')).toBeTruthy();
+  });
+
   it('navega para /feed quando o formulário é válido', () => {
     const navigateSpy = vi.spyOn(router, 'navigateByUrl').mockResolvedValue(true);
     const compiled = fixture.nativeElement as HTMLElement;
@@ -96,6 +136,29 @@ describe('Login', () => {
     fixture.detectChanges();
 
     expect(navigateSpy).toHaveBeenCalledWith('/feed');
+  });
+
+  it('mostra a mensagem da API quando a conta foi desativada pelo administrador', () => {
+    const compiled = fixture.nativeElement as HTMLElement;
+    const emailInput = compiled.querySelector('input[type="email"]') as HTMLInputElement;
+    const senhaInput = compiled.querySelector('input[type="password"]') as HTMLInputElement;
+
+    emailInput.value = 'aluno@catolicasc.edu.br';
+    emailInput.dispatchEvent(new Event('input'));
+    senhaInput.value = 'Senha123!';
+    senhaInput.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+
+    (compiled.querySelector('button[type="submit"]') as HTMLButtonElement).click();
+
+    httpMock.expectOne('http://localhost:8080/auth/login').flush(
+      { error: { code: 'CONTA_DESATIVADA', message: 'Sua conta está desativada. Procure a administração da plataforma.', details: null } },
+      { status: 401, statusText: 'Unauthorized' },
+    );
+    fixture.detectChanges();
+
+    expect(compiled.querySelector('[role="alert"]')?.textContent).toContain('Sua conta está desativada.');
+    expect(compiled.textContent).not.toContain('E-mail ou senha inválidos.');
   });
 
   it('mostra mensagem de erro quando as credenciais são inválidas', () => {

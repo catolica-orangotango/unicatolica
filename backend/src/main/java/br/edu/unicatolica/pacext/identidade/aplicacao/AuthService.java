@@ -1,6 +1,7 @@
 package br.edu.unicatolica.pacext.identidade.aplicacao;
 
 import br.edu.unicatolica.pacext.identidade.LoginRealizado;
+import br.edu.unicatolica.pacext.identidade.dominio.ContaDesativadaException;
 import br.edu.unicatolica.pacext.identidade.dominio.CredenciaisInvalidasException;
 import br.edu.unicatolica.pacext.identidade.dominio.EmailNaoConfirmadoException;
 import br.edu.unicatolica.pacext.identidade.dominio.PasswordHasher;
@@ -75,6 +76,9 @@ public class AuthService {
     public String autenticar(String email, String senha) {
         Usuario usuario = buscarUsuarioComCredencialValida(email, senha);
 
+        if (!usuario.ativo) {
+            throw new ContaDesativadaException();
+        }
         if (!usuario.emailConfirmado) {
             throw new EmailNaoConfirmadoException();
         }
@@ -100,10 +104,12 @@ public class AuthService {
      * perfil vem do banco, não do token antigo. Sem auditoria: o frontend renova várias vezes
      * por sessão, e o registro relevante é o login.
      *
-     * @throws ApiException 401 se o usuário do token não existe mais.
+     * @throws ApiException 401 se o usuário do token não existe mais ou se a conta foi
+     *         desativada (KAN-83; a sessão dela já cai antes, no {@code SessaoInvalidadaFilter}).
      */
     public String renovar(Long usuarioId) {
         Usuario usuario = usuarioRepository.findByIdOptional(usuarioId)
+                .filter(u -> u.ativo)
                 .orElseThrow(() -> ApiException.naoAutenticado(
                         "NAO_AUTENTICADO", "Autenticação necessária.", null));
         return emitirToken(usuario);

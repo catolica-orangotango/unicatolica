@@ -15,7 +15,7 @@
       [attr.aria-describedby]="form.controls.nome.touched && form.controls.nome.invalid ? 'erro-admin-nome' : null"
     />
     @if (form.controls.nome.touched && form.controls.nome.invalid) {
-      <span class="admin__erro-campo" id="erro-admin-nome">Informe o nome da comunidade.</span>
+      <span class="admin__erro-campo" role="alert" id="erro-admin-nome">Informe o nome da comunidade.</span>
     }
 
     <label class="admin__label" for="admin-descricao">Descrição</label>
