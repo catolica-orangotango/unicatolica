@@ -26,7 +26,7 @@ Definem o que o sistema deve fazer. Mudam pouco.
 | [`produto/contexto-pacext.md`](produto/contexto-pacext.md) | Relatório do PAC Extensionista: 80 requisitos funcionais (RF), 9 não funcionais (RNF), riscos, C4 |
 | [`produto/prd.md`](produto/prd.md) | PRD: visão, personas, jornadas, métricas de sucesso |
 | [`produto/ux-experiencia.md`](produto/ux-experiencia.md) | Fluxos de UX e padrões de interação |
-| [`produto/ux-design.md`](produto/ux-design.md) | Sistema de design Campus Clean |
+| [`../DESIGN.md`](../DESIGN.md) | Sistema de design Campus Clean (fonte única; `produto/ux-design.md` só aponta para ele) |
 | [`produto/artefatos-visuais.md`](produto/artefatos-visuais.md) | Links para protótipos e decks interativos |
 
 ## Histórico

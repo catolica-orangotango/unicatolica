@@ -2,8 +2,14 @@
 
 Esta pasta e a **fonte unica** de valores de design do frontend: paleta, escala
 tipografica, espacamento, raio e a sombra de overlay. Tudo vem, verbatim, do
-`DESIGN.md` do UX ("Campus Clean"):
-`_bmad-output/planning-artifacts/ux-designs/ux-unicatolica-2026-08-17/DESIGN.md`.
+`DESIGN.md` da raiz do repositorio ("Campus Clean"), a fonte unica do sistema
+visual. Mudou um valor la, muda aqui no mesmo PR.
+
+> **Redesign em andamento (KAN-84).** A nova direção visual, com a proposta de
+> tokens (o que entra, muda e sai) e o contraste de cada par, está em
+> [`docs/decisoes/2026-10-24-nova-direcao-visual.md`](../../../docs/decisoes/2026-10-24-nova-direcao-visual.md).
+> Os valores abaixo seguem valendo até o primeiro ticket de implementação, que
+> troca `DESIGN.md` e `_tokens.scss` juntos.
 
 ## Arquivos
 
