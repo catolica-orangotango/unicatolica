@@ -1,3 +1,4 @@
+import { HttpErrorResponse } from '@angular/common/http';
 import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -51,9 +52,15 @@ export class Login {
         this.enviando.set(false);
         this.router.navigateByUrl('/feed');
       },
-      error: () => {
+      error: (erro: HttpErrorResponse) => {
         this.enviando.set(false);
-        this.mensagemErro.set('E-mail ou senha inválidos.');
+        // Conta desativada pelo administrador (KAN-83): a API só diz isso a quem acertou a senha.
+        const desativada = erro.error?.error?.code === 'CONTA_DESATIVADA';
+        this.mensagemErro.set(
+          desativada && typeof erro.error?.error?.message === 'string'
+            ? erro.error.error.message
+            : 'E-mail ou senha inválidos.',
+        );
       },
     });
   }

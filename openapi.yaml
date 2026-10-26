@@ -32,6 +32,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/LoginResponse'
+        # 401: credenciais inválidas, e-mail não confirmado (EMAIL_NAO_CONFIRMADO) ou conta
+        # desativada pelo administrador (CONTA_DESATIVADA, KAN-83).
         '401':
           $ref: '#/components/responses/NaoAutenticado'
 
@@ -230,6 +232,126 @@ paths:
           $ref: '#/components/responses/NaoAutenticado'
         '403':
           $ref: '#/components/responses/SemPermissao'
+
+  /admin/usuarios:
+    get:
+      operationId: listarUsuariosAdmin
+      summary: Lista os usuários da plataforma, paginado, só ADMINISTRADOR (KAN-83)
+      tags: [Administracao]
+      description: >
+        Ordenada por nome. `busca` casa por trecho do nome ou do e-mail, sem diferenciar
+        maiúsculas; `perfil` filtra pelo perfil exato. Os dois são opcionais e se combinam.
+      parameters:
+        - name: busca
+          in: query
+          schema:
+            type: string
+        - name: perfil
+          in: query
+          schema:
+            type: string
+            enum: [ALUNO, MODERADOR, ADMINISTRADOR]
+        - name: pagina
+          in: query
+          schema:
+            type: integer
+            format: int32
+            minimum: 0
+            default: 0
+        - name: tamanho
+          in: query
+          schema:
+            type: integer
+            format: int32
+            minimum: 1
+            maximum: 100
+            default: 20
+      responses:
+        '200':
+          description: Página de usuários.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsuarioAdminPageResponse'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        # 422: perfil fora de ALUNO, MODERADOR, ADMINISTRADOR (PERFIL_INVALIDO).
+        '422':
+          $ref: '#/components/responses/ErroValidacao'
+
+  /admin/usuarios/{id}/perfil:
+    put:
+      operationId: alterarPerfilUsuario
+      summary: Altera o perfil de um usuário, só ADMINISTRADOR (KAN-83)
+      tags: [Administracao]
+      description: >
+        A sessão do usuário afetado é invalidada: na próxima requisição ele recebe 401 e
+        precisa entrar de novo, já com o perfil novo. O administrador não altera o próprio
+        perfil, e o sistema nunca fica sem administrador ativo (409). Registrado na auditoria.
+      parameters:
+        - $ref: '#/components/parameters/UsuarioId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AlterarPerfilRequest'
+      responses:
+        '200':
+          description: Usuário com o perfil novo.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsuarioAdminResponse'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        # 409: AUTO_ALTERACAO_NAO_PERMITIDA (o próprio usuário) ou ULTIMO_ADMINISTRADOR.
+        '409':
+          $ref: '#/components/responses/Conflito'
+        # 422: perfil fora de ALUNO, MODERADOR, ADMINISTRADOR (PERFIL_INVALIDO).
+        '422':
+          $ref: '#/components/responses/ErroValidacao'
+
+  /admin/usuarios/{id}/ativo:
+    put:
+      operationId: alterarSituacaoUsuario
+      summary: Desativa ou reativa a conta de um usuário, só ADMINISTRADOR (KAN-83)
+      tags: [Administracao]
+      description: >
+        Conta desativada não consegue entrar (401 CONTA_DESATIVADA no login) e a sessão ativa
+        cai na próxima requisição (401). Reativar devolve o acesso, com novo login. O
+        administrador não desativa a própria conta, e o sistema nunca fica sem administrador
+        ativo (409). Registrado na auditoria.
+      parameters:
+        - $ref: '#/components/parameters/UsuarioId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AlterarSituacaoRequest'
+      responses:
+        '200':
+          description: Usuário com a situação nova.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsuarioAdminResponse'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        # 409: AUTO_ALTERACAO_NAO_PERMITIDA (o próprio usuário) ou ULTIMO_ADMINISTRADOR.
+        '409':
+          $ref: '#/components/responses/Conflito'
 
   /comunidades:
     post:
@@ -1059,6 +1181,14 @@ paths:
 
 components:
   parameters:
+    UsuarioId:
+      name: id
+      in: path
+      required: true
+      description: Id do usuário.
+      schema:
+        type: integer
+        format: int64
     DenunciaId:
       name: id
       in: path
@@ -1076,6 +1206,53 @@ components:
         perfil:
           type: string
           example: ADMINISTRADOR
+    UsuarioAdminResponse:
+      type: object
+      required: [id, nomeCompleto, email, perfil, ativo]
+      properties:
+        id:
+          type: integer
+          format: int64
+        nomeCompleto:
+          type: string
+        email:
+          type: string
+        curso:
+          type: [string, 'null']
+          description: Nome do curso, ou nulo se o usuário ainda não tem curso.
+        perfil:
+          type: string
+          enum: [ALUNO, MODERADOR, ADMINISTRADOR]
+        ativo:
+          type: boolean
+          description: Falso quando o administrador desativou a conta.
+
+    UsuarioAdminPageResponse:
+      allOf:
+        - $ref: '#/components/schemas/PageResponse'
+        - type: object
+          properties:
+            content:
+              type: array
+              items:
+                $ref: '#/components/schemas/UsuarioAdminResponse'
+
+    AlterarPerfilRequest:
+      type: object
+      required: [perfil]
+      properties:
+        perfil:
+          type: string
+          enum: [ALUNO, MODERADOR, ADMINISTRADOR]
+
+    AlterarSituacaoRequest:
+      type: object
+      required: [ativo]
+      properties:
+        ativo:
+          type: boolean
+          description: Falso desativa a conta, verdadeiro reativa.
+
     LoginRequest:
       type: object
       required: [email, senha]

@@ -13,4 +13,9 @@ public final class Perfis {
 
     private Perfis() {
     }
+
+    /** Se {@code perfil} é um dos perfis de plataforma (a comparação é exata, com maiúsculas). */
+    public static boolean ehValido(String perfil) {
+        return ALUNO.equals(perfil) || MODERADOR.equals(perfil) || ADMINISTRADOR.equals(perfil);
+    }
 }
