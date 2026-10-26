@@ -614,6 +614,11 @@ export async function mockCursosAdmin(
           headers: { ...CORS, 'access-control-allow-methods': 'GET,POST,PUT,OPTIONS' },
         });
       }
+      // Só `GET /cursos` é público; as demais rotas exigem token, como o backend (KAN-88).
+      const publica = caminho === '/cursos' && request.method() === 'GET';
+      if (!publica && !request.headers()['authorization']) {
+        return route.fulfill(erro(401, 'NAO_AUTENTICADO', 'Token JWT ausente.'));
+      }
       if (request.method() !== 'GET') {
         chamadas.push({ metodo: request.method(), caminho, corpo: request.postDataJSON() });
       }
