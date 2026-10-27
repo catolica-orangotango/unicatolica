@@ -123,7 +123,7 @@ flowchart TD
 
 - **Binds:** todos os módulos (RNF07)
 - **Prevents:** cada módulo reinventando a própria tabela de auditoria isoladamente, quebrando a trilha única exigida por RNF07
-- **Rule:** tabela `log_auditoria` única e compartilhada, gravada exclusivamente através de um `AuditoriaService` injetável — infraestrutura transversal, não pertence a nenhum dos 12 módulos de domínio. Todo módulo que precisa registrar um evento de auditoria (login, denúncia, remoção de conteúdo, alteração administrativa) injeta esse serviço; nenhum módulo escreve na tabela diretamente nem cria a própria tabela de log. Ativo desde a semana 1 (login via Identidade, alteração administrativa de comunidade via Comunidades).
+- **Rule:** tabela `log_auditoria` única e compartilhada, gravada exclusivamente através de um `AuditoriaService` injetável — infraestrutura transversal, não pertence a nenhum dos 12 módulos de domínio. Todo módulo que precisa registrar um evento de auditoria (login, denúncia, remoção de conteúdo, alteração administrativa) injeta esse serviço; nenhum módulo escreve na tabela diretamente nem cria a própria tabela de log. Ativo desde a semana 1 (login via Identidade, alteração administrativa de comunidade via Comunidades). Leitura só pela interface somente leitura `AuditoriaConsulta`, consumida pela administração de plataforma (`docs/decisoes/2026-10-26-consulta-de-auditoria-pelo-administrador.md`).
 
 ## Consistency Conventions
 
