@@ -262,6 +262,14 @@
   background: var(--uc-color-orange-tint);
 }
 
+// Comunidade atualmente aberta (KAN-89) - mesmo par orange-tint/orange/semibold
+// de .shell__nav-item--active, pra sinalizar seleção com o mesmo vocabulário visual.
+.shell__comunidade-item--ativa {
+  background: var(--uc-color-orange-tint);
+  color: var(--uc-color-orange);
+  font-weight: var(--uc-font-weight-semibold);
+}
+
 .shell__comunidade-item--vazio {
   color: var(--uc-color-ink-faint);
 }

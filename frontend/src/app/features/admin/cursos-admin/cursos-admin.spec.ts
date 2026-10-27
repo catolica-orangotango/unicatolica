@@ -74,7 +74,7 @@ describe('CursosAdmin', () => {
 
     expect(nomes()).toEqual(['Administração', 'Biomedicina', 'Direito']);
     expect((el.querySelector('#curso-novo-nome') as HTMLInputElement).value).toBe('');
-    expect(toasts).toEqual(['Curso Biomedicina cadastrado']);
+    expect(toasts).toEqual(['Curso Biomedicina cadastrado e comunidade de curso criada']);
   });
 
   it('nome em branco não envia e mostra o erro ligado ao campo', () => {
