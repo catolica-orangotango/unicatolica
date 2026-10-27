@@ -25,6 +25,14 @@
   color: var(--uc-color-error);
 }
 
+// Erro de uma ação (marcar/excluir) - a lista continua na tela, então isto não
+// usa o padding grande/centralizado de .lista__estado (pensado pra tela vazia).
+.lista__erro-acao {
+  margin: 0 0 var(--uc-space-unit);
+  color: var(--uc-color-error);
+  font-size: var(--uc-font-size-meta);
+}
+
 .lista__itens {
   margin: 0;
   padding: 0;

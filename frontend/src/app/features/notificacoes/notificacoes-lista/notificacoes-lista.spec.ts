@@ -4,6 +4,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Router, provideRouter } from '@angular/router';
 import { vi } from 'vitest';
 import { API_BASE_URL } from '../../../core/config/api.config';
+import { ToastService } from '../../../ui';
 import { Notificacao } from '../notificacoes.service';
 import { NotificacoesLista } from './notificacoes-lista';
 
@@ -29,11 +30,18 @@ describe('NotificacoesLista', () => {
   let fixture: ComponentFixture<NotificacoesLista>;
   let httpMock: HttpTestingController;
   let el: HTMLElement;
+  let toasts: string[];
 
   async function montar(): Promise<void> {
+    toasts = [];
     await TestBed.configureTestingModule({
       imports: [NotificacoesLista],
-      providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([])],
+      providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        provideRouter([]),
+        { provide: ToastService, useValue: { mostrar: (m: string) => toasts.push(m) } },
+      ],
     }).compileComponents();
     httpMock = TestBed.inject(HttpTestingController);
     fixture = TestBed.createComponent(NotificacoesLista);
@@ -148,6 +156,22 @@ describe('NotificacoesLista', () => {
 
     expect(el.querySelectorAll('.lista__item')).toHaveLength(2);
     expect(el.querySelector('.lista__carregar-mais')).toBeNull();
+  });
+
+  it('erro ao "Carregar mais" mostra um toast e mantém a lista e o botão', async () => {
+    await montar();
+    flushPrimeiraPagina([notificacao(1)], 2);
+
+    (el.querySelector('.lista__carregar-mais') as HTMLButtonElement).click();
+    httpMock
+      .expectOne((r) => r.url === URL && r.params.get('pagina') === '1')
+      .flush(null, { status: 500, statusText: 'Server Error' });
+    fixture.detectChanges();
+
+    expect(toasts).toEqual(['Não foi possível carregar mais notificações agora.']);
+    expect(el.querySelectorAll('.lista__item')).toHaveLength(1);
+    expect(el.querySelector('.lista__carregar-mais')).toBeTruthy();
+    expect(el.querySelector('[role="alert"]')).toBeNull();
   });
 
   it('notificação sem link não é clicável, mas ainda pode ser marcada/excluída', async () => {

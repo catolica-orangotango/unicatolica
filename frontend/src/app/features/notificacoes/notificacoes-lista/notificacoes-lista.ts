@@ -1,6 +1,7 @@
 import { Component, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { Observable } from 'rxjs';
+import { ToastService } from '../../../ui';
 import { tempoRelativo } from '../../publicacoes/tempo-relativo';
 import { Notificacao, NotificacoesService } from '../notificacoes.service';
 
@@ -20,11 +21,15 @@ const TAMANHO_PAGINA = 20;
 export class NotificacoesLista {
   private readonly notificacoesService = inject(NotificacoesService);
   private readonly router = inject(Router);
+  private readonly toastService = inject(ToastService);
 
   protected readonly notificacoes = signal<Notificacao[]>([]);
   protected readonly carregando = signal(true);
   protected readonly carregandoMais = signal(false);
+  /** Só o carregamento inicial — troca a tela inteira pela mensagem (nada pra mostrar). */
   protected readonly erro = signal<string | null>(null);
+  /** Marcar/excluir já tem lista na tela; o erro aparece junto dela, sem escondê-la. */
+  protected readonly erroAcao = signal<string | null>(null);
   protected readonly temMais = signal(false);
   private paginaAtual = 0;
 
@@ -70,7 +75,7 @@ export class NotificacoesLista {
       },
       error: () => {
         this.carregandoMais.set(false);
-        this.erro.set('Não foi possível carregar mais notificações agora. Tente novamente em instantes.');
+        this.toastService.mostrar('Não foi possível carregar mais notificações agora.');
       },
     });
   }
@@ -107,6 +112,7 @@ export class NotificacoesLista {
 
   private executar(id: number, acao: Observable<void>, aoSucesso: () => void): void {
     this.processando.update((atuais) => new Set(atuais).add(id));
+    this.erroAcao.set(null);
     acao.subscribe({
       next: () => {
         this.processando.update((atuais) => {
@@ -122,7 +128,7 @@ export class NotificacoesLista {
           proximo.delete(id);
           return proximo;
         });
-        this.erro.set('Não foi possível concluir a ação agora. Tente novamente em instantes.');
+        this.erroAcao.set('Não foi possível concluir a ação agora. Tente novamente em instantes.');
       },
     });
   }

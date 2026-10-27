@@ -8,6 +8,10 @@
   } @else if (notificacoes().length === 0) {
     <p class="lista__estado">Você não tem notificações.</p>
   } @else {
+    @if (erroAcao(); as mensagemAcao) {
+      <p class="lista__erro-acao" role="alert">{{ mensagemAcao }}</p>
+    }
+
     <ul class="lista__itens">
       @for (notificacao of notificacoes(); track notificacao.id) {
         <li class="lista__item" [class.lista__item--nao-lida]="!notificacao.lida">

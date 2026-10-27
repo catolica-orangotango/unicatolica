@@ -71,3 +71,26 @@ test('excluir remove a notificação da lista, sem precisar de confirmação (RF
   await expect(page.getByText('Notificação A')).toHaveCount(0);
   await expect(page.getByText('Notificação B')).toBeVisible();
 });
+
+test('erro ao excluir mostra mensagem e mantém a notificação e as outras na lista', async ({ page }) => {
+  await mockNotificacoes(page, [
+    { id: 1, tipo: 'ONBOARDING_PERFIL', texto: 'Notificação A', link: null, lida: false, criadoEm: '2026-10-08T00:00:00Z' },
+    { id: 2, tipo: 'ONBOARDING_PERFIL', texto: 'Notificação B', link: null, lida: false, criadoEm: '2026-10-08T01:00:00Z' },
+  ]);
+  // Sobrepõe só o DELETE, registrado depois de mockNotificacoes (última rota tem prioridade).
+  await page.route(
+    (url) => url.port === '8080' && /^\/notificacoes\/\d+$/.test(url.pathname),
+    (route) =>
+      route.request().method() === 'DELETE'
+        ? route.fulfill({ status: 500, headers: { 'access-control-allow-origin': '*' } })
+        : route.fallback(),
+  );
+  await plantarToken(page, ['ALUNO']);
+  await page.goto('/notificacoes');
+
+  await page.getByRole('button', { name: 'Excluir notificação: Notificação A' }).click();
+
+  await expect(page.getByRole('alert')).toContainText('Não foi possível concluir a ação');
+  await expect(page.getByText('Notificação A')).toBeVisible();
+  await expect(page.getByText('Notificação B')).toBeVisible();
+});
