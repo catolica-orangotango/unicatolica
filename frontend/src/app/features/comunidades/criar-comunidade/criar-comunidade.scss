@@ -29,7 +29,21 @@
 }
 
 .criar__intro {
-  margin-bottom: var(--uc-space-section-gap);
+  margin-bottom: calc(var(--uc-space-unit) * 2);
+}
+
+.criar__aviso {
+  margin: 0 0 var(--uc-space-section-gap);
+  padding: calc(var(--uc-space-unit) * 2) calc(var(--uc-space-unit) * 3);
+  border: 1px solid var(--uc-color-border);
+  border-radius: var(--uc-radius-default);
+  font-size: var(--uc-font-size-meta);
+  color: var(--uc-color-ink);
+}
+
+.criar__aviso a {
+  color: var(--uc-color-ink);
+  font-weight: var(--uc-font-weight-semibold);
 }
 
 .criar__label {

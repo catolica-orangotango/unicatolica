@@ -3,6 +3,7 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Router, provideRouter } from '@angular/router';
 import { vi } from 'vitest';
+import { AuthService } from '../../../core/auth/auth.service';
 import { API_BASE_URL } from '../../../core/config/api.config';
 import { ToastService } from '../../../ui';
 import { Comunidade } from '../comunidades.service';
@@ -24,7 +25,7 @@ describe('CriarComunidade', () => {
   let toasts: string[];
   let navegar: ReturnType<typeof vi.spyOn>;
 
-  async function montar(): Promise<HTMLElement> {
+  async function montar(perfis: string[] = []): Promise<HTMLElement> {
     toasts = [];
     await TestBed.configureTestingModule({
       imports: [CriarComunidade],
@@ -32,6 +33,7 @@ describe('CriarComunidade', () => {
         provideHttpClient(),
         provideHttpClientTesting(),
         provideRouter([]),
+        { provide: AuthService, useValue: { possuiPerfil: (p: string) => perfis.includes(p), obterCabecalhoAutorizacao: () => ({}) } },
         { provide: ToastService, useValue: { mostrar: (m: string) => toasts.push(m) } },
       ],
     }).compileComponents();
@@ -54,6 +56,22 @@ describe('CriarComunidade', () => {
   }
 
   afterEach(() => httpMock.verify());
+
+  it('para o administrador, avisa que só cria aberta e aponta para Administração → Cursos (KAN-21)', async () => {
+    const el = await montar(['ADMINISTRADOR']);
+
+    const aviso = el.querySelector('#aviso-tipo');
+    expect(aviso?.textContent).toContain('só se criam comunidades abertas');
+    expect(aviso?.querySelector('a')?.getAttribute('href')).toBe('/admin/cursos');
+  });
+
+  it('para o aluno, avisa que só cria aberta e que a de curso vem da administração', async () => {
+    const el = await montar();
+
+    const aviso = el.querySelector('#aviso-tipo');
+    expect(aviso?.textContent).toContain('criadas pela administração');
+    expect(aviso?.querySelector('a')).toBeNull();
+  });
 
   it('sem nome não envia e marca o campo como inválido (RF22)', async () => {
     const el = await montar();

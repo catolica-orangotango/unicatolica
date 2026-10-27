@@ -9,7 +9,7 @@ const ERRO_GENERICO = 'Não foi possível concluir agora. Tente novamente em ins
 // Só espaços conta como vazio, igual ao backend.
 const VALIDADORES_NOME = [Validators.required, Validators.pattern(/\S/), Validators.maxLength(LIMITE_NOME_CURSO)];
 
-const avisoCadastrado = (curso: CursoAdmin) => `Curso ${curso.nome} cadastrado`;
+const avisoCadastrado = (curso: CursoAdmin) => `Curso ${curso.nome} cadastrado e comunidade de curso criada`;
 const avisoRenomeado = (curso: CursoAdmin) => `Curso renomeado para ${curso.nome}`;
 const avisoSituacao = (curso: CursoAdmin) => `Curso ${curso.nome} ${curso.ativo ? 'reativado' : 'desativado'}`;
 
