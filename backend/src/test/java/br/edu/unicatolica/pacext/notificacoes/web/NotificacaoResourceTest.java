@@ -56,4 +56,12 @@ class NotificacaoResourceTest {
         assertEquals(204, response.getStatus());
         verify(notificacaoService).marcarComoLida(42L, 7L);
     }
+
+    @Test
+    void excluirChamaOServicoComOUsuarioAutenticadoEDevolve204() {
+        Response response = resource.excluir(7L);
+
+        assertEquals(204, response.getStatus());
+        verify(notificacaoService).excluir(42L, 7L);
+    }
 }

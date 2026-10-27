@@ -87,3 +87,30 @@ test('salvar o perfil atualiza o badge de notificações sem precisar reabrir o 
   // Sem reabrir o painel nem recarregar: o badge já some sozinho.
   await expect(badge).toHaveCount(0);
 });
+
+test('o painel mostra só as 5 mais recentes e "Ver todas" leva pra /notificacoes (Story 10.2, KAN-46)', async ({
+  page,
+}) => {
+  const notificacoes: NotificacaoMock[] = Array.from({ length: 8 }, (_, i) => ({
+    id: i + 1,
+    tipo: 'ONBOARDING_PERFIL',
+    texto: `Notificação ${i + 1}`,
+    link: null,
+    lida: false,
+    criadoEm: '2026-10-08T00:00:00Z',
+  }));
+  await mockNotificacoes(page, notificacoes);
+  await plantarToken(page, ['ALUNO']);
+  await page.goto('/feed');
+
+  await page.getByRole('button', { name: /Notificações/ }).click();
+  const painel = page.locator('#shell-notificacoes');
+  await expect(painel).toBeVisible();
+  await expect(painel.getByRole('menuitem', { name: /^Notificação \d$/ })).toHaveCount(5);
+
+  await painel.getByRole('menuitem', { name: 'Ver todas as notificações' }).click();
+
+  await expect(page).toHaveURL(/\/notificacoes$/);
+  await expect(painel).toHaveCount(0);
+  await expect(page.getByRole('heading', { name: 'Notificações' })).toBeVisible();
+});

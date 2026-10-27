@@ -9,6 +9,7 @@ import {
   mockFeedOk,
   mockMeuPerfil,
   mockModeracao,
+  mockNotificacoes as mockNotificacoesInterativo,
   mockPerfilDeUsuario,
 } from './support/mocks';
 import { plantarToken } from './support/seed';
@@ -79,6 +80,28 @@ test.describe('Telas do aluno', () => {
     await page.reload();
     await page.getByRole('button', { name: /Notificações/ }).click();
     await expect(page.getByRole('menuitem', { name: /Complete seu perfil/ })).toBeVisible();
+    await esperarSemViolacoes(page);
+  });
+
+  test('todas as notificações (Story 10.2)', async ({ page }) => {
+    // Versão interativa (de mocks.ts) - a local deste arquivo só intercepta GET
+    // /notificacoes/me, e esta tela também chama POST .../lida e DELETE.
+    await mockNotificacoesInterativo(page, [
+      {
+        id: 1,
+        tipo: 'ONBOARDING_PERFIL',
+        texto: 'Complete seu perfil e apareça mais nas buscas - adicione seus interesses.',
+        link: '/perfil',
+        lida: false,
+        criadoEm: new Date().toISOString(),
+      },
+    ]);
+    await page.goto('/notificacoes');
+    await expect(page.getByRole('heading', { level: 1, name: 'Notificações' })).toBeVisible();
+    await expect(page).toHaveTitle('Notificações — UniCatólica');
+    await esperarSemViolacoes(page);
+
+    await page.getByRole('button', { name: 'Marcar como lida' }).click();
     await esperarSemViolacoes(page);
   });
 

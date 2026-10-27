@@ -5,6 +5,7 @@ import br.edu.unicatolica.pacext.compartilhado.seguranca.UsuarioAutenticado;
 import br.edu.unicatolica.pacext.notificacoes.aplicacao.NotificacaoService;
 import br.edu.unicatolica.pacext.notificacoes.dominio.Notificacao;
 import jakarta.inject.Inject;
+import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
@@ -39,6 +40,13 @@ public class NotificacaoResource {
     @Path("/{id}/lida")
     public Response marcarComoLida(@PathParam("id") Long id) {
         notificacaoService.marcarComoLida(usuarioAutenticado.id(), id);
+        return Response.noContent().build();
+    }
+
+    @DELETE
+    @Path("/{id}")
+    public Response excluir(@PathParam("id") Long id) {
+        notificacaoService.excluir(usuarioAutenticado.id(), id);
         return Response.noContent().build();
     }
 }

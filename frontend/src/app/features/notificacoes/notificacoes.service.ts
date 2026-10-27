@@ -63,4 +63,31 @@ export class NotificacoesService {
         map(() => undefined),
       );
   }
+
+  /**
+   * `DELETE /notificacoes/{id}` (Story 10.2, RF84) - exclusão física, sem confirmação. Tira
+   * da cache compartilhada também, pro badge/painel da sidebar não ficarem com o item morto.
+   */
+  excluir(id: number): Observable<void> {
+    return this.http
+      .delete<void>(`${API_BASE_URL}/notificacoes/${id}`, {
+        headers: this.authService.obterCabecalhoAutorizacao(),
+      })
+      .pipe(
+        tap(() => this._notificacoes.update((lista) => lista.filter((n) => n.id !== id))),
+        map(() => undefined),
+      );
+  }
+
+  /**
+   * `GET /notificacoes/me` sem tocar na cache compartilhada do painel - usado pela tela
+   * `/notificacoes` (Story 10.2), que pagina de verdade e não pode pisar nos "5 mais
+   * recentes" que o painel da sidebar espera encontrar em {@link notificacoes}.
+   */
+  listarPagina(pagina: number, tamanho: number): Observable<Pagina<Notificacao>> {
+    return this.http.get<Pagina<Notificacao>>(`${API_BASE_URL}/notificacoes/me`, {
+      headers: this.authService.obterCabecalhoAutorizacao(),
+      params: { pagina: String(pagina), tamanho: String(tamanho) },
+    });
+  }
 }

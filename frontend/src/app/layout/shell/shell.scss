@@ -238,6 +238,20 @@
   cursor: default;
 }
 
+// Link "Ver todas as notificações" (Story 10.2) - mesmo item de lista, mas
+// separado por um traço e com a cor de ação (--uc-color-orange), pra não se
+// confundir com as notificações de cima.
+.shell__notificacao-item--ver-todas {
+  margin-top: calc(var(--uc-space-unit) / 2);
+  border-top: 1px solid var(--uc-color-border);
+  border-radius: 0;
+  padding-top: calc(var(--uc-space-unit) * 2.5);
+  color: var(--uc-color-orange);
+  font-weight: var(--uc-font-weight-semibold);
+  text-align: center;
+  text-decoration: none;
+}
+
 // -- "Suas comunidades" dynamic sub-list (Epic 2) -----------------------
 // Deliberately NOT .shell__nav-item: it's a list of links to community
 // pages, not part of the fixed global nav IA above it.

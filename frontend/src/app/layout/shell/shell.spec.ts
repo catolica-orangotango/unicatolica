@@ -653,6 +653,13 @@ describe('Shell - painel de notificações (Story 10.1)', () => {
             path: 'perfil',
             loadComponent: () => import('../../features/perfil/meu-perfil/meu-perfil').then((m) => m.MeuPerfil),
           },
+          {
+            path: 'notificacoes',
+            loadComponent: () =>
+              import('../../features/notificacoes/notificacoes-lista/notificacoes-lista').then(
+                (m) => m.NotificacoesLista,
+              ),
+          },
         ]),
       ],
     }).compileComponents();
@@ -791,6 +798,51 @@ describe('Shell - painel de notificações (Story 10.1)', () => {
     // notificações também usa role="menu" e continua aberto aqui de propósito.
     expect(f.nativeElement.querySelector('#shell-menu')).toBeNull();
     expect(f.nativeElement.querySelector('#shell-notificacoes')).toBeTruthy();
+  });
+
+  it('painel mostra só as 5 mais recentes, mesmo com mais carregadas (Story 10.2, KAN-46)', async () => {
+    const { f, httpMock } = await montar();
+    flushNotificacoes(httpMock);
+    f.detectChanges();
+
+    sininhoBtn(f).click();
+    f.detectChanges();
+    flushNotificacoes(
+      httpMock,
+      Array.from({ length: 8 }, (_, i) => ({
+        id: i + 1,
+        tipo: 'ONBOARDING_PERFIL',
+        texto: `Notificação ${i + 1}`,
+        link: null,
+        lida: false,
+        criadoEm: '2026-09-30T12:00:00Z',
+      })),
+    );
+    f.detectChanges();
+
+    // button.shell__notificacao-item, não só a classe: o link "Ver todas" (um <a>)
+    // reaproveita essa mesma classe base e entraria na contagem por engano.
+    expect(f.nativeElement.querySelectorAll('button.shell__notificacao-item')).toHaveLength(5);
+  });
+
+  it('"Ver todas as notificações" fecha o painel e leva pra /notificacoes', async () => {
+    const { f, httpMock } = await montar();
+    flushNotificacoes(httpMock);
+    f.detectChanges();
+
+    sininhoBtn(f).click();
+    f.detectChanges();
+    flushNotificacoes(httpMock);
+    f.detectChanges();
+
+    const link = f.nativeElement.querySelector('.shell__notificacao-item--ver-todas') as HTMLAnchorElement;
+    expect(link.getAttribute('href')).toBe('/notificacoes');
+
+    link.click();
+    f.detectChanges();
+
+    expect(sininhoBtn(f).getAttribute('aria-expanded')).toBe('false');
+    expect(f.nativeElement.querySelector('#shell-notificacoes')).toBeNull();
   });
 });
 

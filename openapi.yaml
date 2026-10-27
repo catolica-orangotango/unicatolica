@@ -1179,6 +1179,29 @@ paths:
         '404':
           $ref: '#/components/responses/NaoEncontrado'
 
+  /notificacoes/{id}:
+    delete:
+      operationId: excluirNotificacao
+      summary: Exclui uma notificação do usuário autenticado (Story 10.2, RF84)
+      tags: [Notificacoes]
+      description: >
+        Exclusão física, sem confirmação — vale para notificações lidas e não lidas e não
+        pode ser desfeita.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '204':
+          description: Excluída.
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+
 components:
   parameters:
     UsuarioId:

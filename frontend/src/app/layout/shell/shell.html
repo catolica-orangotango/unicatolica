@@ -62,7 +62,7 @@
                   (click)="$event.stopPropagation()"
                   (focusout)="aoSairFocoNotificacoes($event)"
                 >
-                  @for (notificacao of notificacoes(); track notificacao.id) {
+                  @for (notificacao of notificacoesRecentes(); track notificacao.id) {
                     <button
                       type="button"
                       class="shell__notificacao-item"
@@ -82,6 +82,14 @@
                       Sem notificações por enquanto.
                     </p>
                   }
+                  <a
+                    class="shell__notificacao-item shell__notificacao-item--ver-todas"
+                    role="menuitem"
+                    routerLink="/notificacoes"
+                    (click)="notificacoesAbertas.set(false)"
+                  >
+                    Ver todas as notificações
+                  </a>
                 </div>
               }
             </div>

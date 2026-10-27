@@ -58,4 +58,13 @@ public class NotificacaoService implements NotificacaoEmissor {
                         "Notificação não encontrada.", null));
         notificacao.lida = true;
     }
+
+    /** Story 10.2 (RF84) — exclusão física, sem confirmação, não pode ser desfeita. */
+    @Transactional
+    public void excluir(Long usuarioId, Long notificacaoId) {
+        Notificacao notificacao = notificacaoRepository.buscarPorIdEUsuario(notificacaoId, usuarioId)
+                .orElseThrow(() -> ApiException.naoEncontrado("NOTIFICACAO_NAO_ENCONTRADA",
+                        "Notificação não encontrada.", null));
+        notificacaoRepository.delete(notificacao);
+    }
 }

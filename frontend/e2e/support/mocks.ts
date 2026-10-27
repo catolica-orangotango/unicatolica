@@ -290,6 +290,17 @@ export async function mockNotificacoes(page: Page, iniciais: NotificacaoMock[]):
         }
         return route.fulfill({ status: 204, headers: CORS });
       }
+      // DELETE /notificacoes/{id} (Story 10.2, RF84) — exclusão física.
+      const alvoExclusao = /^\/notificacoes\/(\d+)$/.exec(new URL(request.url()).pathname);
+      if (request.method() === 'DELETE' && alvoExclusao) {
+        const id = Number(alvoExclusao[1]);
+        const indice = notificacoes.findIndex((n) => n.id === id);
+        if (indice === -1) {
+          return route.fulfill(json(404, { error: { code: 'NOTIFICACAO_NAO_ENCONTRADA', message: 'Notificação não encontrada.', details: null } }));
+        }
+        notificacoes.splice(indice, 1);
+        return route.fulfill({ status: 204, headers: CORS });
+      }
       return route.fulfill(
         json(200, {
           content: notificacoes,

@@ -95,4 +95,26 @@ class NotificacaoServiceTest {
         assertEquals(404, erro.getStatus());
         assertEquals("NOTIFICACAO_NAO_ENCONTRADA", erro.getCode());
     }
+
+    @Test
+    void excluirRemoveANotificacaoDoProprioUsuario() {
+        Notificacao notificacao = new Notificacao();
+        notificacao.id = 7L;
+        notificacao.usuarioId = USUARIO_ID;
+        when(repository.buscarPorIdEUsuario(7L, USUARIO_ID)).thenReturn(Optional.of(notificacao));
+
+        service.excluir(USUARIO_ID, 7L);
+
+        verify(repository).delete(notificacao);
+    }
+
+    @Test
+    void excluirDeNotificacaoInexistenteOuDeOutroUsuarioDa404() {
+        when(repository.buscarPorIdEUsuario(7L, USUARIO_ID)).thenReturn(Optional.empty());
+
+        ApiException erro = assertThrows(ApiException.class, () -> service.excluir(USUARIO_ID, 7L));
+
+        assertEquals(404, erro.getStatus());
+        assertEquals("NOTIFICACAO_NAO_ENCONTRADA", erro.getCode());
+    }
 }

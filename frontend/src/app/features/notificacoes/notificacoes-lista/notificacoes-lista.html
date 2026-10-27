@@ -1,0 +1,54 @@
+<section class="lista">
+  <h1 class="lista__titulo">Notificações</h1>
+
+  @if (carregando()) {
+    <p class="lista__estado">Carregando suas notificações…</p>
+  } @else if (erro(); as mensagem) {
+    <p class="lista__estado lista__estado--erro" role="alert">{{ mensagem }}</p>
+  } @else if (notificacoes().length === 0) {
+    <p class="lista__estado">Você não tem notificações.</p>
+  } @else {
+    <ul class="lista__itens">
+      @for (notificacao of notificacoes(); track notificacao.id) {
+        <li class="lista__item" [class.lista__item--nao-lida]="!notificacao.lida">
+          @if (notificacao.link) {
+            <button type="button" class="lista__texto" (click)="selecionar(notificacao)">
+              {{ notificacao.texto }}
+            </button>
+          } @else {
+            <span class="lista__texto lista__texto--inerte">{{ notificacao.texto }}</span>
+          }
+          <span class="lista__meta">{{ tempoRelativo(notificacao.criadoEm) }}</span>
+
+          <div class="lista__acoes">
+            @if (!notificacao.lida) {
+              <button
+                type="button"
+                class="lista__botao-secundario"
+                [disabled]="processando().has(notificacao.id)"
+                (click)="marcarComoLida(notificacao)"
+              >
+                Marcar como lida
+              </button>
+            }
+            <button
+              type="button"
+              class="lista__botao-perigo"
+              [attr.aria-label]="'Excluir notificação: ' + notificacao.texto"
+              [disabled]="processando().has(notificacao.id)"
+              (click)="excluir(notificacao)"
+            >
+              Excluir
+            </button>
+          </div>
+        </li>
+      }
+    </ul>
+
+    @if (temMais()) {
+      <button type="button" class="lista__botao-secundario lista__carregar-mais" [disabled]="carregandoMais()" (click)="carregarMais()">
+        {{ carregandoMais() ? 'Carregando…' : 'Carregar mais' }}
+      </button>
+    }
+  }
+</section>

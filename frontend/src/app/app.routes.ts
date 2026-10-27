@@ -54,6 +54,13 @@ export const routes: Routes = [
           import('./features/perfil/perfil-usuario/perfil-usuario').then((m) => m.PerfilUsuario),
       },
       {
+        // Lista completa de notificações (Story 10.2), aberta pelo "Ver todas" do painel da sininho.
+        path: 'notificacoes',
+        title: 'Notificações',
+        loadComponent: () =>
+          import('./features/notificacoes/notificacoes-lista/notificacoes-lista').then((m) => m.NotificacoesLista),
+      },
+      {
         path: 'admin',
         title: 'Administração',
         canActivate: [adminGuard],

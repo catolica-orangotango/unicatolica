@@ -80,6 +80,8 @@ export class Shell {
   /** Painel de notificações (Story 10.1) — mesma cache compartilhada do `NotificacoesService`. */
   protected readonly notificacoes = this.notificacoesService.notificacoes;
   protected readonly notificacoesNaoLidas = this.notificacoesService.naoLidas;
+  /** Story 10.2 — o painel só mostra as 5 mais recentes; o resto fica em `/notificacoes`. */
+  protected readonly notificacoesRecentes = computed(() => this.notificacoes().slice(0, 5));
   /** Nome acessível do botão de notificações — o badge visual é `aria-hidden`, então a contagem precisa estar aqui. */
   protected readonly rotuloNotificacoes = computed(() => {
     const naoLidas = this.notificacoesNaoLidas();
