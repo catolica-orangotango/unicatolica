@@ -96,7 +96,14 @@
             <ul class="shell__comunidades-lista" aria-label="Suas comunidades">
               @for (comunidade of minhasComunidades(); track comunidade.id) {
                 <li>
-                  <a class="shell__comunidade-item" [routerLink]="['/comunidades', comunidade.id]">
+                  <a
+                    class="shell__comunidade-item"
+                    [routerLink]="['/comunidades', comunidade.id]"
+                    routerLinkActive="shell__comunidade-item--ativa"
+                    [routerLinkActiveOptions]="{ exact: true }"
+                    #rlaComunidade="routerLinkActive"
+                    [attr.aria-current]="rlaComunidade.isActive ? 'page' : null"
+                  >
                     <span
                       class="shell__ponto"
                       [class.shell__ponto--curso]="comunidade.tipo === 'CURSO'"

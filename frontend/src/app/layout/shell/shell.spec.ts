@@ -67,6 +67,13 @@ describe('Shell', () => {
             path: 'feed',
             loadComponent: () => import('../../features/feed/feed').then((m) => m.Feed),
           },
+          {
+            path: 'comunidades/:id',
+            loadComponent: () =>
+              import('../../features/comunidades/comunidade-detalhe/comunidade-detalhe').then(
+                (m) => m.ComunidadeDetalhe,
+              ),
+          },
         ]),
       ],
     }).compileComponents();
@@ -141,6 +148,37 @@ describe('Shell', () => {
       (el.textContent ?? '').trim(),
     );
     expect(itens).toEqual(['Engenharia de Software', 'Clube de Xadrez']);
+  });
+
+  it('a comunidade aberta fica destacada no menu, com aria-current="page" (KAN-89)', async () => {
+    const f = await montar(tokenComPerfis(['ALUNO']));
+    const httpMock = TestBed.inject(HttpTestingController);
+
+    httpMock.expectOne(`${API_BASE_URL}/comunidades/minhas`).flush([
+      {
+        id: 1,
+        nome: 'Engenharia de Software',
+        descricao: null,
+        tipo: 'CURSO',
+        souMembro: true,
+        criadoEm: '2026-01-01T00:00:00Z',
+      },
+      { id: 2, nome: 'Clube de Xadrez', descricao: null, tipo: 'ABERTA', souMembro: true, criadoEm: '2026-01-02T00:00:00Z' },
+    ]);
+    f.detectChanges();
+
+    const links = [...f.nativeElement.querySelectorAll('a.shell__comunidade-item')] as HTMLAnchorElement[];
+    const [engenharia, xadrez] = links;
+    expect(engenharia.getAttribute('aria-current')).toBeNull();
+    expect(engenharia.classList.contains('shell__comunidade-item--ativa')).toBe(false);
+
+    await TestBed.inject(Router).navigateByUrl('/comunidades/1');
+    f.detectChanges();
+
+    expect(engenharia.getAttribute('aria-current')).toBe('page');
+    expect(engenharia.classList.contains('shell__comunidade-item--ativa')).toBe(true);
+    expect(xadrez.getAttribute('aria-current')).toBeNull();
+    expect(xadrez.classList.contains('shell__comunidade-item--ativa')).toBe(false);
   });
 
   it('sem comunidades: mostra o estado vazio sob "Suas comunidades"', async () => {

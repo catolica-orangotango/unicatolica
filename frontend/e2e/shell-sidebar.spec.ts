@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { CHAVE_TOKEN } from './support/jwt';
-import { mockFeedOk } from './support/mocks';
+import { mockComunidadeComFeed, mockFeedOk } from './support/mocks';
 import { plantarToken, semToken } from './support/seed';
 
 /**
@@ -128,6 +128,39 @@ test('"Início" carrega aria-current="page" em /feed; "Descobrir comunidades" é
   await expect(descobrir).not.toHaveAttribute('aria-current', 'page');
 
   await expect(nav(page).getByRole('link')).toHaveCount(2);
+});
+
+test('a comunidade aberta fica destacada em "Suas comunidades", com aria-current="page" (KAN-89)', async ({
+  page,
+}) => {
+  await page.route(
+    (url) => url.port === '8080' && url.pathname === '/comunidades/minhas',
+    (route) =>
+      route.fulfill({
+        status: 200,
+        headers: { 'access-control-allow-origin': '*' },
+        contentType: 'application/json',
+        body: JSON.stringify([
+          { id: 1, nome: 'Engenharia de Software', descricao: null, tipo: 'CURSO', souMembro: true, criadoEm: '2026-01-01T00:00:00Z' },
+          { id: 2, nome: 'Clube de Xadrez', descricao: null, tipo: 'ABERTA', souMembro: true, criadoEm: '2026-01-02T00:00:00Z' },
+        ]),
+      }),
+  );
+  await mockComunidadeComFeed(page, { id: 1, nome: 'Engenharia de Software', tipo: 'CURSO', souMembro: true });
+  await plantarToken(page, ['ALUNO']);
+  await page.goto('/feed');
+
+  const engenharia = nav(page).getByRole('link', { name: 'Engenharia de Software' });
+  const xadrez = nav(page).getByRole('link', { name: 'Clube de Xadrez' });
+  await expect(engenharia).not.toHaveAttribute('aria-current', 'page');
+
+  await engenharia.click();
+
+  await expect(page).toHaveURL(/\/comunidades\/1$/);
+  await expect(engenharia).toHaveAttribute('aria-current', 'page');
+  await expect(engenharia).toHaveClass(/shell__comunidade-item--ativa/);
+  await expect(xadrez).not.toHaveAttribute('aria-current', 'page');
+  await expect(xadrez).not.toHaveClass(/shell__comunidade-item--ativa/);
 });
 
 test('sem token, acessar /feed redireciona para /login e a shell não renderiza', async ({
