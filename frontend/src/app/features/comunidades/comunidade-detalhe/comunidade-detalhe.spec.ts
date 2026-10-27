@@ -1,7 +1,8 @@
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { ActivatedRoute, convertToParamMap } from '@angular/router';
+import { ActivatedRoute, convertToParamMap, ParamMap } from '@angular/router';
+import { BehaviorSubject } from 'rxjs';
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -11,17 +12,18 @@ import { ComunidadeDetalhe } from './comunidade-detalhe';
 describe('ComunidadeDetalhe', () => {
   let fixture: ComponentFixture<ComunidadeDetalhe>;
   let httpMock: HttpTestingController;
+  /** Permite simular troca de :id sem destruir o componente (KAN-89). */
+  let paramMap$: BehaviorSubject<ParamMap>;
 
   async function montar(id: string): Promise<ComponentFixture<ComunidadeDetalhe>> {
+    paramMap$ = new BehaviorSubject<ParamMap>(convertToParamMap({ id }));
+
     await TestBed.configureTestingModule({
       imports: [ComunidadeDetalhe],
       providers: [
         provideHttpClient(),
         provideHttpClientTesting(),
-        {
-          provide: ActivatedRoute,
-          useValue: { snapshot: { paramMap: convertToParamMap({ id }) } },
-        },
+        { provide: ActivatedRoute, useValue: { paramMap: paramMap$ } },
       ],
     }).compileComponents();
 
@@ -166,6 +168,42 @@ describe('ComunidadeDetalhe', () => {
     f.detectChanges();
 
     expect((f.nativeElement as HTMLElement).querySelector('[role="alert"]')).toBeTruthy();
+  });
+
+  it('trocar de :id sem destruir o componente recarrega a comunidade e o feed (KAN-89)', async () => {
+    const f = await montar('14');
+
+    httpMock.expectOne(`${API_BASE_URL}/comunidades/14`).flush({
+      id: 14,
+      nome: 'Engenharia de Software',
+      descricao: null,
+      tipo: 'CURSO',
+      souMembro: true,
+      criadoEm: '2026-01-01T00:00:00Z',
+    });
+    f.detectChanges();
+    responderFeed(14);
+    f.detectChanges();
+
+    const compiled = f.nativeElement as HTMLElement;
+    expect(compiled.querySelector('h1')?.textContent?.trim()).toBe('Engenharia de Software');
+
+    // Mesma instância do componente (Angular reaproveita a rota) - só o paramMap muda.
+    paramMap$.next(convertToParamMap({ id: '27' }));
+
+    httpMock.expectOne(`${API_BASE_URL}/comunidades/27`).flush({
+      id: 27,
+      nome: 'Clube de Xadrez',
+      descricao: null,
+      tipo: 'ABERTA',
+      souMembro: true,
+      criadoEm: '2026-01-02T00:00:00Z',
+    });
+    f.detectChanges();
+    responderFeed(27);
+    f.detectChanges();
+
+    expect(compiled.querySelector('h1')?.textContent?.trim()).toBe('Clube de Xadrez');
   });
 
   it('administrador vê a seção de administração e não vê o botão Sair', async () => {

@@ -84,6 +84,36 @@ test('sem nome não envia e aponta o campo', async ({ page }) => {
   expect(recebidas).toEqual([]);
 });
 
+test('clicar em outra comunidade no menu (sem recarregar a página) troca a tela (KAN-89)', async ({
+  page,
+}) => {
+  await page.route(
+    (url) => url.port === '8080' && url.pathname === '/comunidades/minhas',
+    (route) =>
+      route.fulfill({
+        status: 200,
+        headers: { 'access-control-allow-origin': '*' },
+        contentType: 'application/json',
+        body: JSON.stringify([
+          { id: 14, nome: 'Engenharia de Software', descricao: null, tipo: 'CURSO', souMembro: true, criadoEm: '2026-01-01T00:00:00Z' },
+          { id: 27, nome: 'Clube de Xadrez', descricao: null, tipo: 'ABERTA', souMembro: true, criadoEm: '2026-01-02T00:00:00Z' },
+        ]),
+      }),
+  );
+  await mockComunidadeComFeed(page, { id: 14, nome: 'Engenharia de Software', tipo: 'CURSO', souMembro: true });
+  await mockComunidadeComFeed(page, { id: 27, nome: 'Clube de Xadrez', tipo: 'ABERTA', souMembro: true });
+  await page.goto('/comunidades/14');
+  await expect(page.getByRole('heading', { name: 'Engenharia de Software' })).toBeVisible();
+
+  // Link do RouterLink, não page.goto() - só assim reproduz o bug: o Angular
+  // reaproveita a mesma instância de ComunidadeDetalhe entre os dois :id.
+  await page.getByRole('navigation', { name: 'Navegação principal' }).getByRole('link', { name: 'Clube de Xadrez' }).click();
+
+  await expect(page).toHaveURL(/\/comunidades\/27$/);
+  await expect(page.getByRole('heading', { name: 'Clube de Xadrez' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Engenharia de Software' })).toHaveCount(0);
+});
+
 /** Administração da comunidade (Story 2.6, KAN-26). */
 test.describe('administração da comunidade', () => {
   const MEMBROS: MembroMock[] = [
