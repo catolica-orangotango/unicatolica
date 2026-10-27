@@ -114,6 +114,45 @@ test('clicar em outra comunidade no menu (sem recarregar a página) troca a tela
   await expect(page.getByRole('heading', { name: 'Engenharia de Software' })).toHaveCount(0);
 });
 
+test('voltar e avançar do navegador entre duas comunidades também atualiza a tela (KAN-89)', async ({
+  page,
+}) => {
+  await page.route(
+    (url) => url.port === '8080' && url.pathname === '/comunidades/minhas',
+    (route) =>
+      route.fulfill({
+        status: 200,
+        headers: { 'access-control-allow-origin': '*' },
+        contentType: 'application/json',
+        body: JSON.stringify([
+          { id: 14, nome: 'Engenharia de Software', descricao: null, tipo: 'CURSO', souMembro: true, criadoEm: '2026-01-01T00:00:00Z' },
+          { id: 27, nome: 'Clube de Xadrez', descricao: null, tipo: 'ABERTA', souMembro: true, criadoEm: '2026-01-02T00:00:00Z' },
+        ]),
+      }),
+  );
+  await mockComunidadeComFeed(page, { id: 14, nome: 'Engenharia de Software', tipo: 'CURSO', souMembro: true });
+  await mockComunidadeComFeed(page, { id: 27, nome: 'Clube de Xadrez', tipo: 'ABERTA', souMembro: true });
+  await page.goto('/comunidades/14');
+  await expect(page.getByRole('heading', { name: 'Engenharia de Software' })).toBeVisible();
+
+  // Navegação dentro do SPA (RouterLink, sem reload) - só assim goBack/goForward
+  // disparam popstate no mesmo app Angular, igual ao uso real do navegador.
+  const nav = page.getByRole('navigation', { name: 'Navegação principal' });
+  await nav.getByRole('link', { name: 'Clube de Xadrez' }).click();
+  await expect(page).toHaveURL(/\/comunidades\/27$/);
+  await expect(page.getByRole('heading', { name: 'Clube de Xadrez' })).toBeVisible();
+
+  await page.goBack();
+  await expect(page).toHaveURL(/\/comunidades\/14$/);
+  await expect(page.getByRole('heading', { name: 'Engenharia de Software' })).toBeVisible();
+  await expect(nav.getByRole('link', { name: 'Engenharia de Software' })).toHaveAttribute('aria-current', 'page');
+
+  await page.goForward();
+  await expect(page).toHaveURL(/\/comunidades\/27$/);
+  await expect(page.getByRole('heading', { name: 'Clube de Xadrez' })).toBeVisible();
+  await expect(nav.getByRole('link', { name: 'Clube de Xadrez' })).toHaveAttribute('aria-current', 'page');
+});
+
 /** Administração da comunidade (Story 2.6, KAN-26). */
 test.describe('administração da comunidade', () => {
   const MEMBROS: MembroMock[] = [
