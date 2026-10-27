@@ -46,8 +46,9 @@
   column-gap: calc(var(--uc-space-unit) * 3);
   row-gap: var(--uc-space-unit);
   align-items: start;
-  padding: calc(var(--uc-space-unit) * 4) 0;
+  padding: calc(var(--uc-space-unit) * 4) var(--uc-space-card-padding);
   border-bottom: 1px solid var(--uc-color-border);
+  border-radius: var(--uc-radius-md);
 }
 
 .lista__item--nao-lida {
