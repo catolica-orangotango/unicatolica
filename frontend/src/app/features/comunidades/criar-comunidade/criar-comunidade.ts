@@ -2,6 +2,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
+import { AuthService } from '../../../core/auth/auth.service';
 import { ToastService, UcButton } from '../../../ui';
 import { ComunidadesService, LIMITE_NOME_COMUNIDADE } from '../comunidades.service';
 
@@ -17,6 +18,9 @@ export class CriarComunidade {
   private readonly toastService = inject(ToastService);
   private readonly router = inject(Router);
   private readonly formBuilder = inject(FormBuilder);
+
+  /** O administrador procura aqui a comunidade de curso; ela nasce ao cadastrar o curso (KAN-21). */
+  protected readonly ehAdministrador = inject(AuthService).possuiPerfil('ADMINISTRADOR');
 
   protected readonly limiteNome = LIMITE_NOME_COMUNIDADE;
   protected readonly salvando = signal(false);

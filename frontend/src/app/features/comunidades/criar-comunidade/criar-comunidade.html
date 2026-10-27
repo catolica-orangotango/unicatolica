@@ -1,6 +1,14 @@
 <form class="criar" [formGroup]="form" (ngSubmit)="criar()" novalidate>
   <h1 class="criar__titulo">Criar comunidade</h1>
   <p class="criar__intro">Reúna colegas em torno de um interesse. Qualquer aluno pode participar, e você será o administrador.</p>
+  <p class="criar__aviso" id="aviso-tipo">
+    @if (ehAdministrador) {
+      Aqui só se criam comunidades abertas. A comunidade de curso é criada junto com o curso, em
+      <a routerLink="/admin/cursos">Administração → Cursos</a>.
+    } @else {
+      Aqui só se criam comunidades abertas. As comunidades de curso são criadas pela administração.
+    }
+  </p>
 
   <label class="criar__label" for="nome">Nome</label>
   <input
