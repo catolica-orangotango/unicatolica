@@ -1,4 +1,14 @@
-import { UcBadge, UcButton, UcCard, UcMemberIndicator, type UcBadgeVariant } from './index';
+import {
+  UcAvatar,
+  UcBadge,
+  UcButton,
+  UcCard,
+  UcIcon,
+  UcMemberIndicator,
+  corDoAvatar,
+  type UcBadgeVariant,
+  type UcIconName,
+} from './index';
 
 /**
  * Smoke-tests the barrel: a broken re-export path (a moved folder, a renamed
@@ -15,5 +25,13 @@ describe('ui barrel (src/app/ui/index.ts)', () => {
   it('re-exports the UcBadgeVariant union type', () => {
     const variants: UcBadgeVariant[] = ['course', 'open'];
     expect(variants).toEqual(['course', 'open']);
+  });
+
+  it('re-exports UcIcon, UcAvatar e corDoAvatar', () => {
+    const nome: UcIconName = 'home';
+    expect(UcIcon).toBeDefined();
+    expect(UcAvatar).toBeDefined();
+    expect(nome).toBe('home');
+    expect(corDoAvatar(5)).toBe('azul');
   });
 });

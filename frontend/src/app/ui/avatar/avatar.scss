@@ -1,0 +1,68 @@
+// Avatar de iniciais (KAN-91), conforme .av e .sq de docs/design/kan-84/base.css.
+:host {
+  display: grid;
+  place-items: center;
+  flex: none;
+  font-size: var(--uc-font-size-small);
+  font-weight: var(--uc-font-weight-semibold);
+}
+
+:host(.uc-avatar--sm) {
+  // layout-literal: avatar sm de 34px do mockup (KAN-84)
+  width: 34px;
+  // layout-literal: avatar sm de 34px do mockup (KAN-84)
+  height: 34px;
+  font-size: var(--uc-font-size-label);
+}
+
+:host(.uc-avatar--md) {
+  // layout-literal: avatar md de 40px do mockup (KAN-84)
+  width: 40px;
+  // layout-literal: avatar md de 40px do mockup (KAN-84)
+  height: 40px;
+}
+
+:host(.uc-avatar--lg) {
+  // layout-literal: avatar lg de 60px do mockup (KAN-84)
+  width: 60px;
+  // layout-literal: avatar lg de 60px do mockup (KAN-84)
+  height: 60px;
+}
+
+:host(.uc-avatar--circulo) {
+  border-radius: var(--uc-radius-full);
+}
+
+:host(.uc-avatar--quadrado) {
+  border-radius: var(--uc-radius-default);
+}
+
+:host(.uc-avatar--neutro) {
+  background: var(--uc-color-surface-strong);
+  color: var(--uc-color-ink-nav);
+}
+
+:host(.uc-avatar--marca) {
+  background: var(--uc-color-maroon);
+  color: var(--uc-color-surface);
+}
+
+:host(.uc-avatar--azul) {
+  background: var(--uc-color-avatar-blue-bg);
+  color: var(--uc-color-avatar-blue);
+}
+
+:host(.uc-avatar--verde) {
+  background: var(--uc-color-avatar-green-bg);
+  color: var(--uc-color-avatar-green);
+}
+
+:host(.uc-avatar--areia) {
+  background: var(--uc-color-avatar-sand-bg);
+  color: var(--uc-color-avatar-sand);
+}
+
+:host(.uc-avatar--violeta) {
+  background: var(--uc-color-avatar-violet-bg);
+  color: var(--uc-color-avatar-violet);
+}
