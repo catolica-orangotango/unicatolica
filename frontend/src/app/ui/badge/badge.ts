@@ -1,26 +1,37 @@
 import { Component, input } from '@angular/core';
-
-/** The two community kinds a badge can mark. `course` -> maroon, `open` -> maroon (accent). */
-export type UcBadgeVariant = 'course' | 'open';
+import { UcIcon } from '../icon/icon';
 
 /**
- * Story 14.2 - community badge (course / open).
+ * Variantes do badge no redesign (KAN-91).
+ * - `counter`: contador de notificações (maroon, texto claro).
+ * - `role`: papel do membro (maroon-tint, texto maroon).
+ * - `course` e `open`: tipo de comunidade (curso = estilo de `role`; aberta = neutro).
+ * - `state`: estado de conteúdo, com ícone eyeoff antes do texto.
+ */
+export type UcBadgeVariant = 'counter' | 'role' | 'course' | 'open' | 'state';
+
+/**
+ * Badge em pílula. Seletor de elemento; projeta o texto da label.
  *
- * Element selector; projects its label text. `variant` is a required typed
- * union so a missing value is an Angular dev-time error, and the template
- * binds exactly one of two mutually-exclusive host modifier classes -
- * `uc-badge--course` (maroon text) XOR `uc-badge--open` (maroon text). No code
- * path sets both, so "course colour and open colour never on one badge"
- * (DESIGN.md / epic-14 constraint) holds structurally.
+ * `variant` é uma união tipada obrigatória (valor ausente é erro em dev time) e
+ * o template liga exatamente uma classe modificadora do host, mutuamente
+ * exclusiva (`uc-badge--counter`, `--role`, `--course`, `--open`, `--state`).
+ * Nenhum caminho de código liga duas ao mesmo tempo.
  */
 @Component({
   selector: 'uc-badge',
-  template: '<ng-content></ng-content>',
+  imports: [UcIcon],
+  template: `@if (variant() === 'state') {
+      <uc-icon name="eyeoff" size="sm" />
+    }<ng-content></ng-content>`,
   styleUrl: './badge.scss',
   host: {
     class: 'uc-badge',
+    '[class.uc-badge--counter]': "variant() === 'counter'",
+    '[class.uc-badge--role]': "variant() === 'role'",
     '[class.uc-badge--course]': "variant() === 'course'",
     '[class.uc-badge--open]': "variant() === 'open'",
+    '[class.uc-badge--state]': "variant() === 'state'",
   },
 })
 export class UcBadge {

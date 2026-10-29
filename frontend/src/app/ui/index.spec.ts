@@ -23,8 +23,8 @@ describe('ui barrel (src/app/ui/index.ts)', () => {
   });
 
   it('re-exports the UcBadgeVariant union type', () => {
-    const variants: UcBadgeVariant[] = ['course', 'open'];
-    expect(variants).toEqual(['course', 'open']);
+    const variants: UcBadgeVariant[] = ['counter', 'role', 'course', 'open', 'state'];
+    expect(variants).toEqual(['counter', 'role', 'course', 'open', 'state']);
   });
 
   it('re-exports UcIcon, UcAvatar e corDoAvatar', () => {

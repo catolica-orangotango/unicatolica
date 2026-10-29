@@ -1,23 +1,48 @@
-// UniCatolica - Campus Clean base component (Story 14.2).
-// Community badge: small pill, maroon-tint background, meta size, semibold.
-// Text colour is the ONLY difference between the two variants and the two
-// treatments never coexist (mutually-exclusive host modifier classes).
-// Every value is a var(--uc-*) token from Story 14.1; paddings compose from
-// --uc-space-unit via calc().
+// UniCatolica - badge do redesign (KAN-91): pílula pequena em cinco variantes.
+// Uma classe modificadora por variante (mutuamente exclusivas). Só tokens
+// var(--uc-*); paddings compostos de --uc-space-unit via calc().
 
 :host {
   display: inline-block;
   border-radius: var(--uc-radius-full);
-  background: var(--uc-color-maroon-tint);
   padding: calc(var(--uc-space-unit) / 2) calc(var(--uc-space-unit) * 2);
-  font-size: var(--uc-font-size-meta);
+  font-size: var(--uc-font-size-label);
   font-weight: var(--uc-font-weight-semibold);
 }
 
+// Contador: círculo/pílula de 22px, conteúdo centralizado.
+:host(.uc-badge--counter) {
+  display: inline-grid;
+  place-items: center;
+  // layout-literal: contador de 22px do mockup (KAN-84)
+  min-width: 22px;
+  // layout-literal: contador de 22px do mockup (KAN-84)
+  height: 22px;
+  padding: 0 calc(var(--uc-space-unit) * 7 / 4);
+  background: var(--uc-color-maroon);
+  color: var(--uc-color-surface);
+}
+
+:host(.uc-badge--role) {
+  background: var(--uc-color-maroon-tint);
+  color: var(--uc-color-maroon);
+}
+
 :host(.uc-badge--course) {
+  background: var(--uc-color-maroon-tint);
   color: var(--uc-color-maroon);
 }
 
 :host(.uc-badge--open) {
-  color: var(--uc-color-maroon);
+  background: var(--uc-color-surface-strong);
+  color: var(--uc-color-ink-nav);
+}
+
+:host(.uc-badge--state) {
+  display: inline-flex;
+  align-items: center;
+  gap: calc(var(--uc-space-unit) * 3 / 2);
+  border: 1px solid var(--uc-color-border-strong);
+  background: var(--uc-color-surface);
+  color: var(--uc-color-ink-nav);
 }
