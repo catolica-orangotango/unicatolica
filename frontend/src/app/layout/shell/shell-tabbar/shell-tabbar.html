@@ -1,0 +1,55 @@
+<nav class="abas" aria-label="Navegação inferior">
+  <ng-container *ngTemplateOutlet="link; context: { $implicit: inicio }" />
+  <ng-container *ngTemplateOutlet="link; context: { $implicit: comunidades }" />
+
+  @if (privilegiado()) {
+    <a
+      class="abas__item"
+      routerLink="/moderacao/denuncias"
+      routerLinkActive="abas__item--ativa"
+      [routerLinkActiveOptions]="{ exact: true }"
+      #rlaDenuncias="routerLinkActive"
+      [attr.aria-current]="rlaDenuncias.isActive ? 'page' : null"
+      [attr.aria-label]="rotuloDenuncias()"
+    >
+      <uc-icon name="flag" />
+      @if (pendentes(); as total) {
+        <uc-badge variant="counter" class="abas__contador" aria-hidden="true">{{ total }}</uc-badge>
+      }
+      <span class="abas__rotulo">Denúncias</span>
+    </a>
+  } @else {
+    <button
+      #botaoNotificacoes
+      type="button"
+      class="abas__item"
+      [attr.aria-label]="rotuloNotificacoes()"
+      aria-haspopup="menu"
+      aria-controls="shell-notificacoes"
+      [attr.aria-expanded]="notificacoesAbertas() ? 'true' : 'false'"
+      (click)="alternouNotificacoes.emit($event)"
+    >
+      <uc-icon name="bell" />
+      @if (naoLidas() > 0) {
+        <uc-badge variant="counter" class="abas__contador" aria-hidden="true">{{ naoLidas() }}</uc-badge>
+      }
+      <span class="abas__rotulo">Notificações</span>
+    </button>
+  }
+
+  <ng-container *ngTemplateOutlet="link; context: { $implicit: perfil }" />
+</nav>
+
+<ng-template #link let-aba>
+  <a
+    class="abas__item"
+    [routerLink]="aba.path"
+    routerLinkActive="abas__item--ativa"
+    [routerLinkActiveOptions]="{ exact: true }"
+    #rla="routerLinkActive"
+    [attr.aria-current]="rla.isActive ? 'page' : null"
+  >
+    <uc-icon [name]="aba.icone" />
+    <span class="abas__rotulo">{{ aba.rotulo }}</span>
+  </a>
+</ng-template>

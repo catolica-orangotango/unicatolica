@@ -10,6 +10,7 @@ import { vi } from 'vitest';
 import { routes as rotasDoApp } from '../../app.routes';
 import { AuthService, JWT_ROLES_CLAIM } from '../../core/auth/auth.service';
 import { API_BASE_URL } from '../../core/config/api.config';
+import { blocos, foraDeMedia, regra, semComentarios as removerComentarios } from './css-contrato';
 import { Shell } from './shell';
 import { ShellLateralService } from './shell-lateral.service';
 
@@ -504,42 +505,109 @@ describe('Shell', () => {
     });
   });
 
-  describe('barra superior do celular (interina até a Task 14)', () => {
+  describe('barra superior e barra de abas do celular (KAN-91)', () => {
     function avatarBtn(f: ComponentFixture<Shell>): HTMLButtonElement {
-      return f.nativeElement.querySelector('.shell__topbar .shell__avatar') as HTMLButtonElement;
+      return f.nativeElement.querySelector('app-shell-topbar .topo__avatar') as HTMLButtonElement;
     }
 
-    it('continua no DOM com o avatar e o seu próprio menu (#shell-menu)', async () => {
-      const f = await montar(tokenComPerfis(['ALUNO']));
+    function itensDoMenuTopo(f: ComponentFixture<Shell>): HTMLButtonElement[] {
+      return [...f.nativeElement.querySelectorAll('#shell-menu [role="menuitem"]')] as HTMLButtonElement[];
+    }
 
+    function abrirMenuTopo(f: ComponentFixture<Shell>): void {
       avatarBtn(f).click();
       f.detectChanges();
+    }
 
-      const menu = f.nativeElement.querySelector('#shell-menu') as HTMLElement;
-      expect(menu.getAttribute('aria-label')).toBe('Conta');
-      expect(avatarBtn(f).getAttribute('aria-controls')).toBe('shell-menu');
-      expect([...menu.querySelectorAll('[role="menuitem"]')].map((b) => (b.textContent ?? '').trim())).toEqual([
+    it('a casca monta a barra superior e a barra de abas, fora da <nav> principal', async () => {
+      const f = await montar(tokenComPerfis(['ALUNO']));
+
+      const topo = f.nativeElement.querySelector('app-shell-topbar header') as HTMLElement;
+      const abas = f.nativeElement.querySelector('app-shell-tabbar nav') as HTMLElement;
+      expect(topo).toBeTruthy();
+      expect(abas.getAttribute('aria-label')).toBe('Navegação inferior');
+      expect(topo.closest('#shell-sidebar-nav')).toBeNull();
+      expect(abas.closest('#shell-sidebar-nav')).toBeNull();
+      expect(f.nativeElement.querySelector('.shell__topbar')).toBeNull();
+      expect(f.nativeElement.querySelector('.shell__menu-toggle')).toBeNull();
+    });
+
+    it('aluno: abas Início, Comunidades, Notificações e Perfil; moderador troca Notificações por Denúncias', async () => {
+      const aluno = await montar(tokenComPerfis(['ALUNO']));
+      expect(textos(aluno, '.abas__rotulo')).toEqual(['Início', 'Comunidades', 'Notificações', 'Perfil']);
+      aluno.nativeElement.remove();
+      TestBed.resetTestingModule();
+
+      const moderador = await montar(tokenComPerfis(['MODERADOR']));
+      expect(textos(moderador, '.abas__rotulo')).toEqual(['Início', 'Comunidades', 'Denúncias', 'Perfil']);
+    });
+
+    it('administrador também vê Denúncias na terceira aba', async () => {
+      const f = await montar(tokenComPerfis(['ADMINISTRADOR']));
+      expect(textos(f, '.abas__rotulo')).toEqual(['Início', 'Comunidades', 'Denúncias', 'Perfil']);
+    });
+
+    it('o avatar da barra superior usa as iniciais da conta e abre Perfil, Configurações e Sair', async () => {
+      const f = await montar(tokenComPerfis(['ALUNO']));
+      expect(avatarBtn(f).getAttribute('aria-expanded')).toBe('false');
+      expect(avatarBtn(f).querySelector('uc-avatar')?.textContent?.trim()).toBe('A');
+
+      abrirMenuTopo(f);
+
+      expect(avatarBtn(f).getAttribute('aria-expanded')).toBe('true');
+      expect(itensDoMenuTopo(f).map((b) => (b.textContent ?? '').trim())).toEqual([
         'Perfil',
         'Configurações',
         'Sair',
       ]);
+      expect(itensDoMenuTopo(f)[1].getAttribute('aria-disabled')).toBe('true');
     });
 
-    it('Sair pelo menu do celular chama logout() e navega para /login', async () => {
+    it('Sair pelo menu da barra superior chama logout() e navega para /login', async () => {
       const f = await montar(tokenComPerfis(['ALUNO']));
       const logoutSpy = vi.spyOn(TestBed.inject(AuthService), 'logout').mockImplementation(() => undefined);
       const navSpy = vi.spyOn(TestBed.inject(Router), 'navigateByUrl').mockResolvedValue(true);
 
-      avatarBtn(f).click();
-      f.detectChanges();
-      const sair = [...f.nativeElement.querySelectorAll('#shell-menu [role="menuitem"]')].find(
-        (b) => (b.textContent ?? '').trim() === 'Sair',
-      ) as HTMLButtonElement;
-      sair.click();
+      abrirMenuTopo(f);
+      itensDoMenuTopo(f)[2].click();
       f.detectChanges();
 
       expect(logoutSpy).toHaveBeenCalledTimes(1);
       expect(navSpy).toHaveBeenCalledWith('/login');
+      expect(avatarBtn(f).getAttribute('aria-expanded')).toBe('false');
+    });
+
+    it('Perfil pelo menu da barra superior navega para /perfil', async () => {
+      const f = await montar(tokenComPerfis(['ALUNO']));
+      const navSpy = vi.spyOn(TestBed.inject(Router), 'navigateByUrl').mockResolvedValue(true);
+
+      abrirMenuTopo(f);
+      itensDoMenuTopo(f)[0].click();
+      f.detectChanges();
+
+      expect(navSpy).toHaveBeenCalledWith('/perfil');
+    });
+
+    it('Escape fecha o menu da barra superior e devolve o foco ao avatar', async () => {
+      const f = await montar(tokenComPerfis(['ALUNO']));
+      abrirMenuTopo(f);
+
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+      f.detectChanges();
+
+      expect(avatarBtn(f).getAttribute('aria-expanded')).toBe('false');
+      expect(document.activeElement).toBe(avatarBtn(f));
+    });
+
+    it('abrir o menu da barra superior fecha o menu do cartão da conta', async () => {
+      const f = await montar(tokenComPerfis(['ALUNO']));
+      abrirMenu(f);
+      expect(painelDaConta(f)).toBeTruthy();
+
+      abrirMenuTopo(f);
+
+      expect(painelDaConta(f)).toBeNull();
+      expect(avatarBtn(f).getAttribute('aria-expanded')).toBe('true');
     });
   });
 
@@ -667,7 +735,11 @@ describe('Shell - gaveta de navegação mobile (Story 14.4)', () => {
   }
 
   function botaoNav(f: ComponentFixture<Shell>): HTMLButtonElement {
-    return f.nativeElement.querySelector('.shell__menu-toggle') as HTMLButtonElement;
+    return f.nativeElement.querySelector('app-shell-topbar .topo__gaveta') as HTMLButtonElement;
+  }
+
+  function avatarBtn(f: ComponentFixture<Shell>): HTMLButtonElement {
+    return f.nativeElement.querySelector('app-shell-topbar .topo__avatar') as HTMLButtonElement;
   }
 
   function sidebarNav(f: ComponentFixture<Shell>): HTMLElement {
@@ -686,7 +758,7 @@ describe('Shell - gaveta de navegação mobile (Story 14.4)', () => {
     vi.restoreAllMocks();
   });
 
-  it('o botão Menu começa fechado, com aria-controls apontando para a sidebar', async () => {
+  it('o botão "Suas comunidades" começa fechado, com aria-controls apontando para a sidebar', async () => {
     const f = await montar();
     const botao = botaoNav(f);
 
@@ -696,7 +768,7 @@ describe('Shell - gaveta de navegação mobile (Story 14.4)', () => {
     expect(sidebarNav(f).classList.contains('shell__sidebar--aberta')).toBe(false);
   });
 
-  it('clicar no botão Menu abre a gaveta e marca aria-expanded="true"', async () => {
+  it('clicar em "Suas comunidades" abre a gaveta e marca aria-expanded="true"', async () => {
     const f = await montar();
 
     abrirNav(f);
@@ -705,7 +777,7 @@ describe('Shell - gaveta de navegação mobile (Story 14.4)', () => {
     expect(sidebarNav(f).classList.contains('shell__sidebar--aberta')).toBe(true);
   });
 
-  it('clicar de novo fecha a gaveta', async () => {
+  it('clicar de novo em "Suas comunidades" fecha a gaveta', async () => {
     const f = await montar();
     abrirNav(f);
 
@@ -715,7 +787,7 @@ describe('Shell - gaveta de navegação mobile (Story 14.4)', () => {
     expect(sidebarNav(f).classList.contains('shell__sidebar--aberta')).toBe(false);
   });
 
-  it('Escape fecha a gaveta e devolve o foco ao botão Menu', async () => {
+  it('Escape fecha a gaveta e devolve o foco ao botão "Suas comunidades"', async () => {
     const f = await montar();
     abrirNav(f);
 
@@ -726,7 +798,7 @@ describe('Shell - gaveta de navegação mobile (Story 14.4)', () => {
     expect(document.activeElement).toBe(botaoNav(f));
   });
 
-  it('clique fora fecha a gaveta e devolve o foco ao botão Menu', async () => {
+  it('clique fora fecha a gaveta e devolve o foco ao botão "Suas comunidades"', async () => {
     const f = await montar();
     abrirNav(f);
 
@@ -751,27 +823,53 @@ describe('Shell - gaveta de navegação mobile (Story 14.4)', () => {
     expect(sidebarNav(f).classList.contains('shell__sidebar--aberta')).toBe(false);
   });
 
-  it('abrir a gaveta fecha o dropdown de conta e o painel de notificações', async () => {
+  it('abrir a gaveta fecha o menu da barra superior, o do cartão e o painel de notificações', async () => {
     const f = await montar();
-    (f.nativeElement.querySelector('.shell__avatar') as HTMLButtonElement).click();
+    avatarBtn(f).click();
     f.detectChanges();
-    expect(f.nativeElement.querySelector('#shell-menu')).toBeTruthy();
+    expect(f.nativeElement.querySelector('#shell-menu [role="menu"]')).toBeTruthy();
 
     abrirNav(f);
 
-    expect(f.nativeElement.querySelector('#shell-menu')).toBeNull();
+    expect(f.nativeElement.querySelector('#shell-menu [role="menu"]')).toBeNull();
+    expect(botaoNav(f).getAttribute('aria-expanded')).toBe('true');
+
+    abrirNav(f);
+    (f.nativeElement.querySelector('.shell__conta') as HTMLButtonElement).click();
+    f.detectChanges();
+    expect(f.nativeElement.querySelector('#shell-menu-conta [role="menu"]')).toBeTruthy();
+    abrirNav(f);
+    expect(f.nativeElement.querySelector('#shell-menu-conta [role="menu"]')).toBeNull();
+
+    abrirNav(f);
+    (f.nativeElement.querySelector('app-shell-tabbar button.abas__item') as HTMLButtonElement).click();
+    f.detectChanges();
+    expect(f.nativeElement.querySelector('#shell-notificacoes')).toBeTruthy();
+    abrirNav(f);
+    expect(f.nativeElement.querySelector('#shell-notificacoes')).toBeNull();
     expect(botaoNav(f).getAttribute('aria-expanded')).toBe('true');
   });
 
-  it('abrir o dropdown de conta fecha a gaveta', async () => {
+  it('abrir o menu da barra superior fecha a gaveta', async () => {
     const f = await montar();
     abrirNav(f);
 
-    (f.nativeElement.querySelector('.shell__avatar') as HTMLButtonElement).click();
+    avatarBtn(f).click();
     f.detectChanges();
 
     expect(botaoNav(f).getAttribute('aria-expanded')).toBe('false');
-    expect(f.nativeElement.querySelector('#shell-menu')).toBeTruthy();
+    expect(f.nativeElement.querySelector('#shell-menu [role="menu"]')).toBeTruthy();
+  });
+
+  it('abrir o painel de notificações pela barra de abas fecha a gaveta', async () => {
+    const f = await montar();
+    abrirNav(f);
+
+    (f.nativeElement.querySelector('app-shell-tabbar button.abas__item') as HTMLButtonElement).click();
+    f.detectChanges();
+
+    expect(botaoNav(f).getAttribute('aria-expanded')).toBe('false');
+    expect(f.nativeElement.querySelector('#shell-notificacoes')).toBeTruthy();
   });
 
   it('Tab no último item focável da gaveta volta para o primeiro (foco preso)', async () => {
@@ -811,6 +909,26 @@ describe('Shell - gaveta de navegação mobile (Story 14.4)', () => {
 
     expect(preventDefault).toHaveBeenCalled();
     expect(document.activeElement).toBe(ultimo);
+  });
+
+  it('o foco preso ignora os itens escondidos no celular (checkVisibility falso)', async () => {
+    const f = await montar();
+    abrirNav(f);
+
+    const focaveis = [...sidebarNav(f).querySelectorAll('a, button')] as HTMLElement[];
+    // Simula o celular: só o primeiro e o segundo focáveis estão visíveis.
+    const visiveis = focaveis.slice(0, 2);
+    for (const el of focaveis) {
+      (el as HTMLElement & { checkVisibility: () => boolean }).checkVisibility = () => visiveis.includes(el);
+    }
+    visiveis[1].focus();
+
+    const evento = new KeyboardEvent('keydown', { key: 'Tab', bubbles: true, cancelable: true });
+    const preventDefault = vi.spyOn(evento, 'preventDefault');
+    sidebarNav(f).dispatchEvent(evento);
+
+    expect(preventDefault).toHaveBeenCalled();
+    expect(document.activeElement).toBe(visiveis[0]);
   });
 
   it('Tab dentro da gaveta fechada não prende o foco (nada a fazer)', async () => {
@@ -969,30 +1087,108 @@ describe('Shell - painel de notificações (Story 10.1)', () => {
     expect(navSpy).toHaveBeenCalledWith('/perfil');
   });
 
-  it('abrir o painel de notificações fecha o dropdown da conta', async () => {
+  it('abrir o painel de notificações fecha o menu da barra superior', async () => {
     const { f, httpMock } = await montar();
     flushNotificacoes(httpMock);
     f.detectChanges();
 
-    (f.nativeElement.querySelector('.shell__avatar') as HTMLButtonElement).click();
+    (f.nativeElement.querySelector('app-shell-topbar .topo__avatar') as HTMLButtonElement).click();
     f.detectChanges();
-    expect(f.nativeElement.querySelector('#shell-menu')).toBeTruthy();
+    expect(f.nativeElement.querySelector('#shell-menu [role="menu"]')).toBeTruthy();
 
     sininhoBtn(f).click();
     f.detectChanges();
     flushNotificacoes(httpMock);
     f.detectChanges();
 
-    // #shell-menu (dropdown da conta), não [role="menu"] genérico - o painel de
-    // notificações também usa role="menu" e continua aberto aqui de propósito.
-    expect(f.nativeElement.querySelector('#shell-menu')).toBeNull();
+    // #shell-menu (menu da conta da barra superior), não [role="menu"] genérico - o
+    // painel de notificações também usa role="menu" e continua aberto aqui de propósito.
+    expect(f.nativeElement.querySelector('#shell-menu [role="menu"]')).toBeNull();
     expect(f.nativeElement.querySelector('#shell-notificacoes')).toBeTruthy();
+  });
+
+  it('Escape fecha o painel aberto pelo menu lateral e devolve o foco ao botão do menu', async () => {
+    const { f, httpMock } = await montar();
+    flushNotificacoes(httpMock);
+    sininhoBtn(f).click();
+    f.detectChanges();
+
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+    f.detectChanges();
+
+    expect(f.nativeElement.querySelector('#shell-notificacoes')).toBeNull();
+    expect(document.activeElement).toBe(sininhoBtn(f));
+  });
+
+  describe('pela barra de abas do celular', () => {
+    function abaNotificacoes(f: ComponentFixture<Shell>): HTMLButtonElement {
+      return f.nativeElement.querySelector('app-shell-tabbar button.abas__item') as HTMLButtonElement;
+    }
+
+    it('a aba abre o mesmo painel (um só #shell-notificacoes), fora da <nav> principal', async () => {
+      const { f, httpMock } = await montar();
+      flushNotificacoes(httpMock);
+      f.detectChanges();
+
+      abaNotificacoes(f).click();
+      f.detectChanges();
+      flushNotificacoes(httpMock, [
+        { id: 1, tipo: 'ONBOARDING_PERFIL', texto: 'Complete seu perfil', link: '/perfil', lida: false, criadoEm: '2026-09-30T12:00:00Z' },
+      ]);
+      f.detectChanges();
+
+      const paineis = f.nativeElement.querySelectorAll('#shell-notificacoes');
+      expect(paineis.length).toBe(1);
+      expect(paineis[0].getAttribute('role')).toBe('menu');
+      expect(paineis[0].classList).toContain('shell__notificacoes-painel--abas');
+      expect(paineis[0].closest('#shell-sidebar-nav')).toBeNull();
+      expect(paineis[0].textContent).toContain('Complete seu perfil');
+      expect(abaNotificacoes(f).getAttribute('aria-expanded')).toBe('true');
+      expect(sininhoBtn(f).getAttribute('aria-expanded')).toBe('true');
+    });
+
+    it('a aba mostra o contador de não lidas e a contagem no nome acessível', async () => {
+      const { f, httpMock } = await montar();
+      flushNotificacoes(httpMock, [
+        { id: 1, tipo: 'ONBOARDING_PERFIL', texto: 'Complete seu perfil', link: '/perfil', lida: false, criadoEm: '2026-09-30T12:00:00Z' },
+      ]);
+      f.detectChanges();
+
+      expect(abaNotificacoes(f).querySelector('uc-badge')?.textContent?.trim()).toBe('1');
+      expect(abaNotificacoes(f).getAttribute('aria-label')).toBe('Notificações (1 não lidas)');
+    });
+
+    it('Escape fecha o painel e devolve o foco à aba que o abriu', async () => {
+      const { f, httpMock } = await montar();
+      flushNotificacoes(httpMock);
+      abaNotificacoes(f).click();
+      f.detectChanges();
+
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+      f.detectChanges();
+
+      expect(f.nativeElement.querySelector('#shell-notificacoes')).toBeNull();
+      expect(abaNotificacoes(f).getAttribute('aria-expanded')).toBe('false');
+      expect(document.activeElement).toBe(abaNotificacoes(f));
+    });
+
+    it('clicar de novo na aba fecha o painel', async () => {
+      const { f, httpMock } = await montar();
+      flushNotificacoes(httpMock);
+      abaNotificacoes(f).click();
+      f.detectChanges();
+
+      abaNotificacoes(f).click();
+      f.detectChanges();
+
+      expect(f.nativeElement.querySelector('#shell-notificacoes')).toBeNull();
+    });
   });
 });
 
 describe('shell.scss - contrato de estilo por token', () => {
   const scss = readFileSync(join(dirname(fileURLToPath(import.meta.url)), 'shell.scss'), 'utf8');
-  const semComentarios = scss.replace(/\/\*[\s\S]*?\*\//g, '').replace(/(^|[^:])\/\/.*$/gm, '$1');
+  const semComentarios = removerComentarios(scss);
 
   it('referencia var(--uc-* ao menos uma vez', () => {
     expect(semComentarios).toMatch(/var\(\s*--uc-/);
@@ -1016,39 +1212,7 @@ describe('shell.scss - contrato de estilo por token', () => {
     expect(offenders).toEqual([]);
   });
 
-  /** Corpo (sem as chaves) de cada bloco que abre logo depois de `cabecalho`. */
-  function blocos(fonte: string, cabecalho: string): string[] {
-    const out: string[] = [];
-    let de = fonte.indexOf(cabecalho);
-    while (de >= 0) {
-      const abre = fonte.indexOf('{', de);
-      let nivel = 0;
-      let i = abre;
-      for (; i < fonte.length; i++) {
-        if (fonte[i] === '{') nivel++;
-        else if (fonte[i] === '}' && --nivel === 0) break;
-      }
-      out.push(fonte.slice(abre + 1, i));
-      de = fonte.indexOf(cabecalho, i);
-    }
-    return out;
-  }
-
-  /** Regras de primeiro nível (fora de qualquer @media). */
-  const semMedia = (() => {
-    let texto = semComentarios;
-    for (const cabecalho of ['@media', '@keyframes']) {
-      for (const corpo of blocos(texto, cabecalho)) texto = texto.replace(corpo, '');
-    }
-    return texto;
-  })();
-
-  /** Declarações de `seletor` (match exato do seletor antes da chave) dentro de `fonte`. */
-  function regra(fonte: string, seletor: string): string {
-    const escapado = seletor.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    const m = new RegExp(`(?:^|[}\\s,])${escapado}\\s*\\{([^}]*)\\}`, 'm').exec(fonte);
-    return m ? m[1] : '';
-  }
+  const semMedia = foraDeMedia(semComentarios);
 
   const tablet = blocos(semComentarios, '@media (max-width: bp.$uc-bp-tablet)').join('\n');
   const celular = blocos(semComentarios, '@media (max-width: bp.$uc-bp-mobile)').join('\n');
@@ -1087,10 +1251,36 @@ describe('shell.scss - contrato de estilo por token', () => {
     expect(regra(tablet, ':host')).toMatch(/grid-template-columns:\s*var\(--uc-layout-nav\)\s+minmax\(0,\s*var\(--uc-layout-feed\)\)\s*;/);
   });
 
-  it('a gaveta (overlay fixo) e a barra superior só existem até $uc-bp-mobile', () => {
-    expect(regra(celular, '.shell__sidebar')).toMatch(/position:\s*fixed/);
-    expect(regra(semMedia, '.shell__topbar')).toMatch(/display:\s*none/);
-    expect(regra(celular, '.shell__topbar')).toMatch(/display:\s*flex/);
+  it('até $uc-bp-mobile a gaveta é um overlay fixo entre a barra superior (56px) e a de abas (64px)', () => {
+    const gaveta = regra(celular, '.shell__sidebar');
+    expect(gaveta).toMatch(/position:\s*fixed/);
+    expect(gaveta).toMatch(
+      /inset:\s*calc\(var\(--uc-space-unit\) \* 14\)\s+0\s+calc\(var\(--uc-space-unit\) \* 16\)/,
+    );
+  });
+
+  it('até $uc-bp-mobile a gaveta mostra só "Suas comunidades" (marca, itens, "Em breve" e cartão somem)', () => {
+    const escondidos = regra(
+      celular,
+      '.shell__brand,\n  .shell__nav-list,\n  .shell__secao--breve,\n  .shell__breve-lista,\n  .shell__conta-area',
+    );
+    expect(escondidos).toMatch(/display:\s*none/);
+  });
+
+  it('até $uc-bp-mobile o conteúdo reserva embaixo a altura da barra de abas', () => {
+    expect(regra(celular, '.shell__main')).toMatch(
+      /padding-bottom:\s*calc\(var\(--uc-space-unit\) \* 16 \+ var\(--uc-space-page-margin\)\)/,
+    );
+  });
+
+  it('o painel aberto pela aba fica fixo logo acima da barra de abas', () => {
+    const painel = regra(semMedia, '.shell__notificacoes-painel--abas');
+    expect(painel).toMatch(/position:\s*fixed/);
+    expect(painel).toMatch(/bottom:\s*calc\(var\(--uc-space-unit\) \* 16 \+ var\(--uc-space-2\)\)/);
+  });
+
+  it('sem os estilos da barra superior interina', () => {
+    expect(semComentarios).not.toMatch(/shell__topbar|shell__menu-toggle|shell__avatar|shell__menu\b|@keyframes/);
   });
 
   it('item ativo: tinta forte e negrito, sem fundo', () => {
@@ -1106,7 +1296,6 @@ describe('shell.scss - contrato de estilo por token', () => {
       '.shell__comunidade-item:hover',
       '.shell__conta:hover',
       '.shell__notificacao-item:hover',
-      '.shell__menu-item:hover',
     ]) {
       const m = new RegExp(`${seletor.replace(/[.]/g, '\\.')}\\s*[,{]`).exec(semMedia);
       expect(m, seletor).toBeTruthy();
@@ -1115,13 +1304,6 @@ describe('shell.scss - contrato de estilo por token', () => {
       expect(corpo, seletor).toMatch(/background:\s*var\(--uc-color-surface-muted\)/);
       expect(corpo, seletor).not.toMatch(/font-weight|(?:^|[^-])color:/);
     }
-  });
-
-  it('o dropdown interino do celular mantém o corpo de texto (font-size body)', () => {
-    // Junta todas as regras que terminam em `.shell__menu-item {` (a última vence na cascata).
-    const corpos = [...semMedia.matchAll(/\.shell__menu-item\s*\{([^}]*)\}/g)].map((m) => m[1]);
-    const tamanhos = corpos.flatMap((c) => [...c.matchAll(/font-size:\s*([^;]+);/g)].map((m) => m[1].trim()));
-    expect(tamanhos.at(-1)).toBe('var(--uc-font-size-body)');
   });
 
   // O "sem laranja" já é travado para todo src/app por src/styles/tokens.spec.ts

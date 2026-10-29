@@ -19,6 +19,8 @@ import { NotificacoesService } from '../../features/notificacoes/notificacoes.se
 import { iniciais } from '../../features/publicacoes/tempo-relativo';
 import { UcAvatar, UcBadge, UcIcon, UcMenu, corDoAvatar, type UcIconName, type UcMenuItem } from '../../ui';
 import { ShellLateralService } from './shell-lateral.service';
+import { ShellTabbar } from './shell-tabbar/shell-tabbar';
+import { ShellTopbar } from './shell-topbar/shell-topbar';
 
 /** Um item do menu principal. */
 interface NavItem {
@@ -103,6 +105,8 @@ function rotaAtualELarga(router: Router): boolean {
     RouterOutlet,
     RouterLink,
     RouterLinkActive,
+    ShellTabbar,
+    ShellTopbar,
     UcAvatar,
     UcBadge,
     UcIcon,
@@ -122,9 +126,9 @@ export class Shell {
   private readonly comunidadesService = inject(ComunidadesService);
   private readonly notificacoesService = inject(NotificacoesService);
 
-  private readonly avatar = viewChild<ElementRef<HTMLButtonElement>>('avatar');
+  private readonly topbar = viewChild(ShellTopbar);
+  private readonly tabbar = viewChild(ShellTabbar);
   private readonly sininho = viewChild<ElementRef<HTMLButtonElement>>('sininho');
-  private readonly botaoNav = viewChild<ElementRef<HTMLButtonElement>>('botaoNav');
   private readonly sidebarNav = viewChild<ElementRef<HTMLElement>>('sidebarNav');
   private readonly cartaoConta = viewChild<ElementRef<HTMLButtonElement>>('cartaoConta');
 
@@ -132,7 +136,7 @@ export class Shell {
   protected readonly itensConta = ITENS_CONTA;
   protected readonly iniciaisDaComunidade = iniciaisDaComunidade;
   protected readonly corDoAvatar = corDoAvatar;
-  /** Dropdown do avatar da barra superior do celular (interino até a Task 14 do KAN-91). */
+  /** Menu da conta do avatar da barra superior do celular. */
   protected readonly menuAberto = signal(false);
   /** Menu do cartão da conta, no rodapé da <nav>. */
   protected readonly contaAberta = signal(false);
@@ -146,7 +150,15 @@ export class Shell {
   /** Nome do usuário para o cartão da conta; `null` até `GET /usuarios/me` responder (ou se falhar). */
   protected readonly nomeUsuario = signal<string | null>(null);
   protected readonly notificacoesAbertas = signal(false);
-  /** Gaveta de navegação mobile (Story 14.4) - sem efeito acima do breakpoint, onde a sidebar já é visível. */
+  /**
+   * Quem abriu o painel de notificações: o item do menu lateral ou a aba do
+   * celular. Decide onde o painel (um só) é desenhado e para onde o foco volta.
+   */
+  protected readonly origemNotificacoes = signal<'lateral' | 'abas'>('lateral');
+  /**
+   * Gaveta "Suas comunidades" do celular (Story 14.4, KAN-91) - sem efeito acima
+   * do breakpoint, onde a sidebar já é visível.
+   */
   protected readonly navAberto = signal(false);
   /**
    * "Suas comunidades" (Epic 2) — cache compartilhada do `ComunidadesService`
@@ -219,6 +231,7 @@ export class Shell {
     inject(DestroyRef).onDestroy(() => sessaoAtividade.parar());
   }
 
+  /** Abre/fecha o menu da conta do avatar da barra superior; fecha os outros painéis. */
   protected alternarMenu(evento: Event): void {
     // Impede que o clique borbulhe até o listener `document:click` e feche o
     // menu no mesmo gesto que o abriu.
@@ -237,7 +250,7 @@ export class Shell {
     this.contaAberta.update((aberta) => !aberta);
   }
 
-  /** Item escolhido no menu do cartão da conta (Configurações é inerte e nem chega aqui). */
+  /** Item escolhido no menu da conta, do cartão ou da barra superior (Configurações é inerte e nem chega aqui). */
   protected aoSelecionarConta(id: string): void {
     if (id === 'perfil') {
       this.abrirPerfil();
@@ -246,7 +259,7 @@ export class Shell {
     }
   }
 
-  /** Story 14.4 - abre/fecha a gaveta de navegação mobile (abaixo do breakpoint). */
+  /** Story 14.4 - abre/fecha a gaveta "Suas comunidades" (abaixo do breakpoint). */
   protected alternarNav(evento: Event): void {
     evento.stopPropagation();
     this.menuAberto.set(false);
@@ -259,15 +272,19 @@ export class Shell {
    * Prende o foco dentro da gaveta enquanto ela está aberta (Story 14.4,
    * WCAG 2.2 AA) - Tab no último item volta ao primeiro, Shift+Tab no
    * primeiro vai ao último. Sem efeito acima do breakpoint: lá a gaveta nunca
-   * abre (o botão "Menu" fica `display: none`), então `navAberto()` só vira
-   * `true` por um clique que, nesse layout, não existe.
+   * abre (a barra superior fica `display: none`), então `navAberto()` só vira
+   * `true` por um clique que, nesse layout, não existe. No celular a gaveta
+   * esconde por CSS os itens de navegação, "Em breve" e o cartão da conta; o
+   * filtro por `checkVisibility()` deixa esses itens fora do ciclo de foco.
    */
   protected aoTeclarNaGaveta(evento: KeyboardEvent): void {
     if (evento.key !== 'Tab' || !this.navAberto()) {
       return;
     }
     const nav = this.sidebarNav()?.nativeElement;
-    const focaveis = nav ? [...nav.querySelectorAll<HTMLElement>('a, button')] : [];
+    const focaveis = nav
+      ? [...nav.querySelectorAll<HTMLElement>('a, button')].filter((el) => el.checkVisibility?.() ?? true)
+      : [];
     if (focaveis.length === 0) {
       return;
     }
@@ -282,11 +299,16 @@ export class Shell {
     }
   }
 
-  /** Story 10.1 — abre/fecha o painel de notificações; recarrega ao abrir. */
-  protected alternarNotificacoes(evento: Event): void {
+  /**
+   * Story 10.1: abre/fecha o painel de notificações; recarrega ao abrir.
+   * `origem` é o botão que o abriu: o item do menu lateral ou a aba do celular.
+   */
+  protected alternarNotificacoes(evento: Event, origem: 'lateral' | 'abas' = 'lateral'): void {
     evento.stopPropagation();
     this.menuAberto.set(false);
     this.contaAberta.set(false);
+    this.navAberto.set(false);
+    this.origemNotificacoes.set(origem);
     const vaiAbrir = !this.notificacoesAbertas();
     this.notificacoesAbertas.set(vaiAbrir);
     if (vaiAbrir) {
@@ -302,7 +324,7 @@ export class Shell {
   protected fecharPaineis(): void {
     if (this.menuAberto()) {
       this.menuAberto.set(false);
-      this.avatar()?.nativeElement.focus();
+      this.topbar()?.focarConta();
     }
     if (this.contaAberta()) {
       this.contaAberta.set(false);
@@ -310,29 +332,22 @@ export class Shell {
     }
     if (this.notificacoesAbertas()) {
       this.notificacoesAbertas.set(false);
-      this.sininho()?.nativeElement.focus();
+      if (this.origemNotificacoes() === 'abas') {
+        this.tabbar()?.focarNotificacoes();
+      } else {
+        this.sininho()?.nativeElement.focus();
+      }
     }
     if (this.navAberto()) {
       this.navAberto.set(false);
-      this.botaoNav()?.nativeElement.focus();
+      this.topbar()?.focarGaveta();
     }
   }
 
   /**
-   * Fecha o dropdown quando o foco sai dele (ex.: Tab a partir de "Sair"). Não
-   * devolve o foco ao avatar: o foco já está indo para outro lugar por vontade
-   * do usuário.
+   * Fecha o painel de notificações quando o foco sai dele (ex.: Tab a partir do
+   * último item), sem devolver o foco: ele já está indo para outro lugar.
    */
-  protected aoSairFoco(evento: FocusEvent): void {
-    const menu = evento.currentTarget as HTMLElement;
-    const proximo = evento.relatedTarget as Node | null;
-    if (proximo && menu.contains(proximo)) {
-      return;
-    }
-    this.menuAberto.set(false);
-  }
-
-  /** Mesmo padrão de {@link aoSairFoco}, para o painel de notificações. */
   protected aoSairFocoNotificacoes(evento: FocusEvent): void {
     const painel = evento.currentTarget as HTMLElement;
     const proximo = evento.relatedTarget as Node | null;

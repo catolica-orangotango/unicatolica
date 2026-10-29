@@ -48,7 +48,7 @@
                 aria-haspopup="menu"
                 aria-controls="shell-notificacoes"
                 [attr.aria-expanded]="notificacoesAbertas() ? 'true' : 'false'"
-                (click)="alternarNotificacoes($event)"
+                (click)="alternarNotificacoes($event, 'lateral')"
               >
                 <uc-icon [name]="item.icone" />
                 <span class="shell__nav-rotulo">{{ item.label }}</span>
@@ -59,36 +59,8 @@
                 }
               </button>
 
-              @if (notificacoesAbertas()) {
-                <div
-                  id="shell-notificacoes"
-                  class="shell__notificacoes-painel"
-                  role="menu"
-                  aria-label="Notificações"
-                  (click)="$event.stopPropagation()"
-                  (focusout)="aoSairFocoNotificacoes($event)"
-                >
-                  @for (notificacao of notificacoes(); track notificacao.id) {
-                    <button
-                      type="button"
-                      class="shell__notificacao-item"
-                      [class.shell__notificacao-item--nao-lida]="!notificacao.lida"
-                      role="menuitem"
-                      (click)="aoClicarNotificacao(notificacao)"
-                    >
-                      {{ notificacao.texto }}
-                    </button>
-                  } @empty {
-                    <!-- role="menu" exige ao menos um menuitem, mesmo vazio (axe aria-required-children) -->
-                    <p
-                      class="shell__notificacao-item shell__notificacao-item--vazio"
-                      role="menuitem"
-                      aria-disabled="true"
-                    >
-                      Sem notificações por enquanto.
-                    </p>
-                  }
-                </div>
+              @if (notificacoesAbertas() && origemNotificacoes() === 'lateral') {
+                <ng-container [ngTemplateOutlet]="painelNotificacoes" />
               }
             </div>
           }
@@ -126,7 +98,7 @@
     }
   </ul>
 
-  <div class="shell__secao" id="shell-secao-breve">Em breve</div>
+  <div class="shell__secao shell__secao--breve" id="shell-secao-breve">Em breve</div>
   <ul class="shell__breve-lista" aria-labelledby="shell-secao-breve">
     @for (item of itensEmBreve(); track item.label) {
       <li>
@@ -168,65 +140,20 @@
 </nav>
 
 <!--
-  Barra superior do celular (Story 14.4). Interina até a Task 14 do KAN-91:
-  some acima de $uc-bp-mobile (lá o cartão da conta no rodapé da <nav>
-  substitui o avatar) e continua sendo o acesso à gaveta e ao "Sair" no celular.
+  Barras do celular (KAN-91): só aparecem até $uc-bp-mobile. A superior abre a
+  gaveta "Suas comunidades" (a <nav> acima) e o menu da conta; a de abas abre o
+  mesmo painel de notificações do menu lateral.
 -->
-<header class="shell__topbar">
-  <button
-    #botaoNav
-    type="button"
-    class="shell__menu-toggle"
-    aria-label="Menu"
-    aria-controls="shell-sidebar-nav"
-    [attr.aria-expanded]="navAberto() ? 'true' : 'false'"
-    (click)="alternarNav($event)"
-  >
-    Menu
-  </button>
-
-  <div class="shell__avatar-area">
-    <button
-      #avatar
-      type="button"
-      class="shell__avatar"
-      aria-label="Menu da conta"
-      aria-haspopup="menu"
-      aria-controls="shell-menu"
-      [attr.aria-expanded]="menuAberto() ? 'true' : 'false'"
-      (click)="alternarMenu($event)"
-    >
-      <span class="shell__avatar-face" aria-hidden="true"></span>
-    </button>
-
-    @if (menuAberto()) {
-      <div
-        id="shell-menu"
-        class="shell__menu"
-        role="menu"
-        aria-label="Conta"
-        (click)="$event.stopPropagation()"
-        (focusout)="aoSairFoco($event)"
-      >
-        <button type="button" class="shell__menu-item" role="menuitem" (click)="abrirPerfil()">
-          Perfil
-        </button>
-        <button
-          type="button"
-          class="shell__menu-item"
-          role="menuitem"
-          aria-disabled="true"
-          (click)="fecharPaineis()"
-        >
-          Configurações
-        </button>
-        <button type="button" class="shell__menu-item" role="menuitem" (click)="sair()">
-          Sair
-        </button>
-      </div>
-    }
-  </div>
-</header>
+<app-shell-topbar
+  [gavetaAberta]="navAberto()"
+  [(contaAberta)]="menuAberto"
+  [iniciais]="iniciaisDaConta()"
+  [cor]="corDaConta()"
+  [itens]="itensConta"
+  (alternouGaveta)="alternarNav($event)"
+  (alternouConta)="alternarMenu($event)"
+  (selecionou)="aoSelecionarConta($event)"
+/>
 
 <main class="shell__main">
   <router-outlet />
@@ -237,3 +164,50 @@
     <ng-container [ngTemplateOutlet]="template" />
   </aside>
 }
+
+<app-shell-tabbar
+  [privilegiado]="ehPrivilegiado()"
+  [notificacoesAbertas]="notificacoesAbertas()"
+  [naoLidas]="notificacoesNaoLidas()"
+  (alternouNotificacoes)="alternarNotificacoes($event, 'abas')"
+/>
+@if (notificacoesAbertas() && origemNotificacoes() === 'abas') {
+  <ng-container [ngTemplateOutlet]="painelNotificacoes" />
+}
+
+<!--
+  Painel de notificações (Story 10.1), um só: desenhado junto do botão que o
+  abriu (item do menu lateral ou aba do celular, acima da barra de abas).
+-->
+<ng-template #painelNotificacoes>
+  <div
+    id="shell-notificacoes"
+    class="shell__notificacoes-painel"
+    [class.shell__notificacoes-painel--abas]="origemNotificacoes() === 'abas'"
+    role="menu"
+    aria-label="Notificações"
+    (click)="$event.stopPropagation()"
+    (focusout)="aoSairFocoNotificacoes($event)"
+  >
+    @for (notificacao of notificacoes(); track notificacao.id) {
+      <button
+        type="button"
+        class="shell__notificacao-item"
+        [class.shell__notificacao-item--nao-lida]="!notificacao.lida"
+        role="menuitem"
+        (click)="aoClicarNotificacao(notificacao)"
+      >
+        {{ notificacao.texto }}
+      </button>
+    } @empty {
+      <!-- role="menu" exige ao menos um menuitem, mesmo vazio (axe aria-required-children) -->
+      <p
+        class="shell__notificacao-item shell__notificacao-item--vazio"
+        role="menuitem"
+        aria-disabled="true"
+      >
+        Sem notificações por enquanto.
+      </p>
+    }
+  </div>
+</ng-template>

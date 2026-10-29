@@ -11,9 +11,9 @@
 //
 // Responsivo (styles/_breakpoints.scss):
 // - até $uc-bp-tablet a coluna lateral some e ficam menu + conteúdo;
-// - até $uc-bp-mobile vale o layout de uma coluna da Story 14.4: o menu vira
-//   gaveta (overlay fixo, aberta pelo botão "Menu" da barra superior). A barra
-//   superior só existe nessa faixa e é interina até a Task 14 do KAN-91.
+// - até $uc-bp-mobile vale o layout de uma coluna: barra superior e barra de
+//   abas (componentes próprios em shell-topbar/ e shell-tabbar/), e o menu vira
+//   a gaveta "Suas comunidades" (overlay fixo entre as duas barras).
 @use '../../../styles/breakpoints' as bp;
 
 :host {
@@ -106,8 +106,7 @@
 .shell__nav-item:hover,
 .shell__comunidade-item:hover,
 .shell__conta:hover,
-.shell__notificacao-item:hover,
-.shell__menu-item:hover {
+.shell__notificacao-item:hover {
   background: var(--uc-color-surface-muted);
 }
 
@@ -139,8 +138,7 @@
 // Reset comum dos botões da casca (fundo transparente, largura do contêiner).
 .shell__nav-item--button,
 .shell__notificacao-item,
-.shell__conta,
-.shell__menu-item {
+.shell__conta {
   // layout-literal: ocupa a largura do contêiner, nao e uma dimensao de design
   width: 100%;
   border: 0;
@@ -165,37 +163,25 @@
   border-radius: var(--uc-radius-md);
   box-shadow: var(--uc-shadow-overlay);
   z-index: 1; // acima do resto do menu
-  animation: shell-menu-fade 150ms ease-out;
 }
 
-@keyframes shell-menu-fade {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
+// Aberto pela aba do celular: fixo logo acima da barra de abas (16 unidades).
+.shell__notificacoes-painel--abas {
+  position: fixed;
+  top: auto;
+  bottom: calc(var(--uc-space-unit) * 16 + var(--uc-space-2));
+  left: var(--uc-space-4);
+  right: var(--uc-space-4);
+  width: auto;
+  z-index: 3; // acima da gaveta (2) e das barras (1)
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .shell__notificacoes-painel,
-  .shell__menu {
-    animation: none;
-  }
-}
-
-.shell__notificacao-item,
-.shell__menu-item {
+.shell__notificacao-item {
   display: block;
   padding: calc(var(--uc-space-unit) * 2) calc(var(--uc-space-unit) * 3);
   border-radius: var(--uc-radius-sm);
   color: var(--uc-color-ink);
   font-size: var(--uc-font-size-meta);
-}
-
-// Dropdown interino do celular: corpo de texto, como antes da KAN-91.
-.shell__menu-item {
-  font-size: var(--uc-font-size-body);
 }
 
 .shell__notificacao-item--nao-lida {
@@ -345,65 +331,6 @@
   display: none;
 }
 
-// -- Barra superior do celular (interina até a Task 14) -----------------
-.shell__topbar {
-  display: none;
-}
-
-.shell__menu-toggle {
-  display: inline-flex;
-  align-items: center;
-  // `auto`, não um comprimento: empurra o avatar para a direita.
-  margin-right: auto;
-  padding: calc(var(--uc-space-unit) * 2) calc(var(--uc-space-unit) * 3);
-  border: 1px solid var(--uc-color-border);
-  border-radius: var(--uc-radius-default);
-  background: transparent;
-  color: var(--uc-color-ink);
-  font-size: var(--uc-font-size-body);
-  cursor: pointer;
-}
-
-.shell__avatar-area {
-  position: relative;
-}
-
-.shell__avatar {
-  display: block;
-  width: calc(var(--uc-space-unit) * 9);
-  height: calc(var(--uc-space-unit) * 9);
-  padding: 0;
-  border: 0;
-  border-radius: var(--uc-radius-full);
-  background: transparent;
-  cursor: pointer;
-}
-
-.shell__avatar-face {
-  display: block;
-  // layout-literal: preenche o botao que o contem, nao e uma dimensao de design
-  width: 100%;
-  // layout-literal: preenche o botao que o contem, nao e uma dimensao de design
-  height: 100%;
-  border-radius: var(--uc-radius-full);
-  background: var(--uc-color-maroon);
-}
-
-.shell__menu {
-  position: absolute;
-  // layout-literal: ancora logo abaixo do avatar (100% da altura dele), nao um espacamento
-  top: calc(100% + var(--uc-space-unit));
-  right: 0;
-  min-width: 200px; // layout-literal: ~200px de largura minima do dropdown (DESIGN.md, deferido)
-  padding: calc(var(--uc-space-unit) / 2);
-  background: var(--uc-color-surface);
-  border: 1px solid var(--uc-color-border);
-  border-radius: var(--uc-radius-md);
-  box-shadow: var(--uc-shadow-overlay);
-  z-index: 1;
-  animation: shell-menu-fade 150ms ease-out;
-}
-
 // -- Até $uc-bp-tablet: menu + conteúdo ---------------------------------
 @media (max-width: bp.$uc-bp-tablet) {
   :host {
@@ -429,35 +356,24 @@
     padding: 0;
   }
 
-  .shell__topbar {
-    display: flex;
-    grid-column: 1;
-    grid-row: 1;
-    position: sticky;
-    top: 0;
-    z-index: 1; // acima do conteúdo rolado
-    align-items: center;
-    justify-content: flex-end;
-    height: 64px; // layout-literal: ~64px de altura da topbar (DESIGN.md, deferido)
-    padding: 0 var(--uc-space-page-margin);
-    background: var(--uc-color-bg);
-    border-bottom: 1px solid var(--uc-color-border);
-  }
-
+  // Embaixo, a altura da barra de abas (16 unidades) mais a margem.
   .shell__main {
     grid-column: 1;
     grid-row: 2;
+    padding-bottom: calc(var(--uc-space-unit) * 16 + var(--uc-space-page-margin));
     border-left: 0;
     border-right: 0;
   }
 
-  // O menu vira overlay fixo que desliza a partir de translateX(-100%).
+  // A gaveta "Suas comunidades": overlay fixo entre a barra superior (14
+  // unidades) e a de abas (16), que desliza a partir de translateX(-100%).
   .shell__sidebar {
     position: fixed;
-    inset: 0;
+    inset: calc(var(--uc-space-unit) * 14) 0 calc(var(--uc-space-unit) * 16);
+    height: auto;
     grid-column: auto;
     grid-row: auto;
-    z-index: 2; // acima da shell__topbar (z-index: 1)
+    z-index: 2; // acima das barras (z-index: 1)
     padding: var(--uc-space-5) var(--uc-space-4) var(--uc-space-4);
     visibility: hidden;
     transform: translateX(-100%);
@@ -470,6 +386,16 @@
     visibility: visible;
     transform: translateX(0);
     transition: transform 200ms ease-out;
+  }
+
+  // Na gaveta fica só "Suas comunidades": a barra superior já tem a marca e o
+  // menu da conta, e a de abas tem a navegação.
+  .shell__brand,
+  .shell__nav-list,
+  .shell__secao--breve,
+  .shell__breve-lista,
+  .shell__conta-area {
+    display: none;
   }
 }
 
