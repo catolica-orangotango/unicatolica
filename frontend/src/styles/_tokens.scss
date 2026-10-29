@@ -18,6 +18,8 @@
 //
 // No dark-mode / `prefers-color-scheme` block: dark mode is out of the MVP.
 
+@use 'breakpoints' as bp;
+
 // prettier-ignore
 :root {
   // -- Paleta ------------------------------------------------------
@@ -101,4 +103,12 @@
   // -- Sombra ------------------------------------------------------
   --uc-shadow-overlay: 0 8px 32px rgba(24, 24, 27, 0.12), 0 1px 3px rgba(24, 24, 27, 0.06);
   --uc-shadow-toast: 0 8px 32px rgba(24, 24, 27, 0.18);
+}
+
+// Margem da página: 24px, 16px no celular (decisão KAN-84). É a única
+// sobrescrita de token; o literal é permitido aqui por ser o ponto de declaração.
+@media (max-width: bp.$uc-bp-mobile) {
+  :root {
+    --uc-space-page-margin: 16px;
+  }
 }

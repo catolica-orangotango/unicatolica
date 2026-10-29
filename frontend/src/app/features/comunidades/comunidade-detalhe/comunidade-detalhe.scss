@@ -22,12 +22,11 @@
 .detalhe {
   // layout-literal: coluna de leitura da comunidade, igual a do feed.
   max-width: 720px;
-  // Header sangra até a borda do <main> do Shell (padding negativo cancela o do
-  // Shell) — mesmo efeito "banner cheio" do mockup home-comunidade.html.
+  // Header sangra até a borda da coluna do <main> do Shell: a margem negativa
+  // cancela o padding lateral do Shell (--uc-space-page-margin, que muda no
+  // celular), nos dois lados. Mesmo efeito "banner cheio" do mockup home-comunidade.html.
   // layout-literal: sangria calculada sobre o padding do <main> do Shell, nao um valor de design.
-  margin: calc(var(--uc-space-unit) * -7) 0 0 calc(var(--uc-space-unit) * -8);
-  // layout-literal: 100% da coluna mais a sangria da margem negativa acima
-  width: calc(100% + calc(var(--uc-space-unit) * 8));
+  margin: calc(var(--uc-space-unit) * -7) calc(var(--uc-space-page-margin) * -1) 0;
 }
 
 .detalhe__cabecalho {

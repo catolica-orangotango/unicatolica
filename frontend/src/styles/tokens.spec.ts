@@ -313,13 +313,23 @@ describe('token declaration site and global scope limits', () => {
     const rootBody = extractRuleBody(compiledCss, ':root')!;
     const declaredEverywhere = [...compiledCss.matchAll(/--uc-[a-z0-9-]+\s*:/g)].length;
     const declaredInRoot = [...rootBody.matchAll(/--uc-[a-z0-9-]+\s*:/g)].length;
-    expect(declaredInRoot, '--uc-* declared outside the :root block').toBe(declaredEverywhere);
+    // A única exceção é a margem de página do celular, dentro do @media (próximo teste).
+    expect(declaredInRoot + 1, '--uc-* declared outside the :root block').toBe(declaredEverywhere);
+  });
+
+  it('page-margin: 24px no :root e sobrescrita de 16px só no @media do celular', () => {
+    const rootBody = extractRuleBody(compiledCss, ':root')!;
+    expect(parseCustomProps(rootBody).get('--uc-space-page-margin')).toBe('24px');
+    const media = compiledCss.match(/@media \(max-width: 760px\)\s*{\s*:root\s*{([^}]*)}\s*}/);
+    expect(media, 'bloco @media (max-width: 760px) com :root ausente').not.toBeNull();
+    expect([...parseCustomProps(media![1])]).toEqual([['--uc-space-page-margin', '16px']]);
   });
 
   it('emits no dark-mode, @import or @font-face at-rule', () => {
-    // @media covers prefers-color-scheme; the rest would mean a font-face,
-    // keyframes, @supports gate or an @import crept into a global partial.
-    expect(compiledCss).not.toMatch(/@(media|font-face|keyframes|supports|import)\b/);
+    // O único @media permitido é o do celular (max-width), conferido acima; o resto
+    // seria um font-face, keyframes, @supports ou @import entrando num parcial global.
+    expect(compiledCss.match(/@media[^{]*/g)).toEqual(['@media (max-width: 760px) ']);
+    expect(compiledCss).not.toMatch(/@(font-face|keyframes|supports|import)\b/);
     expect(compiledCss).not.toMatch(/prefers-color-scheme/);
   });
 });

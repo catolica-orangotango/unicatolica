@@ -85,7 +85,7 @@ spacing:
   "8": "40px"
   card-padding: "18px"
   section-gap: "20px"
-  page-margin: "24px"
+  page-margin: "24px"  # 16px abaixo de 760px (sobrescrita em @media no _tokens.scss)
   touch-target: "44px"
 layout:
   nav: "248px"
@@ -346,17 +346,17 @@ Cada papel tem uma classe utilitária `.uc-text-*` em `frontend/src/styles/_typo
 
 ## Layout
 
-**Casca autenticada** (`frontend/src/app/layout/shell/`): três colunas centradas como um único bloco, não encostadas à esquerda. Menu lateral de 248px (`layout-nav`), conteúdo de 600px (`layout-feed`) e coluna lateral de 340px (`layout-aside`), com 32px entre elas (`layout-gap`) e 24px de margem de página (`page-margin`). O menu é fixo no topo da janela com rolagem própria; a coluna de conteúdo tem filete de 1px à esquerda e à direita. A coluna lateral só existe quando a tela ativa registra conteúdo nela pelo `ShellLateralService`.
+**Casca autenticada** (`frontend/src/app/layout/shell/`): três colunas centradas como um único bloco, não encostadas à esquerda. Menu lateral de 248px (`layout-nav`), conteúdo de 600px (`layout-feed`) e coluna lateral de 340px (`layout-aside`), com 32px entre elas (`layout-gap`) e 24px de margem de página (`page-margin`, 16px abaixo de 760px). O menu é fixo no topo da janela com rolagem própria; a coluna de conteúdo tem filete de 1px à esquerda e à direita. A coluna lateral só existe quando a tela ativa registra conteúdo nela pelo `ShellLateralService`.
 
 **Modo largo:** telas de trabalho (descobrir comunidades, fila de denúncias, admin) marcam `data: { largo: true }` na rota e usam menu + 1040px (`layout-wide`), sem coluna lateral.
 
 **Quebras** (`_breakpoints.scss`, porque `@media` não lê custom property):
 - **Até 1180px** (`$uc-bp-tablet`): a coluna lateral some; ficam menu + conteúdo.
-- **Até 760px** (`$uc-bp-mobile`): uma coluna só. Entram a barra superior de 56px (marca, botão "Suas comunidades" e avatar com o menu da conta) e a barra de abas inferior de 64px (Início, Comunidades, Notificações ou Denúncias, Perfil). O menu lateral vira a gaveta "Suas comunidades", que desliza da esquerda entre as duas barras e mostra só a lista de comunidades. O conteúdo mantém a margem lateral de `page-margin` (24px) também no celular; os 16px previstos na decisão do KAN-84 ainda não foram aplicados.
+- **Até 760px** (`$uc-bp-mobile`): uma coluna só. Entram a barra superior de 56px (marca, botão "Suas comunidades" e avatar com o menu da conta) e a barra de abas inferior de 64px (Início, Comunidades, Notificações ou Denúncias, Perfil). O menu lateral vira a gaveta "Suas comunidades", que desliza da esquerda entre as duas barras e mostra só a lista de comunidades. A margem lateral do conteúdo, `page-margin`, cai para 16px.
 
 **Telas públicas** (login, cadastro, confirmação de e-mail) usam a casca própria `<uc-auth-shell>`: card único centralizado, a marca acima.
 
-**Ritmo:** unidade de 4px e a escala numérica `space-1` a `space-8` (4, 8, 12, 16, 20, 24, 32, 40px). Três medidas nomeadas completam: `card-padding` (18px), `section-gap` (20px) e `page-margin` (24px). Valor fora da escala é composto com `calc()` sobre `space-unit`; dimensão estrutural sem token (avatar de 34px, altura máxima de painel) leva o marcador `// layout-literal: <motivo>`, a única exceção que o guard aceita.
+**Ritmo:** unidade de 4px e a escala numérica `space-1` a `space-8` (4, 8, 12, 16, 20, 24, 32, 40px). Três medidas nomeadas completam: `card-padding` (18px), `section-gap` (20px) e `page-margin` (24px, 16px abaixo de 760px). Valor fora da escala é composto com `calc()` sobre `space-unit`; dimensão estrutural sem token (avatar de 34px, altura máxima de painel) leva o marcador `// layout-literal: <motivo>`, a única exceção que o guard aceita.
 
 **Alvo de toque:** 44px (`touch-target`) no celular para botão, aba, campo e botão da barra superior; no desktop o botão tem 36px.
 

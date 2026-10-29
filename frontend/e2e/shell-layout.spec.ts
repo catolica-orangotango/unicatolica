@@ -8,7 +8,7 @@ import {
   menuDaConta,
   navPrincipal,
 } from './support/casca';
-import { mockFeedOk, mockLogoutOk, mockMinhasComunidades, mockModeracao } from './support/mocks';
+import { mockComunidadeComFeed, mockFeedOk, mockLogoutOk, mockMinhasComunidades, mockModeracao } from './support/mocks';
 import { plantarToken, tokenAtual } from './support/seed';
 
 /**
@@ -204,5 +204,40 @@ test.describe('celular (360px)', () => {
 
     await expect(page).toHaveURL(/\/login$/);
     expect(await tokenAtual(page)).toBeNull();
+  });
+});
+
+/** Faixa bordô da Home da comunidade: sangra até a borda da coluna, em qualquer margem de página. */
+test.describe('faixa da comunidade', () => {
+  test('1440px: a faixa não passa da borda esquerda da coluna de conteúdo (filete de 1px)', async ({ page }) => {
+    await page.setViewportSize(VIEWPORT_DESKTOP);
+    await mockComunidadeComFeed(page, { id: 42, nome: 'Clube de Xadrez', tipo: 'ABERTA', souMembro: true });
+    await plantarToken(page, ['ALUNO']);
+    await page.goto('/comunidades/42');
+    const cabecalho = page.locator('.detalhe__cabecalho');
+    await expect(cabecalho).toBeVisible();
+
+    const faixa = await caixa(page, '.detalhe__cabecalho');
+    const coluna = await caixa(page, 'main');
+    expect(faixa.x).toBeGreaterThanOrEqual(coluna.x - 1);
+    expect(faixa.x + faixa.width).toBeLessThanOrEqual(coluna.x + coluna.width + 1);
+    expect(faixa.x - coluna.x).toBeLessThanOrEqual(2);
+  });
+
+  test('360px: a faixa fica dentro da tela e a página não rola na horizontal', async ({ page }) => {
+    await page.setViewportSize(VIEWPORT_CELULAR);
+    await mockComunidadeComFeed(page, { id: 42, nome: 'Clube de Xadrez', tipo: 'ABERTA', souMembro: true });
+    await plantarToken(page, ['ALUNO']);
+    await page.goto('/comunidades/42');
+    await expect(page.locator('.detalhe__cabecalho')).toBeVisible();
+
+    const faixa = await caixa(page, '.detalhe__cabecalho');
+    expect(faixa.x).toBeGreaterThanOrEqual(0);
+    expect(faixa.x + faixa.width).toBeLessThanOrEqual(VIEWPORT_CELULAR.width);
+    const rolagem = await page.evaluate(() => ({
+      doc: document.documentElement.scrollWidth,
+      janela: window.innerWidth,
+    }));
+    expect(rolagem.doc).toBeLessThanOrEqual(rolagem.janela);
   });
 });

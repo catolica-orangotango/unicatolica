@@ -129,7 +129,10 @@ describe('the base layer introduces no design value of its own', () => {
   });
 
   it('declares no --uc-* custom property outside the :root token block', () => {
-    expect([...outsideRoot().matchAll(/--uc-[a-z0-9-]+\s*:/g)].map((m) => m[0])).toEqual([]);
+    // Única exceção: a sobrescrita da margem de página no @media do celular (tokens.spec.ts a fixa).
+    expect([...outsideRoot().matchAll(/--uc-[a-z0-9-]+\s*:/g)].map((m) => m[0])).toEqual([
+      '--uc-space-page-margin:',
+    ]);
   });
 });
 

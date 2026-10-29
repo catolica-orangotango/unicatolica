@@ -240,7 +240,7 @@ vermelho).
 | `--uc-space-8` | `40px` | escala numerica |
 | `--uc-space-card-padding` | `18px` | padding interno de card |
 | `--uc-space-section-gap` | `20px` | separacao entre blocos verticais |
-| `--uc-space-page-margin` | `24px` | margem da pagina (16px no celular) |
+| `--uc-space-page-margin` | `24px` | margem da pagina (16px abaixo de 760px, sobrescrita em `@media` no `_tokens.scss`) |
 | `--uc-layout-nav` | `248px` | largura do menu lateral |
 | `--uc-layout-feed` | `600px` | largura da coluna do feed |
 | `--uc-layout-aside` | `340px` | largura da coluna lateral |
