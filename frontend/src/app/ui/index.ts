@@ -14,6 +14,7 @@ export { UcEmptyState } from './empty-state/empty-state';
 export { UcMenu, type UcMenuItem } from './menu/menu';
 export { UcMemberIndicator } from './member-indicator/member-indicator';
 export { UcNote, type UcNoteTom } from './note/note';
+export { UcSegmented, type UcSegmentedOpcao } from './segmented/segmented';
 export { UcSkeleton } from './skeleton/skeleton';
 export { ToastService, type ToastItem } from './toast/toast.service';
 export { UcToastHost } from './toast/toast-host';

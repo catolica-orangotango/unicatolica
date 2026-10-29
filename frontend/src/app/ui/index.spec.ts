@@ -10,12 +10,14 @@ import {
   UcMemberIndicator,
   UcMenu,
   UcNote,
+  UcSegmented,
   UcSkeleton,
   corDoAvatar,
   type UcBadgeVariant,
   type UcIconName,
   type UcMenuItem,
   type UcNoteTom,
+  type UcSegmentedOpcao,
 } from './index';
 
 /**
@@ -60,5 +62,11 @@ describe('ui barrel (src/app/ui/index.ts)', () => {
     const item: UcMenuItem = { id: 'sair', rotulo: 'Sair' };
     expect(UcMenu).toBeDefined();
     expect(item.id).toBe('sair');
+  });
+
+  it('re-exports UcSegmented e o tipo UcSegmentedOpcao', () => {
+    const opcao: UcSegmentedOpcao = { valor: 'todos', rotulo: 'Todos' };
+    expect(UcSegmented).toBeDefined();
+    expect(opcao.valor).toBe('todos');
   });
 });
