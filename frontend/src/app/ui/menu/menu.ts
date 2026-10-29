@@ -85,6 +85,10 @@ export class UcMenu {
     if (proximo && painel.contains(proximo)) {
       return;
     }
+    // Focar o próprio gatilho não fecha: o toggle do consumidor cuida disso.
+    if (proximo && this.gatilho()?.contains(proximo)) {
+      return;
+    }
     this.fechar(false);
   }
 

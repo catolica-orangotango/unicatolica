@@ -126,6 +126,13 @@ describe('UcMenu', () => {
     expect(document.activeElement).toBe(fora);
   });
 
+  it('foco indo para o próprio gatilho não fecha o menu', async () => {
+    const { fixture, gatilho } = await criar();
+    gatilho.focus();
+    fixture.detectChanges();
+    expect(fixture.componentInstance.aberto()).toBe(true);
+  });
+
   it('foco entre itens do painel não fecha', async () => {
     const { fixture, itens } = await criar();
     itens()[2].focus();
