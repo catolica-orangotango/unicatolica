@@ -5,6 +5,8 @@ import {
   UcCard,
   UcIcon,
   UcEmptyState,
+  UcField,
+  UcInput,
   UcMemberIndicator,
   UcNote,
   UcSkeleton,
@@ -45,5 +47,10 @@ describe('ui barrel (src/app/ui/index.ts)', () => {
     expect(UcAvatar).toBeDefined();
     expect(nome).toBe('home');
     expect(corDoAvatar(5)).toBe('azul');
+  });
+
+  it('re-exports UcField e UcInput', () => {
+    expect(UcField).toBeDefined();
+    expect(UcInput).toBeDefined();
   });
 });

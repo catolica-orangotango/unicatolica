@@ -1,0 +1,47 @@
+// UniCatolica - controle de formulário do redesign (KAN-91).
+//
+// Estilo GLOBAL do `.uc-input`, aplicado como classe de host pela diretiva
+// `ucInput` (input, select e textarea projetados em `<uc-field>`). Fica fora do
+// SCSS do componente porque o controle é conteúdo projetado, que a
+// encapsulação de estilo do Angular não alcança. Só seletores de classe.
+// Só tokens var(--uc-*). Carregado por `src/styles.scss`.
+
+.uc-input {
+  display: block;
+  width: 100%; // layout-literal: o controle preenche a largura do campo
+  height: var(--uc-touch-target);
+  padding: 0 calc(var(--uc-space-unit) * 7 / 2);
+  border: 1px solid var(--uc-color-border-input);
+  border-radius: var(--uc-radius-md);
+  background: var(--uc-color-surface);
+  color: var(--uc-color-ink);
+  font: inherit;
+  font-size: var(--uc-font-size-body);
+}
+
+.uc-input::placeholder {
+  color: var(--uc-color-ink-faint);
+}
+
+// O anel global de `:focus-visible` (base) continua valendo; aqui entram a
+// borda bordô e o halo do campo. O halo de 3px é espalhamento estrutural.
+.uc-input:focus,
+.uc-input:focus-visible {
+  border-color: var(--uc-color-maroon);
+  box-shadow: 0 0 0 3px var(--uc-color-maroon-tint); // layout-literal: espalhamento do halo
+}
+
+// Erro vence o foco: o campo inválido segue vermelho enquanto é editado.
+.uc-input[aria-invalid='true'],
+.uc-input.uc-input--erro {
+  border-color: var(--uc-color-error);
+  box-shadow: 0 0 0 3px var(--uc-color-error-tint); // layout-literal: espalhamento do halo
+}
+
+.uc-input:is(textarea) {
+  height: auto;
+  min-height: calc(var(--uc-space-unit) * 24);
+  padding: var(--uc-space-3) calc(var(--uc-space-unit) * 7 / 2);
+  line-height: var(--uc-line-height-body);
+  resize: vertical;
+}

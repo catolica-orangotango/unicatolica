@@ -13,6 +13,7 @@ aqui, muda a tabela abaixo no mesmo PR.
 | `_tokens.scss`     | Bloco `:root` unico. Todas as custom properties `--uc-*`. Fonte da verdade.                                       |
 | `_typography.scss` | Classes utilitarias `.uc-text-*`, uma por papel de tipografia. Compoem so `var(--uc-*)`.                          |
 | `_base.scss`       | Camada base global (Story 14.7): reset, pintura do `body`, `font: inherit` em controles e anel de foco unico.     |
+| `../app/ui/field/_input.scss` | Estilo global do controle de formulario `.uc-input` (KAN-91), aplicado pela diretiva `ucInput`. Incluido por `styles.scss`, depois de `base`. |
 | `_breakpoints.scss` | Breakpoint(s) de layout (Story 14.4) como variavel Sass (`$uc-breakpoint-nav`), nao `--uc-*` - `@media` nao le custom property. So `@use`d por quem precisa, nao agregado em `styles.scss`. |
 | `../styles.scss`   | Unico entry point de build. Agrega os parciais via `@use` (tokens -> typography -> base, nessa ordem).            |
 | `tokens.spec.ts`   | Compila `styles.scss` com `sass` e trava os tokens, a tabela deste README e as classes `.uc-text-*` contra drift. |
@@ -86,6 +87,20 @@ Duas regras inegociaveis, ambas travadas por teste:
 
 Ordem de `@use` em `styles.scss`: `tokens` -> `typography` -> `base`. A base
 consome os tokens, entao entra por ultimo.
+
+## Controle de formulario (`ui/field/_input.scss`, KAN-91)
+
+O `input`, `select` ou `textarea` projetado dentro de `<uc-field>` e conteudo
+projetado: a encapsulacao de estilo do Angular nao o alcanca. Por isso a
+diretiva `ucInput` poe a classe `uc-input` no elemento e o estilo mora neste
+parcial global, que so emite seletores de classe (`.uc-input`,
+`.uc-input:is(textarea)`). Estados: repouso (`--uc-color-border-input`,
+`--uc-radius-md`, `--uc-touch-target`), foco (borda `--uc-color-maroon` e halo de
+3px `--uc-color-maroon-tint`) e erro (`aria-invalid="true"` ou
+`.uc-input--erro`: borda `--uc-color-error` e halo `--uc-color-error-tint`). O
+halo de 3px e espalhamento estrutural, marcado com `// layout-literal:`. O
+`select` mantem a seta nativa do navegador (seta `down` customizada exigiria
+`background-image`, que nao aceita cor fora de token).
 
 ## Guard "nada hardcoded" (`scss-guard.spec.ts`, Story 14.7)
 

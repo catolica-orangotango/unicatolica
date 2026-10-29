@@ -7,6 +7,8 @@ export { UcAvatar, corDoAvatar, type UcAvatarCor } from './avatar/avatar';
 export { UcBadge, type UcBadgeVariant } from './badge/badge';
 export { UcButton } from './button/button';
 export { UcCard } from './card/card';
+export { UcField } from './field/field';
+export { UcInput } from './field/input';
 export { UcIcon, type UcIconName } from './icon/icon';
 export { UcEmptyState } from './empty-state/empty-state';
 export { UcMemberIndicator } from './member-indicator/member-indicator';
