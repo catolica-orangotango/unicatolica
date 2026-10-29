@@ -1,0 +1,6 @@
+<uc-icon class="uc-note__icone" [name]="icone()" />
+<div class="uc-note__corpo">
+  <b>{{ titulo() }}</b>
+  <ng-content></ng-content>
+  <div class="uc-note__acao"><ng-content select="[acao]"></ng-content></div>
+</div>

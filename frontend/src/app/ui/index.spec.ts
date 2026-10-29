@@ -4,10 +4,14 @@ import {
   UcButton,
   UcCard,
   UcIcon,
+  UcEmptyState,
   UcMemberIndicator,
+  UcNote,
+  UcSkeleton,
   corDoAvatar,
   type UcBadgeVariant,
   type UcIconName,
+  type UcNoteTom,
 } from './index';
 
 /**
@@ -20,6 +24,14 @@ describe('ui barrel (src/app/ui/index.ts)', () => {
     expect(UcButton).toBeDefined();
     expect(UcCard).toBeDefined();
     expect(UcMemberIndicator).toBeDefined();
+  });
+
+  it('re-exports UcSkeleton, UcEmptyState, UcNote e o tipo UcNoteTom', () => {
+    const tons: UcNoteTom[] = ['neutro', 'alerta', 'erro'];
+    expect(UcSkeleton).toBeDefined();
+    expect(UcEmptyState).toBeDefined();
+    expect(UcNote).toBeDefined();
+    expect(tons).toHaveLength(3);
   });
 
   it('re-exports the UcBadgeVariant union type', () => {
