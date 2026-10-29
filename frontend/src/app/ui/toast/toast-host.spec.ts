@@ -49,6 +49,9 @@ describe('UcToastHost', () => {
     expect(svg).not.toBeNull();
     expect(svg!.getAttribute('stroke')).toBe('currentColor');
     expect(svg!.getAttribute('aria-hidden')).toBe('true');
+    expect(itens()[0].querySelector('uc-icon')).not.toBeNull();
+    expect(itens()[0].querySelector('uc-icon')!.classList).toContain('uc-toast-host__icon--ok');
+    expect(itens()[0].getAttribute('role')).toBeNull();
   });
 
   it('renderiza dois toasts simultaneos quando mostrar() e chamado duas vezes seguidas', () => {
@@ -79,6 +82,143 @@ describe('UcToastHost', () => {
 
     expect(itens()).toHaveLength(0);
   });
+
+  it('toast de erro tem role alert no proprio item e icone de alerta', () => {
+    service.mostrar('Falhou', { tipo: 'erro' });
+    fixture.detectChanges();
+
+    expect(itens()[0].getAttribute('role')).toBe('alert');
+    const icone = itens()[0].querySelector('uc-icon') as HTMLElement;
+    expect(icone.classList).toContain('uc-toast-host__icon--erro');
+    // o check tem 1 path de 'm5 12.5'; o alert tem circle
+    expect(itens()[0].querySelector('svg circle')).not.toBeNull();
+  });
+
+  it('sem acao nao renderiza botao', () => {
+    service.mostrar('ok');
+    fixture.detectChanges();
+    expect(itens()[0].querySelector('button')).toBeNull();
+  });
+
+  it('clicar na acao chama aoAcionar e dispensa o toast', () => {
+    const aoAcionar = vi.fn();
+    service.mostrar('Removido', { acao: { rotulo: 'Desfazer', aoAcionar } });
+    fixture.detectChanges();
+
+    const botao = itens()[0].querySelector('button') as HTMLButtonElement;
+    expect(botao.type).toBe('button');
+    expect(botao.textContent?.trim()).toBe('Desfazer');
+    botao.click();
+    fixture.detectChanges();
+
+    expect(aoAcionar).toHaveBeenCalledTimes(1);
+    expect(itens()).toHaveLength(0);
+  });
+
+  describe('foco', () => {
+    let origem: HTMLButtonElement;
+
+    beforeEach(() => {
+      origem = document.createElement('button');
+      document.body.appendChild(origem);
+      origem.focus();
+    });
+
+    afterEach(() => {
+      document.body.querySelectorAll('main').forEach((m) => m.remove());
+      origem.remove();
+    });
+
+    function mostrarComAcao(): HTMLButtonElement {
+      service.mostrar('Removido', { acao: { rotulo: 'Desfazer', aoAcionar: () => undefined } });
+      fixture.detectChanges();
+      return itens()[0].querySelector('button') as HTMLButtonElement;
+    }
+
+    it('com foco dentro, o toast nao some apos TOAST_DURACAO_MS', () => {
+      const botao = mostrarComAcao();
+      document.body.appendChild(fixture.nativeElement);
+      botao.focus();
+      botao.dispatchEvent(new FocusEvent('focusin', { bubbles: true }));
+
+      vi.advanceTimersByTime(TOAST_DURACAO_MS * 2);
+      fixture.detectChanges();
+      expect(itens()).toHaveLength(1);
+    });
+
+    it('some depois que o foco sai, apos uma nova duracao', () => {
+      const botao = mostrarComAcao();
+      document.body.appendChild(fixture.nativeElement);
+      botao.focus();
+      botao.dispatchEvent(new FocusEvent('focusin', { bubbles: true }));
+      vi.advanceTimersByTime(TOAST_DURACAO_MS * 2);
+
+      botao.dispatchEvent(
+        new FocusEvent('focusout', { bubbles: true, relatedTarget: document.body }),
+      );
+      vi.advanceTimersByTime(TOAST_DURACAO_MS - 1);
+      fixture.detectChanges();
+      expect(itens()).toHaveLength(1);
+
+      vi.advanceTimersByTime(1);
+      fixture.detectChanges();
+      expect(itens()).toHaveLength(0);
+    });
+
+    it('focusout para dentro do mesmo toast nao retoma o timer', () => {
+      const botao = mostrarComAcao();
+      botao.dispatchEvent(new FocusEvent('focusin', { bubbles: true }));
+      botao.dispatchEvent(
+        new FocusEvent('focusout', { bubbles: true, relatedTarget: itens()[0] }),
+      );
+      vi.advanceTimersByTime(TOAST_DURACAO_MS * 2);
+      expect(service.toasts()).toHaveLength(1);
+    });
+
+    it('ao dispensar com o foco dentro, devolve o foco a origem', () => {
+      const botao = mostrarComAcao();
+      document.body.appendChild(fixture.nativeElement);
+      botao.focus();
+      expect(document.activeElement).toBe(botao);
+
+      botao.click();
+      fixture.detectChanges();
+
+      expect(document.activeElement).toBe(origem);
+    });
+
+    it('se a origem saiu do DOM, o foco vai para o main da pagina', () => {
+      const main = document.createElement('main');
+      document.body.appendChild(main);
+      const botao = mostrarComAcao();
+      document.body.appendChild(fixture.nativeElement);
+      origem.remove();
+      botao.focus();
+
+      botao.click();
+      fixture.detectChanges();
+
+      expect(document.activeElement).toBe(main);
+    });
+
+    it('sem origem nem main, o foco fica como estava', () => {
+      const botao = mostrarComAcao();
+      document.body.appendChild(fixture.nativeElement);
+      origem.remove();
+      botao.focus();
+      botao.click();
+      expect(() => fixture.detectChanges()).not.toThrow();
+    });
+
+    it('nao mexe no foco quando ele nao estava dentro do toast', () => {
+      mostrarComAcao();
+      document.body.appendChild(fixture.nativeElement);
+      origem.focus();
+      vi.advanceTimersByTime(TOAST_DURACAO_MS);
+      fixture.detectChanges();
+      expect(document.activeElement).toBe(origem);
+    });
+  });
 });
 
 // jsdom cannot read computed styles from an external stylesheet; the fixed
@@ -105,15 +245,26 @@ describe('toast-host.scss style contract', () => {
     expect(norm).toContain('bottom: var(--uc-space-page-margin)');
   });
 
-  it('is a card-like surface with border, radius and overlay shadow tokens', () => {
-    expect(norm).toContain('background: var(--uc-color-surface)');
-    expect(norm).toContain('border: 1px solid var(--uc-color-border)');
-    expect(norm).toContain('border-radius: var(--uc-radius-md)');
-    expect(norm).toContain('box-shadow: var(--uc-shadow-overlay)');
+  it('e uma superficie escura com raio lg e a sombra de toast', () => {
+    expect(norm).toContain('background: var(--uc-color-ink)');
+    expect(norm).toContain('color: var(--uc-color-surface)');
+    expect(norm).toContain('border-radius: var(--uc-radius-lg)');
+    expect(norm).toContain('box-shadow: var(--uc-shadow-toast)');
+    expect(norm).not.toContain('var(--uc-color-border)');
   });
 
-  it('uses the green-ok token for the icon colour', () => {
-    expect(norm).toContain('color: var(--uc-color-green-ok)');
+  it('usa toast-ok e toast-error nos icones e ink-nav no botao de acao', () => {
+    expect(norm).toContain('color: var(--uc-color-toast-ok)');
+    expect(norm).toContain('color: var(--uc-color-toast-error)');
+    expect(norm).toContain('background: var(--uc-color-ink-nav)');
+  });
+
+  it('abaixo do breakpoint mobile ocupa a largura e sobe acima da barra de abas', () => {
+    expect(norm).toContain('@media (max-width: bp.$uc-bp-mobile)');
+    expect(norm).toContain(
+      'bottom: calc(var(--uc-space-unit) * 16 + var(--uc-space-page-margin))',
+    );
+    expect(norm).toContain('left: var(--uc-space-page-margin)');
   });
 
   it('has an entrance-only fade/slide keyframes at 150ms with a reduced-motion guard', () => {

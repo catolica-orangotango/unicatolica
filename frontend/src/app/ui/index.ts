@@ -16,5 +16,11 @@ export { UcMemberIndicator, type UcMemberIndicatorEstado } from './member-indica
 export { UcNote, type UcNoteTom } from './note/note';
 export { UcSegmented, type UcSegmentedOpcao } from './segmented/segmented';
 export { UcSkeleton } from './skeleton/skeleton';
-export { ToastService, type ToastItem } from './toast/toast.service';
+export {
+  ToastService,
+  type ToastAcao,
+  type ToastItem,
+  type ToastOpcoes,
+  type ToastTipo,
+} from './toast/toast.service';
 export { UcToastHost } from './toast/toast-host';
