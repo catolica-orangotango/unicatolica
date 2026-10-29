@@ -194,3 +194,21 @@ describe('the entry point is wired into the build', () => {
     ).toContain('src/styles.scss');
   });
 });
+
+/**
+ * KAN-91: a familia `Inter` do token so existe de fato se o `index.html` a
+ * carregar (Google Fonts, `display=swap`); o fallback `system-ui` cobre a espera.
+ */
+describe('fonte Inter', () => {
+  it('index.html carrega a Inter e o token de familia tem o fallback system-ui', () => {
+    const indexHtml = readFileSync(join(stylesDir, '..', 'index.html'), 'utf8');
+    expect(indexHtml).toContain('href="https://fonts.googleapis.com"');
+    expect(indexHtml).toContain('href="https://fonts.gstatic.com"');
+    expect(indexHtml).toMatch(
+      /fonts\.googleapis\.com\/css2\?family=Inter:wght@400;500;600;700&display=swap/,
+    );
+
+    const tokens = readFileSync(join(stylesDir, '_tokens.scss'), 'utf8');
+    expect(tokens).toMatch(/--uc-font-family-base:\s*Inter,\s*system-ui/);
+  });
+});

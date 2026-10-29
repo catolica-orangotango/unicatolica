@@ -65,6 +65,11 @@ Nomes no padrão atual `--uc-*`. "Entra" é token novo, "muda" mantém o nome co
 | `--uc-color-warn-tint` | | #FDF5E7 | entra |
 | `--uc-color-avatar-{blue,green,sand,violet}` | | #2B4A72, #2F6141, #6B4E1F, #4E3A72 | entra (iniciais) |
 | `--uc-color-avatar-{blue,green,sand,violet}-bg` | | #E8EEF6, #EAF3EC, #F3EEE6, #EFEAF6 | entra (fundo do avatar) |
+| `--uc-color-ink-nav` | | #3F3F46 | entra na KAN-91 (item de menu lateral, 10,44:1) |
+| `--uc-color-ink-disabled` | | #8A8A93 | entra na KAN-91 (texto de controle desabilitado, isento do WCAG) |
+| `--uc-color-error-border` | | #F0C9C6 | entra na KAN-91 (borda do aviso de erro) |
+| `--uc-color-toast-ok` | | #B9E4C9 | entra na KAN-91 (ícone de sucesso sobre toast escuro) |
+| `--uc-color-toast-error` | | #FFB4AB | entra na KAN-91 (ícone de erro sobre toast escuro) |
 
 ### Tipografia
 

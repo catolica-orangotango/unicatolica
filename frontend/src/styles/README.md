@@ -8,8 +8,9 @@ visual. Mudou um valor la, muda aqui no mesmo PR.
 > **Redesign em andamento (KAN-84).** A nova direção visual, com a proposta de
 > tokens (o que entra, muda e sai) e o contraste de cada par, está em
 > [`docs/decisoes/2026-10-24-nova-direcao-visual.md`](../../../docs/decisoes/2026-10-24-nova-direcao-visual.md).
-> Os valores abaixo seguem valendo até o primeiro ticket de implementação, que
-> troca `DESIGN.md` e `_tokens.scss` juntos.
+> Os valores abaixo já são os do redesign (KAN-91, tarefa 1). Os tokens marcados
+> "SAI" na tabela continuam declarados até os consumidores migrarem e saem em
+> tarefas seguintes. O `DESIGN.md` da raiz ainda precisa ser alinhado.
 
 ## Arquivos
 
@@ -134,64 +135,109 @@ vermelho).
 
 ### Paleta (`colors`)
 
-| Token                    | Valor     | Papel                                                                                                                    |
-| ------------------------ | --------- | ------------------------------------------------------------------------------------------------------------------------ |
-| `--uc-color-bg`          | `#FAFAF8` | `colors.bg` - canvas base, quase branco                                                                                  |
-| `--uc-color-surface`     | `#FFFFFF` | `colors.surface` - superficie de card                                                                                    |
-| `--uc-color-border`      | `#EAEAE6` | `colors.border` - divisoria / contorno de card (1px)                                                                     |
-| `--uc-color-ink`         | `#1C1C1A` | `colors.ink` - texto de conteudo principal                                                                               |
-| `--uc-color-ink-soft`    | `#6B6B66` | `colors.ink-soft` - texto secundario (metadados, timestamps)                                                             |
-| `--uc-color-ink-faint`   | `#6E6E68` | `colors.ink-faint` - texto terciario (labels, placeholders)                                                              |
-| `--uc-color-maroon`      | `#7A1F2B` | `colors.maroon` - acento institucional minimo (traco, icone ativo, titulo de comunidade de curso); nunca fundo dominante |
-| `--uc-color-orange`      | `#BC4913` | `colors.orange` - unico acento de acao forte (CTA primario, tag de destaque)                                             |
-| `--uc-color-orange-tint` | `#FDEEE6` | `colors.orange-tint` - fundo suave de badge / nav ativa; nunca texto                                                     |
-| `--uc-color-green-ok`    | `#3A7D5C` | `colors.green-ok` - unico token de sucesso (membro, confirmacao positiva)                                                |
-| `--uc-color-error`       | `#B3261E` | `colors.error` - texto de erro (validacao inline, falha de login/cadastro); aviso e borda + texto, nunca bloco preenchido |
+| Token | Valor | Papel |
+| --- | --- | --- |
+| `--uc-color-bg` | `#FFFFFF` | canvas base (KAN-91: era #FAFAF8) |
+| `--uc-color-surface` | `#FFFFFF` | superficie de card |
+| `--uc-color-surface-muted` | `#F7F7F8` | hover, avisos, publicacao oculta |
+| `--uc-color-surface-strong` | `#F1F1F3` | filtro segmentado, chips, avatar neutro |
+| `--uc-color-border` | `#ECECEE` | filete decorativo |
+| `--uc-color-border-strong` | `#E2E2E6` | contorno de botao secundario |
+| `--uc-color-border-input` | `#8E8E96` | contorno de campo (3:1) |
+| `--uc-color-ink` | `#18181B` | texto principal |
+| `--uc-color-ink-soft` | `#66666E` | texto secundario (meta, descricao) |
+| `--uc-color-ink-faint` | `#707078` | placeholder |
+| `--uc-color-ink-nav` | `#3F3F46` | item de menu lateral (adicionado na KAN-91) |
+| `--uc-color-ink-disabled` | `#8A8A93` | texto de controle desabilitado, isento do WCAG (KAN-91) |
+| `--uc-color-maroon` | `#7A1F2B` | marca, acao primaria, foco |
+| `--uc-color-maroon-hover` | `#691A25` | botao primario em hover |
+| `--uc-color-maroon-tint` | `#F7ECEE` | badge de papel, dia de hoje, halo do foco |
+| `--uc-color-orange` | `#BC4913` | SAI: sera removido quando os consumidores migrarem (KAN-91) |
+| `--uc-color-orange-tint` | `#FDEEE6` | SAI: idem |
+| `--uc-color-green-ok` | `#2F6141` | sucesso (membro, criada) |
+| `--uc-color-green-tint` | `#EAF3EC` | fundo de sucesso |
+| `--uc-color-error` | `#B3261E` | erro de campo, botao de perigo |
+| `--uc-color-error-tint` | `#FBEAE9` | fundo de aviso de erro |
+| `--uc-color-error-border` | `#F0C9C6` | borda de aviso de erro (KAN-91) |
+| `--uc-color-warn` | `#8A5A00` | icone de alerta |
+| `--uc-color-warn-tint` | `#FDF5E7` | fundo de alerta |
+| `--uc-color-toast-ok` | `#B9E4C9` | icone de sucesso em toast escuro (KAN-91) |
+| `--uc-color-toast-error` | `#FFB4AB` | icone de erro em toast escuro (KAN-91) |
+| `--uc-color-avatar-blue` | `#2B4A72` | iniciais do avatar blue |
+| `--uc-color-avatar-green` | `#2F6141` | iniciais do avatar green |
+| `--uc-color-avatar-sand` | `#6B4E1F` | iniciais do avatar sand |
+| `--uc-color-avatar-violet` | `#4E3A72` | iniciais do avatar violet |
+| `--uc-color-avatar-blue-bg` | `#E8EEF6` | fundo do avatar blue |
+| `--uc-color-avatar-green-bg` | `#EAF3EC` | fundo do avatar green |
+| `--uc-color-avatar-sand-bg` | `#F3EEE6` | fundo do avatar sand |
+| `--uc-color-avatar-violet-bg` | `#EFEAF6` | fundo do avatar violet |
 
 ### Tipografia (`typography`)
 
-| Token                            | Valor                                                                         | Papel                                                                     |
-| -------------------------------- | ----------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
-| `--uc-font-family-base`          | `-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif` | pilha de sistema, todos os papeis (pendencia do time - ver acima)         |
-| `--uc-font-size-greeting`        | `22px`                                                                        | `typography.greeting` - saudacao no topo do Inicio                        |
-| `--uc-font-size-question`        | `15px`                                                                        | `typography.question` - perguntas de enquete, titulos de card             |
-| `--uc-font-size-body`            | `13.5px`                                                                      | `typography.body` - corpo de postagem, texto corrido                      |
-| `--uc-font-size-meta`            | `12px`                                                                        | `typography.meta` - timestamps, contagens, texto secundario               |
-| `--uc-font-size-label-caps`      | `10.5px`                                                                      | `typography.label-caps` - labels em caixa alta, nomes de secao            |
-| `--uc-font-weight-regular`       | `400`                                                                         | peso regular (`body`, `meta`)                                             |
-| `--uc-font-weight-semibold`      | `600`                                                                         | peso de enfase (`greeting`, `question`)                                   |
-| `--uc-font-weight-caps`          | `700`                                                                         | peso reservado a `label-caps`                                             |
-| `--uc-line-height-body`          | `1.5`                                                                         | `typography.body.lineHeight` (unico papel com line-height no `DESIGN.md`) |
-| `--uc-letter-spacing-greeting`   | `-0.01em`                                                                     | `typography.greeting.letterSpacing`                                       |
-| `--uc-letter-spacing-label-caps` | `0.05em`                                                                      | `typography.label-caps.letterSpacing`                                     |
+| Token | Valor | Papel |
+| --- | --- | --- |
+| `--uc-font-family-base` | `Inter, system-ui, -apple-system, 'Segoe UI', sans-serif` | Inter carregada pelo index.html |
+| `--uc-font-size-greeting` | `22px` | titulo de tela |
+| `--uc-font-size-title-lg` | `24px` | titulo de tela de trabalho |
+| `--uc-font-size-title` | `17px` | titulo de secao e cartao |
+| `--uc-font-size-question` | `15px` | SAI: vira body |
+| `--uc-font-size-body` | `15px` | corpo, texto corrido |
+| `--uc-font-size-small` | `14px` | acoes, descricao |
+| `--uc-font-size-meta` | `13px` | timestamps, contagens |
+| `--uc-font-size-label` | `12px` | badge, legenda |
+| `--uc-font-size-label-caps` | `10.5px` | SAI: labels em caixa alta |
+| `--uc-font-weight-regular` | `400` | peso regular |
+| `--uc-font-weight-medium` | `500` | peso medio |
+| `--uc-font-weight-semibold` | `600` | peso de enfase |
+| `--uc-font-weight-bold` | `700` | titulos, item ativo |
+| `--uc-font-weight-caps` | `700` | SAI: peso de label-caps |
+| `--uc-line-height-body` | `1.5` | line-height do corpo |
+| `--uc-letter-spacing-greeting` | `-0.02em` | titulo de tela |
+| `--uc-letter-spacing-label-caps` | `0.05em` | SAI: label-caps |
 
 ### Espacamento (`spacing`)
 
-| Token                     | Valor  | Papel                                                                                      |
-| ------------------------- | ------ | ------------------------------------------------------------------------------------------ |
-| `--uc-space-unit`         | `4px`  | `spacing.unit` - unidade base; componha com `calc()`                                       |
-| `--uc-space-card-padding` | `18px` | `spacing.card-padding` - padding interno padrao de card (fora do grid de 4px, intencional) |
-| `--uc-space-section-gap`  | `20px` | `spacing.section-gap` - separacao entre blocos verticais                                   |
-| `--uc-space-page-margin`  | `32px` | `spacing.page-margin` - enquadramento do conteudo                                          |
+| Token | Valor | Papel |
+| --- | --- | --- |
+| `--uc-space-unit` | `4px` | unidade base |
+| `--uc-space-1` | `4px` | escala numerica |
+| `--uc-space-2` | `8px` | escala numerica |
+| `--uc-space-3` | `12px` | escala numerica |
+| `--uc-space-4` | `16px` | escala numerica |
+| `--uc-space-5` | `20px` | escala numerica |
+| `--uc-space-6` | `24px` | escala numerica |
+| `--uc-space-7` | `32px` | escala numerica |
+| `--uc-space-8` | `40px` | escala numerica |
+| `--uc-space-card-padding` | `18px` | padding interno de card |
+| `--uc-space-section-gap` | `20px` | separacao entre blocos verticais |
+| `--uc-space-page-margin` | `24px` | margem da pagina (16px no celular) |
+| `--uc-layout-nav` | `248px` | largura do menu lateral |
+| `--uc-layout-feed` | `600px` | largura da coluna do feed |
+| `--uc-layout-aside` | `340px` | largura da coluna lateral |
+| `--uc-layout-wide` | `1040px` | largura de telas largas |
+| `--uc-layout-gap` | `32px` | espaco entre colunas |
+| `--uc-touch-target` | `44px` | alvo de toque minimo no celular |
 
 Nao ha ramp numerico `--uc-space-{n}`: o `DESIGN.md` nao define um. Um consumidor
 que precise de um pede via "Ask First".
 
 ### Raio (`rounded`)
 
-| Token                 | Valor    | Papel                                                                                 |
-| --------------------- | -------- | ------------------------------------------------------------------------------------- |
-| `--uc-radius-sm`      | `6px`    | `rounded.sm` - chips e controles pequenos                                             |
-| `--uc-radius-default` | `8px`    | `rounded.DEFAULT` - cards e inputs                                                    |
-| `--uc-radius-md`      | `12px`   | `rounded.md` - cards e inputs (card generico da 14.2)                                 |
-| `--uc-radius-lg`      | `14px`   | `rounded.lg` - container externo de um bloco de app                                   |
-| `--uc-radius-full`    | `9999px` | `rounded.full` - pill: badges de comunidade e botoes de acao; nunca cards de conteudo |
+| Token | Valor | Papel |
+| --- | --- | --- |
+| `--uc-radius-sm` | `8px` | controles pequenos |
+| `--uc-radius-default` | `10px` | cards e inputs |
+| `--uc-radius-md` | `12px` | campo, item de menu |
+| `--uc-radius-lg` | `16px` | aviso, menu suspenso |
+| `--uc-radius-xl` | `20px` | bloco lateral, painel |
+| `--uc-radius-full` | `9999px` | botao, badge, avatar |
 
 ### Elevacao
 
-| Token                 | Valor                            | Papel                                                                                   |
-| --------------------- | -------------------------------- | --------------------------------------------------------------------------------------- |
-| `--uc-shadow-overlay` | `0 8px 24px rgba(0, 0, 0, 0.08)` | `DESIGN.md` prosa "Elevation & Depth" - dropdowns e toasts; valor de partida, ajustavel |
+| Token | Valor | Papel |
+| --- | --- | --- |
+| `--uc-shadow-overlay` | `0 8px 32px rgba(24, 24, 27, 0.12), 0 1px 3px rgba(24, 24, 27, 0.06)` | dropdowns |
+| `--uc-shadow-toast` | `0 8px 32px rgba(24, 24, 27, 0.18)` | toasts |
 
 ## Verificacao rapida
 
