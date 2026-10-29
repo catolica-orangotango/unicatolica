@@ -14,7 +14,7 @@ aqui, muda a tabela abaixo no mesmo PR.
 | `_typography.scss` | Classes utilitarias `.uc-text-*`, uma por papel de tipografia. Compoem so `var(--uc-*)`.                          |
 | `_base.scss`       | Camada base global (Story 14.7): reset, pintura do `body`, `font: inherit` em controles e anel de foco unico.     |
 | `../app/ui/field/_input.scss` | Estilo global do controle de formulario `.uc-input` (KAN-91), aplicado pela diretiva `ucInput`. Incluido por `styles.scss`, depois de `base`. |
-| `_breakpoints.scss` | Breakpoint(s) de layout (Story 14.4) como variavel Sass (`$uc-breakpoint-nav`), nao `--uc-*` - `@media` nao le custom property. So `@use`d por quem precisa, nao agregado em `styles.scss`. |
+| `_breakpoints.scss` | Breakpoints de layout (KAN-91) como variaveis Sass (`$uc-bp-tablet`, `$uc-bp-mobile`), nao `--uc-*` - `@media` nao le custom property. So `@use`d por quem precisa, nao agregado em `styles.scss`. |
 | `../styles.scss`   | Unico entry point de build. Agrega os parciais via `@use` (tokens -> typography -> base, nessa ordem).            |
 | `tokens.spec.ts`   | Compila `styles.scss` com `sass` e trava os tokens, a tabela deste README e as classes `.uc-text-*` contra drift. |
 | `base.spec.ts`     | Compila `styles.scss` e trava o contrato da camada base (regra `body`, reset, anel de foco, zero hex fora do `:root`). |

@@ -1,57 +1,119 @@
+import { NgTemplateOutlet } from '@angular/common';
 import { Component, DestroyRef, ElementRef, computed, inject, signal, viewChild } from '@angular/core';
-import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import {
+  ActivatedRouteSnapshot,
+  NavigationEnd,
+  Router,
+  RouterLink,
+  RouterLinkActive,
+  RouterOutlet,
+} from '@angular/router';
+import { filter } from 'rxjs';
 import { AuthService } from '../../core/auth/auth.service';
 import { SessaoAtividadeService } from '../../core/auth/sessao-atividade.service';
 import { ComunidadesService } from '../../features/comunidades/comunidades.service';
 import { ContadorDenuncias } from '../../features/moderacao/contador-denuncias/contador-denuncias';
+import { UsuarioService } from '../../features/identidade/usuario.service';
 import { NotificacoesService } from '../../features/notificacoes/notificacoes.service';
+import { iniciais } from '../../features/publicacoes/tempo-relativo';
+import { UcAvatar, UcBadge, UcIcon, UcMenu, corDoAvatar, type UcIconName, type UcMenuItem } from '../../ui';
+import { ShellLateralService } from './shell-lateral.service';
 
-/** Um item da navegação global. `path === null` = item ainda sem rota (inerte). */
+/** Um item do menu principal. */
 interface NavItem {
   label: string;
+  icone: UcIconName;
+  /** Rota do item; `null` só em "Notificações", que abre o painel em vez de navegar. */
   path: string | null;
   /** Só aparece para MODERADOR / ADMINISTRADOR. */
   privileged?: boolean;
   /** Só aparece para ADMINISTRADOR. */
   somenteAdministrador?: boolean;
-  /** Só true no item "Suas comunidades" — expande a lista dinâmica logo abaixo dele. */
-  expandeComunidades?: boolean;
-  /** Só true em "Denúncias" — mostra o contador de pendentes (UJ-2, passo 1). */
+  /** Só true em "Denúncias": mostra o contador de pendentes (UJ-2, passo 1). */
   contaDenuncias?: boolean;
-  /** Só true em "Notificações" — abre o painel (ver {@link Shell.alternarNotificacoes}) em vez de navegar. */
+  /** Só true em "Notificações": abre o painel (ver {@link Shell.alternarNotificacoes}) em vez de navegar. */
   abrePainelNotificacoes?: boolean;
 }
 
+/** Um item inerte da seção "Em breve": visível desde já, mas sem rota. */
+interface ItemEmBreve {
+  label: string;
+  privileged?: boolean;
+}
+
 /**
- * Itens da sidebar, na ordem da tabela "Navegação global" de EXPERIENCE.md:
- * Denúncias e Solicitações de fixação ficam entre "Criar enquete" e "Suas
- * comunidades", e só aparecem para MODERADOR / ADMINISTRADOR. "Administração"
- * fica no fim e só aparece para ADMINISTRADOR.
- * "Início", "Descobrir comunidades" (Epic 2) e "Denúncias" (Epic 12) têm rota; o resto entra
- * conforme cada epic aterrissa. "Suas comunidades" não vira rota própria —
- * é só o cabeçalho da lista dinâmica (ver {@link Shell.minhasComunidades}).
+ * Menu principal do redesign (KAN-91, docs/design/kan-84/inicio-*.html), na
+ * ordem aprovada: Início, Comunidades, Denúncias (moderador e administrador),
+ * Notificações, Perfil e Administração (só administrador).
  */
 const NAV_ITENS: readonly NavItem[] = [
-  { label: 'Início', path: '/feed' },
-  { label: 'Buscar', path: null },
-  { label: 'Mensagens', path: null },
-  { label: 'Notificações', path: null, abrePainelNotificacoes: true },
-  { label: 'Criar enquete', path: null },
-  { label: 'Denúncias', path: '/moderacao/denuncias', privileged: true, contaDenuncias: true },
-  { label: 'Solicitações de fixação', path: null, privileged: true },
-  { label: 'Suas comunidades', path: null, expandeComunidades: true },
-  { label: 'Descobrir comunidades', path: '/comunidades' },
-  { label: 'Administração', path: '/admin', somenteAdministrador: true },
+  { label: 'Início', icone: 'home', path: '/feed' },
+  { label: 'Comunidades', icone: 'users', path: '/comunidades' },
+  { label: 'Denúncias', icone: 'flag', path: '/moderacao/denuncias', privileged: true, contaDenuncias: true },
+  { label: 'Notificações', icone: 'bell', path: null, abrePainelNotificacoes: true },
+  { label: 'Perfil', icone: 'user', path: '/perfil' },
+  { label: 'Administração', icone: 'shield', path: '/admin', somenteAdministrador: true },
 ];
+
+/** Seção "Em breve": funcionalidades previstas, ainda sem tela (itens inertes). */
+const ITENS_EM_BREVE: readonly ItemEmBreve[] = [
+  { label: 'Busca' },
+  { label: 'Mensagens' },
+  { label: 'Criar enquete' },
+  { label: 'Solicitações de fixação', privileged: true },
+];
+
+/** Itens do menu do cartão da conta (UcMenu, abre para cima). */
+const ITENS_CONTA: readonly UcMenuItem[] = [
+  { id: 'perfil', rotulo: 'Perfil' },
+  { id: 'configuracoes', rotulo: 'Configurações', desabilitado: true },
+  { id: 'sair', rotulo: 'Sair' },
+];
+
+/** Conectivos que não entram nas iniciais ("Engenharia de Software" vira ES, como no mockup). */
+const CONECTIVOS = new Set(['de', 'da', 'do', 'das', 'dos', 'e']);
+
+/** Iniciais do avatar de uma comunidade: primeira letra das duas primeiras palavras, sem conectivos. */
+function iniciaisDaComunidade(nome: string): string {
+  return nome
+    .trim()
+    .split(/\s+/)
+    .filter((parte) => !CONECTIVOS.has(parte.toLowerCase()))
+    .slice(0, 2)
+    .map((parte) => parte[0] ?? '')
+    .join('')
+    .toUpperCase();
+}
+
+/** Rota filha mais profunda ativada marca `data.largo` (telas de trabalho em menu + 1040px). */
+function rotaAtualELarga(router: Router): boolean {
+  let rota: ActivatedRouteSnapshot | null = router.routerState.snapshot.root;
+  while (rota?.firstChild) {
+    rota = rota.firstChild;
+  }
+  return rota?.data['largo'] === true;
+}
 
 @Component({
   selector: 'app-shell',
-  imports: [ContadorDenuncias, RouterOutlet, RouterLink, RouterLinkActive],
+  imports: [
+    ContadorDenuncias,
+    NgTemplateOutlet,
+    RouterOutlet,
+    RouterLink,
+    RouterLinkActive,
+    UcAvatar,
+    UcBadge,
+    UcIcon,
+    UcMenu,
+  ],
   templateUrl: './shell.html',
   styleUrl: './shell.scss',
   host: {
     '(document:keydown.escape)': 'fecharPaineis()',
     '(document:click)': 'fecharPaineis()',
+    '[class.shell--larga]': 'larga()',
   },
 })
 export class Shell {
@@ -64,9 +126,25 @@ export class Shell {
   private readonly sininho = viewChild<ElementRef<HTMLButtonElement>>('sininho');
   private readonly botaoNav = viewChild<ElementRef<HTMLButtonElement>>('botaoNav');
   private readonly sidebarNav = viewChild<ElementRef<HTMLElement>>('sidebarNav');
+  private readonly cartaoConta = viewChild<ElementRef<HTMLButtonElement>>('cartaoConta');
 
   protected readonly navItens = NAV_ITENS;
+  protected readonly itensConta = ITENS_CONTA;
+  protected readonly iniciaisDaComunidade = iniciaisDaComunidade;
+  protected readonly corDoAvatar = corDoAvatar;
+  /** Dropdown do avatar da barra superior do celular (interino até a Task 14 do KAN-91). */
   protected readonly menuAberto = signal(false);
+  /** Menu do cartão da conta, no rodapé da <nav>. */
+  protected readonly contaAberta = signal(false);
+  /**
+   * Telas de trabalho (descobrir, fila, admin) usam menu + 1040px sem coluna
+   * lateral: a rota filha ativa marca `data: { largo: true }` em app.routes.ts.
+   */
+  protected readonly larga = signal(false);
+  /** Conteúdo da coluna lateral, registrado pela tela ativa (ver {@link ShellLateralService}). */
+  protected readonly lateral = inject(ShellLateralService).template;
+  /** Nome do usuário para o cartão da conta; `null` até `GET /usuarios/me` responder (ou se falhar). */
+  protected readonly nomeUsuario = signal<string | null>(null);
   protected readonly notificacoesAbertas = signal(false);
   /** Gaveta de navegação mobile (Story 14.4) - sem efeito acima do breakpoint, onde a sidebar já é visível. */
   protected readonly navAberto = signal(false);
@@ -97,11 +175,43 @@ export class Shell {
 
   protected readonly ehAdministrador = computed(() => this.auth.possuiPerfil('ADMINISTRADOR'));
 
+  protected readonly itensEmBreve = computed(() =>
+    ITENS_EM_BREVE.filter((item) => !item.privileged || this.ehPrivilegiado()),
+  );
+
+  /** Papel exibido no cartão da conta. */
+  protected readonly papel = computed(() =>
+    this.ehAdministrador() ? 'Administrador' : this.auth.possuiPerfil('MODERADOR') ? 'Moderador' : 'Aluno',
+  );
+
+  /** Iniciais do nome; sem nome, a inicial do papel (nunca um "?"). */
+  protected readonly iniciaisDaConta = computed(() => {
+    const nome = this.nomeUsuario();
+    return nome ? iniciais(nome) : this.papel()[0];
+  });
+
+  protected readonly corDaConta = computed(() => {
+    const id = this.auth.usuarioId();
+    return id === null ? 'neutro' : corDoAvatar(id);
+  });
+
   constructor() {
     // Best-effort: a sidebar não é o lugar de mostrar erro de rede — em caso de
     // falha a cache simplesmente fica vazia, sem travar o resto da navegação.
     this.comunidadesService.carregarMinhas().subscribe({ error: () => undefined });
     this.notificacoesService.carregar().subscribe({ error: () => undefined });
+    // Mesmo padrão para o nome do cartão da conta: o JWT só traz id e papéis.
+    inject(UsuarioService)
+      .me()
+      .subscribe({ next: (usuario) => this.nomeUsuario.set(usuario.nome), error: () => undefined });
+
+    this.larga.set(rotaAtualELarga(this.router));
+    this.router.events
+      .pipe(
+        filter((evento) => evento instanceof NavigationEnd),
+        takeUntilDestroyed(),
+      )
+      .subscribe(() => this.larga.set(rotaAtualELarga(this.router)));
 
     // Sessão por inatividade (KAN-78): só roda enquanto a casca autenticada existe.
     const sessaoAtividade = inject(SessaoAtividadeService);
@@ -115,13 +225,32 @@ export class Shell {
     evento.stopPropagation();
     this.notificacoesAbertas.set(false);
     this.navAberto.set(false);
+    this.contaAberta.set(false);
     this.menuAberto.update((aberto) => !aberto);
+  }
+
+  /** Abre/fecha o menu do cartão da conta; fecha os outros painéis. */
+  protected alternarConta(evento: Event): void {
+    evento.stopPropagation();
+    this.menuAberto.set(false);
+    this.notificacoesAbertas.set(false);
+    this.contaAberta.update((aberta) => !aberta);
+  }
+
+  /** Item escolhido no menu do cartão da conta (Configurações é inerte e nem chega aqui). */
+  protected aoSelecionarConta(id: string): void {
+    if (id === 'perfil') {
+      this.abrirPerfil();
+    } else if (id === 'sair') {
+      this.sair();
+    }
   }
 
   /** Story 14.4 - abre/fecha a gaveta de navegação mobile (abaixo do breakpoint). */
   protected alternarNav(evento: Event): void {
     evento.stopPropagation();
     this.menuAberto.set(false);
+    this.contaAberta.set(false);
     this.notificacoesAbertas.set(false);
     this.navAberto.update((aberto) => !aberto);
   }
@@ -157,6 +286,7 @@ export class Shell {
   protected alternarNotificacoes(evento: Event): void {
     evento.stopPropagation();
     this.menuAberto.set(false);
+    this.contaAberta.set(false);
     const vaiAbrir = !this.notificacoesAbertas();
     this.notificacoesAbertas.set(vaiAbrir);
     if (vaiAbrir) {
@@ -165,7 +295,7 @@ export class Shell {
   }
 
   /**
-   * Fecha os dois painéis (menu da conta e notificações) e devolve o foco ao
+   * Fecha os painéis (menus da conta, notificações e gaveta) e devolve o foco ao
    * botão que os abriu. Caminho de Escape, clique fora e ativação de item -
    * onde o foco precisa voltar para um lugar previsível.
    */
@@ -173,6 +303,10 @@ export class Shell {
     if (this.menuAberto()) {
       this.menuAberto.set(false);
       this.avatar()?.nativeElement.focus();
+    }
+    if (this.contaAberta()) {
+      this.contaAberta.set(false);
+      this.cartaoConta()?.nativeElement.focus();
     }
     if (this.notificacoesAbertas()) {
       this.notificacoesAbertas.set(false);

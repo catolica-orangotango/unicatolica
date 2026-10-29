@@ -6,9 +6,8 @@
 // importa este parcial com `@use` e lê, por exemplo, `bp.$uc-bp-mobile`.
 // Nada aqui gera CSS por conta própria.
 //
-// - $uc-bp-tablet / $uc-bp-mobile: breakpoints do redesign (KAN-91).
-// - $uc-breakpoint-nav: legado da Story 14.4 (sidebar vira drawer abaixo
-//   dele); sai na Task 13 do KAN-91.
+// - $uc-bp-tablet: até aqui a casca esconde a coluna lateral (menu + conteúdo).
+// - $uc-bp-mobile: até aqui a casca tem uma coluna e o menu vira gaveta
+//   (Story 14.4, redesign KAN-91).
 $uc-bp-tablet: 1180px;
 $uc-bp-mobile: 760px;
-$uc-breakpoint-nav: 1024px;

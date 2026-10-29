@@ -1,6 +1,7 @@
 <!--
-  Casca de navegação global (Story 14.3).
-  A <nav> é ela própria o landmark da sidebar - não um <nav> dentro de <aside>
+  Casca de navegação global (Story 14.3, redesenhada na KAN-91): menu,
+  conteúdo e coluna lateral centrados como um bloco.
+  A <nav> é ela própria o landmark do menu - não um <nav> dentro de <aside>
   (que seria anunciado como landmark complementar, não de navegação).
 -->
 <nav
@@ -12,7 +13,7 @@
   (keydown)="aoTeclarNaGaveta($event)"
 >
   <div class="shell__brand">
-    <span class="shell__brand-mark" aria-hidden="true"></span>
+    <span class="shell__brand-mark" aria-hidden="true">U</span>
     <span class="shell__brand-name">UniCatólica</span>
   </div>
 
@@ -30,11 +31,13 @@
               [routerLinkActiveOptions]="{ exact: true }"
               #rla="routerLinkActive"
               [attr.aria-current]="rla.isActive ? 'page' : null"
-              >{{ item.label }}
-              @if (item.contaDenuncias) {
-                <app-contador-denuncias />
-              }</a
             >
+              <uc-icon [name]="item.icone" />
+              <span class="shell__nav-rotulo">{{ item.label }}</span>
+              @if (item.contaDenuncias) {
+                <app-contador-denuncias class="shell__nav-contador" />
+              }
+            </a>
           } @else if (item.abrePainelNotificacoes) {
             <div class="shell__nav-item-wrapper">
               <button
@@ -47,9 +50,12 @@
                 [attr.aria-expanded]="notificacoesAbertas() ? 'true' : 'false'"
                 (click)="alternarNotificacoes($event)"
               >
-                {{ item.label }}
+                <uc-icon [name]="item.icone" />
+                <span class="shell__nav-rotulo">{{ item.label }}</span>
                 @if (notificacoesNaoLidas() > 0) {
-                  <span class="shell__nav-badge" aria-hidden="true">{{ notificacoesNaoLidas() }}</span>
+                  <uc-badge variant="counter" class="shell__nav-badge" aria-hidden="true">{{
+                    notificacoesNaoLidas()
+                  }}</uc-badge>
                 }
               </button>
 
@@ -85,46 +91,87 @@
                 </div>
               }
             </div>
-          } @else {
-            <span class="shell__nav-item shell__nav-item--inert" aria-disabled="true">{{
-              item.label
-            }}</span>
           }
         </li>
-        @if (item.expandeComunidades) {
-          <li>
-            <ul class="shell__comunidades-lista" aria-label="Suas comunidades">
-              @for (comunidade of minhasComunidades(); track comunidade.id) {
-                <li>
-                  <a
-                    class="shell__comunidade-item"
-                    [routerLink]="['/comunidades', comunidade.id]"
-                    routerLinkActive="shell__comunidade-item--ativa"
-                    [routerLinkActiveOptions]="{ exact: true }"
-                    #rlaComunidade="routerLinkActive"
-                    [attr.aria-current]="rlaComunidade.isActive ? 'page' : null"
-                  >
-                    <span
-                      class="shell__ponto"
-                      [class.shell__ponto--curso]="comunidade.tipo === 'CURSO'"
-                      aria-hidden="true"
-                    ></span>
-                    {{ comunidade.nome }}
-                  </a>
-                </li>
-              } @empty {
-                <li class="shell__comunidade-item shell__comunidade-item--vazio">
-                  Você ainda não faz parte de nenhuma
-                </li>
-              }
-            </ul>
-          </li>
-        }
       }
     }
   </ul>
+
+  <div class="shell__secao" id="shell-secao-comunidades">Suas comunidades</div>
+  <ul class="shell__comunidades-lista" aria-labelledby="shell-secao-comunidades">
+    @for (comunidade of minhasComunidades(); track comunidade.id) {
+      <li>
+        <a
+          class="shell__comunidade-item"
+          [routerLink]="['/comunidades', comunidade.id]"
+          routerLinkActive="shell__comunidade-item--ativa"
+          [routerLinkActiveOptions]="{ exact: true }"
+          #rlaComunidade="routerLinkActive"
+          [attr.aria-current]="rlaComunidade.isActive ? 'page' : null"
+        >
+          <uc-avatar
+            class="shell__comunidade-avatar"
+            forma="quadrado"
+            tamanho="sm"
+            [cor]="comunidade.tipo === 'CURSO' ? 'marca' : corDoAvatar(comunidade.id)"
+            [iniciais]="iniciaisDaComunidade(comunidade.nome)"
+          />
+          <span class="shell__comunidade-nome">{{ comunidade.nome }}</span>
+        </a>
+      </li>
+    } @empty {
+      <li class="shell__comunidade-item shell__comunidade-item--vazio">
+        Você ainda não faz parte de nenhuma
+      </li>
+    }
+  </ul>
+
+  <div class="shell__secao" id="shell-secao-breve">Em breve</div>
+  <ul class="shell__breve-lista" aria-labelledby="shell-secao-breve">
+    @for (item of itensEmBreve(); track item.label) {
+      <li>
+        <span class="shell__breve-item" aria-disabled="true">{{ item.label }}</span>
+      </li>
+    }
+  </ul>
+
+  <div class="shell__conta-area">
+    <button
+      #cartaoConta
+      type="button"
+      class="shell__conta"
+      aria-haspopup="menu"
+      aria-controls="shell-menu-conta"
+      [attr.aria-expanded]="contaAberta() ? 'true' : 'false'"
+      (click)="alternarConta($event)"
+    >
+      <uc-avatar tamanho="sm" [cor]="corDaConta()" [iniciais]="iniciaisDaConta()" />
+      <span class="shell__conta-texto">
+        @if (nomeUsuario(); as nome) {
+          <span class="shell__conta-nome">{{ nome }}</span>
+        }
+        <span class="shell__conta-papel">{{ papel() }}</span>
+      </span>
+      <uc-icon class="shell__conta-icone" name="dots" size="sm" />
+    </button>
+    <uc-menu
+      id="shell-menu-conta"
+      class="shell__conta-menu"
+      rotulo="Conta"
+      direcao="acima"
+      [itens]="itensConta"
+      [(aberto)]="contaAberta"
+      [gatilho]="cartaoConta"
+      (selecionou)="aoSelecionarConta($event)"
+    />
+  </div>
 </nav>
 
+<!--
+  Barra superior do celular (Story 14.4). Interina até a Task 14 do KAN-91:
+  some acima de $uc-bp-mobile (lá o cartão da conta no rodapé da <nav>
+  substitui o avatar) e continua sendo o acesso à gaveta e ao "Sair" no celular.
+-->
 <header class="shell__topbar">
   <button
     #botaoNav
@@ -184,3 +231,9 @@
 <main class="shell__main">
   <router-outlet />
 </main>
+
+@if (lateral(); as template) {
+  <aside class="shell__lateral" aria-label="Complementar">
+    <ng-container [ngTemplateOutlet]="template" />
+  </aside>
+}

@@ -1,34 +1,32 @@
-// Global navigation shell (Story 14.3).
+// Casca de navegação global (Story 14.3, redesenhada na KAN-91).
 //
-// Token-only styling: every colour / font / spacing / radius / shadow is a
-// var(--uc-*) token from Story 14.1. The only raw literals are the structural
-// dimensions DESIGN.md writes as "~" and explicitly defers (sidebar width,
-// topbar height, dropdown min-width), plus 1px/2px borders & outlines, 0, and
-// unitless weights / z-index. Story 14.7 turned those inline notes into
-// `// layout-literal: <reason>` markers - the one escape hatch the widened
-// no-hardcode guard (src/styles/scss-guard.spec.ts) recognises. Comment-only
-// change: no declaration and no rendered pixel moved.
+// Três colunas centradas como um bloco (docs/design/kan-84/base.css, regras
+// .app, nav.side, .col e aside): menu --uc-layout-nav, conteúdo
+// --uc-layout-feed e lateral --uc-layout-aside. Telas de trabalho
+// (.shell--larga, rota com data.largo) usam menu + --uc-layout-wide.
 //
-// Story 14.4 adds the responsive collapse below styles/_breakpoints.scss'
-// $uc-breakpoint-nav: the sidebar becomes a fixed-position overlay drawer,
-// toggled by .shell__menu-toggle ("Menu") and the navAberto() signal. The
-// feed's discovery panel needs no change of its own - it was already a
-// stacked <section>, not a side column, so it falls into place once the
-// sidebar stops reserving a grid column below the breakpoint.
+// Só tokens var(--uc-*). As dimensões estruturais que não têm token levam o
+// marcador `// layout-literal: <motivo>` reconhecido pelo
+// src/styles/scss-guard.spec.ts.
+//
+// Responsivo (styles/_breakpoints.scss):
+// - até $uc-bp-tablet a coluna lateral some e ficam menu + conteúdo;
+// - até $uc-bp-mobile vale o layout de uma coluna da Story 14.4: o menu vira
+//   gaveta (overlay fixo, aberta pelo botão "Menu" da barra superior). A barra
+//   superior só existe nessa faixa e é interina até a Task 14 do KAN-91.
 @use '../../../styles/breakpoints' as bp;
 
 :host {
   display: grid;
-  // layout-literal: ~220px sidebar (DESIGN.md "Layout & Spacing", deferido) + main fluido.
-  grid-template-columns: 220px 1fr;
-  grid-template-rows: auto 1fr;
+  grid-template-columns: var(--uc-layout-nav) minmax(0, var(--uc-layout-feed)) var(--uc-layout-aside);
+  justify-content: center;
+  column-gap: var(--uc-layout-gap);
+  padding: 0 var(--uc-space-page-margin);
   min-height: 100vh; // layout-literal: fallback de viewport para navegadores sem dvh
   min-height: 100dvh; // layout-literal: altura de viewport dinamica, nao e um espacamento de design
-  // Abaixo do breakpoint a sidebar vira position: fixed e desliza a partir de
-  // translateX(-100%) - sem isto, a barra de rolagem horizontal aparece
-  // mesmo com o conteudo visivel encaixado (Story 14.4, criterio do painel
-  // de descoberta sem rolagem horizontal em 360px).
-  overflow-x: hidden;
+  // clip, não hidden: hidden faria do host um contêiner de rolagem e o menu
+  // sticky deixaria de grudar no topo da janela.
+  overflow-x: clip;
   background: var(--uc-color-bg);
   color: var(--uc-color-ink);
   font-family: var(--uc-font-family-base);
@@ -36,148 +34,115 @@
   line-height: var(--uc-line-height-body);
 }
 
-@media (max-width: bp.$uc-breakpoint-nav) {
-  :host {
-    grid-template-columns: 1fr;
-  }
-
-  // Só 1 coluna explícita abaixo do breakpoint - sem isto, grid-column: 2
-  // (o valor de desktop) cairia numa coluna implícita fora da área visível e
-  // escondia a topbar/o conteúdo principal inteiros.
-  .shell__topbar,
-  .shell__main {
-    grid-column: 1;
-  }
+:host(.shell--larga) {
+  grid-template-columns: var(--uc-layout-nav) minmax(0, var(--uc-layout-wide));
 }
 
-// -- Sidebar: the <nav> landmark itself ---------------------------------
+// -- Menu: o próprio landmark <nav> --------------------------------------
 .shell__sidebar {
   grid-column: 1;
-  grid-row: 1 / 3;
+  grid-row: 1;
   position: sticky;
   top: 0;
   align-self: start;
+  display: flex;
+  flex-direction: column;
   height: 100vh; // layout-literal: fallback de viewport para navegadores sem dvh
   height: 100dvh; // layout-literal: altura de viewport dinamica, nao e um espacamento de design
   overflow-y: auto;
-  // Explicito, nao so o padrao: sem isso, o navegador computa overflow-x como auto
-  // tambem (regra do CSS Overflow quando so overflow-y nao e 'visible'), abrindo
-  // scroll horizontal pra qualquer filho mais largo que a sidebar (ex.: o painel de
-  // notificacoes, antes de caber em 100% da largura dela).
+  // Explícito: só com overflow-y o navegador computa overflow-x como auto e
+  // abre rolagem horizontal para qualquer filho mais largo que o menu.
   overflow-x: hidden;
-  padding: var(--uc-space-section-gap) var(--uc-space-card-padding);
+  padding: var(--uc-space-5) 0 var(--uc-space-4);
   background: var(--uc-color-bg);
-  border-right: 1px solid var(--uc-color-border);
-}
-
-// -- Gaveta mobile (Story 14.4) ------------------------------------------
-@media (max-width: bp.$uc-breakpoint-nav) {
-  .shell__sidebar {
-    position: fixed;
-    inset: 0;
-    grid-column: auto;
-    grid-row: auto;
-    z-index: 2; // acima do shell__topbar (z-index: 1)
-    visibility: hidden;
-    transform: translateX(-100%);
-    // O delay na visibility espera o slide terminar antes de tirar a gaveta
-    // da arvore de foco/leitura - fechar e imediato (sem delay), abrir
-    // "escorrega" (Story 14.4, criterio de acessibilidade).
-    transition: transform 200ms ease-out, visibility 0s linear 200ms;
-  }
-
-  .shell__sidebar--aberta {
-    visibility: visible;
-    transform: translateX(0);
-    transition: transform 200ms ease-out;
-  }
-}
-
-@media (max-width: bp.$uc-breakpoint-nav) and (prefers-reduced-motion: reduce) {
-  .shell__sidebar,
-  .shell__sidebar--aberta {
-    transition: none;
-  }
 }
 
 .shell__brand {
   display: flex;
   align-items: center;
-  gap: calc(var(--uc-space-unit) * 2);
-  margin-bottom: calc(var(--uc-space-unit) * 7);
+  gap: calc(var(--uc-space-unit) * 2.5);
+  padding: calc(var(--uc-space-unit) * 1.5) var(--uc-space-3) calc(var(--uc-space-unit) * 5.5);
+  font-size: var(--uc-font-size-title);
+  font-weight: var(--uc-font-weight-bold);
 }
 
 .shell__brand-mark {
-  width: calc(var(--uc-space-unit) * 6);
-  height: calc(var(--uc-space-unit) * 6);
+  display: grid;
+  place-items: center;
+  width: calc(var(--uc-space-unit) * 7.5);
+  height: calc(var(--uc-space-unit) * 7.5);
   border-radius: var(--uc-radius-sm);
   background: var(--uc-color-maroon);
-}
-
-.shell__brand-name {
+  color: var(--uc-color-surface);
   font-size: var(--uc-font-size-body);
-  font-weight: var(--uc-font-weight-semibold);
+  font-weight: var(--uc-font-weight-bold);
 }
 
-.shell__nav-list {
+.shell__nav-list,
+.shell__comunidades-lista,
+.shell__breve-lista {
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
+// Item do menu principal (.nl do mockup): 46px, 16px medium, tinta de menu.
 .shell__nav-item {
   display: flex;
   align-items: center;
-  padding: calc(var(--uc-space-unit) * 2) calc(var(--uc-space-unit) * 2.5);
-  margin-bottom: calc(var(--uc-space-unit) / 2);
-  border-radius: var(--uc-radius-default);
-  color: var(--uc-color-ink-soft);
-  font-size: var(--uc-font-size-body);
-  font-weight: var(--uc-font-weight-regular);
+  gap: calc(var(--uc-space-unit) * 3.5);
+  // layout-literal: item de 46px do mockup (base.css .nl), sem token de altura
+  height: calc(var(--uc-space-unit) * 11.5);
+  padding: 0 var(--uc-space-3);
+  border-radius: var(--uc-radius-md);
+  color: var(--uc-color-ink-nav);
+  // 16px do mockup: a escala tipográfica não tem um papel de 16px.
+  font-size: calc(var(--uc-space-unit) * 4);
+  font-weight: var(--uc-font-weight-medium);
   text-decoration: none;
 }
 
-// Active route ("Início" today) - maroon-tint bg + maroon text + semibold,
-// straight from mockups/home-comunidade.html.
+// Hover comum dos itens clicáveis do menu e dos painéis.
+.shell__nav-item:hover,
+.shell__comunidade-item:hover,
+.shell__conta:hover,
+.shell__notificacao-item:hover,
+// Rota ativa (.nl.on): tinta forte e negrito, sem fundo; ícone com traço mais grosso.
 .shell__nav-item--active {
-  background: var(--uc-color-maroon-tint);
-  color: var(--uc-color-maroon);
-  font-weight: var(--uc-font-weight-semibold);
+  color: var(--uc-color-ink);
+  font-weight: var(--uc-font-weight-bold);
 }
 
-// Routeless items: visible (full IA from day one) but inert.
-.shell__nav-item--inert {
-  color: var(--uc-color-ink-faint);
-  cursor: default;
+// O <svg> é do template do UcIcon, por isso o ::ng-deep (escopo continua nesta casca).
+.shell__nav-item--active ::ng-deep svg {
+  stroke-width: 2.25;
 }
 
-// -- Notificações: item da sidebar + painel (Story 10.1) ----------------
+.shell__nav-item uc-icon {
+  color: inherit;
+}
+
+.shell__nav-contador,
+.shell__nav-badge {
+  margin-left: auto;
+}
+
+// -- Notificações: item do menu + painel (Story 10.1) ------------------
 .shell__nav-item-wrapper {
   position: relative;
 }
 
-.shell__nav-item--button {
-  justify-content: space-between;
-  // layout-literal: ocupa a largura do item de nav, nao e uma dimensao de design
+// Reset comum dos botões da casca (fundo transparente, largura do contêiner).
+.shell__nav-item--button,
+.shell__notificacao-item,
+.shell__conta,
+.shell__menu-item {
+  // layout-literal: ocupa a largura do contêiner, nao e uma dimensao de design
   width: 100%;
   border: 0;
   background: transparent;
-  font: inherit;
+  text-align: left;
   cursor: pointer;
-}
-
-.shell__nav-badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: calc(var(--uc-space-unit) * 4.5);
-  height: calc(var(--uc-space-unit) * 4.5);
-  padding: 0 calc(var(--uc-space-unit) * 1.5);
-  border-radius: var(--uc-radius-full);
-  background: var(--uc-color-error);
-  color: var(--uc-color-surface);
-  font-size: var(--uc-font-size-label);
-  font-weight: var(--uc-font-weight-semibold);
 }
 
 .shell__notificacoes-painel {
@@ -185,13 +150,8 @@
   // layout-literal: ancora logo abaixo do item (100% da altura dele), nao um espacamento
   top: calc(100% + var(--uc-space-unit));
   left: 0;
-  // 100% do .shell__nav-item-wrapper (position: relative), nao 280px fixo como o dropdown
-  // de conta: .shell__sidebar tem overflow-y: auto, e por isso o navegador computa
-  // overflow-x como auto tambem (regra do CSS Overflow quando so um eixo nao e
-  // 'visible') - qualquer coisa mais larga que a sidebar fica cortada/com scroll
-  // horizontal, mesmo sendo position: absolute (e mesmo com position: fixed, que
-  // tambem e clipado por overflow de ancestral). Caber na sidebar em vez de tentar
-  // escapar dela.
+  // 100% do wrapper, não largura fixa: o menu tem overflow-y: auto (e por isso
+  // overflow-x computado), então o que for mais largo que ele seria cortado.
   width: 100%; // layout-literal: preenche o wrapper que o contém, não é dimensão de design
   max-height: 360px; // layout-literal: limite de altura antes de rolar - sem token de "altura de lista"
   overflow-y: auto;
@@ -200,33 +160,33 @@
   border: 1px solid var(--uc-color-border);
   border-radius: var(--uc-radius-md);
   box-shadow: var(--uc-shadow-overlay);
-  z-index: 1; // acima do resto da sidebar
-  animation: shell-menu-fade 150ms ease-out; // mesma animação do dropdown de conta
+  z-index: 1; // acima do resto do menu
+  animation: shell-menu-fade 150ms ease-out;
+}
+
+@keyframes shell-menu-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .shell__notificacoes-painel {
+  .shell__notificacoes-painel,
+  .shell__menu {
     animation: none;
   }
 }
 
-.shell__notificacao-item {
+.shell__notificacao-item,
+.shell__menu-item {
   display: block;
-  // layout-literal: ocupa a largura do painel, nao e uma dimensao de design
-  width: 100%;
   padding: calc(var(--uc-space-unit) * 2) calc(var(--uc-space-unit) * 3);
-  border: 0;
   border-radius: var(--uc-radius-sm);
-  background: transparent;
   color: var(--uc-color-ink);
-  font: inherit;
   font-size: var(--uc-font-size-meta);
-  text-align: left;
-  cursor: pointer;
-}
-
-.shell__notificacao-item:hover {
-  background: var(--uc-color-maroon-tint);
 }
 
 .shell__notificacao-item--nao-lida {
@@ -238,98 +198,161 @@
   cursor: default;
 }
 
-// -- "Suas comunidades" dynamic sub-list (Epic 2) -----------------------
-// Deliberately NOT .shell__nav-item: it's a list of links to community
-// pages, not part of the fixed global nav IA above it.
-.shell__comunidades-lista {
-  margin: 0 0 calc(var(--uc-space-unit) / 2);
-  padding: 0;
-  list-style: none;
-}
-
-.shell__comunidade-item {
-  display: flex;
-  align-items: center;
-  gap: calc(var(--uc-space-unit) * 2.5);
-  padding: calc(var(--uc-space-unit) * 1.5) calc(var(--uc-space-unit) * 2.5);
-  border-radius: var(--uc-radius-sm);
+// -- Seções "Suas comunidades" e "Em breve" (.nh) -----------------------
+.shell__secao {
+  padding: calc(var(--uc-space-unit) * 5.5) var(--uc-space-3) calc(var(--uc-space-unit) * 1.5);
   color: var(--uc-color-ink-soft);
   font-size: var(--uc-font-size-meta);
-  text-decoration: none;
-}
-
-.shell__comunidade-item:hover {
-  background: var(--uc-color-maroon-tint);
-}
-
-// Comunidade atualmente aberta (KAN-89) - mesmo par maroon-tint/maroon/semibold
-// de .shell__nav-item--active, pra sinalizar seleção com o mesmo vocabulário visual.
-.shell__comunidade-item--ativa {
-  background: var(--uc-color-maroon-tint);
-  color: var(--uc-color-maroon);
   font-weight: var(--uc-font-weight-semibold);
 }
 
-.shell__comunidade-item--vazio {
-  color: var(--uc-color-ink-faint);
-}
-
-.shell__ponto {
-  width: calc(var(--uc-space-unit) * 2);
-  height: calc(var(--uc-space-unit) * 2);
-  border-radius: var(--uc-radius-full);
-  background: var(--uc-color-border);
-  flex-shrink: 0;
-}
-
-.shell__ponto--curso {
-  background: var(--uc-color-maroon);
-}
-
-// -- Topbar ------------------------------------------------------------
-.shell__topbar {
-  grid-column: 2;
-  grid-row: 1;
-  position: sticky;
-  top: 0;
-  z-index: 1; // above scrolled main content
+// Comunidade (.cm): 40px, avatar quadrado de 26px e nome em 14px medium.
+.shell__comunidade-item {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
-  height: 64px; // layout-literal: ~64px de altura da topbar (DESIGN.md, deferido)
-  padding: 0 var(--uc-space-page-margin);
-  background: var(--uc-color-bg);
-  border-bottom: 1px solid var(--uc-color-border);
+  gap: var(--uc-space-3);
+  height: var(--uc-space-8);
+  padding: 0 var(--uc-space-3);
+  border-radius: var(--uc-radius-default);
+  color: var(--uc-color-ink);
+  font-size: var(--uc-font-size-small);
+  font-weight: var(--uc-font-weight-medium);
+  text-decoration: none;
 }
 
-// Toggle da gaveta mobile (Story 14.4) - escondido acima do breakpoint, onde
-// a sidebar já é a coluna fixa de sempre.
-.shell__menu-toggle {
-  display: none;
+// Comunidade aberta (KAN-89): mesmo vocabulário do item ativo do menu.
+.shell__comunidade-item--ativa {
+  font-weight: var(--uc-font-weight-bold);
+}
+
+.shell__comunidade-item--vazio {
+  color: var(--uc-color-ink-soft);
+}
+
+.shell__comunidade-item .shell__comunidade-avatar {
+  // Seletor composto para vencer o tamanho 'sm' do próprio UcAvatar.
+  // layout-literal: quadrado de 26px do mockup (base.css .sq)
+  width: calc(var(--uc-space-unit) * 6.5);
+  // layout-literal: quadrado de 26px do mockup (base.css .sq)
+  height: calc(var(--uc-space-unit) * 6.5);
+  border-radius: var(--uc-radius-sm);
+  font-size: var(--uc-font-size-label);
+  font-weight: var(--uc-font-weight-bold);
+}
+
+.shell__comunidade-nome {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+// Item em breve (.soon): inerte, 36px, 14px em tinta suave.
+.shell__breve-item {
+  display: flex;
   align-items: center;
-  // `auto`, não um comprimento - empurra o avatar para a direita sem mudar o
-  // justify-content (flex-end) do shell__topbar, que precisa continuar
-  // valendo quando este botão não está no layout (acima do breakpoint).
+  height: calc(var(--uc-space-unit) * 9);
+  padding: 0 var(--uc-space-3);
+  color: var(--uc-color-ink-soft);
+  font-size: var(--uc-font-size-small);
+  cursor: default;
+}
+
+// -- Cartão da conta (.me), no rodapé do menu -----------------------------
+.shell__conta-area {
+  position: relative;
+  margin-top: auto;
+  padding-top: var(--uc-space-4);
+}
+
+.shell__conta {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--uc-space-unit) * 2.5);
+  padding: calc(var(--uc-space-unit) * 2.5) var(--uc-space-3);
+  border-radius: var(--uc-radius-md);
+  color: var(--uc-color-ink);
+}
+
+.shell__conta-texto {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.shell__conta-nome {
+  font-size: var(--uc-font-size-small);
+  font-weight: var(--uc-font-weight-semibold);
+  line-height: 1.3;
+}
+
+.shell__conta-papel {
+  color: var(--uc-color-ink-soft);
+  font-size: var(--uc-font-size-meta);
+}
+
+.shell__conta-icone {
+  margin-left: auto;
+  color: var(--uc-color-ink-soft);
+}
+
+// Âncora de tamanho zero no canto superior direito do cartão: o painel do
+// UcMenu (direcao 'acima') abre logo acima dele, alinhado à direita.
+.shell__conta-menu {
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline-end: 0;
+}
+
+// -- Conteúdo (.col) ---------------------------------------------------
+.shell__main {
+  grid-column: 2;
+  grid-row: 1;
+  // Sem min-height: o item de grid estica até a altura da linha (>= 100dvh do host).
+  min-width: 0;
+  padding: calc(var(--uc-space-unit) * 7) var(--uc-space-page-margin);
+  border-left: 1px solid var(--uc-color-border);
+  border-right: 1px solid var(--uc-color-border);
+  background: var(--uc-color-bg);
+}
+
+:host(.shell--larga) .shell__main {
+  border-right: 0;
+}
+
+// -- Coluna lateral (aside) --------------------------------------------
+// Sem grid-column explícito: cai na próxima célula livre, a 3ª coluna.
+.shell__lateral {
+  position: sticky;
+  top: 0;
+  align-self: start;
+  display: flex;
+  flex-direction: column;
+  gap: var(--uc-space-4);
+  padding: var(--uc-space-5) 0;
+}
+
+// Telas largas não têm coluna lateral, mesmo que uma tela tenha deixado um template.
+:host(.shell--larga) .shell__lateral {
+  display: none;
+}
+
+// -- Barra superior do celular (interina até a Task 14) -----------------
+.shell__topbar {
+  display: none;
+}
+
+.shell__menu-toggle {
+  display: inline-flex;
+  align-items: center;
+  // `auto`, não um comprimento: empurra o avatar para a direita.
   margin-right: auto;
   padding: calc(var(--uc-space-unit) * 2) calc(var(--uc-space-unit) * 3);
   border: 1px solid var(--uc-color-border);
   border-radius: var(--uc-radius-default);
   background: transparent;
   color: var(--uc-color-ink);
-  font: inherit;
   font-size: var(--uc-font-size-body);
   cursor: pointer;
-}
-
-.shell__menu-toggle:focus-visible {
-  outline: 2px solid var(--uc-color-maroon);
-  outline-offset: 2px;
-}
-
-@media (max-width: bp.$uc-breakpoint-nav) {
-  .shell__menu-toggle {
-    display: inline-flex;
-  }
 }
 
 .shell__avatar-area {
@@ -357,7 +380,6 @@
   background: var(--uc-color-maroon);
 }
 
-// -- Avatar dropdown -------------------------------------------------
 .shell__menu {
   position: absolute;
   // layout-literal: ancora logo abaixo do avatar (100% da altura dele), nao um espacamento
@@ -369,57 +391,85 @@
   border: 1px solid var(--uc-color-border);
   border-radius: var(--uc-radius-md);
   box-shadow: var(--uc-shadow-overlay);
-  animation: shell-menu-fade 150ms ease-out; // single fade - Story 14.5 owns motion
+  z-index: 1;
+  animation: shell-menu-fade 150ms ease-out;
 }
 
-@keyframes shell-menu-fade {
-  from {
-    opacity: 0;
+// -- Até $uc-bp-tablet: menu + conteúdo ---------------------------------
+@media (max-width: bp.$uc-bp-tablet) {
+  :host {
+    grid-template-columns: var(--uc-layout-nav) minmax(0, var(--uc-layout-feed));
   }
-  to {
-    opacity: 1;
+
+  :host(.shell--larga) {
+    grid-template-columns: var(--uc-layout-nav) minmax(0, 1fr);
+  }
+
+  .shell__lateral {
+    display: none;
   }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .shell__menu {
-    animation: none;
+// -- Até $uc-bp-mobile: uma coluna e gaveta (Story 14.4) -----------------
+@media (max-width: bp.$uc-bp-mobile) {
+  :host,
+  :host(.shell--larga) {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto 1fr;
+    column-gap: 0;
+    padding: 0;
+  }
+
+  .shell__topbar {
+    display: flex;
+    grid-column: 1;
+    grid-row: 1;
+    position: sticky;
+    top: 0;
+    z-index: 1; // acima do conteúdo rolado
+    align-items: center;
+    justify-content: flex-end;
+    height: 64px; // layout-literal: ~64px de altura da topbar (DESIGN.md, deferido)
+    padding: 0 var(--uc-space-page-margin);
+    background: var(--uc-color-bg);
+    border-bottom: 1px solid var(--uc-color-border);
+  }
+
+  .shell__main {
+    grid-column: 1;
+    grid-row: 2;
+    border-left: 0;
+    border-right: 0;
+  }
+
+  // O menu vira overlay fixo que desliza a partir de translateX(-100%).
+  .shell__sidebar {
+    position: fixed;
+    inset: 0;
+    grid-column: auto;
+    grid-row: auto;
+    z-index: 2; // acima da shell__topbar (z-index: 1)
+    padding: var(--uc-space-5) var(--uc-space-4) var(--uc-space-4);
+    visibility: hidden;
+    transform: translateX(-100%);
+    // O delay na visibility espera o slide terminar antes de tirar a gaveta da
+    // árvore de foco/leitura: fechar é imediato, abrir "escorrega".
+    transition: transform 200ms ease-out, visibility 0s linear 200ms;
+  }
+
+  .shell__sidebar--aberta {
+    visibility: visible;
+    transform: translateX(0);
+    transition: transform 200ms ease-out;
   }
 }
 
-.shell__menu-item {
-  display: block;
-  // layout-literal: ocupa a largura do dropdown, nao e uma dimensao de design
-  width: 100%;
-  padding: calc(var(--uc-space-unit) * 2) calc(var(--uc-space-unit) * 3);
-  border: 0;
-  border-radius: var(--uc-radius-sm);
-  background: transparent;
-  color: var(--uc-color-ink);
-  font: inherit;
-  font-size: var(--uc-font-size-body);
-  text-align: left;
-  cursor: pointer;
+@media (max-width: bp.$uc-bp-mobile) and (prefers-reduced-motion: reduce) {
+  .shell__sidebar,
+  .shell__sidebar--aberta {
+    transition: none;
+  }
 }
 
-.shell__menu-item:hover {
-  background: var(--uc-color-maroon-tint);
-}
-
-// -- Main content --------------------------------------------------
-.shell__main {
-  grid-column: 2;
-  grid-row: 2;
-  padding: calc(var(--uc-space-unit) * 7) var(--uc-space-page-margin);
-  background: var(--uc-color-bg);
-}
-
-// -- Focus ring (matches ui/button/button.scss) -------------------
-.shell__nav-item:focus-visible,
-.shell__comunidade-item:focus-visible,
-.shell__avatar:focus-visible,
-.shell__menu-item:focus-visible,
-.shell__notificacao-item:focus-visible {
-  outline: 2px solid var(--uc-color-maroon);
-  outline-offset: 2px;
-}
+// Anel de foco: o global de styles/_base.scss (:focus-visible) já cobre todos
+// os links e botões da casca, sem repetição aqui.

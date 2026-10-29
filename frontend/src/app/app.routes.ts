@@ -36,6 +36,8 @@ export const routes: Routes = [
       },
       {
         path: 'comunidades',
+        // Tela de trabalho: menu + 1040px, sem coluna lateral (KAN-91, ver Shell.larga).
+        data: { largo: true },
         title: 'Descobrir comunidades',
         loadComponent: () =>
           import('./features/comunidades/comunidades-lista/comunidades-lista').then((m) => m.ComunidadesLista),
@@ -55,6 +57,7 @@ export const routes: Routes = [
       },
       {
         path: 'admin',
+        data: { largo: true },
         title: 'Administração',
         canActivate: [adminGuard],
         loadComponent: () =>
@@ -63,6 +66,7 @@ export const routes: Routes = [
       {
         // Tela "Cursos" da administração (KAN-44): cadastrar, renomear e desativar cursos.
         path: 'admin/cursos',
+        data: { largo: true },
         title: 'Cursos',
         canActivate: [adminGuard],
         loadComponent: () =>
@@ -70,6 +74,7 @@ export const routes: Routes = [
       },
       {
         path: 'admin/usuarios',
+        data: { largo: true },
         title: 'Usuários',
         canActivate: [adminGuard],
         loadComponent: () => import('./features/admin/usuarios/usuarios').then((m) => m.Usuarios),
@@ -77,6 +82,7 @@ export const routes: Routes = [
       {
         // Fila de denúncias do moderador (Stories 12.4/12.5) — URL do mockup key-denuncias.
         path: 'moderacao/denuncias',
+        data: { largo: true },
         title: 'Denúncias',
         canActivate: [moderadorGuard],
         loadComponent: () =>
