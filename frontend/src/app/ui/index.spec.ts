@@ -8,11 +8,13 @@ import {
   UcField,
   UcInput,
   UcMemberIndicator,
+  UcMenu,
   UcNote,
   UcSkeleton,
   corDoAvatar,
   type UcBadgeVariant,
   type UcIconName,
+  type UcMenuItem,
   type UcNoteTom,
 } from './index';
 
@@ -52,5 +54,11 @@ describe('ui barrel (src/app/ui/index.ts)', () => {
   it('re-exports UcField e UcInput', () => {
     expect(UcField).toBeDefined();
     expect(UcInput).toBeDefined();
+  });
+
+  it('re-exports UcMenu e o tipo UcMenuItem', () => {
+    const item: UcMenuItem = { id: 'sair', rotulo: 'Sair' };
+    expect(UcMenu).toBeDefined();
+    expect(item.id).toBe('sair');
   });
 });

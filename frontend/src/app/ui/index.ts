@@ -11,6 +11,7 @@ export { UcField } from './field/field';
 export { UcInput } from './field/input';
 export { UcIcon, type UcIconName } from './icon/icon';
 export { UcEmptyState } from './empty-state/empty-state';
+export { UcMenu, type UcMenuItem } from './menu/menu';
 export { UcMemberIndicator } from './member-indicator/member-indicator';
 export { UcNote, type UcNoteTom } from './note/note';
 export { UcSkeleton } from './skeleton/skeleton';
