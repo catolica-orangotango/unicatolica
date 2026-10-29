@@ -1,16 +1,10 @@
 # Camada de tokens de design (Story 14.1) e camada base (Story 14.7)
 
 Esta pasta e a **fonte unica** de valores de design do frontend: paleta, escala
-tipografica, espacamento, raio e a sombra de overlay. Tudo vem, verbatim, do
-`DESIGN.md` da raiz do repositorio ("Campus Clean"), a fonte unica do sistema
-visual. Mudou um valor la, muda aqui no mesmo PR.
-
-> **Redesign em andamento (KAN-84).** A nova direção visual, com a proposta de
-> tokens (o que entra, muda e sai) e o contraste de cada par, está em
-> [`docs/decisoes/2026-10-24-nova-direcao-visual.md`](../../../docs/decisoes/2026-10-24-nova-direcao-visual.md).
-> Os valores abaixo já são os do redesign (KAN-91, tarefa 1). Os tokens marcados
-> "SAI" na tabela continuam declarados até os consumidores migrarem e saem em
-> tarefas seguintes. O `DESIGN.md` da raiz ainda precisa ser alinhado.
+tipografica, espacamento, raio e as sombras. Os valores seguem
+[`docs/decisoes/2026-10-24-nova-direcao-visual.md`](../../../docs/decisoes/2026-10-24-nova-direcao-visual.md)
+ate o `DESIGN.md` da raiz ser reescrito neste mesmo PR (KAN-91). Mudou um valor
+aqui, muda a tabela abaixo no mesmo PR.
 
 ## Arquivos
 
@@ -115,17 +109,12 @@ Duas valvulas, ambas explicitas:
 Fora de escopo do MVP (decisao confirmada no `DESIGN.md`). Nao ha bloco
 `@media (prefers-color-scheme)` nem token dark. Nao adicione um sem renegociar.
 
-## Nota sobre a pilha de fontes
+## Fonte
 
-O `DESIGN.md` marca a pilha de fontes de sistema como **pendencia do time**:
-nenhuma tipografia de marca (Google Font ou similar) foi avaliada. A pilha atual
-e uma escolha pragmatica; uma fonte de exibicao propria mais adiante e uma
-revisao explicita do `DESIGN.md`, nao um bloqueio para esta camada.
-
-As classes `.uc-text-*` **nao** aplicam `font-family` (nenhum papel do
-`DESIGN.md` define uma). A pilha de sistema vale para o documento inteiro desde
-a Story 14.7, aplicada uma unica vez no `body` por `_base.scss`; texto marcado
-com `.uc-text-*` herda dali.
+A familia de fonte e o token `--uc-font-family-base` (Inter, com `system-ui` e
+a pilha de sistema como fallback), aplicada uma unica vez no `body` por
+`_base.scss`. As classes `.uc-text-*` **nao** aplicam `font-family`: o texto
+marcado com elas herda dali.
 
 ## Tabela de tokens
 
@@ -152,8 +141,6 @@ vermelho).
 | `--uc-color-maroon` | `#7A1F2B` | marca, acao primaria, foco |
 | `--uc-color-maroon-hover` | `#691A25` | botao primario em hover |
 | `--uc-color-maroon-tint` | `#F7ECEE` | badge de papel, dia de hoje, halo do foco |
-| `--uc-color-orange` | `#BC4913` | SAI: sera removido quando os consumidores migrarem (KAN-91) |
-| `--uc-color-orange-tint` | `#FDEEE6` | SAI: idem |
 | `--uc-color-green-ok` | `#2F6141` | sucesso (membro, criada) |
 | `--uc-color-green-tint` | `#EAF3EC` | fundo de sucesso |
 | `--uc-color-error` | `#B3261E` | erro de campo, botao de perigo |
@@ -180,20 +167,16 @@ vermelho).
 | `--uc-font-size-greeting` | `22px` | titulo de tela |
 | `--uc-font-size-title-lg` | `24px` | titulo de tela de trabalho |
 | `--uc-font-size-title` | `17px` | titulo de secao e cartao |
-| `--uc-font-size-question` | `15px` | SAI: vira body |
 | `--uc-font-size-body` | `15px` | corpo, texto corrido |
 | `--uc-font-size-small` | `14px` | acoes, descricao |
 | `--uc-font-size-meta` | `13px` | timestamps, contagens |
 | `--uc-font-size-label` | `12px` | badge, legenda |
-| `--uc-font-size-label-caps` | `10.5px` | SAI: labels em caixa alta |
 | `--uc-font-weight-regular` | `400` | peso regular |
 | `--uc-font-weight-medium` | `500` | peso medio |
 | `--uc-font-weight-semibold` | `600` | peso de enfase |
 | `--uc-font-weight-bold` | `700` | titulos, item ativo |
-| `--uc-font-weight-caps` | `700` | SAI: peso de label-caps |
 | `--uc-line-height-body` | `1.5` | line-height do corpo |
 | `--uc-letter-spacing-greeting` | `-0.02em` | titulo de tela |
-| `--uc-letter-spacing-label-caps` | `0.05em` | SAI: label-caps |
 
 ### Espacamento (`spacing`)
 
@@ -218,8 +201,8 @@ vermelho).
 | `--uc-layout-gap` | `32px` | espaco entre colunas |
 | `--uc-touch-target` | `44px` | alvo de toque minimo no celular |
 
-Nao ha ramp numerico `--uc-space-{n}`: o `DESIGN.md` nao define um. Um consumidor
-que precise de um pede via "Ask First".
+A rampa numerica `--uc-space-1` a `--uc-space-8` cobre os espacamentos comuns.
+Um valor fora dela e uma escalada "Ask First", nao um literal.
 
 ### Raio (`rounded`)
 

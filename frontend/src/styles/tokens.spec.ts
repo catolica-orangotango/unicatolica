@@ -17,9 +17,10 @@ const entryScss = join(stylesDir, '..', 'styles.scss');
 const readmePath = join(stylesDir, 'README.md');
 
 /**
- * EXPECTED mirrors DESIGN.md frontmatter (`colors` / `typography` / `rounded` /
- * `spacing`) plus the one prose-sourced token `--uc-shadow-overlay`. It is the
- * contract: the compiled `--uc-*` set must equal this key set exactly.
+ * EXPECTED lists the tokens of the redesign (KAN-91), with values from
+ * docs/decisoes/2026-10-24-nova-direcao-visual.md (DESIGN.md is rewritten later
+ * in the same PR). It is the contract: the compiled `--uc-*` set must equal
+ * this key set exactly.
  */
 const EXPECTED: Record<string, Record<string, string>> = {
   colors: {
@@ -38,8 +39,6 @@ const EXPECTED: Record<string, Record<string, string>> = {
     '--uc-color-maroon': '#7A1F2B',
     '--uc-color-maroon-hover': '#691A25',
     '--uc-color-maroon-tint': '#F7ECEE',
-    '--uc-color-orange': '#BC4913',
-    '--uc-color-orange-tint': '#FDEEE6',
     '--uc-color-green-ok': '#2F6141',
     '--uc-color-green-tint': '#EAF3EC',
     '--uc-color-error': '#B3261E',
@@ -63,20 +62,16 @@ const EXPECTED: Record<string, Record<string, string>> = {
     '--uc-font-size-greeting': '22px',
     '--uc-font-size-title-lg': '24px',
     '--uc-font-size-title': '17px',
-    '--uc-font-size-question': '15px',
     '--uc-font-size-body': '15px',
     '--uc-font-size-small': '14px',
     '--uc-font-size-meta': '13px',
     '--uc-font-size-label': '12px',
-    '--uc-font-size-label-caps': '10.5px',
     '--uc-font-weight-regular': '400',
     '--uc-font-weight-medium': '500',
     '--uc-font-weight-semibold': '600',
     '--uc-font-weight-bold': '700',
-    '--uc-font-weight-caps': '700',
     '--uc-line-height-body': '1.5',
     '--uc-letter-spacing-greeting': '-0.02em',
-    '--uc-letter-spacing-label-caps': '0.05em',
   },
   spacing: {
     '--uc-space-unit': '4px',
@@ -119,7 +114,7 @@ const EXPECTED_KEYS = Object.values(EXPECTED)
 const TEXT_ROLES = ['greeting', 'title-lg', 'title', 'body', 'small', 'meta', 'label'] as const;
 
 /**
- * The exact declaration set each `.uc-text-*` class must carry, per DESIGN.md
+ * The exact declaration set each `.uc-text-*` class must carry, per the redesign
  * `typography`: font-size + font-weight for every role, line-height only for
  * `body`, letter-spacing only for `greeting` and `title-lg`. Nothing else --
  * no `font-family`, no `text-transform`. Values are `var(--uc-*)` references
@@ -218,7 +213,7 @@ beforeAll(() => {
 for (const [group, tokens] of Object.entries(EXPECTED)) {
   describe(`tokens: ${group}`, () => {
     for (const [name, value] of Object.entries(tokens)) {
-      it(`${name} is present with the DESIGN.md value`, () => {
+      it(`${name} is present with the expected value`, () => {
         expect(tokenProps.has(name)).toBe(true);
         expect(normalizeValue(tokenProps.get(name)!)).toBe(normalizeValue(value));
       });
@@ -231,6 +226,20 @@ for (const [group, tokens] of Object.entries(EXPECTED)) {
 describe('token set', () => {
   it('the compiled --uc-* set equals EXPECTED exactly (no extra, none missing)', () => {
     expect([...new Set(tokenProps.keys())].sort()).toEqual(EXPECTED_KEYS);
+  });
+
+  it('não declara nenhum token marcado "sai"', () => {
+    const sai = [
+      '--uc-color-orange',
+      '--uc-color-orange-tint',
+      '--uc-font-size-question',
+      '--uc-font-size-label-caps',
+      '--uc-font-weight-caps',
+      '--uc-letter-spacing-label-caps',
+    ];
+    for (const nome of sai) {
+      expect(tokenProps.has(nome), nome).toBe(false);
+    }
   });
 });
 
@@ -266,7 +275,7 @@ function parseDeclarations(ruleBody: string): Record<string, string> {
 
 describe('.uc-text-* utility classes', () => {
   for (const role of TEXT_ROLES) {
-    it(`.uc-text-${role} sets exactly the DESIGN.md property set, values only var(--uc-*)`, () => {
+    it(`.uc-text-${role} sets exactly the expected property set, values only var(--uc-*)`, () => {
       const body = extractRuleBody(compiledCss, `.uc-text-${role}`);
       expect(body, `.uc-text-${role} rule missing from compiled CSS`).not.toBeNull();
 
