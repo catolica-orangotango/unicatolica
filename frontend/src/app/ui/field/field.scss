@@ -1,0 +1,30 @@
+// UniCatolica - campo de formulário do redesign (KAN-91): rótulo, dica e erro.
+// O estilo do controle em si vive em `_input.scss` (global, classe `.uc-input`).
+// Só tokens var(--uc-*).
+
+:host {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--uc-space-unit) * 3 / 2);
+  margin-bottom: var(--uc-space-4);
+}
+
+.uc-field__rotulo {
+  font-size: var(--uc-font-size-small);
+  font-weight: var(--uc-font-weight-semibold);
+  color: var(--uc-color-ink);
+}
+
+.uc-field__dica {
+  font-size: var(--uc-font-size-meta);
+  color: var(--uc-color-ink-soft);
+}
+
+.uc-field__erro {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--uc-space-unit) * 3 / 2);
+  font-size: var(--uc-font-size-meta);
+  font-weight: var(--uc-font-weight-medium);
+  color: var(--uc-color-error);
+}

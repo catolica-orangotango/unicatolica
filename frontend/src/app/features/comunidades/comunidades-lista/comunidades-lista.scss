@@ -2,7 +2,7 @@
 //
 // Story 14.7 fechou os furos que restavam: `var(--lista-ink)` nunca foi declarado
 // (texto caía no valor inicial do navegador), o vermelho de erro era hardcoded e o
-// peso 700 é reservado ao papel `label-caps` pelo DESIGN.md. Literal estrutural que
+// peso 700 é reservado a papéis de título (bold) pelo DESIGN.md. Literal estrutural que
 // ficou carrega `// layout-literal:` (ver src/styles/scss-guard.spec.ts).
 :host {
   display: block;
@@ -71,6 +71,8 @@
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
+  // Sem espaço para o selo ao lado do nome, ele desce em vez de espremer o texto.
+  flex-wrap: wrap;
   gap: calc(var(--uc-space-unit) * 2);
   margin-bottom: calc(var(--uc-space-unit) * 2);
 }

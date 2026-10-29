@@ -7,7 +7,7 @@
  * `--uc-*` custom properties is a hard failure (the frozen I/O matrix demands
  * "Sass compile error -> tokens.spec.ts fails").
  */
-import { readFileSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import * as sass from 'sass';
@@ -17,56 +17,92 @@ const entryScss = join(stylesDir, '..', 'styles.scss');
 const readmePath = join(stylesDir, 'README.md');
 
 /**
- * EXPECTED mirrors DESIGN.md frontmatter (`colors` / `typography` / `rounded` /
- * `spacing`) plus the one prose-sourced token `--uc-shadow-overlay`. It is the
- * contract: the compiled `--uc-*` set must equal this key set exactly.
+ * EXPECTED lists the tokens of the redesign (KAN-91), with the values of the
+ * DESIGN.md frontmatter (origin: docs/decisoes/2026-10-24-nova-direcao-visual.md).
+ * It is the contract: the compiled `--uc-*` set must equal this key set exactly.
  */
 const EXPECTED: Record<string, Record<string, string>> = {
   colors: {
-    '--uc-color-bg': '#FAFAF8',
+    '--uc-color-bg': '#FFFFFF',
     '--uc-color-surface': '#FFFFFF',
-    '--uc-color-border': '#EAEAE6',
-    '--uc-color-ink': '#1C1C1A',
-    '--uc-color-ink-soft': '#6B6B66',
-    '--uc-color-ink-faint': '#6E6E68',
+    '--uc-color-surface-muted': '#F7F7F8',
+    '--uc-color-surface-strong': '#F1F1F3',
+    '--uc-color-border': '#ECECEE',
+    '--uc-color-border-strong': '#E2E2E6',
+    '--uc-color-border-input': '#8E8E96',
+    '--uc-color-ink': '#18181B',
+    '--uc-color-ink-soft': '#66666E',
+    '--uc-color-ink-faint': '#707078',
+    '--uc-color-ink-nav': '#3F3F46',
+    '--uc-color-ink-disabled': '#8A8A93',
     '--uc-color-maroon': '#7A1F2B',
-    '--uc-color-orange': '#BC4913',
-    '--uc-color-orange-tint': '#FDEEE6',
-    '--uc-color-green-ok': '#3A7D5C',
-    // Added in Story 14.7 and escalated back into DESIGN.md `colors.error`
-    // before landing here (see _tokens.scss header).
+    '--uc-color-maroon-hover': '#691A25',
+    '--uc-color-maroon-tint': '#F7ECEE',
+    '--uc-color-green-ok': '#2F6141',
+    '--uc-color-green-tint': '#EAF3EC',
     '--uc-color-error': '#B3261E',
+    '--uc-color-error-tint': '#FBEAE9',
+    '--uc-color-error-border': '#F0C9C6',
+    '--uc-color-warn': '#8A5A00',
+    '--uc-color-warn-tint': '#FDF5E7',
+    '--uc-color-toast-ok': '#B9E4C9',
+    '--uc-color-toast-error': '#FFB4AB',
+    '--uc-color-avatar-blue': '#2B4A72',
+    '--uc-color-avatar-green': '#2F6141',
+    '--uc-color-avatar-sand': '#6B4E1F',
+    '--uc-color-avatar-violet': '#4E3A72',
+    '--uc-color-avatar-blue-bg': '#E8EEF6',
+    '--uc-color-avatar-green-bg': '#EAF3EC',
+    '--uc-color-avatar-sand-bg': '#F3EEE6',
+    '--uc-color-avatar-violet-bg': '#EFEAF6',
   },
   typography: {
-    '--uc-font-family-base':
-      "-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif",
+    '--uc-font-family-base': "Inter, system-ui, -apple-system, 'Segoe UI', sans-serif",
     '--uc-font-size-greeting': '22px',
-    '--uc-font-size-question': '15px',
-    '--uc-font-size-body': '13.5px',
-    '--uc-font-size-meta': '12px',
-    '--uc-font-size-label-caps': '10.5px',
+    '--uc-font-size-title-lg': '24px',
+    '--uc-font-size-title': '17px',
+    '--uc-font-size-body': '15px',
+    '--uc-font-size-small': '14px',
+    '--uc-font-size-meta': '13px',
+    '--uc-font-size-label': '12px',
     '--uc-font-weight-regular': '400',
+    '--uc-font-weight-medium': '500',
     '--uc-font-weight-semibold': '600',
-    '--uc-font-weight-caps': '700',
+    '--uc-font-weight-bold': '700',
     '--uc-line-height-body': '1.5',
-    '--uc-letter-spacing-greeting': '-0.01em',
-    '--uc-letter-spacing-label-caps': '0.05em',
+    '--uc-letter-spacing-greeting': '-0.02em',
   },
   spacing: {
     '--uc-space-unit': '4px',
+    '--uc-space-1': '4px',
+    '--uc-space-2': '8px',
+    '--uc-space-3': '12px',
+    '--uc-space-4': '16px',
+    '--uc-space-5': '20px',
+    '--uc-space-6': '24px',
+    '--uc-space-7': '32px',
+    '--uc-space-8': '40px',
     '--uc-space-card-padding': '18px',
     '--uc-space-section-gap': '20px',
-    '--uc-space-page-margin': '32px',
+    '--uc-space-page-margin': '24px',
+    '--uc-layout-nav': '248px',
+    '--uc-layout-feed': '600px',
+    '--uc-layout-aside': '340px',
+    '--uc-layout-wide': '1040px',
+    '--uc-layout-gap': '32px',
+    '--uc-touch-target': '44px',
   },
   rounded: {
-    '--uc-radius-sm': '6px',
-    '--uc-radius-default': '8px',
+    '--uc-radius-sm': '8px',
+    '--uc-radius-default': '10px',
     '--uc-radius-md': '12px',
-    '--uc-radius-lg': '14px',
+    '--uc-radius-lg': '16px',
+    '--uc-radius-xl': '20px',
     '--uc-radius-full': '9999px',
   },
   shadow: {
-    '--uc-shadow-overlay': '0 8px 24px rgba(0, 0, 0, 0.08)',
+    '--uc-shadow-overlay': '0 8px 32px rgba(24, 24, 27, 0.12), 0 1px 3px rgba(24, 24, 27, 0.06)',
+    '--uc-shadow-toast': '0 8px 32px rgba(24, 24, 27, 0.18)',
   },
 };
 
@@ -74,12 +110,12 @@ const EXPECTED_KEYS = Object.values(EXPECTED)
   .flatMap((group) => Object.keys(group))
   .sort();
 
-const TEXT_ROLES = ['greeting', 'question', 'body', 'meta', 'label-caps'] as const;
+const TEXT_ROLES = ['greeting', 'title-lg', 'title', 'body', 'small', 'meta', 'label'] as const;
 
 /**
- * The exact declaration set each `.uc-text-*` class must carry, per DESIGN.md
+ * The exact declaration set each `.uc-text-*` class must carry, per the redesign
  * `typography`: font-size + font-weight for every role, line-height only for
- * `body`, letter-spacing only for `greeting` and `label-caps`. Nothing else --
+ * `body`, letter-spacing only for `greeting` and `title-lg`. Nothing else --
  * no `font-family`, no `text-transform`. Values are `var(--uc-*)` references
  * whose names must resolve against the compiled `:root` token set.
  */
@@ -89,9 +125,14 @@ const ROLE_DECLS: Record<string, Record<string, string>> = {
     'font-weight': 'var(--uc-font-weight-semibold)',
     'letter-spacing': 'var(--uc-letter-spacing-greeting)',
   },
-  question: {
-    'font-size': 'var(--uc-font-size-question)',
-    'font-weight': 'var(--uc-font-weight-semibold)',
+  'title-lg': {
+    'font-size': 'var(--uc-font-size-title-lg)',
+    'font-weight': 'var(--uc-font-weight-bold)',
+    'letter-spacing': 'var(--uc-letter-spacing-greeting)',
+  },
+  title: {
+    'font-size': 'var(--uc-font-size-title)',
+    'font-weight': 'var(--uc-font-weight-bold)',
   },
   body: {
     'font-size': 'var(--uc-font-size-body)',
@@ -102,10 +143,13 @@ const ROLE_DECLS: Record<string, Record<string, string>> = {
     'font-size': 'var(--uc-font-size-meta)',
     'font-weight': 'var(--uc-font-weight-regular)',
   },
-  'label-caps': {
-    'font-size': 'var(--uc-font-size-label-caps)',
-    'font-weight': 'var(--uc-font-weight-caps)',
-    'letter-spacing': 'var(--uc-letter-spacing-label-caps)',
+  small: {
+    'font-size': 'var(--uc-font-size-small)',
+    'font-weight': 'var(--uc-font-weight-regular)',
+  },
+  label: {
+    'font-size': 'var(--uc-font-size-label)',
+    'font-weight': 'var(--uc-font-weight-semibold)',
   },
 };
 
@@ -168,7 +212,7 @@ beforeAll(() => {
 for (const [group, tokens] of Object.entries(EXPECTED)) {
   describe(`tokens: ${group}`, () => {
     for (const [name, value] of Object.entries(tokens)) {
-      it(`${name} is present with the DESIGN.md value`, () => {
+      it(`${name} is present with the expected value`, () => {
         expect(tokenProps.has(name)).toBe(true);
         expect(normalizeValue(tokenProps.get(name)!)).toBe(normalizeValue(value));
       });
@@ -181,6 +225,20 @@ for (const [group, tokens] of Object.entries(EXPECTED)) {
 describe('token set', () => {
   it('the compiled --uc-* set equals EXPECTED exactly (no extra, none missing)', () => {
     expect([...new Set(tokenProps.keys())].sort()).toEqual(EXPECTED_KEYS);
+  });
+
+  it('não declara nenhum token marcado "sai"', () => {
+    const sai = [
+      '--uc-color-orange',
+      '--uc-color-orange-tint',
+      '--uc-font-size-question',
+      '--uc-font-size-label-caps',
+      '--uc-font-weight-caps',
+      '--uc-letter-spacing-label-caps',
+    ];
+    for (const nome of sai) {
+      expect(tokenProps.has(nome), nome).toBe(false);
+    }
   });
 });
 
@@ -216,7 +274,7 @@ function parseDeclarations(ruleBody: string): Record<string, string> {
 
 describe('.uc-text-* utility classes', () => {
   for (const role of TEXT_ROLES) {
-    it(`.uc-text-${role} sets exactly the DESIGN.md property set, values only var(--uc-*)`, () => {
+    it(`.uc-text-${role} sets exactly the expected property set, values only var(--uc-*)`, () => {
       const body = extractRuleBody(compiledCss, `.uc-text-${role}`);
       expect(body, `.uc-text-${role} rule missing from compiled CSS`).not.toBeNull();
 
@@ -255,13 +313,43 @@ describe('token declaration site and global scope limits', () => {
     const rootBody = extractRuleBody(compiledCss, ':root')!;
     const declaredEverywhere = [...compiledCss.matchAll(/--uc-[a-z0-9-]+\s*:/g)].length;
     const declaredInRoot = [...rootBody.matchAll(/--uc-[a-z0-9-]+\s*:/g)].length;
-    expect(declaredInRoot, '--uc-* declared outside the :root block').toBe(declaredEverywhere);
+    // A única exceção é a margem de página do celular, dentro do @media (próximo teste).
+    expect(declaredInRoot + 1, '--uc-* declared outside the :root block').toBe(declaredEverywhere);
+  });
+
+  it('page-margin: 24px no :root e sobrescrita de 16px só no @media do celular', () => {
+    const rootBody = extractRuleBody(compiledCss, ':root')!;
+    expect(parseCustomProps(rootBody).get('--uc-space-page-margin')).toBe('24px');
+    const media = compiledCss.match(/@media \(max-width: 760px\)\s*{\s*:root\s*{([^}]*)}\s*}/);
+    expect(media, 'bloco @media (max-width: 760px) com :root ausente').not.toBeNull();
+    expect([...parseCustomProps(media![1])]).toEqual([['--uc-space-page-margin', '16px']]);
   });
 
   it('emits no dark-mode, @import or @font-face at-rule', () => {
-    // @media covers prefers-color-scheme; the rest would mean a font-face,
-    // keyframes, @supports gate or an @import crept into a global partial.
-    expect(compiledCss).not.toMatch(/@(media|font-face|keyframes|supports|import)\b/);
+    // O único @media permitido é o do celular (max-width), conferido acima; o resto
+    // seria um font-face, keyframes, @supports ou @import entrando num parcial global.
+    expect(compiledCss.match(/@media[^{]*/g)).toEqual(['@media (max-width: 760px) ']);
+    expect(compiledCss).not.toMatch(/@(font-face|keyframes|supports|import)\b/);
     expect(compiledCss).not.toMatch(/prefers-color-scheme/);
+  });
+});
+
+// -- consumidores dos tokens que saem (KAN-91) -------------------------------
+
+function listarArquivos(dir: string): string[] {
+  return readdirSync(dir, { withFileTypes: true }).flatMap((e) => {
+    const caminho = join(dir, e.name);
+    return e.isDirectory() ? listarArquivos(caminho) : [caminho];
+  });
+}
+
+describe('consumidores de src/app', () => {
+  it('nenhum SCSS, HTML ou TS referencia token ou classe que sai no redesign', () => {
+    const appDir = join(stylesDir, '..', 'app');
+    const proibido = /orange|label-caps|font-size-question|font-weight-caps|uc-text-question/;
+    const ofensores = listarArquivos(appDir)
+      .filter((f) => /\.(scss|html|ts)$/.test(f))
+      .filter((f) => proibido.test(readFileSync(f, 'utf8')));
+    expect(ofensores).toEqual([]);
   });
 });

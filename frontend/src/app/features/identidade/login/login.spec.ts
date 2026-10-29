@@ -57,7 +57,7 @@ describe('Login', () => {
     const submit = compiled.querySelector('button[type="submit"]')!;
     expect(submit.hasAttribute('uc-button')).toBe(true);
     expect(submit.textContent?.trim()).toBe('Entrar');
-    // No máximo uma ação laranja por tela (DESIGN.md).
+    // Uma única ação primária (bordô) por tela.
     expect(compiled.querySelectorAll('[uc-button]')).toHaveLength(1);
   });
 

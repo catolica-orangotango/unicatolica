@@ -1,69 +1,114 @@
-// UniCatolica - Campus Clean design tokens (Story 14.1).
+// UniCatolica - design tokens do redesign (Story 14.1, revisto na KAN-91).
 //
 // Single source of truth for palette, type scale, spacing and radius.
-// Every value mirrors the root DESIGN.md (frontmatter `colors` /
-// `typography` / `rounded` / `spacing`), except --uc-shadow-overlay, which
-// comes from that doc's prose section "Elevation & Depth". The original
-// planning copy lived in _bmad-output/.../ux-unicatolica-2026-08-17/DESIGN.md.
+// Os valores espelham o frontmatter do DESIGN.md da raiz (nomes sem o prefixo
+// --uc-), que veio de docs/decisoes/2026-10-24-nova-direcao-visual.md (secao
+// "Tokens propostos"), sombras incluidas. Mudou aqui, muda la no mesmo PR.
 //
-// Names mirror the DESIGN.md role names with no translation layer. Consumers
-// (Stories 14.2 / 14.7 and later feature epics) read these via `var(--uc-*)`
-// only - never re-declare a raw design value. A value not defined in DESIGN.md
-// (focus ring, overlay scrim, disabled state, ...) is an "Ask First"
-// escalation in the consuming story, not a hardcode.
+// Consumers read these via `var(--uc-*)` only - never re-declare a raw design
+// value. A value not defined here (focus ring, overlay scrim, disabled state,
+// ...) is an "Ask First" escalation in the consuming story, not a hardcode.
 //
-// --uc-color-error is the one token added after 14.1: DESIGN.md had no error
-// role, three screens had already hardcoded #B3261E, and Story 14.7 escalated
-// it back into the DESIGN.md `colors` frontmatter before adding it here.
-//
-// --uc-color-orange and --uc-color-ink-faint were darkened in KAN-71 (was
-// #EA6A2E / #A2A29C) to reach WCAG 2.2 AA 4.5:1 on bg, surface and
-// orange-tint; docs/produto/ux-design.md was updated to match.
+// Redesign KAN-84 / KAN-91: os tokens do Campus Clean marcados "sai" na
+// decisao foram removidos depois que os consumidores migraram (a lista esta
+// no teste "nao declara nenhum token marcado sai" de tokens.spec.ts); o
+// scss-guard falha em qualquer referencia a token nao declarado.
+// Cinco tokens nao constavam da tabela original e entraram na KAN-91:
+// ink-nav, ink-disabled, error-border, toast-ok, toast-error.
 //
 // No dark-mode / `prefers-color-scheme` block: dark mode is out of the MVP.
 
+@use 'breakpoints' as bp;
+
 // prettier-ignore
 :root {
-  // -- Palette (DESIGN.md `colors`) --------------------------------------
-  --uc-color-bg: #FAFAF8;
+  // -- Paleta ------------------------------------------------------
+  --uc-color-bg: #FFFFFF;
   --uc-color-surface: #FFFFFF;
-  --uc-color-border: #EAEAE6;
-  --uc-color-ink: #1C1C1A;
-  --uc-color-ink-soft: #6B6B66;
-  --uc-color-ink-faint: #6E6E68;
+  --uc-color-surface-muted: #F7F7F8;
+  --uc-color-surface-strong: #F1F1F3;
+  --uc-color-border: #ECECEE;
+  --uc-color-border-strong: #E2E2E6;
+  --uc-color-border-input: #8E8E96;
+  --uc-color-ink: #18181B;
+  --uc-color-ink-soft: #66666E;
+  --uc-color-ink-faint: #707078;
+  --uc-color-ink-nav: #3F3F46;
+  --uc-color-ink-disabled: #8A8A93;
   --uc-color-maroon: #7A1F2B;
-  --uc-color-orange: #BC4913;
-  --uc-color-orange-tint: #FDEEE6;
-  --uc-color-green-ok: #3A7D5C;
+  --uc-color-maroon-hover: #691A25;
+  --uc-color-maroon-tint: #F7ECEE;
+  --uc-color-green-ok: #2F6141;
+  --uc-color-green-tint: #EAF3EC;
   --uc-color-error: #B3261E;
+  --uc-color-error-tint: #FBEAE9;
+  --uc-color-error-border: #F0C9C6;
+  --uc-color-warn: #8A5A00;
+  --uc-color-warn-tint: #FDF5E7;
+  --uc-color-toast-ok: #B9E4C9;
+  --uc-color-toast-error: #FFB4AB;
+  --uc-color-avatar-blue: #2B4A72;
+  --uc-color-avatar-green: #2F6141;
+  --uc-color-avatar-sand: #6B4E1F;
+  --uc-color-avatar-violet: #4E3A72;
+  --uc-color-avatar-blue-bg: #E8EEF6;
+  --uc-color-avatar-green-bg: #EAF3EC;
+  --uc-color-avatar-sand-bg: #F3EEE6;
+  --uc-color-avatar-violet-bg: #EFEAF6;
 
-  // -- Typography (DESIGN.md `typography`) ------------------------------
-  --uc-font-family-base: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+  // -- Tipografia --------------------------------------------------
+  --uc-font-family-base: Inter, system-ui, -apple-system, 'Segoe UI', sans-serif;
   --uc-font-size-greeting: 22px;
-  --uc-font-size-question: 15px;
-  --uc-font-size-body: 13.5px;
-  --uc-font-size-meta: 12px;
-  --uc-font-size-label-caps: 10.5px;
+  --uc-font-size-title-lg: 24px;
+  --uc-font-size-title: 17px;
+  --uc-font-size-body: 15px;
+  --uc-font-size-small: 14px;
+  --uc-font-size-meta: 13px;
+  --uc-font-size-label: 12px;
   --uc-font-weight-regular: 400;
+  --uc-font-weight-medium: 500;
   --uc-font-weight-semibold: 600;
-  --uc-font-weight-caps: 700;
+  --uc-font-weight-bold: 700;
   --uc-line-height-body: 1.5;
-  --uc-letter-spacing-greeting: -0.01em;
-  --uc-letter-spacing-label-caps: 0.05em;
+  --uc-letter-spacing-greeting: -0.02em;
 
-  // -- Spacing (DESIGN.md `spacing`; no numeric ramp) ------------------
+  // -- Espacamento e layout ----------------------------------------
   --uc-space-unit: 4px;
+  --uc-space-1: 4px;
+  --uc-space-2: 8px;
+  --uc-space-3: 12px;
+  --uc-space-4: 16px;
+  --uc-space-5: 20px;
+  --uc-space-6: 24px;
+  --uc-space-7: 32px;
+  --uc-space-8: 40px;
   --uc-space-card-padding: 18px;
   --uc-space-section-gap: 20px;
-  --uc-space-page-margin: 32px;
+  --uc-space-page-margin: 24px;
+  --uc-layout-nav: 248px;
+  --uc-layout-feed: 600px;
+  --uc-layout-aside: 340px;
+  --uc-layout-wide: 1040px;
+  --uc-layout-gap: 32px;
+  --uc-touch-target: 44px;
 
-  // -- Radius (DESIGN.md `rounded`; key DEFAULT -> `default`) ----------
-  --uc-radius-sm: 6px;
-  --uc-radius-default: 8px;
+  // -- Raio --------------------------------------------------------
+  --uc-radius-sm: 8px;
+  --uc-radius-default: 10px;
   --uc-radius-md: 12px;
-  --uc-radius-lg: 14px;
+  --uc-radius-lg: 16px;
+  --uc-radius-xl: 20px;
   --uc-radius-full: 9999px;
 
-  // -- Elevation (DESIGN.md prose "Elevation & Depth"; provisional) ---
-  --uc-shadow-overlay: 0 8px 24px rgba(0, 0, 0, 0.08);
+  // -- Sombra ------------------------------------------------------
+  --uc-shadow-overlay: 0 8px 32px rgba(24, 24, 27, 0.12), 0 1px 3px rgba(24, 24, 27, 0.06);
+  --uc-shadow-toast: 0 8px 32px rgba(24, 24, 27, 0.18);
+}
+
+// Margem da página: 24px, 16px no celular (decisão KAN-84). É a única
+// sobrescrita de token; o literal é permitido aqui por ser o ponto de declaração.
+@media (max-width: bp.$uc-bp-mobile) {
+  :root {
+    --uc-space-page-margin: 16px;
+  }
 }

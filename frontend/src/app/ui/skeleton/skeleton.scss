@@ -1,0 +1,14 @@
+// UniCatolica - esqueleto do redesign (KAN-91): barra estática, sem animação.
+// A largura é do consumidor (bloco ocupa 100% por padrão); altura de 12px = 3 unidades de espaçamento.
+
+:host {
+  display: block;
+  height: calc(var(--uc-space-unit) * 3);
+  border-radius: var(--uc-radius-default);
+  background: linear-gradient(
+    90deg,
+    var(--uc-color-surface-strong),
+    var(--uc-color-surface-muted),
+    var(--uc-color-surface-strong)
+  );
+}

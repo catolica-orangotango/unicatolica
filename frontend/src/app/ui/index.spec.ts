@@ -1,4 +1,24 @@
-import { UcBadge, UcButton, UcCard, UcMemberIndicator, type UcBadgeVariant } from './index';
+import {
+  UcAvatar,
+  UcBadge,
+  UcButton,
+  UcCard,
+  UcIcon,
+  UcEmptyState,
+  UcField,
+  UcInput,
+  UcMemberIndicator,
+  UcMenu,
+  UcNote,
+  UcSegmented,
+  UcSkeleton,
+  corDoAvatar,
+  type UcBadgeVariant,
+  type UcIconName,
+  type UcMenuItem,
+  type UcNoteTom,
+  type UcSegmentedOpcao,
+} from './index';
 
 /**
  * Smoke-tests the barrel: a broken re-export path (a moved folder, a renamed
@@ -12,8 +32,41 @@ describe('ui barrel (src/app/ui/index.ts)', () => {
     expect(UcMemberIndicator).toBeDefined();
   });
 
+  it('re-exports UcSkeleton, UcEmptyState, UcNote e o tipo UcNoteTom', () => {
+    const tons: UcNoteTom[] = ['neutro', 'alerta', 'erro'];
+    expect(UcSkeleton).toBeDefined();
+    expect(UcEmptyState).toBeDefined();
+    expect(UcNote).toBeDefined();
+    expect(tons).toHaveLength(3);
+  });
+
   it('re-exports the UcBadgeVariant union type', () => {
-    const variants: UcBadgeVariant[] = ['course', 'open'];
-    expect(variants).toEqual(['course', 'open']);
+    const variants: UcBadgeVariant[] = ['counter', 'role', 'course', 'open', 'state'];
+    expect(variants).toEqual(['counter', 'role', 'course', 'open', 'state']);
+  });
+
+  it('re-exports UcIcon, UcAvatar e corDoAvatar', () => {
+    const nome: UcIconName = 'home';
+    expect(UcIcon).toBeDefined();
+    expect(UcAvatar).toBeDefined();
+    expect(nome).toBe('home');
+    expect(corDoAvatar(5)).toBe('azul');
+  });
+
+  it('re-exports UcField e UcInput', () => {
+    expect(UcField).toBeDefined();
+    expect(UcInput).toBeDefined();
+  });
+
+  it('re-exports UcMenu e o tipo UcMenuItem', () => {
+    const item: UcMenuItem = { id: 'sair', rotulo: 'Sair' };
+    expect(UcMenu).toBeDefined();
+    expect(item.id).toBe('sair');
+  });
+
+  it('re-exports UcSegmented e o tipo UcSegmentedOpcao', () => {
+    const opcao: UcSegmentedOpcao = { valor: 'todos', rotulo: 'Todos' };
+    expect(UcSegmented).toBeDefined();
+    expect(opcao.valor).toBe('todos');
   });
 });

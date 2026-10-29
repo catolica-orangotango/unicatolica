@@ -1,6 +1,7 @@
 <!--
-  Casca de navegação global (Story 14.3).
-  A <nav> é ela própria o landmark da sidebar - não um <nav> dentro de <aside>
+  Casca de navegação global (Story 14.3, redesenhada na KAN-91): menu,
+  conteúdo e coluna lateral centrados como um bloco.
+  A <nav> é ela própria o landmark do menu - não um <nav> dentro de <aside>
   (que seria anunciado como landmark complementar, não de navegação).
 -->
 <nav
@@ -12,7 +13,7 @@
   (keydown)="aoTeclarNaGaveta($event)"
 >
   <div class="shell__brand">
-    <span class="shell__brand-mark" aria-hidden="true"></span>
+    <span class="shell__brand-mark" aria-hidden="true">U</span>
     <span class="shell__brand-name">UniCatólica</span>
   </div>
 
@@ -30,11 +31,13 @@
               [routerLinkActiveOptions]="{ exact: true }"
               #rla="routerLinkActive"
               [attr.aria-current]="rla.isActive ? 'page' : null"
-              >{{ item.label }}
-              @if (item.contaDenuncias) {
-                <app-contador-denuncias />
-              }</a
             >
+              <uc-icon [name]="item.icone" />
+              <span class="shell__nav-rotulo">{{ item.label }}</span>
+              @if (item.contaDenuncias) {
+                <app-contador-denuncias class="shell__nav-contador" />
+              }
+            </a>
           } @else if (item.abrePainelNotificacoes) {
             <div class="shell__nav-item-wrapper">
               <button
@@ -45,142 +48,166 @@
                 aria-haspopup="menu"
                 aria-controls="shell-notificacoes"
                 [attr.aria-expanded]="notificacoesAbertas() ? 'true' : 'false'"
-                (click)="alternarNotificacoes($event)"
+                (click)="alternarNotificacoes($event, 'lateral')"
               >
-                {{ item.label }}
+                <uc-icon [name]="item.icone" />
+                <span class="shell__nav-rotulo">{{ item.label }}</span>
                 @if (notificacoesNaoLidas() > 0) {
-                  <span class="shell__nav-badge" aria-hidden="true">{{ notificacoesNaoLidas() }}</span>
+                  <uc-badge variant="counter" class="shell__nav-badge" aria-hidden="true">{{
+                    notificacoesNaoLidas()
+                  }}</uc-badge>
                 }
               </button>
 
-              @if (notificacoesAbertas()) {
-                <div
-                  id="shell-notificacoes"
-                  class="shell__notificacoes-painel"
-                  role="menu"
-                  aria-label="Notificações"
-                  (click)="$event.stopPropagation()"
-                  (focusout)="aoSairFocoNotificacoes($event)"
-                >
-                  @for (notificacao of notificacoes(); track notificacao.id) {
-                    <button
-                      type="button"
-                      class="shell__notificacao-item"
-                      [class.shell__notificacao-item--nao-lida]="!notificacao.lida"
-                      role="menuitem"
-                      (click)="aoClicarNotificacao(notificacao)"
-                    >
-                      {{ notificacao.texto }}
-                    </button>
-                  } @empty {
-                    <!-- role="menu" exige ao menos um menuitem, mesmo vazio (axe aria-required-children) -->
-                    <p
-                      class="shell__notificacao-item shell__notificacao-item--vazio"
-                      role="menuitem"
-                      aria-disabled="true"
-                    >
-                      Sem notificações por enquanto.
-                    </p>
-                  }
-                </div>
+              @if (notificacoesAbertas() && origemNotificacoes() === 'lateral') {
+                <ng-container [ngTemplateOutlet]="painelNotificacoes" />
               }
             </div>
-          } @else {
-            <span class="shell__nav-item shell__nav-item--inert" aria-disabled="true">{{
-              item.label
-            }}</span>
           }
         </li>
-        @if (item.expandeComunidades) {
-          <li>
-            <ul class="shell__comunidades-lista" aria-label="Suas comunidades">
-              @for (comunidade of minhasComunidades(); track comunidade.id) {
-                <li>
-                  <a
-                    class="shell__comunidade-item"
-                    [routerLink]="['/comunidades', comunidade.id]"
-                    routerLinkActive="shell__comunidade-item--ativa"
-                    [routerLinkActiveOptions]="{ exact: true }"
-                    #rlaComunidade="routerLinkActive"
-                    [attr.aria-current]="rlaComunidade.isActive ? 'page' : null"
-                  >
-                    <span
-                      class="shell__ponto"
-                      [class.shell__ponto--curso]="comunidade.tipo === 'CURSO'"
-                      aria-hidden="true"
-                    ></span>
-                    {{ comunidade.nome }}
-                  </a>
-                </li>
-              } @empty {
-                <li class="shell__comunidade-item shell__comunidade-item--vazio">
-                  Você ainda não faz parte de nenhuma
-                </li>
-              }
-            </ul>
-          </li>
-        }
       }
     }
   </ul>
+
+  <div class="shell__secao" id="shell-secao-comunidades">Suas comunidades</div>
+  <ul class="shell__comunidades-lista" aria-labelledby="shell-secao-comunidades">
+    @for (comunidade of minhasComunidades(); track comunidade.id) {
+      <li>
+        <a
+          class="shell__comunidade-item"
+          [routerLink]="['/comunidades', comunidade.id]"
+          routerLinkActive="shell__comunidade-item--ativa"
+          [routerLinkActiveOptions]="{ exact: true }"
+          #rlaComunidade="routerLinkActive"
+          [attr.aria-current]="rlaComunidade.isActive ? 'page' : null"
+        >
+          <uc-avatar
+            class="shell__comunidade-avatar"
+            forma="quadrado"
+            tamanho="sm"
+            [cor]="comunidade.tipo === 'CURSO' ? 'marca' : corDoAvatar(comunidade.id)"
+            [iniciais]="iniciaisDaComunidade(comunidade.nome)"
+          />
+          <span class="shell__comunidade-nome">{{ comunidade.nome }}</span>
+        </a>
+      </li>
+    } @empty {
+      <li class="shell__comunidade-item shell__comunidade-item--vazio">
+        Você ainda não faz parte de nenhuma
+      </li>
+    }
+  </ul>
+
+  <div class="shell__secao shell__secao--breve" id="shell-secao-breve">Em breve</div>
+  <ul class="shell__breve-lista" aria-labelledby="shell-secao-breve">
+    @for (item of itensEmBreve(); track item.label) {
+      <li>
+        <span class="shell__breve-item" aria-disabled="true">{{ item.label }}</span>
+      </li>
+    }
+  </ul>
+
+  <div class="shell__conta-area">
+    <button
+      #cartaoConta
+      type="button"
+      class="shell__conta"
+      aria-haspopup="menu"
+      aria-controls="shell-menu-conta"
+      [attr.aria-expanded]="contaAberta() ? 'true' : 'false'"
+      (click)="alternarConta($event)"
+    >
+      <uc-avatar tamanho="sm" [cor]="corDaConta()" [iniciais]="iniciaisDaConta()" />
+      <span class="shell__conta-texto">
+        @if (nomeUsuario(); as nome) {
+          <span class="shell__conta-nome">{{ nome }}</span>
+        }
+        <span class="shell__conta-papel">{{ papel() }}</span>
+      </span>
+      <uc-icon class="shell__conta-icone" name="dots" size="sm" />
+    </button>
+    <uc-menu
+      id="shell-menu-conta"
+      class="shell__conta-menu"
+      rotulo="Conta"
+      direcao="acima"
+      [itens]="itensConta"
+      [(aberto)]="contaAberta"
+      [gatilho]="cartaoConta"
+      (selecionou)="aoSelecionarConta($event)"
+    />
+  </div>
 </nav>
 
-<header class="shell__topbar">
-  <button
-    #botaoNav
-    type="button"
-    class="shell__menu-toggle"
-    aria-label="Menu"
-    aria-controls="shell-sidebar-nav"
-    [attr.aria-expanded]="navAberto() ? 'true' : 'false'"
-    (click)="alternarNav($event)"
-  >
-    Menu
-  </button>
-
-  <div class="shell__avatar-area">
-    <button
-      #avatar
-      type="button"
-      class="shell__avatar"
-      aria-label="Menu da conta"
-      aria-haspopup="menu"
-      aria-controls="shell-menu"
-      [attr.aria-expanded]="menuAberto() ? 'true' : 'false'"
-      (click)="alternarMenu($event)"
-    >
-      <span class="shell__avatar-face" aria-hidden="true"></span>
-    </button>
-
-    @if (menuAberto()) {
-      <div
-        id="shell-menu"
-        class="shell__menu"
-        role="menu"
-        aria-label="Conta"
-        (click)="$event.stopPropagation()"
-        (focusout)="aoSairFoco($event)"
-      >
-        <button type="button" class="shell__menu-item" role="menuitem" (click)="abrirPerfil()">
-          Perfil
-        </button>
-        <button
-          type="button"
-          class="shell__menu-item"
-          role="menuitem"
-          aria-disabled="true"
-          (click)="fecharPaineis()"
-        >
-          Configurações
-        </button>
-        <button type="button" class="shell__menu-item" role="menuitem" (click)="sair()">
-          Sair
-        </button>
-      </div>
-    }
-  </div>
-</header>
+<!--
+  Barras do celular (KAN-91): só aparecem até $uc-bp-mobile. A superior abre a
+  gaveta "Suas comunidades" (a <nav> acima) e o menu da conta; a de abas abre o
+  mesmo painel de notificações do menu lateral.
+-->
+<app-shell-topbar
+  [gavetaAberta]="navAberto()"
+  [(contaAberta)]="menuAberto"
+  [iniciais]="iniciaisDaConta()"
+  [cor]="corDaConta()"
+  [itens]="itensConta"
+  (alternouGaveta)="alternarNav($event)"
+  (alternouConta)="alternarMenu($event)"
+  (selecionou)="aoSelecionarConta($event)"
+/>
 
 <main class="shell__main">
   <router-outlet />
 </main>
+
+@if (lateral(); as template) {
+  <aside class="shell__lateral" aria-label="Complementar">
+    <ng-container [ngTemplateOutlet]="template" />
+  </aside>
+}
+
+<app-shell-tabbar
+  [privilegiado]="ehPrivilegiado()"
+  [notificacoesAbertas]="notificacoesAbertas()"
+  [naoLidas]="notificacoesNaoLidas()"
+  (alternouNotificacoes)="alternarNotificacoes($event, 'abas')"
+/>
+@if (notificacoesAbertas() && origemNotificacoes() === 'abas') {
+  <ng-container [ngTemplateOutlet]="painelNotificacoes" />
+}
+
+<!--
+  Painel de notificações (Story 10.1), um só: desenhado junto do botão que o
+  abriu (item do menu lateral ou aba do celular, acima da barra de abas).
+-->
+<ng-template #painelNotificacoes>
+  <div
+    id="shell-notificacoes"
+    class="shell__notificacoes-painel"
+    [class.shell__notificacoes-painel--abas]="origemNotificacoes() === 'abas'"
+    role="menu"
+    aria-label="Notificações"
+    (click)="$event.stopPropagation()"
+    (focusout)="aoSairFocoNotificacoes($event)"
+  >
+    @for (notificacao of notificacoes(); track notificacao.id) {
+      <button
+        type="button"
+        class="shell__notificacao-item"
+        [class.shell__notificacao-item--nao-lida]="!notificacao.lida"
+        role="menuitem"
+        (click)="aoClicarNotificacao(notificacao)"
+      >
+        {{ notificacao.texto }}
+      </button>
+    } @empty {
+      <!-- role="menu" exige ao menos um menuitem, mesmo vazio (axe aria-required-children) -->
+      <p
+        class="shell__notificacao-item shell__notificacao-item--vazio"
+        role="menuitem"
+        aria-disabled="true"
+      >
+        Sem notificações por enquanto.
+      </p>
+    }
+  </div>
+</ng-template>

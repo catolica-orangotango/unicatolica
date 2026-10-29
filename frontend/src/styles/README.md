@@ -1,15 +1,11 @@
 # Camada de tokens de design (Story 14.1) e camada base (Story 14.7)
 
 Esta pasta e a **fonte unica** de valores de design do frontend: paleta, escala
-tipografica, espacamento, raio e a sombra de overlay. Tudo vem, verbatim, do
-`DESIGN.md` da raiz do repositorio ("Campus Clean"), a fonte unica do sistema
-visual. Mudou um valor la, muda aqui no mesmo PR.
-
-> **Redesign em andamento (KAN-84).** A nova direção visual, com a proposta de
-> tokens (o que entra, muda e sai) e o contraste de cada par, está em
-> [`docs/decisoes/2026-10-24-nova-direcao-visual.md`](../../../docs/decisoes/2026-10-24-nova-direcao-visual.md).
-> Os valores abaixo seguem valendo até o primeiro ticket de implementação, que
-> troca `DESIGN.md` e `_tokens.scss` juntos.
+tipografica, espacamento, layout, raio e as sombras. Os valores sao os do
+frontmatter do [`DESIGN.md`](../../../DESIGN.md) da raiz (sistema do redesign,
+aprovado no KAN-84 e implementado no KAN-91; origem e contraste em
+[`docs/decisoes/2026-10-24-nova-direcao-visual.md`](../../../docs/decisoes/2026-10-24-nova-direcao-visual.md)).
+Mudou um valor aqui, muda o `DESIGN.md` e a tabela abaixo no mesmo PR.
 
 ## Arquivos
 
@@ -18,7 +14,8 @@ visual. Mudou um valor la, muda aqui no mesmo PR.
 | `_tokens.scss`     | Bloco `:root` unico. Todas as custom properties `--uc-*`. Fonte da verdade.                                       |
 | `_typography.scss` | Classes utilitarias `.uc-text-*`, uma por papel de tipografia. Compoem so `var(--uc-*)`.                          |
 | `_base.scss`       | Camada base global (Story 14.7): reset, pintura do `body`, `font: inherit` em controles e anel de foco unico.     |
-| `_breakpoints.scss` | Breakpoint(s) de layout (Story 14.4) como variavel Sass (`$uc-breakpoint-nav`), nao `--uc-*` - `@media` nao le custom property. So `@use`d por quem precisa, nao agregado em `styles.scss`. |
+| `../app/ui/field/_input.scss` | Estilo global do controle de formulario `.uc-input` (KAN-91), aplicado pela diretiva `ucInput`. Incluido por `styles.scss`, depois de `base`. |
+| `_breakpoints.scss` | Breakpoints de layout (KAN-91) como variaveis Sass (`$uc-bp-tablet`, `$uc-bp-mobile`), nao `--uc-*` - `@media` nao le custom property. So `@use`d por quem precisa, nao agregado em `styles.scss`. |
 | `../styles.scss`   | Unico entry point de build. Agrega os parciais via `@use` (tokens -> typography -> base, nessa ordem).            |
 | `tokens.spec.ts`   | Compila `styles.scss` com `sass` e trava os tokens, a tabela deste README e as classes `.uc-text-*` contra drift. |
 | `base.spec.ts`     | Compila `styles.scss` e trava o contrato da camada base (regra `body`, reset, anel de foco, zero hex fora do `:root`). |
@@ -47,21 +44,22 @@ falha nomeando arquivo, linha e declaracao.
 
 ### Valor ausente do `DESIGN.md` = "Ask First"
 
-Se uma story consumidora (14.2, 14.7, ...) precisa de um valor que o `DESIGN.md`
-nao define (focus ring, scrim de overlay, estado desabilitado), isso e uma
-escalada **"Ask First"** na story consumidora, nao um literal silencioso. Nenhum
-token novo entra aqui sem passar pelo `DESIGN.md`.
+Se uma tela ou componente precisa de um valor que o `DESIGN.md` nao define
+(scrim de overlay, opacidade, duracao de animacao), isso e uma escalada
+**"Ask First"** no ticket consumidor, nao um literal silencioso. Nenhum token
+novo entra aqui sem entrar no frontmatter do `DESIGN.md` no mesmo PR (foi assim
+com os cinco tokens que a KAN-91 acrescentou: `ink-nav`, `ink-disabled`,
+`error-border`, `toast-ok` e `toast-error`).
 
 ## `.uc-text-*` vs classe de componente
 
 - Use `.uc-text-*` para um papel de tipografia puro em um template
   (`<span class="uc-text-meta">ha 2 h</span>`).
-- A Story 14.2 introduz os componentes standalone `<uc-badge>`,
-  `button[uc-button]`, `<uc-member-indicator>` e `<uc-card>` em `src/app/ui/`,
-  cujo SCSS compoe os mesmos tokens. Para um componente, use o componente
-  `uc-*`, nao a utilitaria de tipografia. O `button[uc-button]` nao sobrescreve
-  o `type` nativo: em uma acao que nao deve enviar um formulario ao redor, o
-  consumidor precisa passar `type="button"` explicitamente.
+- Para um componente, use o componente `uc-*` de `src/app/ui/` (exportado por
+  `ui/index.ts`), nao a utilitaria de tipografia: o SCSS dele ja compoe os
+  mesmos tokens. O `button[uc-button]` nao sobrescreve o `type` nativo: em uma
+  acao que nao deve enviar um formulario ao redor, o consumidor precisa passar
+  `type="button"` explicitamente.
 - A Story 14.7 migrou as telas ja existentes (Login, Cadastro, Verifique seu
   e-mail) do SCSS por componente com valores hardcoded para consumo de token, e
   deu as tres a casca comum `<uc-auth-shell>`
@@ -92,6 +90,51 @@ Duas regras inegociaveis, ambas travadas por teste:
 Ordem de `@use` em `styles.scss`: `tokens` -> `typography` -> `base`. A base
 consome os tokens, entao entra por ultimo.
 
+## Controle de formulario (`ui/field/_input.scss`, KAN-91)
+
+O `input`, `select` ou `textarea` projetado dentro de `<uc-field>` e conteudo
+projetado: a encapsulacao de estilo do Angular nao o alcanca. Por isso a
+diretiva `ucInput` poe a classe `uc-input` no elemento e o estilo mora neste
+parcial global, que so emite seletores de classe (`.uc-input`,
+`.uc-input:is(textarea)`). Estados: repouso (`--uc-color-border-input`,
+`--uc-radius-md`, `--uc-touch-target`), foco (borda `--uc-color-maroon` e halo de
+3px `--uc-color-maroon-tint`) e erro (`aria-invalid="true"` ou
+`.uc-input--erro`: borda `--uc-color-error` e halo `--uc-color-error-tint`). O
+halo de 3px e espalhamento estrutural, marcado com `// layout-literal:`. O
+`select` mantem a seta nativa do navegador (seta `down` customizada exigiria
+`background-image`, que nao aceita cor fora de token).
+
+## Componentes de `src/app/ui/` (KAN-91)
+
+Visual e estados descritos na secao "Components" do `DESIGN.md`; referencia em
+`docs/design/kan-84/componentes.html`.
+
+| Componente | Seletor | Variantes e estados |
+| ---------- | ------- | ------------------- |
+| Icone | `<uc-icon>` | 18 nomes (`UcIconName`), `size` `md` (22px) ou `sm` (18px); sempre `aria-hidden` |
+| Avatar | `<uc-avatar>` | `cor` marca, neutro, azul, verde, areia, violeta (`corDoAvatar(id)`); `forma` circulo ou quadrado; `tamanho` sm, md, lg |
+| Botao | `button[uc-button]` | `variant` primary, secondary, danger; `size` default (36px) ou large (44px); 44px abaixo de 760px; `disabled` ou `aria-disabled` |
+| Badge | `<uc-badge>` | `variant` obrigatoria: counter, role, course, open, state |
+| Card | `<uc-card>` | sem inputs; raio xl, borda, sem sombra; so blocos laterais |
+| Esqueleto | `<uc-skeleton>` | sem inputs; `aria-hidden`; largura do consumidor |
+| Estado vazio | `<uc-empty-state>` | `titulo`, `descricao` opcional, acao por `[acao]` |
+| Aviso | `<uc-note>` | `tom` neutro, alerta, erro (`role="alert"` so no erro); `titulo`; acao por `[acao]` |
+| Campo | `<uc-field>` + `ucInput` | `label`, `hint`, `error`; repouso, foco, erro, selecao (estilo em `_input.scss`) |
+| Menu suspenso | `<uc-menu>` | `itens` (`perigo`, `desabilitado`), `direcao` abaixo ou acima, `[(aberto)]`, `gatilho` |
+| Filtro segmentado | `<uc-segmented>` | `opcoes` (com `contador` opcional), `[(valor)]`; radiogroup com setas |
+| Indicador de membro | `<uc-member-indicator>` | `estado` nao-membro, entrando, membro, membro-menu, restrito |
+| Toast | `<uc-toast-host>` + `ToastService` | `tipo` sucesso ou erro; `acao` opcional; pausa com foco |
+
+## Breakpoints (`_breakpoints.scss`, KAN-91)
+
+| Variavel | Valor | Efeito na casca |
+| -------- | ----- | --------------- |
+| `$uc-bp-tablet` | 1180px | ate aqui a coluna lateral some (menu + conteudo) |
+| `$uc-bp-mobile` | 760px | ate aqui uma coluna, barra superior, barra de abas e gaveta "Suas comunidades"; botoes e campos com `--uc-touch-target` |
+
+Use com `@use '<caminho>/styles/breakpoints' as bp;` e
+`@media (max-width: bp.$uc-bp-mobile)`. Nao repita o valor literal em `@media`.
+
 ## Guard "nada hardcoded" (`scss-guard.spec.ts`, Story 14.7)
 
 Sucede o guard da Story 14.2 (`src/app/ui/ui-styles.spec.ts`, deletado) e vale
@@ -105,93 +148,126 @@ Duas valvulas, ambas explicitas:
   valido (a geometria pode ser literal, a cor nao);
 - uma declaracao fica isenta quando a propria linha, ou a linha imediatamente
   acima, traz `// layout-literal: <motivo>` **com motivo nao vazio**. E para as
-  dimensoes estruturais que o `DESIGN.md` escreve com "~" e defere (sidebar de
-  220px, coluna de leitura de 720px, `minmax()` de grade). Motivo vazio nao
-  isenta nada.
+  dimensoes estruturais que nao tem token (avatar de 34px, contador de 22px,
+  altura maxima de painel, `minmax()` de grade). Motivo vazio nao isenta nada.
 
 ## Modo escuro
 
 Fora de escopo do MVP (decisao confirmada no `DESIGN.md`). Nao ha bloco
 `@media (prefers-color-scheme)` nem token dark. Nao adicione um sem renegociar.
 
-## Nota sobre a pilha de fontes
+## Fonte
 
-O `DESIGN.md` marca a pilha de fontes de sistema como **pendencia do time**:
-nenhuma tipografia de marca (Google Font ou similar) foi avaliada. A pilha atual
-e uma escolha pragmatica; uma fonte de exibicao propria mais adiante e uma
-revisao explicita do `DESIGN.md`, nao um bloqueio para esta camada.
-
-As classes `.uc-text-*` **nao** aplicam `font-family` (nenhum papel do
-`DESIGN.md` define uma). A pilha de sistema vale para o documento inteiro desde
-a Story 14.7, aplicada uma unica vez no `body` por `_base.scss`; texto marcado
-com `.uc-text-*` herda dali.
+A familia de fonte e o token `--uc-font-family-base` (Inter, com `system-ui` e
+a pilha de sistema como fallback), aplicada uma unica vez no `body` por
+`_base.scss`. As classes `.uc-text-*` **nao** aplicam `font-family`: o texto
+marcado com elas herda dali.
 
 ## Tabela de tokens
 
-Nome -> valor -> papel no `DESIGN.md`. Esta tabela e verificada contra
+Nome -> valor -> papel no `DESIGN.md` (no frontmatter, sem o prefixo `--uc-`). Esta tabela e verificada contra
 `_tokens.scss` compilado por `tokens.spec.ts` (linha fora de sincronia = teste
 vermelho).
 
 ### Paleta (`colors`)
 
-| Token                    | Valor     | Papel                                                                                                                    |
-| ------------------------ | --------- | ------------------------------------------------------------------------------------------------------------------------ |
-| `--uc-color-bg`          | `#FAFAF8` | `colors.bg` - canvas base, quase branco                                                                                  |
-| `--uc-color-surface`     | `#FFFFFF` | `colors.surface` - superficie de card                                                                                    |
-| `--uc-color-border`      | `#EAEAE6` | `colors.border` - divisoria / contorno de card (1px)                                                                     |
-| `--uc-color-ink`         | `#1C1C1A` | `colors.ink` - texto de conteudo principal                                                                               |
-| `--uc-color-ink-soft`    | `#6B6B66` | `colors.ink-soft` - texto secundario (metadados, timestamps)                                                             |
-| `--uc-color-ink-faint`   | `#6E6E68` | `colors.ink-faint` - texto terciario (labels, placeholders)                                                              |
-| `--uc-color-maroon`      | `#7A1F2B` | `colors.maroon` - acento institucional minimo (traco, icone ativo, titulo de comunidade de curso); nunca fundo dominante |
-| `--uc-color-orange`      | `#BC4913` | `colors.orange` - unico acento de acao forte (CTA primario, tag de destaque)                                             |
-| `--uc-color-orange-tint` | `#FDEEE6` | `colors.orange-tint` - fundo suave de badge / nav ativa; nunca texto                                                     |
-| `--uc-color-green-ok`    | `#3A7D5C` | `colors.green-ok` - unico token de sucesso (membro, confirmacao positiva)                                                |
-| `--uc-color-error`       | `#B3261E` | `colors.error` - texto de erro (validacao inline, falha de login/cadastro); aviso e borda + texto, nunca bloco preenchido |
+| Token | Valor | Papel |
+| --- | --- | --- |
+| `--uc-color-bg` | `#FFFFFF` | canvas base (KAN-91: era #FAFAF8) |
+| `--uc-color-surface` | `#FFFFFF` | superficie de card, campo, menu |
+| `--uc-color-surface-muted` | `#F7F7F8` | hover, avisos, publicacao oculta |
+| `--uc-color-surface-strong` | `#F1F1F3` | filtro segmentado, chips, avatar neutro |
+| `--uc-color-border` | `#ECECEE` | filete decorativo |
+| `--uc-color-border-strong` | `#E2E2E6` | contorno de botao secundario |
+| `--uc-color-border-input` | `#8E8E96` | contorno de campo (3:1) |
+| `--uc-color-ink` | `#18181B` | texto principal |
+| `--uc-color-ink-soft` | `#66666E` | texto secundario (meta, descricao) |
+| `--uc-color-ink-faint` | `#707078` | placeholder |
+| `--uc-color-ink-nav` | `#3F3F46` | item de menu lateral (adicionado na KAN-91) |
+| `--uc-color-ink-disabled` | `#8A8A93` | texto de controle desabilitado, isento do WCAG (KAN-91) |
+| `--uc-color-maroon` | `#7A1F2B` | marca, acao primaria, foco |
+| `--uc-color-maroon-hover` | `#691A25` | botao primario em hover |
+| `--uc-color-maroon-tint` | `#F7ECEE` | badge de papel, dia de hoje, halo do foco |
+| `--uc-color-green-ok` | `#2F6141` | sucesso (membro, criada) |
+| `--uc-color-green-tint` | `#EAF3EC` | fundo de sucesso |
+| `--uc-color-error` | `#B3261E` | erro de campo, botao de perigo |
+| `--uc-color-error-tint` | `#FBEAE9` | fundo de aviso de erro |
+| `--uc-color-error-border` | `#F0C9C6` | borda de aviso de erro (KAN-91) |
+| `--uc-color-warn` | `#8A5A00` | icone de alerta |
+| `--uc-color-warn-tint` | `#FDF5E7` | fundo de alerta |
+| `--uc-color-toast-ok` | `#B9E4C9` | icone de sucesso em toast escuro (KAN-91) |
+| `--uc-color-toast-error` | `#FFB4AB` | icone de erro em toast escuro (KAN-91) |
+| `--uc-color-avatar-blue` | `#2B4A72` | iniciais do avatar blue |
+| `--uc-color-avatar-green` | `#2F6141` | iniciais do avatar green |
+| `--uc-color-avatar-sand` | `#6B4E1F` | iniciais do avatar sand |
+| `--uc-color-avatar-violet` | `#4E3A72` | iniciais do avatar violet |
+| `--uc-color-avatar-blue-bg` | `#E8EEF6` | fundo do avatar blue |
+| `--uc-color-avatar-green-bg` | `#EAF3EC` | fundo do avatar green |
+| `--uc-color-avatar-sand-bg` | `#F3EEE6` | fundo do avatar sand |
+| `--uc-color-avatar-violet-bg` | `#EFEAF6` | fundo do avatar violet |
 
 ### Tipografia (`typography`)
 
-| Token                            | Valor                                                                         | Papel                                                                     |
-| -------------------------------- | ----------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
-| `--uc-font-family-base`          | `-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif` | pilha de sistema, todos os papeis (pendencia do time - ver acima)         |
-| `--uc-font-size-greeting`        | `22px`                                                                        | `typography.greeting` - saudacao no topo do Inicio                        |
-| `--uc-font-size-question`        | `15px`                                                                        | `typography.question` - perguntas de enquete, titulos de card             |
-| `--uc-font-size-body`            | `13.5px`                                                                      | `typography.body` - corpo de postagem, texto corrido                      |
-| `--uc-font-size-meta`            | `12px`                                                                        | `typography.meta` - timestamps, contagens, texto secundario               |
-| `--uc-font-size-label-caps`      | `10.5px`                                                                      | `typography.label-caps` - labels em caixa alta, nomes de secao            |
-| `--uc-font-weight-regular`       | `400`                                                                         | peso regular (`body`, `meta`)                                             |
-| `--uc-font-weight-semibold`      | `600`                                                                         | peso de enfase (`greeting`, `question`)                                   |
-| `--uc-font-weight-caps`          | `700`                                                                         | peso reservado a `label-caps`                                             |
-| `--uc-line-height-body`          | `1.5`                                                                         | `typography.body.lineHeight` (unico papel com line-height no `DESIGN.md`) |
-| `--uc-letter-spacing-greeting`   | `-0.01em`                                                                     | `typography.greeting.letterSpacing`                                       |
-| `--uc-letter-spacing-label-caps` | `0.05em`                                                                      | `typography.label-caps.letterSpacing`                                     |
+| Token | Valor | Papel |
+| --- | --- | --- |
+| `--uc-font-family-base` | `Inter, system-ui, -apple-system, 'Segoe UI', sans-serif` | Inter carregada pelo index.html |
+| `--uc-font-size-greeting` | `22px` | titulo de tela |
+| `--uc-font-size-title-lg` | `24px` | titulo de tela de trabalho |
+| `--uc-font-size-title` | `17px` | titulo de secao e cartao |
+| `--uc-font-size-body` | `15px` | corpo, texto corrido |
+| `--uc-font-size-small` | `14px` | acoes, descricao |
+| `--uc-font-size-meta` | `13px` | timestamps, contagens |
+| `--uc-font-size-label` | `12px` | badge, legenda |
+| `--uc-font-weight-regular` | `400` | peso regular |
+| `--uc-font-weight-medium` | `500` | peso medio |
+| `--uc-font-weight-semibold` | `600` | peso de enfase |
+| `--uc-font-weight-bold` | `700` | titulos, item ativo |
+| `--uc-line-height-body` | `1.5` | line-height do corpo |
+| `--uc-letter-spacing-greeting` | `-0.02em` | titulo de tela |
 
 ### Espacamento (`spacing`)
 
-| Token                     | Valor  | Papel                                                                                      |
-| ------------------------- | ------ | ------------------------------------------------------------------------------------------ |
-| `--uc-space-unit`         | `4px`  | `spacing.unit` - unidade base; componha com `calc()`                                       |
-| `--uc-space-card-padding` | `18px` | `spacing.card-padding` - padding interno padrao de card (fora do grid de 4px, intencional) |
-| `--uc-space-section-gap`  | `20px` | `spacing.section-gap` - separacao entre blocos verticais                                   |
-| `--uc-space-page-margin`  | `32px` | `spacing.page-margin` - enquadramento do conteudo                                          |
+| Token | Valor | Papel |
+| --- | --- | --- |
+| `--uc-space-unit` | `4px` | unidade base |
+| `--uc-space-1` | `4px` | escala numerica |
+| `--uc-space-2` | `8px` | escala numerica |
+| `--uc-space-3` | `12px` | escala numerica |
+| `--uc-space-4` | `16px` | escala numerica |
+| `--uc-space-5` | `20px` | escala numerica |
+| `--uc-space-6` | `24px` | escala numerica |
+| `--uc-space-7` | `32px` | escala numerica |
+| `--uc-space-8` | `40px` | escala numerica |
+| `--uc-space-card-padding` | `18px` | padding interno de card |
+| `--uc-space-section-gap` | `20px` | separacao entre blocos verticais |
+| `--uc-space-page-margin` | `24px` | margem da pagina (16px abaixo de 760px, sobrescrita em `@media` no `_tokens.scss`) |
+| `--uc-layout-nav` | `248px` | largura do menu lateral |
+| `--uc-layout-feed` | `600px` | largura da coluna do feed |
+| `--uc-layout-aside` | `340px` | largura da coluna lateral |
+| `--uc-layout-wide` | `1040px` | largura de telas largas |
+| `--uc-layout-gap` | `32px` | espaco entre colunas |
+| `--uc-touch-target` | `44px` | alvo de toque minimo no celular |
 
-Nao ha ramp numerico `--uc-space-{n}`: o `DESIGN.md` nao define um. Um consumidor
-que precise de um pede via "Ask First".
+A rampa numerica `--uc-space-1` a `--uc-space-8` cobre os espacamentos comuns.
+Um valor fora dela e uma escalada "Ask First", nao um literal.
 
 ### Raio (`rounded`)
 
-| Token                 | Valor    | Papel                                                                                 |
-| --------------------- | -------- | ------------------------------------------------------------------------------------- |
-| `--uc-radius-sm`      | `6px`    | `rounded.sm` - chips e controles pequenos                                             |
-| `--uc-radius-default` | `8px`    | `rounded.DEFAULT` - cards e inputs                                                    |
-| `--uc-radius-md`      | `12px`   | `rounded.md` - cards e inputs (card generico da 14.2)                                 |
-| `--uc-radius-lg`      | `14px`   | `rounded.lg` - container externo de um bloco de app                                   |
-| `--uc-radius-full`    | `9999px` | `rounded.full` - pill: badges de comunidade e botoes de acao; nunca cards de conteudo |
+| Token | Valor | Papel |
+| --- | --- | --- |
+| `--uc-radius-sm` | `8px` | marca, avatar de comunidade |
+| `--uc-radius-default` | `10px` | item de menu suspenso, esqueleto, avatar quadrado |
+| `--uc-radius-md` | `12px` | campo, item do menu lateral |
+| `--uc-radius-lg` | `16px` | aviso, menu suspenso, toast |
+| `--uc-radius-xl` | `20px` | bloco lateral (`uc-card`), estado vazio |
+| `--uc-radius-full` | `9999px` | botao, badge, avatar |
 
 ### Elevacao
 
-| Token                 | Valor                            | Papel                                                                                   |
-| --------------------- | -------------------------------- | --------------------------------------------------------------------------------------- |
-| `--uc-shadow-overlay` | `0 8px 24px rgba(0, 0, 0, 0.08)` | `DESIGN.md` prosa "Elevation & Depth" - dropdowns e toasts; valor de partida, ajustavel |
+| Token | Valor | Papel |
+| --- | --- | --- |
+| `--uc-shadow-overlay` | `0 8px 32px rgba(24, 24, 27, 0.12), 0 1px 3px rgba(24, 24, 27, 0.06)` | menus suspensos, painel de notificacoes |
+| `--uc-shadow-toast` | `0 8px 32px rgba(24, 24, 27, 0.18)` | toast escuro |
 
 ## Verificacao rapida
 

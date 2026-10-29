@@ -76,7 +76,7 @@ interface RequisitoSenha {
 }
 
 /**
- * Tela de cadastro (Story 1.2), restilizada no Design System "Campus Clean" pela
+ * Tela de cadastro (Story 1.2), restilizada no Design System do redesign pela
  * Story 14.7. Cobre os critérios de aceite da história: envia nome, e-mail
  * institucional, senha, curso (escolhido da lista de `GET /cursos`) e data de nascimento
  * para `POST /auth/registro`, e exibe as
