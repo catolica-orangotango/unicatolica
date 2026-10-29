@@ -6,6 +6,7 @@ Problemas conhecidos que ainda não têm história nem PR. Quando um item virar 
 |---|---|---|
 | DT-4 | E-mail de confirmação do cadastro não chega ao usuário | Código pronto; falta configurar a Brevo no Render |
 | DT-5 | Nome de comunidade sem limite de tamanho no backend | Aberta |
+| DT-6 | Produção sem administrador e checklist do primeiro deploy | Aberta, tratar no primeiro deploy |
 | DT-7 | `select` do formulário sem a seta do redesign | Aberta, sem história ainda |
 | DT-8 | Moderador e administrador não abrem notificações no celular | Aberta, sem história ainda |
 | DT-9 | Itens de "Em breve" sem ícone no menu lateral | Aberta, sem história ainda |

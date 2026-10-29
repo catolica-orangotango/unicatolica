@@ -3,8 +3,8 @@
 // Reescrita para consumo de token: todo valor aqui é um --uc-* da Story 14.1.
 // O enquadramento (landmark, marca, card) vem do <uc-auth-shell>.
 //
-// Não há formulário nem botão: o link é a única ação da tela, então ele é o
-// acento laranja permitido (DESIGN.md: no máximo uma ação laranja por tela).
+// Não há formulário nem botão: o link é a única ação da tela, então ele é a
+// única ação da tela e usa a cor de link (bordô).
 // Títulos e textos de link são contrato de teste e2e - não reescrever.
 
 :host {

@@ -298,7 +298,7 @@ Paleta neutra e fria sobre branco, com uma cor institucional que faz todo o trab
 - **Ícones do toast** (toast-ok, toast-error): verde e vermelho claros para o ícone de sucesso e de erro sobre o toast escuro.
 
 ### Avatares
-- Quatro pares de iniciais sobre fundo claro (avatar-blue, avatar-green, avatar-sand, avatar-violet, cada um com o `-bg`). A cor sai do id da pessoa ou da comunidade, em ciclo de quatro (`corDoAvatar`), e é estável entre telas. Comunidade de curso usa o avatar bordô; o avatar neutro usa Superfície Forte e Tinta de Menu.
+- Quatro pares de iniciais sobre fundo claro (avatar-blue, avatar-green, avatar-sand, avatar-violet, cada um com o `-bg`). A cor sai do id da pessoa ou da comunidade, em ciclo de quatro (`corDoAvatar`), e é estável entre telas. Comunidade de curso usa o avatar bordô; a conta do usuário (cartão do menu e barra superior) usa o bordô claro, sem rotação por id; o avatar neutro usa Superfície Forte e Tinta de Menu.
 
 ### Neutral
 - **Branco** (bg, surface): fundo de toda tela, das colunas, do card, do campo, do menu suspenso.
@@ -383,7 +383,7 @@ Todos em `frontend/src/app/ui/`, exportados por `ui/index.ts`. Detalhe visual em
 - **`<uc-icon>`:** ícone de traço (stroke 1.75, `currentColor`), 22px ou 18px (`size="sm"`). Sempre decorativo (`aria-hidden`): o nome acessível vem do botão ou link ao redor. Conjunto fechado (`UcIconName`): home, users, bell, user, search, dots, flag, eyeoff, check, x, alert, info, down, trash, plus, lock, shield, edit. No item ativo do menu e da barra de abas o traço fica mais grosso.
 
 ### Avatar
-- **`<uc-avatar>`:** iniciais em 600 sobre fundo claro. Cores `marca` (bordô com texto branco), `neutro`, `azul`, `verde`, `areia` e `violeta`; formas `circulo` (pessoa) e `quadrado` (comunidade); tamanhos `sm` 34px, `md` 40px e `lg` 60px. As iniciais ficam em `aria-hidden`; quem usa dá o nome acessível.
+- **`<uc-avatar>`:** iniciais em 600 sobre fundo claro. Cores `marca` (bordô com texto branco), `marca-suave` (texto bordô sobre Bordô Claro, 8,84:1, usada na conta do usuário), `neutro`, `azul`, `verde`, `areia` e `violeta`; formas `circulo` (pessoa) e `quadrado` (comunidade); tamanhos `sm` 34px, `md` 40px e `lg` 60px. As iniciais ficam em `aria-hidden`; quem usa dá o nome acessível.
 
 ### Buttons
 Contidos e diretos: um botão forte, o resto se apaga.

@@ -20,8 +20,8 @@
  *    keywords `transparent` / `none` / `currentColor` / `inherit`, nor an
  *    all-token gradient (see below);
  *  - a `font-weight` / `letter-spacing` / `font-family` value that is not a bare
- *    `var(--uc-*)` reference (new in 14.7: DESIGN.md reserves weight 700 to the
- *    `label-caps` role, so a bare `font-weight: 700` is a real drift);
+ *    `var(--uc-*)` reference (new in 14.7: a weight must come from a
+ *    `--uc-font-weight-*` token, so a bare `font-weight: 700` is a real drift);
  *  - a named colour, `rgb(...)` or `hsl(...)` inside a `border` / `outline` /
  *    `box-shadow` / `fill` / `stroke` shorthand;
  *  - a `var(--uc-*)` reference to a token `_tokens.scss` does not declare

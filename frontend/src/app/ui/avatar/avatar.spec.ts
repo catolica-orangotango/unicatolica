@@ -46,7 +46,7 @@ describe('UcAvatar', () => {
     expect(mods()).toEqual(['uc-avatar--lg', 'uc-avatar--quadrado', 'uc-avatar--violeta']);
   });
 
-  it('corDoAvatar mapeia id % 4', () => {
+  it('corDoAvatar mapeia (id - 1) % 4', () => {
     expect([1, 2, 3, 4].map(corDoAvatar)).toEqual(['azul', 'verde', 'areia', 'violeta']);
     expect(corDoAvatar(5)).toBe('azul');
   });
@@ -58,6 +58,10 @@ describe('avatar.scss style contract', () => {
 
   it('marca: fundo maroon e texto surface', () => {
     expect(norm).toMatch(/:host\(\.uc-avatar--marca\)\s*\{[^}]*background: var\(--uc-color-maroon\)[^}]*color: var\(--uc-color-surface\)/);
+  });
+
+  it('marca-suave: fundo maroon-tint e texto maroon', () => {
+    expect(norm).toMatch(/:host\(\.uc-avatar--marca-suave\)\s*\{[^}]*background: var\(--uc-color-maroon-tint\)[^}]*color: var\(--uc-color-maroon\)/);
   });
 
   for (const [cor, token] of [['azul', 'blue'], ['verde', 'green'], ['areia', 'sand'], ['violeta', 'violet']]) {

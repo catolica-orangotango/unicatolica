@@ -3,7 +3,7 @@
 // Reescrita de 139 linhas hardcoded para consumo de token: todo valor aqui é
 // um --uc-* da Story 14.1. O enquadramento (landmark, marca, card) vem do
 // <uc-auth-shell>; o envio é o `button[uc-button]` da Story 14.2, única ação
-// laranja da tela. O anel de foco é o global de `styles/_base.scss`.
+// primária (bordô) da tela. O anel de foco é o global de `styles/_base.scss`.
 //
 // Avisos (erro e "verifique seu e-mail") são `surface` + borda de 1px + texto
 // no token - nunca um bloco preenchido, pelo mesmo motivo que os cards usam
@@ -140,7 +140,7 @@
 }
 
 // Ação secundária: pill de borda, fundo transparente, texto em ink. Nunca uma
-// segunda cor preenchida competindo com o laranja.
+// segunda cor preenchida competindo com o bordô do envio.
 .botao-secundario {
   margin-top: var(--uc-space-section-gap);
   padding: calc(var(--uc-space-unit) * 2) calc(var(--uc-space-unit) * 4);

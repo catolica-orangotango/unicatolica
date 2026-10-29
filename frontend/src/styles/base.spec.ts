@@ -8,7 +8,7 @@
  * What it pins:
  *  - `body` exists and paints the canvas with tokens only (bg / ink / the font
  *    stack / body size / body line-height). Without this rule the three public
- *    screens never get the Campus Clean canvas or the token font.
+ *    screens never get the redesign canvas or the token font.
  *  - the `box-sizing` reset and the `margin: 0` on `html, body` exist;
  *  - one global `:focus-visible` ring exists, maroon, token-valued;
  *  - form controls inherit the document font;

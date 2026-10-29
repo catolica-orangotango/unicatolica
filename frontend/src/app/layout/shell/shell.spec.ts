@@ -343,7 +343,7 @@ describe('Shell', () => {
       expect((cartao.querySelector('.shell__conta-nome')?.textContent ?? '').trim()).toBe('Rafael Souza');
       expect((cartao.querySelector('.shell__conta-papel')?.textContent ?? '').trim()).toBe('Aluno');
       expect((cartao.querySelector('uc-avatar')?.textContent ?? '').trim()).toBe('RS');
-      expect(cartao.querySelector('uc-avatar')?.classList).toContain('uc-avatar--verde');
+      expect(cartao.querySelector('uc-avatar')?.classList).toContain('uc-avatar--marca-suave');
     });
 
     it('falha ao buscar o nome: continua só com o papel, sem lançar', async () => {

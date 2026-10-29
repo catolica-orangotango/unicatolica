@@ -1,11 +1,11 @@
 import { Component, input } from '@angular/core';
 
-export type UcAvatarCor = 'marca' | 'neutro' | 'azul' | 'verde' | 'areia' | 'violeta';
+export type UcAvatarCor = 'marca' | 'marca-suave' | 'neutro' | 'azul' | 'verde' | 'areia' | 'violeta';
 
 const CORES_POR_ID = ['azul', 'verde', 'areia', 'violeta'] as const;
 
 /** Cor estável do avatar a partir do id, em ciclo de 4 (ids 1, 5, 9... dão azul). */
-export function corDoAvatar(id: number): Exclude<UcAvatarCor, 'marca' | 'neutro'> {
+export function corDoAvatar(id: number): Exclude<UcAvatarCor, 'marca' | 'marca-suave' | 'neutro'> {
   return CORES_POR_ID[(((id - 1) % 4) + 4) % 4];
 }
 

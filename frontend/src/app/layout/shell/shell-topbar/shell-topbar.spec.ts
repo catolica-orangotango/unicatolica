@@ -19,7 +19,7 @@ const ITENS: readonly UcMenuItem[] = [
     [gavetaAberta]="gavetaAberta()"
     [(contaAberta)]="contaAberta"
     iniciais="JM"
-    cor="azul"
+    cor="marca-suave"
     [itens]="itens"
     (alternouGaveta)="gaveta = gaveta + 1"
     (alternouConta)="conta = conta + 1"

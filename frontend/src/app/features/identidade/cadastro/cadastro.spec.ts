@@ -341,7 +341,7 @@ describe('Cadastro', () => {
     });
   });
 
-  it('usa o botão forte do Design System e uma única ação laranja', () => {
+  it('usa o botão forte do Design System e uma única ação primária', () => {
     fixture.detectChanges();
     const compiled = fixture.nativeElement as HTMLElement;
     const submit = compiled.querySelector('button[type="submit"]')!;
@@ -373,7 +373,7 @@ describe('Cadastro', () => {
     expect(aviso.classList.contains('cadastro__aviso--sucesso')).toBe(true);
     expect(aviso.textContent).toContain('ana@catolicasc.edu.br');
 
-    // Reenvio é pill secundária, nunca um segundo uc-button laranja.
+    // Reenvio é pill secundária, nunca um segundo uc-button primário.
     const reenvio = compiled.querySelector('.botao-secundario')!;
     expect(reenvio).toBeTruthy();
     expect(reenvio.hasAttribute('uc-button')).toBe(false);

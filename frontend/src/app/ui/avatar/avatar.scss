@@ -47,6 +47,11 @@
   color: var(--uc-color-surface);
 }
 
+:host(.uc-avatar--marca-suave) {
+  background: var(--uc-color-maroon-tint);
+  color: var(--uc-color-maroon);
+}
+
 :host(.uc-avatar--azul) {
   background: var(--uc-color-avatar-blue-bg);
   color: var(--uc-color-avatar-blue);

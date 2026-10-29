@@ -17,7 +17,7 @@ import { ContadorDenuncias } from '../../features/moderacao/contador-denuncias/c
 import { UsuarioService } from '../../features/identidade/usuario.service';
 import { NotificacoesService } from '../../features/notificacoes/notificacoes.service';
 import { iniciais } from '../../features/publicacoes/tempo-relativo';
-import { UcAvatar, UcBadge, UcIcon, UcMenu, corDoAvatar, type UcIconName, type UcMenuItem } from '../../ui';
+import { UcAvatar, UcBadge, UcIcon, UcMenu, corDoAvatar, type UcAvatarCor, type UcIconName, type UcMenuItem } from '../../ui';
 import { ShellLateralService } from './shell-lateral.service';
 import { ShellTabbar } from './shell-tabbar/shell-tabbar';
 import { ShellTopbar } from './shell-topbar/shell-topbar';
@@ -202,10 +202,8 @@ export class Shell {
     return nome ? iniciais(nome) : this.papel()[0];
   });
 
-  protected readonly corDaConta = computed(() => {
-    const id = this.auth.usuarioId();
-    return id === null ? 'neutro' : corDoAvatar(id);
-  });
+  /** Bordô claro (o `.av.a1` do mockup): vale para o cartão da conta e o avatar da barra superior. */
+  protected readonly corDaConta = computed<UcAvatarCor>(() => 'marca-suave');
 
   constructor() {
     // Best-effort: a sidebar não é o lugar de mostrar erro de rede — em caso de

@@ -1,8 +1,9 @@
-// UniCatolica - Campus Clean base visual components (Story 14.2).
+// UniCatolica - design system do redesign (Story 14.2, ampliado na KAN-91).
 //
-// Barrel for the four design-system primitives consumed by the feature epics
-// (Comunidades, Publicacoes, Enquetes, ...). Each is standalone, `uc-` prefix,
-// and its SCSS consumes only `var(--uc-*)` tokens from Story 14.1.
+// Barrel de todos os componentes do design system (avatar, badge, button, card,
+// field/input, icon, empty-state, menu, member-indicator, note, segmented,
+// skeleton, toast) consumidos pelas telas. Cada um é standalone, com prefixo
+// `uc-`, e seu SCSS consome só `var(--uc-*)` dos tokens de styles/_tokens.scss.
 export { UcAvatar, corDoAvatar, type UcAvatarCor } from './avatar/avatar';
 export { UcBadge, type UcBadgeVariant } from './badge/badge';
 export { UcButton } from './button/button';
