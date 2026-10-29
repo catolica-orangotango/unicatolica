@@ -1,18 +1,18 @@
 // UniCatolica - design tokens do redesign (Story 14.1, revisto na KAN-91).
 //
 // Single source of truth for palette, type scale, spacing and radius.
-// Os valores seguem docs/decisoes/2026-10-24-nova-direcao-visual.md (secao
-// "Tokens propostos") ate o DESIGN.md ser reescrito no mesmo PR da KAN-91.
-// --uc-shadow-overlay e --uc-shadow-toast vem da mesma decisao.
+// Os valores espelham o frontmatter do DESIGN.md da raiz (nomes sem o prefixo
+// --uc-), que veio de docs/decisoes/2026-10-24-nova-direcao-visual.md (secao
+// "Tokens propostos"), sombras incluidas. Mudou aqui, muda la no mesmo PR.
 //
 // Consumers read these via `var(--uc-*)` only - never re-declare a raw design
 // value. A value not defined here (focus ring, overlay scrim, disabled state,
 // ...) is an "Ask First" escalation in the consuming story, not a hardcode.
 //
-// Redesign KAN-84 / KAN-91: os tokens do Campus Clean marcados "SAI" (orange,
-// orange-tint, font-size-question, font-size-label-caps, font-weight-caps,
-// letter-spacing-label-caps) foram removidos depois que os consumidores
-// migraram; o scss-guard falha em qualquer referencia a token nao declarado.
+// Redesign KAN-84 / KAN-91: os tokens do Campus Clean marcados "sai" na
+// decisao foram removidos depois que os consumidores migraram (a lista esta
+// no teste "nao declara nenhum token marcado sai" de tokens.spec.ts); o
+// scss-guard falha em qualquer referencia a token nao declarado.
 // Cinco tokens nao constavam da tabela original e entraram na KAN-91:
 // ink-nav, ink-disabled, error-border, toast-ok, toast-error.
 //

@@ -1,10 +1,11 @@
 # Camada de tokens de design (Story 14.1) e camada base (Story 14.7)
 
 Esta pasta e a **fonte unica** de valores de design do frontend: paleta, escala
-tipografica, espacamento, raio e as sombras. Os valores seguem
-[`docs/decisoes/2026-10-24-nova-direcao-visual.md`](../../../docs/decisoes/2026-10-24-nova-direcao-visual.md)
-ate o `DESIGN.md` da raiz ser reescrito neste mesmo PR (KAN-91). Mudou um valor
-aqui, muda a tabela abaixo no mesmo PR.
+tipografica, espacamento, layout, raio e as sombras. Os valores sao os do
+frontmatter do [`DESIGN.md`](../../../DESIGN.md) da raiz (sistema do redesign,
+aprovado no KAN-84 e implementado no KAN-91; origem e contraste em
+[`docs/decisoes/2026-10-24-nova-direcao-visual.md`](../../../docs/decisoes/2026-10-24-nova-direcao-visual.md)).
+Mudou um valor aqui, muda o `DESIGN.md` e a tabela abaixo no mesmo PR.
 
 ## Arquivos
 
@@ -43,21 +44,22 @@ falha nomeando arquivo, linha e declaracao.
 
 ### Valor ausente do `DESIGN.md` = "Ask First"
 
-Se uma story consumidora (14.2, 14.7, ...) precisa de um valor que o `DESIGN.md`
-nao define (focus ring, scrim de overlay, estado desabilitado), isso e uma
-escalada **"Ask First"** na story consumidora, nao um literal silencioso. Nenhum
-token novo entra aqui sem passar pelo `DESIGN.md`.
+Se uma tela ou componente precisa de um valor que o `DESIGN.md` nao define
+(scrim de overlay, opacidade, duracao de animacao), isso e uma escalada
+**"Ask First"** no ticket consumidor, nao um literal silencioso. Nenhum token
+novo entra aqui sem entrar no frontmatter do `DESIGN.md` no mesmo PR (foi assim
+com os cinco tokens que a KAN-91 acrescentou: `ink-nav`, `ink-disabled`,
+`error-border`, `toast-ok` e `toast-error`).
 
 ## `.uc-text-*` vs classe de componente
 
 - Use `.uc-text-*` para um papel de tipografia puro em um template
   (`<span class="uc-text-meta">ha 2 h</span>`).
-- A Story 14.2 introduz os componentes standalone `<uc-badge>`,
-  `button[uc-button]`, `<uc-member-indicator>` e `<uc-card>` em `src/app/ui/`,
-  cujo SCSS compoe os mesmos tokens. Para um componente, use o componente
-  `uc-*`, nao a utilitaria de tipografia. O `button[uc-button]` nao sobrescreve
-  o `type` nativo: em uma acao que nao deve enviar um formulario ao redor, o
-  consumidor precisa passar `type="button"` explicitamente.
+- Para um componente, use o componente `uc-*` de `src/app/ui/` (exportado por
+  `ui/index.ts`), nao a utilitaria de tipografia: o SCSS dele ja compoe os
+  mesmos tokens. O `button[uc-button]` nao sobrescreve o `type` nativo: em uma
+  acao que nao deve enviar um formulario ao redor, o consumidor precisa passar
+  `type="button"` explicitamente.
 - A Story 14.7 migrou as telas ja existentes (Login, Cadastro, Verifique seu
   e-mail) do SCSS por componente com valores hardcoded para consumo de token, e
   deu as tres a casca comum `<uc-auth-shell>`
@@ -102,6 +104,37 @@ halo de 3px e espalhamento estrutural, marcado com `// layout-literal:`. O
 `select` mantem a seta nativa do navegador (seta `down` customizada exigiria
 `background-image`, que nao aceita cor fora de token).
 
+## Componentes de `src/app/ui/` (KAN-91)
+
+Visual e estados descritos na secao "Components" do `DESIGN.md`; referencia em
+`docs/design/kan-84/componentes.html`.
+
+| Componente | Seletor | Variantes e estados |
+| ---------- | ------- | ------------------- |
+| Icone | `<uc-icon>` | 18 nomes (`UcIconName`), `size` `md` (22px) ou `sm` (18px); sempre `aria-hidden` |
+| Avatar | `<uc-avatar>` | `cor` marca, neutro, azul, verde, areia, violeta (`corDoAvatar(id)`); `forma` circulo ou quadrado; `tamanho` sm, md, lg |
+| Botao | `button[uc-button]` | `variant` primary, secondary, danger; `size` default (36px) ou large (44px); 44px abaixo de 760px; `disabled` ou `aria-disabled` |
+| Badge | `<uc-badge>` | `variant` obrigatoria: counter, role, course, open, state |
+| Card | `<uc-card>` | sem inputs; raio xl, borda, sem sombra; so blocos laterais |
+| Esqueleto | `<uc-skeleton>` | sem inputs; `aria-hidden`; largura do consumidor |
+| Estado vazio | `<uc-empty-state>` | `titulo`, `descricao` opcional, acao por `[acao]` |
+| Aviso | `<uc-note>` | `tom` neutro, alerta, erro (`role="alert"` so no erro); `titulo`; acao por `[acao]` |
+| Campo | `<uc-field>` + `ucInput` | `label`, `hint`, `error`; repouso, foco, erro, selecao (estilo em `_input.scss`) |
+| Menu suspenso | `<uc-menu>` | `itens` (`perigo`, `desabilitado`), `direcao` abaixo ou acima, `[(aberto)]`, `gatilho` |
+| Filtro segmentado | `<uc-segmented>` | `opcoes` (com `contador` opcional), `[(valor)]`; radiogroup com setas |
+| Indicador de membro | `<uc-member-indicator>` | `estado` nao-membro, entrando, membro, membro-menu, restrito |
+| Toast | `<uc-toast-host>` + `ToastService` | `tipo` sucesso ou erro; `acao` opcional; pausa com foco |
+
+## Breakpoints (`_breakpoints.scss`, KAN-91)
+
+| Variavel | Valor | Efeito na casca |
+| -------- | ----- | --------------- |
+| `$uc-bp-tablet` | 1180px | ate aqui a coluna lateral some (menu + conteudo) |
+| `$uc-bp-mobile` | 760px | ate aqui uma coluna, barra superior, barra de abas e gaveta "Suas comunidades"; botoes e campos com `--uc-touch-target` |
+
+Use com `@use '<caminho>/styles/breakpoints' as bp;` e
+`@media (max-width: bp.$uc-bp-mobile)`. Nao repita o valor literal em `@media`.
+
 ## Guard "nada hardcoded" (`scss-guard.spec.ts`, Story 14.7)
 
 Sucede o guard da Story 14.2 (`src/app/ui/ui-styles.spec.ts`, deletado) e vale
@@ -115,9 +148,8 @@ Duas valvulas, ambas explicitas:
   valido (a geometria pode ser literal, a cor nao);
 - uma declaracao fica isenta quando a propria linha, ou a linha imediatamente
   acima, traz `// layout-literal: <motivo>` **com motivo nao vazio**. E para as
-  dimensoes estruturais que o `DESIGN.md` escreve com "~" e defere (sidebar de
-  220px, coluna de leitura de 720px, `minmax()` de grade). Motivo vazio nao
-  isenta nada.
+  dimensoes estruturais que nao tem token (avatar de 34px, contador de 22px,
+  altura maxima de painel, `minmax()` de grade). Motivo vazio nao isenta nada.
 
 ## Modo escuro
 
@@ -133,7 +165,7 @@ marcado com elas herda dali.
 
 ## Tabela de tokens
 
-Nome -> valor -> papel no `DESIGN.md`. Esta tabela e verificada contra
+Nome -> valor -> papel no `DESIGN.md` (no frontmatter, sem o prefixo `--uc-`). Esta tabela e verificada contra
 `_tokens.scss` compilado por `tokens.spec.ts` (linha fora de sincronia = teste
 vermelho).
 
@@ -142,7 +174,7 @@ vermelho).
 | Token | Valor | Papel |
 | --- | --- | --- |
 | `--uc-color-bg` | `#FFFFFF` | canvas base (KAN-91: era #FAFAF8) |
-| `--uc-color-surface` | `#FFFFFF` | superficie de card |
+| `--uc-color-surface` | `#FFFFFF` | superficie de card, campo, menu |
 | `--uc-color-surface-muted` | `#F7F7F8` | hover, avisos, publicacao oculta |
 | `--uc-color-surface-strong` | `#F1F1F3` | filtro segmentado, chips, avatar neutro |
 | `--uc-color-border` | `#ECECEE` | filete decorativo |
@@ -223,19 +255,19 @@ Um valor fora dela e uma escalada "Ask First", nao um literal.
 
 | Token | Valor | Papel |
 | --- | --- | --- |
-| `--uc-radius-sm` | `8px` | controles pequenos |
-| `--uc-radius-default` | `10px` | cards e inputs |
-| `--uc-radius-md` | `12px` | campo, item de menu |
-| `--uc-radius-lg` | `16px` | aviso, menu suspenso |
-| `--uc-radius-xl` | `20px` | bloco lateral, painel |
+| `--uc-radius-sm` | `8px` | marca, avatar de comunidade |
+| `--uc-radius-default` | `10px` | item de menu suspenso, esqueleto, avatar quadrado |
+| `--uc-radius-md` | `12px` | campo, item do menu lateral |
+| `--uc-radius-lg` | `16px` | aviso, menu suspenso, toast |
+| `--uc-radius-xl` | `20px` | bloco lateral (`uc-card`), estado vazio |
 | `--uc-radius-full` | `9999px` | botao, badge, avatar |
 
 ### Elevacao
 
 | Token | Valor | Papel |
 | --- | --- | --- |
-| `--uc-shadow-overlay` | `0 8px 32px rgba(24, 24, 27, 0.12), 0 1px 3px rgba(24, 24, 27, 0.06)` | dropdowns |
-| `--uc-shadow-toast` | `0 8px 32px rgba(24, 24, 27, 0.18)` | toasts |
+| `--uc-shadow-overlay` | `0 8px 32px rgba(24, 24, 27, 0.12), 0 1px 3px rgba(24, 24, 27, 0.06)` | menus suspensos, painel de notificacoes |
+| `--uc-shadow-toast` | `0 8px 32px rgba(24, 24, 27, 0.18)` | toast escuro |
 
 ## Verificacao rapida
 

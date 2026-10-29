@@ -17,10 +17,9 @@ const entryScss = join(stylesDir, '..', 'styles.scss');
 const readmePath = join(stylesDir, 'README.md');
 
 /**
- * EXPECTED lists the tokens of the redesign (KAN-91), with values from
- * docs/decisoes/2026-10-24-nova-direcao-visual.md (DESIGN.md is rewritten later
- * in the same PR). It is the contract: the compiled `--uc-*` set must equal
- * this key set exactly.
+ * EXPECTED lists the tokens of the redesign (KAN-91), with the values of the
+ * DESIGN.md frontmatter (origin: docs/decisoes/2026-10-24-nova-direcao-visual.md).
+ * It is the contract: the compiled `--uc-*` set must equal this key set exactly.
  */
 const EXPECTED: Record<string, Record<string, string>> = {
   colors: {
