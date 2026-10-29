@@ -96,6 +96,27 @@ export async function mockFeedOk(page: Page): Promise<void> {
   await mockNotificacoes(page, []);
 }
 
+/** Comunidade no formato de `ComunidadeResponse` do `openapi.yaml`, como `GET /comunidades/minhas` devolve. */
+export interface ComunidadeMock {
+  id: number;
+  nome: string;
+  tipo: 'CURSO' | 'ABERTA';
+}
+
+/**
+ * `GET /comunidades/minhas` -> 200 com as comunidades dadas (seção "Suas comunidades" do
+ * menu e da gaveta do celular). Registrar depois de `mockFeedOk`, que responde `[]`.
+ */
+export function mockMinhasComunidades(page: Page, comunidades: ComunidadeMock[]): Promise<void> {
+  const corpo = comunidades.map((c, i) => ({
+    ...c,
+    descricao: null,
+    souMembro: true,
+    criadoEm: `2026-01-0${(i % 9) + 1}T00:00:00Z`,
+  }));
+  return rota(page, (url) => ehApi(url) && url.pathname === '/comunidades/minhas', 200, JSON.stringify(corpo));
+}
+
 /**
  * Só a API (`:8080`). `/comunidades/{id}` também é rota do Angular (`:4200`): sem
  * isso o mock responderia a própria navegação da página com JSON.

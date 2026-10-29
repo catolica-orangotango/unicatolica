@@ -6,6 +6,7 @@ import {
   mockMeuPerfil,
   mockPerfilDeUsuario,
 } from './support/mocks';
+import { cartaoDaConta } from './support/casca';
 import { plantarToken } from './support/seed';
 
 /**
@@ -24,7 +25,7 @@ test('pelo menu da conta, completa o perfil e ele continua salvo depois de recar
   await mockMeuPerfil(page, { usuarioId: 1, nome: 'Usuário Teste', curso: null, periodo: null, interesses: [] });
   await page.goto('/feed');
 
-  await page.getByRole('button', { name: 'Menu da conta' }).click();
+  await cartaoDaConta(page).click();
   await page.getByRole('menuitem', { name: 'Perfil' }).click();
   await expect(page).toHaveURL(/\/perfil$/);
   await expect(page.getByRole('heading', { name: 'Complete seu perfil' })).toBeVisible();

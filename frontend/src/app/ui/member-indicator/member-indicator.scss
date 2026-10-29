@@ -2,16 +2,20 @@
 // .member / .locked do mockup. Só tokens var(--uc-*). O estado nunca é só cor:
 // todo estado tem texto (RNF06).
 
+// A cor fica no host e o estado "membro" herda: assim a tela que põe o
+// indicador sobre fundo escuro (cabeçalho bordô da comunidade) troca a cor só
+// no seletor do elemento, sem perder o contraste (axe color-contrast).
 :host {
   display: inline-flex;
   align-items: center;
+  color: var(--uc-color-green-ok);
 }
 
 .uc-member-indicator__membro {
   display: inline-flex;
   align-items: center;
   gap: var(--uc-space-2);
-  color: var(--uc-color-green-ok);
+  color: inherit;
   font-size: var(--uc-font-size-small);
   font-weight: var(--uc-font-weight-semibold);
 }

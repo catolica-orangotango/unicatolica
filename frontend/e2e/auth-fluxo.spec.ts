@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { mockFeedOk, mockLogin401, mockLoginOk } from './support/mocks';
+import { cartaoDaConta } from './support/casca';
 import { semToken, tokenAtual } from './support/seed';
 
 /**
@@ -24,7 +25,7 @@ async function preencherLogin(page: import('@playwright/test').Page, email: stri
 }
 
 test.describe('login mockado', () => {
-  test('credencial válida cai na shell em /feed com sidebar e avatar', async ({ page }) => {
+  test('credencial válida cai na shell em /feed com o menu e o cartão da conta', async ({ page }) => {
     // Conteúdo de /feed (Home, Epic 2) é fora de escopo: só mocado pra a
     // página assentar sem depender de backend, sem asserção sobre ele aqui.
     await mockFeedOk(page);
@@ -33,7 +34,7 @@ test.describe('login mockado', () => {
 
     await expect(page).toHaveURL(/\/feed$/);
     await expect(page.getByRole('navigation', { name: 'Navegação principal' })).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Menu da conta' })).toBeVisible();
+    await expect(cartaoDaConta(page)).toBeVisible();
     expect(await tokenAtual(page)).not.toBeNull();
   });
 
