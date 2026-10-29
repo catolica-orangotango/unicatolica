@@ -107,6 +107,10 @@
 .shell__comunidade-item:hover,
 .shell__conta:hover,
 .shell__notificacao-item:hover,
+.shell__menu-item:hover {
+  background: var(--uc-color-surface-muted);
+}
+
 // Rota ativa (.nl.on): tinta forte e negrito, sem fundo; ícone com traço mais grosso.
 .shell__nav-item--active {
   color: var(--uc-color-ink);
@@ -187,6 +191,11 @@
   border-radius: var(--uc-radius-sm);
   color: var(--uc-color-ink);
   font-size: var(--uc-font-size-meta);
+}
+
+// Dropdown interino do celular: corpo de texto, como antes da KAN-91.
+.shell__menu-item {
+  font-size: var(--uc-font-size-body);
 }
 
 .shell__notificacao-item--nao-lida {

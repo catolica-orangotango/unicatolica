@@ -1100,6 +1100,30 @@ describe('shell.scss - contrato de estilo por token', () => {
     expect(ativo).not.toMatch(/background/);
   });
 
+  it('hover dos itens clicáveis só pinta o fundo surface-muted, sem mudar peso nem cor', () => {
+    for (const seletor of [
+      '.shell__nav-item:hover',
+      '.shell__comunidade-item:hover',
+      '.shell__conta:hover',
+      '.shell__notificacao-item:hover',
+      '.shell__menu-item:hover',
+    ]) {
+      const m = new RegExp(`${seletor.replace(/[.]/g, '\\.')}\\s*[,{]`).exec(semMedia);
+      expect(m, seletor).toBeTruthy();
+      // Corpo da regra que contém o seletor (até a primeira chave de fechamento).
+      const corpo = semMedia.slice(semMedia.indexOf('{', m!.index) + 1, semMedia.indexOf('}', m!.index));
+      expect(corpo, seletor).toMatch(/background:\s*var\(--uc-color-surface-muted\)/);
+      expect(corpo, seletor).not.toMatch(/font-weight|(?:^|[^-])color:/);
+    }
+  });
+
+  it('o dropdown interino do celular mantém o corpo de texto (font-size body)', () => {
+    // Junta todas as regras que terminam em `.shell__menu-item {` (a última vence na cascata).
+    const corpos = [...semMedia.matchAll(/\.shell__menu-item\s*\{([^}]*)\}/g)].map((m) => m[1]);
+    const tamanhos = corpos.flatMap((c) => [...c.matchAll(/font-size:\s*([^;]+);/g)].map((m) => m[1].trim()));
+    expect(tamanhos.at(-1)).toBe('var(--uc-font-size-body)');
+  });
+
   // O "sem laranja" já é travado para todo src/app por src/styles/tokens.spec.ts
   // (consumidores de src/app); repetir a palavra aqui faria este spec ser ofensor.
   it('sem o breakpoint legado $uc-breakpoint-nav', () => {
