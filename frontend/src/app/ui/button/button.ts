@@ -1,22 +1,29 @@
-import { Component } from '@angular/core';
+import { Component, input } from '@angular/core';
+
+export type UcButtonVariant = 'primary' | 'secondary' | 'danger';
 
 /**
- * Story 14.2 - strong-action button (the only one in the system).
+ * Botão do redesign (KAN-91): primário (maroon), secundário (contorno) e de perigo.
  *
- * Attribute selector on a real `<button>`: `<button uc-button>`. Keeping it on
- * the native element (not a wrapper) preserves native `type` / `disabled` /
- * form participation / focus - the accessibility floor. No inputs and no
- * secondary / ghost / size / tone variant (DESIGN.md lists none); the consumer
- * uses native `type` and `disabled` directly.
- *
- * Styling (see button.scss): maroon fill, surface text, pill; a visible
- * `--uc-color-maroon` keyboard-focus outline via `:focus-visible`; dim +
- * `cursor: not-allowed` while `[disabled]`.
+ * Seletor de atributo sobre um `<button>` real: `<button uc-button>`. Manter o
+ * elemento nativo preserva `type`, `disabled`, participação em formulário e foco.
+ * Sem inputs, o botão é o primário no tamanho padrão (compatível com os usos
+ * anteriores). `variant` e `size` viram classes no host (`uc-button--secondary`,
+ * `uc-button--large`); o visual fica em button.scss.
  */
 @Component({
   selector: 'button[uc-button]',
   template: '<ng-content></ng-content>',
   styleUrl: './button.scss',
-  host: { class: 'uc-button' },
+  host: {
+    class: 'uc-button',
+    '[class.uc-button--primary]': "variant() === 'primary'",
+    '[class.uc-button--secondary]': "variant() === 'secondary'",
+    '[class.uc-button--danger]': "variant() === 'danger'",
+    '[class.uc-button--large]': "size() === 'large'",
+  },
 })
-export class UcButton {}
+export class UcButton {
+  readonly variant = input<UcButtonVariant>('primary');
+  readonly size = input<'default' | 'large'>('default');
+}

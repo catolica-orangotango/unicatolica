@@ -1,23 +1,57 @@
-// UniCatolica - Campus Clean base component (Story 14.2).
-// The one strong-action button style in the system: maroon fill, surface text,
-// pill, body size, semibold. Sits directly on a native <button> (attribute
-// selector) so type / disabled / form participation / focus stay native.
-//
-// Colour / size / radius values are var(--uc-*) tokens from Story 14.1.
-// Structural literals only: `border: 0`, the 1px/2px focus outline, and the
-// `.5` disabled opacity. The focus ring and disabled dim are values DESIGN.md
-// omits - composed from --uc-color-maroon + structural literals with no new
-// token, provisional and revisited in Story 14.9 ("Ask First" escalation).
+// UniCatolica - botão do redesign (KAN-91).
+// Pílula de 36px (44px no tamanho grande e em telas móveis), fonte small
+// semibold. Três variantes (primária, secundária, de perigo) por classe no host.
+// Fica sobre um <button> nativo (seletor de atributo), então type, disabled e
+// foco continuam nativos. Só tokens var(--uc-*); 36px não é token, por isso
+// calc(var(--uc-space-unit) * 9). Literais estruturais: borda de 1px e o anel
+// de foco de 2px.
+@use '../../../styles/breakpoints' as bp;
 
 :host {
-  border: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: calc(var(--uc-space-unit) * 2);
+  height: calc(var(--uc-space-unit) * 9);
+  padding: 0 calc(var(--uc-space-unit) * 4.5);
+  border: 1px solid transparent;
   border-radius: var(--uc-radius-full);
   background: var(--uc-color-maroon);
   color: var(--uc-color-surface);
-  padding: var(--uc-space-unit) calc(var(--uc-space-unit) * 4);
-  font-size: var(--uc-font-size-body);
+  font-size: var(--uc-font-size-small);
   font-weight: var(--uc-font-weight-semibold);
+  white-space: nowrap;
   cursor: pointer;
+}
+
+:host(.uc-button--large) {
+  height: var(--uc-touch-target);
+  padding: 0 calc(var(--uc-space-unit) * 5.5);
+  font-size: var(--uc-font-size-body);
+}
+
+:host(.uc-button--primary:hover:not(:disabled):not([aria-disabled='true'])) {
+  background: var(--uc-color-maroon-hover);
+}
+
+:host(.uc-button--secondary) {
+  background: var(--uc-color-surface);
+  color: var(--uc-color-ink);
+  border-color: var(--uc-color-border-strong);
+}
+
+:host(.uc-button--secondary:hover:not(:disabled):not([aria-disabled='true'])) {
+  background: var(--uc-color-surface-muted);
+}
+
+:host(.uc-button--danger) {
+  background: var(--uc-color-surface);
+  color: var(--uc-color-error);
+  border-color: var(--uc-color-error-border);
+}
+
+:host(.uc-button--danger:hover:not(:disabled):not([aria-disabled='true'])) {
+  background: var(--uc-color-error-tint);
 }
 
 :host(:focus-visible) {
@@ -25,9 +59,18 @@
   outline-offset: 2px;
 }
 
-// `:disabled` pseudo-class (not an attribute selector) so the dim also applies
-// to a button made non-interactive by an ancestor `<fieldset disabled>`.
-:host(:disabled) {
-  opacity: 0.5;
+// `:disabled` (e não o atributo) também cobre <fieldset disabled>. Vem por
+// último para vencer as variantes; sem opacidade, só as cores abaixo.
+:host(:disabled),
+:host([aria-disabled='true']) {
+  background: var(--uc-color-surface-strong);
+  color: var(--uc-color-ink-disabled);
+  border-color: transparent;
   cursor: not-allowed;
+}
+
+@media (max-width: bp.$uc-bp-mobile) {
+  :host {
+    height: var(--uc-touch-target);
+  }
 }

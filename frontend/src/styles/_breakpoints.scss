@@ -1,11 +1,14 @@
-// Breakpoints (Story 14.4).
+// Breakpoints.
 //
-// A CSS custom property (`--uc-*`) can't be read inside an `@media` feature
-// condition - that's a CSS platform limitation, not a choice - so this single
-// value lives as a Sass variable instead of a `_tokens.scss` entry. A
-// stylesheet that needs it imports this partial with `@use` and reads
-// `bp.$uc-breakpoint-nav`. Nothing here compiles to CSS output on its own.
+// Uma custom property (`--uc-*`) não pode ser lida na condição de um `@media`
+// (limitação da plataforma CSS, não uma escolha), então estes valores vivem
+// como variáveis Sass em vez de entradas do `_tokens.scss`. Quem precisa deles
+// importa este parcial com `@use` e lê, por exemplo, `bp.$uc-bp-mobile`.
+// Nada aqui gera CSS por conta própria.
 //
-// Decision log: 2026-10-07 prep for Sprint 2 (Story 14.4) - sidebar becomes an
-// overlay drawer below this width; nothing above it changes.
+// - $uc-bp-tablet / $uc-bp-mobile: breakpoints do redesign (KAN-91).
+// - $uc-breakpoint-nav: legado da Story 14.4 (sidebar vira drawer abaixo
+//   dele); sai na Task 13 do KAN-91.
+$uc-bp-tablet: 1180px;
+$uc-bp-mobile: 760px;
 $uc-breakpoint-nav: 1024px;
