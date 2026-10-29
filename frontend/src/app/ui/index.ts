@@ -12,7 +12,7 @@ export { UcInput } from './field/input';
 export { UcIcon, type UcIconName } from './icon/icon';
 export { UcEmptyState } from './empty-state/empty-state';
 export { UcMenu, type UcMenuItem } from './menu/menu';
-export { UcMemberIndicator } from './member-indicator/member-indicator';
+export { UcMemberIndicator, type UcMemberIndicatorEstado } from './member-indicator/member-indicator';
 export { UcNote, type UcNoteTom } from './note/note';
 export { UcSegmented, type UcSegmentedOpcao } from './segmented/segmented';
 export { UcSkeleton } from './skeleton/skeleton';
