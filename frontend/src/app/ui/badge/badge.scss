@@ -8,6 +8,8 @@
   padding: calc(var(--uc-space-unit) / 2) calc(var(--uc-space-unit) * 2);
   font-size: var(--uc-font-size-label);
   font-weight: var(--uc-font-weight-semibold);
+  // O rótulo de um selo nunca quebra linha: em coluna estreita quem cede é o consumidor.
+  white-space: nowrap;
 }
 
 // Contador: círculo/pílula de 22px, conteúdo centralizado.

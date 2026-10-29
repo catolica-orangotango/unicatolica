@@ -128,6 +128,10 @@ describe('badge.scss style contract', () => {
     expect(norm).not.toContain('letter-spacing');
   });
 
+  it('base: o rótulo nunca quebra linha (o selo não vira uma pílula torta em coluna estreita)', () => {
+    expect(bloco(':host')).toContain('white-space: nowrap');
+  });
+
   it('counter: fundo maroon, texto surface, 22px mínimos', () => {
     const b = bloco(':host(.uc-badge--counter)');
     expect(b).toContain('background: var(--uc-color-maroon)');

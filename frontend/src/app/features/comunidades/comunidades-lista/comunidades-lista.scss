@@ -71,6 +71,8 @@
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
+  // Sem espaço para o selo ao lado do nome, ele desce em vez de espremer o texto.
+  flex-wrap: wrap;
   gap: calc(var(--uc-space-unit) * 2);
   margin-bottom: calc(var(--uc-space-unit) * 2);
 }
