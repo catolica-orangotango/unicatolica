@@ -9,7 +9,7 @@ import { Component } from '@angular/core';
  * secondary / ghost / size / tone variant (DESIGN.md lists none); the consumer
  * uses native `type` and `disabled` directly.
  *
- * Styling (see button.scss): orange fill, surface text, pill; a visible
+ * Styling (see button.scss): maroon fill, surface text, pill; a visible
  * `--uc-color-maroon` keyboard-focus outline via `:focus-visible`; dim +
  * `cursor: not-allowed` while `[disabled]`.
  */

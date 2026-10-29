@@ -1,5 +1,5 @@
 // UniCatolica - Campus Clean base component (Story 14.2).
-// The one strong-action button style in the system: orange fill, surface text,
+// The one strong-action button style in the system: maroon fill, surface text,
 // pill, body size, semibold. Sits directly on a native <button> (attribute
 // selector) so type / disabled / form participation / focus stay native.
 //
@@ -12,7 +12,7 @@
 :host {
   border: 0;
   border-radius: var(--uc-radius-full);
-  background: var(--uc-color-orange);
+  background: var(--uc-color-maroon);
   color: var(--uc-color-surface);
   padding: var(--uc-space-unit) calc(var(--uc-space-unit) * 4);
   font-size: var(--uc-font-size-body);

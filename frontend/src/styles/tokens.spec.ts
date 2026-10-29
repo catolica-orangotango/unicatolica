@@ -7,7 +7,7 @@
  * `--uc-*` custom properties is a hard failure (the frozen I/O matrix demands
  * "Sass compile error -> tokens.spec.ts fails").
  */
-import { readFileSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import * as sass from 'sass';
@@ -116,12 +116,12 @@ const EXPECTED_KEYS = Object.values(EXPECTED)
   .flatMap((group) => Object.keys(group))
   .sort();
 
-const TEXT_ROLES = ['greeting', 'question', 'body', 'meta', 'label-caps'] as const;
+const TEXT_ROLES = ['greeting', 'title-lg', 'title', 'body', 'small', 'meta', 'label'] as const;
 
 /**
  * The exact declaration set each `.uc-text-*` class must carry, per DESIGN.md
  * `typography`: font-size + font-weight for every role, line-height only for
- * `body`, letter-spacing only for `greeting` and `label-caps`. Nothing else --
+ * `body`, letter-spacing only for `greeting` and `title-lg`. Nothing else --
  * no `font-family`, no `text-transform`. Values are `var(--uc-*)` references
  * whose names must resolve against the compiled `:root` token set.
  */
@@ -131,9 +131,14 @@ const ROLE_DECLS: Record<string, Record<string, string>> = {
     'font-weight': 'var(--uc-font-weight-semibold)',
     'letter-spacing': 'var(--uc-letter-spacing-greeting)',
   },
-  question: {
-    'font-size': 'var(--uc-font-size-question)',
-    'font-weight': 'var(--uc-font-weight-semibold)',
+  'title-lg': {
+    'font-size': 'var(--uc-font-size-title-lg)',
+    'font-weight': 'var(--uc-font-weight-bold)',
+    'letter-spacing': 'var(--uc-letter-spacing-greeting)',
+  },
+  title: {
+    'font-size': 'var(--uc-font-size-title)',
+    'font-weight': 'var(--uc-font-weight-bold)',
   },
   body: {
     'font-size': 'var(--uc-font-size-body)',
@@ -144,10 +149,13 @@ const ROLE_DECLS: Record<string, Record<string, string>> = {
     'font-size': 'var(--uc-font-size-meta)',
     'font-weight': 'var(--uc-font-weight-regular)',
   },
-  'label-caps': {
-    'font-size': 'var(--uc-font-size-label-caps)',
-    'font-weight': 'var(--uc-font-weight-caps)',
-    'letter-spacing': 'var(--uc-letter-spacing-label-caps)',
+  small: {
+    'font-size': 'var(--uc-font-size-small)',
+    'font-weight': 'var(--uc-font-weight-regular)',
+  },
+  label: {
+    'font-size': 'var(--uc-font-size-label)',
+    'font-weight': 'var(--uc-font-weight-semibold)',
   },
 };
 
@@ -305,5 +313,25 @@ describe('token declaration site and global scope limits', () => {
     // keyframes, @supports gate or an @import crept into a global partial.
     expect(compiledCss).not.toMatch(/@(media|font-face|keyframes|supports|import)\b/);
     expect(compiledCss).not.toMatch(/prefers-color-scheme/);
+  });
+});
+
+// -- consumidores dos tokens que saem (KAN-91) -------------------------------
+
+function listarArquivos(dir: string): string[] {
+  return readdirSync(dir, { withFileTypes: true }).flatMap((e) => {
+    const caminho = join(dir, e.name);
+    return e.isDirectory() ? listarArquivos(caminho) : [caminho];
+  });
+}
+
+describe('consumidores de src/app', () => {
+  it('nenhum SCSS, HTML ou TS referencia token ou classe que sai no redesign', () => {
+    const appDir = join(stylesDir, '..', 'app');
+    const proibido = /orange|label-caps|font-size-question|font-weight-caps|uc-text-question/;
+    const ofensores = listarArquivos(appDir)
+      .filter((f) => /\.(scss|html|ts)$/.test(f))
+      .filter((f) => proibido.test(readFileSync(f, 'utf8')));
+    expect(ofensores).toEqual([]);
   });
 });

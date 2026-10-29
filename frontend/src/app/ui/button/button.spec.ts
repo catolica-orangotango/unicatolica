@@ -77,8 +77,8 @@ describe('button.scss style contract', () => {
     expect(readFileSync(join(dir, 'button.ts'), 'utf8')).toContain("styleUrl: './button.scss'");
   });
 
-  it('fills with the orange token, surface text, pill radius', () => {
-    expect(norm).toContain('background: var(--uc-color-orange)');
+  it('fills with the maroon token, surface text, pill radius', () => {
+    expect(norm).toContain('background: var(--uc-color-maroon)');
     expect(norm).toContain('color: var(--uc-color-surface)');
     expect(norm).toContain('border-radius: var(--uc-radius-full)');
   });

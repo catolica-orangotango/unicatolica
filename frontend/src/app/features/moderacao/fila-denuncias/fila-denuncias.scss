@@ -35,9 +35,9 @@
 }
 
 .fila__filtro--ativo {
-  background: var(--uc-color-orange-tint);
-  border-color: var(--uc-color-orange);
-  color: var(--uc-color-orange);
+  background: var(--uc-color-maroon-tint);
+  border-color: var(--uc-color-maroon);
+  color: var(--uc-color-maroon);
   font-weight: var(--uc-font-weight-semibold);
 }
 
@@ -104,8 +104,8 @@
 }
 
 .fila__item--selecionado {
-  background: var(--uc-color-orange-tint);
-  border-left-color: var(--uc-color-orange);
+  background: var(--uc-color-maroon-tint);
+  border-left-color: var(--uc-color-maroon);
 }
 
 .fila__item-motivo {

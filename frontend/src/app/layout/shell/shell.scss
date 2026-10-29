@@ -137,11 +137,11 @@
   text-decoration: none;
 }
 
-// Active route ("Início" today) - orange-tint bg + orange text + semibold,
+// Active route ("Início" today) - maroon-tint bg + maroon text + semibold,
 // straight from mockups/home-comunidade.html.
 .shell__nav-item--active {
-  background: var(--uc-color-orange-tint);
-  color: var(--uc-color-orange);
+  background: var(--uc-color-maroon-tint);
+  color: var(--uc-color-maroon);
   font-weight: var(--uc-font-weight-semibold);
 }
 
@@ -176,7 +176,7 @@
   border-radius: var(--uc-radius-full);
   background: var(--uc-color-error);
   color: var(--uc-color-surface);
-  font-size: var(--uc-font-size-label-caps);
+  font-size: var(--uc-font-size-label);
   font-weight: var(--uc-font-weight-semibold);
 }
 
@@ -226,7 +226,7 @@
 }
 
 .shell__notificacao-item:hover {
-  background: var(--uc-color-orange-tint);
+  background: var(--uc-color-maroon-tint);
 }
 
 .shell__notificacao-item--nao-lida {
@@ -259,14 +259,14 @@
 }
 
 .shell__comunidade-item:hover {
-  background: var(--uc-color-orange-tint);
+  background: var(--uc-color-maroon-tint);
 }
 
-// Comunidade atualmente aberta (KAN-89) - mesmo par orange-tint/orange/semibold
+// Comunidade atualmente aberta (KAN-89) - mesmo par maroon-tint/maroon/semibold
 // de .shell__nav-item--active, pra sinalizar seleção com o mesmo vocabulário visual.
 .shell__comunidade-item--ativa {
-  background: var(--uc-color-orange-tint);
-  color: var(--uc-color-orange);
+  background: var(--uc-color-maroon-tint);
+  color: var(--uc-color-maroon);
   font-weight: var(--uc-font-weight-semibold);
 }
 
@@ -403,7 +403,7 @@
 }
 
 .shell__menu-item:hover {
-  background: var(--uc-color-orange-tint);
+  background: var(--uc-color-maroon-tint);
 }
 
 // -- Main content --------------------------------------------------

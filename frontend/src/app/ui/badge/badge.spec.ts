@@ -72,7 +72,7 @@ describe('UcBadge', () => {
 });
 
 // jsdom cannot read computed styles from an external stylesheet, so the pill /
-// orange-tint / per-variant text-colour half of the I/O matrix is pinned to the
+// maroon-tint / per-variant text-colour half of the I/O matrix is pinned to the
 // SCSS source (as Story 14.1's tokens.spec.ts does).
 describe('badge.scss style contract', () => {
   const dir = dirname(fileURLToPath(import.meta.url));
@@ -83,13 +83,13 @@ describe('badge.scss style contract', () => {
     expect(readFileSync(join(dir, 'badge.ts'), 'utf8')).toContain("styleUrl: './badge.scss'");
   });
 
-  it('is a pill with the orange-tint token background', () => {
+  it('is a pill with the maroon-tint token background', () => {
     expect(norm).toContain('border-radius: var(--uc-radius-full)');
-    expect(norm).toContain('background: var(--uc-color-orange-tint)');
+    expect(norm).toContain('background: var(--uc-color-maroon-tint)');
   });
 
-  it('course text is maroon, open text is orange, on the two modifier classes', () => {
+  it('course and open text are both maroon, on the two modifier classes', () => {
     expect(norm).toMatch(/:host\(\.uc-badge--course\)\s*\{[^}]*color: var\(--uc-color-maroon\)/);
-    expect(norm).toMatch(/:host\(\.uc-badge--open\)\s*\{[^}]*color: var\(--uc-color-orange\)/);
+    expect(norm).toMatch(/:host\(\.uc-badge--open\)\s*\{[^}]*color: var\(--uc-color-maroon\)/);
   });
 });

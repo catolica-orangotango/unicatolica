@@ -56,7 +56,7 @@
   width: calc(var(--uc-space-unit) * 8);
   height: calc(var(--uc-space-unit) * 8);
   border-radius: var(--uc-radius-full);
-  background: linear-gradient(135deg, var(--uc-color-orange), var(--uc-color-maroon));
+  background: var(--uc-color-maroon);
   color: var(--uc-color-surface);
   display: flex;
   align-items: center;

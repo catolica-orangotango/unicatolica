@@ -1,5 +1,5 @@
 // UniCatolica - Campus Clean base component (Story 14.2).
-// Community badge: small pill, orange-tint background, meta size, semibold.
+// Community badge: small pill, maroon-tint background, meta size, semibold.
 // Text colour is the ONLY difference between the two variants and the two
 // treatments never coexist (mutually-exclusive host modifier classes).
 // Every value is a var(--uc-*) token from Story 14.1; paddings compose from
@@ -8,7 +8,7 @@
 :host {
   display: inline-block;
   border-radius: var(--uc-radius-full);
-  background: var(--uc-color-orange-tint);
+  background: var(--uc-color-maroon-tint);
   padding: calc(var(--uc-space-unit) / 2) calc(var(--uc-space-unit) * 2);
   font-size: var(--uc-font-size-meta);
   font-weight: var(--uc-font-weight-semibold);
@@ -19,5 +19,5 @@
 }
 
 :host(.uc-badge--open) {
-  color: var(--uc-color-orange);
+  color: var(--uc-color-maroon);
 }

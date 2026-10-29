@@ -1,6 +1,6 @@
 import { Component, input } from '@angular/core';
 
-/** The two community kinds a badge can mark. `course` -> maroon, `open` -> orange. */
+/** The two community kinds a badge can mark. `course` -> maroon, `open` -> maroon (accent). */
 export type UcBadgeVariant = 'course' | 'open';
 
 /**
@@ -9,7 +9,7 @@ export type UcBadgeVariant = 'course' | 'open';
  * Element selector; projects its label text. `variant` is a required typed
  * union so a missing value is an Angular dev-time error, and the template
  * binds exactly one of two mutually-exclusive host modifier classes -
- * `uc-badge--course` (maroon text) XOR `uc-badge--open` (orange text). No code
+ * `uc-badge--course` (maroon text) XOR `uc-badge--open` (maroon text). No code
  * path sets both, so "course colour and open colour never on one badge"
  * (DESIGN.md / epic-14 constraint) holds structurally.
  */
