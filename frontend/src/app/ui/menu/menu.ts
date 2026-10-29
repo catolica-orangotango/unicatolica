@@ -41,12 +41,33 @@ export class UcMenu {
   readonly selecionou = output<string>();
 
   constructor() {
+    this.vigiarGatilho();
     effect(() => {
       if (this.aberto()) {
         untracked(() =>
           afterNextRender(() => this.itensHabilitados()[0]?.focus(), { injector: this.injector }),
         );
       }
+    });
+  }
+
+  /** Aberto, foco saindo do gatilho para fora dele e do painel também fecha. */
+  private vigiarGatilho(): void {
+    effect((onCleanup) => {
+      const gatilho = this.gatilho();
+      if (!this.aberto() || !gatilho) {
+        return;
+      }
+      const aoSair = (evento: FocusEvent) => {
+        const proximo = evento.relatedTarget as Node | null;
+        const painel = this.host.nativeElement.querySelector('.uc-menu__painel');
+        if (proximo && (gatilho.contains(proximo) || painel?.contains(proximo))) {
+          return;
+        }
+        this.fechar(false);
+      };
+      gatilho.addEventListener('focusout', aoSair);
+      onCleanup(() => gatilho.removeEventListener('focusout', aoSair));
     });
   }
 

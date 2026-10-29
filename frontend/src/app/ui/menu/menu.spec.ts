@@ -133,6 +133,48 @@ describe('UcMenu', () => {
     expect(fixture.componentInstance.aberto()).toBe(true);
   });
 
+  it('foco saindo do gatilho para fora fecha o menu', async () => {
+    const { fixture, el, gatilho } = await criar();
+    gatilho.focus();
+    fixture.detectChanges();
+    expect(fixture.componentInstance.aberto()).toBe(true);
+    (el.querySelector('.fora') as HTMLButtonElement).focus();
+    fixture.detectChanges();
+    expect(fixture.componentInstance.aberto()).toBe(false);
+  });
+
+  it('foco indo do gatilho para um item do painel mantém aberto', async () => {
+    const { fixture, gatilho, itens } = await criar();
+    gatilho.focus();
+    itens()[2].focus();
+    fixture.detectChanges();
+    expect(fixture.componentInstance.aberto()).toBe(true);
+  });
+
+  it('item, gatilho e depois fora (Shift+Tab em sequência) fecha', async () => {
+    const { fixture, el, itens, gatilho } = await criar();
+    itens()[2].focus();
+    gatilho.focus();
+    fixture.detectChanges();
+    expect(fixture.componentInstance.aberto()).toBe(true);
+    (el.querySelector('.fora') as HTMLButtonElement).focus();
+    fixture.detectChanges();
+    expect(fixture.componentInstance.aberto()).toBe(false);
+  });
+
+  it('remove o listener do gatilho ao fechar e ao destruir', async () => {
+    const { fixture, gatilho, itens } = await criar();
+    const remover = vi.spyOn(gatilho, 'removeEventListener');
+    itens()[0].click();
+    fixture.detectChanges();
+    expect(remover).toHaveBeenCalledWith('focusout', expect.any(Function));
+    remover.mockClear();
+    fixture.componentInstance.aberto.set(true);
+    fixture.detectChanges();
+    fixture.destroy();
+    expect(remover).toHaveBeenCalledWith('focusout', expect.any(Function));
+  });
+
   it('foco entre itens do painel não fecha', async () => {
     const { fixture, itens } = await criar();
     itens()[2].focus();
