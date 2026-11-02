@@ -1,5 +1,6 @@
 import { DatePipe } from '@angular/common';
 import { Component, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Comunidade, ComunidadesService } from '../comunidades.service';
 import { ToastService, UcButton, UcMemberIndicator } from '../../../ui';
@@ -31,10 +32,13 @@ export class ComunidadeDetalhe {
   protected readonly processando = signal(false);
 
   constructor() {
-    // Componente é recriado a cada navegação pra um :id diferente (rota simples,
-    // sem reuse customizado) — o snapshot já basta, não precisa assinar paramMap.
-    const id = Number(this.route.snapshot.paramMap.get('id'));
-    this.carregar(id);
+    // O Angular REAPROVEITA a instância do componente ao navegar entre
+    // :id diferentes da mesma rota (sem RouteReuseStrategy customizada) — o
+    // construtor só roda uma vez, então o snapshot sozinho travava na primeira
+    // comunidade aberta (KAN-89). Assina paramMap pra recarregar a cada troca.
+    this.route.paramMap.pipe(takeUntilDestroyed()).subscribe((params) => {
+      this.carregar(Number(params.get('id')));
+    });
   }
 
   private carregar(id: number): void {
