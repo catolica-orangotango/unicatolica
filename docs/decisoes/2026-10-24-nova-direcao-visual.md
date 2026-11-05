@@ -1,7 +1,7 @@
 # Decisão: nova direção visual do front-end (redesign)
 
 - **Data:** 2026-10-24
-- **Estado:** proposta, aguardando aprovação do time no KAN-84
+- **Estado:** aprovada no KAN-84 (26/10/2026) e implementada no KAN-91
 - **Ticket:** KAN-84 (Epic 14, KAN-14)
 - **Arquitetura (AD-1 a AD-11):** sem alteração. Muda só a camada visual (`frontend/src/styles/` e `frontend/src/app/ui/`)
 - **Mockups:** https://claude.ai/artifact/4J4Uk9aqZ8LZVt7H5FaHQL (link privado; o responsável compartilha com o time). Cópia versionada em [`docs/design/kan-84/`](../design/kan-84/)
@@ -65,6 +65,11 @@ Nomes no padrão atual `--uc-*`. "Entra" é token novo, "muda" mantém o nome co
 | `--uc-color-warn-tint` | | #FDF5E7 | entra |
 | `--uc-color-avatar-{blue,green,sand,violet}` | | #2B4A72, #2F6141, #6B4E1F, #4E3A72 | entra (iniciais) |
 | `--uc-color-avatar-{blue,green,sand,violet}-bg` | | #E8EEF6, #EAF3EC, #F3EEE6, #EFEAF6 | entra (fundo do avatar) |
+| `--uc-color-ink-nav` | | #3F3F46 | entra na KAN-91 (item de menu lateral, 10,44:1) |
+| `--uc-color-ink-disabled` | | #8A8A93 | entra na KAN-91 (texto de controle desabilitado, isento do WCAG) |
+| `--uc-color-error-border` | | #F0C9C6 | entra na KAN-91 (borda do aviso de erro) |
+| `--uc-color-toast-ok` | | #B9E4C9 | entra na KAN-91 (ícone de sucesso sobre toast escuro) |
+| `--uc-color-toast-error` | | #FFB4AB | entra na KAN-91 (ícone de erro sobre toast escuro) |
 
 ### Tipografia
 
@@ -157,7 +162,8 @@ Detalhe visual na folha [`docs/design/kan-84/componentes.html`](../design/kan-84
 
 ## Consequências
 
-- `DESIGN.md` da raiz é reescrito para o novo sistema no primeiro ticket de implementação, junto com `_tokens.scss`, no mesmo PR, como manda `frontend/src/styles/README.md`. Até lá ele continua descrevendo o Campus Clean que está no ar.
-- `tokens.spec.ts` e `scss-guard.spec.ts` precisam ser atualizados no mesmo PR dos tokens (tokens que saem, entram e mudam).
-- A implementação vira tickets da sprint seguinte, um por grupo de telas, com critérios verificáveis contra os mockups: (1) casca, tokens e componentes de `ui/`; (2) Entrar e Criar conta; (3) Início do aluno e do moderador; (4) Comunidades e Comunidade; (5) Perfil; (6) Fila de denúncias; (7) Painel admin. Os itens marcados como "backend pendente" nos mockups (abrir com `#anotacoes`) dependem de contrato novo no `openapi.yaml` (AD-4) e entram nos tickets dos respectivos módulos.
+- O KAN-91 (casca, tokens e componentes de `ui/`) aplicou a tabela de tokens acima em `frontend/src/styles/_tokens.scss` e reescreveu o `DESIGN.md` da raiz para o novo sistema no mesmo PR. Os cinco tokens marcados "entra na KAN-91" não estavam na proposta original e entraram porque a implementação precisou deles; estão no frontmatter do `DESIGN.md` e no `README.md` de `styles/`.
+- `tokens.spec.ts` e `scss-guard.spec.ts` foram atualizados no mesmo PR: os tokens que saem não são mais declarados nem referenciados em `src/app/`, e os que entram e mudam estão travados contra o `_tokens.scss` e a tabela do `README.md`.
+- Ficaram para depois, registrados em `docs/dividas-tecnicas.md`, os acertos que o KAN-91 não fechou (seta do `select`, notificações de moderador no celular, ícones de "Em breve", coluna lateral vazia, contratos do `UcInput` e do `UcMenu`, painel de notificações no fluxo do menu).
+- O restante da implementação segue em tickets, um por grupo de telas, com critérios verificáveis contra os mockups: (1) casca, tokens e componentes de `ui/` (KAN-91, feito); (2) Entrar e Criar conta; (3) Início do aluno e do moderador; (4) Comunidades e Comunidade; (5) Perfil; (6) Fila de denúncias; (7) Painel admin. Os itens marcados como "backend pendente" nos mockups (abrir com `#anotacoes`) dependem de contrato novo no `openapi.yaml` (AD-4) e entram nos tickets dos respectivos módulos.
 - Os 4 bugs achados na crítica (login ignora `EMAIL_NAO_CONFIRMADO`, perfil perde o interesse digitado, botão da comunidade sobrepõe o nome em 360px, foco bordô invisível na faixa bordô) entram nos tickets das telas correspondentes.

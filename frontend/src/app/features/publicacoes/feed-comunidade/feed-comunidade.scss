@@ -71,9 +71,7 @@
 }
 
 .feed__titulo {
-  font-size: var(--uc-font-size-label-caps);
-  text-transform: uppercase;
-  letter-spacing: var(--uc-letter-spacing-label-caps);
+  font-size: var(--uc-font-size-label);
   color: var(--uc-color-ink-faint);
   margin: 0 0 calc(var(--uc-space-unit) * 2.5);
 }
@@ -107,7 +105,7 @@
   width: calc(var(--uc-space-unit) * 9);
   height: calc(var(--uc-space-unit) * 9);
   border-radius: var(--uc-radius-full);
-  background: linear-gradient(135deg, var(--uc-color-orange), var(--uc-color-maroon));
+  background: var(--uc-color-maroon);
   color: var(--uc-color-surface);
   font-size: var(--uc-font-size-meta);
   font-weight: var(--uc-font-weight-semibold);

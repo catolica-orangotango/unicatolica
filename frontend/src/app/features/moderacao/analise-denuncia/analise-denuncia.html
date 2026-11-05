@@ -1,5 +1,5 @@
 @let d = denuncia();
-<h2 id="analise-titulo" class="uc-text-question analise__titulo">Denúncia #{{ d.id }}</h2>
+<h2 id="analise-titulo" class="uc-text-title analise__titulo">Denúncia #{{ d.id }}</h2>
 @if (d.conteudo.comunidadeId !== null) {
   <a class="uc-text-meta analise__link" [routerLink]="['/comunidades', d.conteudo.comunidadeId]">Ver comunidade</a>
 }

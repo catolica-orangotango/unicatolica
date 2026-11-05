@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { mockCursosOk, mockFeedOk, mockMeuPerfil, mockNotificacoes, type NotificacaoMock } from './support/mocks';
+import { cartaoDaConta } from './support/casca';
 import { plantarToken } from './support/seed';
 
 /**
@@ -75,7 +76,7 @@ test('salvar o perfil atualiza o badge de notificações sem precisar reabrir o 
   const badge = page.locator('.shell__nav-badge');
   await expect(badge).toHaveText('1');
 
-  await page.getByRole('button', { name: 'Menu da conta' }).click();
+  await cartaoDaConta(page).click();
   await page.getByRole('menuitem', { name: 'Perfil' }).click();
   await expect(page).toHaveURL(/\/perfil$/);
 

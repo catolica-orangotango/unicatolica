@@ -1,21 +1,12 @@
-// Toast host (Story 14.5).
+// Toast host (Story 14.5, redesign KAN-91).
 //
-// Fixed bottom-right stack, mounted once in app.html so it never competes
-// with the topbar avatar dropdown (top-right, shell.scss) or the sidebar
-// (left). Each toast is a card-like surface - surface bg + 1px border +
-// radius-md + the same diffuse shadow dropdowns use - with a green-ok
-// checkmark icon (member-indicator's "positive confirmation" language) and
-// its own entrance-only fade/slide animation.
-//
-// 150ms ease-out matches the duration shell.scss's dropdown fade already
-// established (shell.scss:141, "Story 14.5 owns motion") so the app has one
-// consistent motion value. No exit animation: an item disappears immediately
-// when ToastService removes it from the array, same as the dropdown's own
-// close behaviour.
-//
-// Every colour/spacing/radius/shadow value is a var(--uc-*) token; only the
-// svg's own viewBox/path/stroke-width numbers and the 1px border are
-// literal (same allowance every existing ui/ component uses).
+// Pilha fixa no canto inferior direito; abaixo do breakpoint mobile ocupa a
+// largura da tela, acima da barra de abas. Cada toast e uma pilula escura
+// (ink) com icone colorido (toast-ok / toast-error), mensagem e, opcional,
+// um botao de acao. Animacao de entrada de 150ms, sem saida; some com
+// prefers-reduced-motion. Tudo em tokens var(--uc-*).
+
+@use '../../../styles/breakpoints' as bp;
 
 :host {
   display: block;
@@ -25,37 +16,50 @@
   position: fixed;
   right: var(--uc-space-page-margin);
   bottom: var(--uc-space-page-margin);
-  // Placeholder stacking value: sufficient today because no other overlay
-  // exists yet. Revisit if/when a modal or dialog is introduced - it is not
-  // backed by any structural precedent elsewhere in the app.
+  // Valor provisorio de empilhamento: suficiente hoje, sem outro overlay.
   z-index: 1;
   display: flex;
   flex-direction: column;
   align-items: flex-end;
   gap: calc(var(--uc-space-unit) * 2);
-  // Fixed cap (not viewport-relative - vh isn't an allowed token unit here)
-  // so a long queue scrolls internally instead of pushing older toasts off
-  // a short/mobile viewport (RNF02).
+  // Teto fixo para que uma fila longa role internamente (RNF02).
   max-height: calc(var(--uc-space-unit) * 120);
   overflow-y: auto;
-  pointer-events: none; // empty wrapper never blocks clicks
+  pointer-events: none; // wrapper vazio nunca bloqueia cliques
+}
+
+@media (max-width: bp.$uc-bp-mobile) {
+  .uc-toast-host {
+    left: var(--uc-space-page-margin);
+    // Acima da barra de abas (16 * unidade) mais a margem da pagina.
+    bottom: calc(var(--uc-space-unit) * 16 + var(--uc-space-page-margin));
+    align-items: stretch;
+  }
 }
 
 .uc-toast-host__item {
   display: flex;
   align-items: center;
-  gap: calc(var(--uc-space-unit) * 2);
-  padding: calc(var(--uc-space-unit) * 3) calc(var(--uc-space-unit) * 4);
-  max-width: calc(var(--uc-space-unit) * 90);
+  gap: calc(var(--uc-space-unit) * 3);
+  padding: calc(var(--uc-space-unit) * 2.5) calc(var(--uc-space-unit) * 2.5)
+    calc(var(--uc-space-unit) * 2.5) calc(var(--uc-space-unit) * 4);
+  min-height: calc(var(--uc-space-unit) * 12);
+  max-width: calc(var(--uc-space-unit) * 105);
   overflow-wrap: anywhere;
-  background: var(--uc-color-surface);
-  border: 1px solid var(--uc-color-border);
-  border-radius: var(--uc-radius-md);
-  box-shadow: var(--uc-shadow-overlay);
-  color: var(--uc-color-ink);
-  font-size: var(--uc-font-size-body);
+  background: var(--uc-color-ink);
+  border-radius: var(--uc-radius-lg);
+  box-shadow: var(--uc-shadow-toast);
+  color: var(--uc-color-surface);
+  font-size: var(--uc-font-size-small);
+  font-weight: var(--uc-font-weight-medium);
   pointer-events: auto;
   animation: uc-toast-fade-slide 150ms ease-out;
+}
+
+@media (max-width: bp.$uc-bp-mobile) {
+  .uc-toast-host__item {
+    max-width: none;
+  }
 }
 
 @keyframes uc-toast-fade-slide {
@@ -76,8 +80,29 @@
 }
 
 .uc-toast-host__icon {
-  width: var(--uc-font-size-body);
-  height: var(--uc-font-size-body);
   flex: none;
-  color: var(--uc-color-green-ok);
+}
+
+.uc-toast-host__icon--ok {
+  color: var(--uc-color-toast-ok);
+}
+
+.uc-toast-host__icon--erro {
+  color: var(--uc-color-toast-error);
+}
+
+.uc-toast-host__texto {
+  flex: 1;
+}
+
+.uc-toast-host__acao {
+  flex: none;
+  padding: calc(var(--uc-space-unit) * 1.5) calc(var(--uc-space-unit) * 3.5);
+  background: var(--uc-color-ink-nav);
+  border: 0;
+  border-radius: var(--uc-radius-full);
+  color: var(--uc-color-surface);
+  font: inherit;
+  font-weight: var(--uc-font-weight-semibold);
+  cursor: pointer;
 }

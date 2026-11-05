@@ -1,0 +1,25 @@
+// Ícone de traço (KAN-91). Cor herdada via currentColor.
+:host {
+  display: inline-flex;
+  flex: none;
+  // Cor padrão; o consumidor sobrescreve via color no host.
+  color: var(--uc-color-ink-nav);
+  // layout-literal: ícone de 22px/18px da folha de componentes (KAN-84)
+  width: 22px;
+  // layout-literal: ícone de 22px/18px da folha de componentes (KAN-84)
+  height: 22px;
+}
+
+:host(.uc-icon--sm) {
+  // layout-literal: ícone de 22px/18px da folha de componentes (KAN-84)
+  width: 18px;
+  // layout-literal: ícone de 22px/18px da folha de componentes (KAN-84)
+  height: 18px;
+}
+
+svg {
+  // layout-literal: o svg ocupa o tamanho do host
+  width: 100%;
+  // layout-literal: o svg ocupa o tamanho do host
+  height: 100%;
+}

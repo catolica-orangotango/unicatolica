@@ -1,0 +1,66 @@
+// UniCatolica - menu suspenso do redesign (KAN-91), baseado em .pop do mockup.
+// Painel posicionado em relação ao host; só tokens var(--uc-*).
+
+:host {
+  position: relative;
+  display: inline-block;
+}
+
+.uc-menu__painel {
+  position: absolute;
+  inset-inline-end: 0;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  // layout-literal: largura mínima do painel de 48 unidades (192px) do mockup
+  min-width: calc(var(--uc-space-unit) * 48);
+  padding: var(--uc-space-2);
+  background: var(--uc-color-surface);
+  border: 1px solid var(--uc-color-border);
+  border-radius: var(--uc-radius-lg);
+  box-shadow: var(--uc-shadow-overlay);
+}
+
+:host(.uc-menu--abaixo) .uc-menu__painel {
+  // layout-literal: painel colado à borda inferior do host
+  top: 100%;
+  margin-top: var(--uc-space-2);
+}
+
+:host(.uc-menu--acima) .uc-menu__painel {
+  // layout-literal: painel colado à borda superior do host
+  bottom: 100%;
+  margin-bottom: var(--uc-space-2);
+}
+
+.uc-menu__item {
+  display: flex;
+  align-items: center;
+  // layout-literal: item ocupa toda a largura do painel
+  width: 100%;
+  height: calc(var(--uc-space-unit) * 10);
+  padding: 0 var(--uc-space-3);
+  border: 0;
+  border-radius: var(--uc-radius-default);
+  background: transparent;
+  color: var(--uc-color-ink-nav);
+  font: inherit;
+  font-size: var(--uc-font-size-small);
+  font-weight: var(--uc-font-weight-medium);
+  text-align: start;
+  cursor: pointer;
+}
+
+.uc-menu__item:hover,
+.uc-menu__item:focus-visible {
+  background: var(--uc-color-surface-muted);
+}
+
+.uc-menu__item--perigo {
+  color: var(--uc-color-error);
+}
+
+.uc-menu__item[aria-disabled='true'] {
+  color: var(--uc-color-ink-disabled);
+  cursor: default;
+}

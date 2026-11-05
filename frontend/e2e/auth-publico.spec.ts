@@ -9,8 +9,8 @@ import { semToken } from './support/seed';
  * lista de cursos (`mockCursosOk`); a confirmação de e-mail é mockada.
  */
 
-/** `--uc-color-bg` (#FAFAF8) como o navegador reporta. */
-const CANVAS_BASE = 'rgb(250, 250, 248)';
+/** `--uc-color-bg` (#FFFFFF desde o redesign KAN-91) como o navegador reporta. */
+const CANVAS_BASE = 'rgb(255, 255, 255)';
 
 test.beforeEach(async ({ page }) => {
   await semToken(page);

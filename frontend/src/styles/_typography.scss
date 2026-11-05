@@ -1,9 +1,9 @@
-// UniCatolica - Campus Clean type-role utilities (Story 14.1).
+// UniCatolica - redesign type-role utilities (Story 14.1).
 //
 // One class per DESIGN.md type role. Each class composes `var(--uc-*)` tokens
 // only - no hardcoded design value. Each role sets exactly the properties
 // DESIGN.md lists for it: font-size + font-weight for every role, plus
-// line-height for `body` and letter-spacing for `greeting` and `label-caps`.
+// line-height for `body` and letter-spacing for `greeting` and `title-lg`.
 //
 // No global element selectors and no page-level reset here: the global
 // surface/spacing normalization ships in Story 14.7, where its effect on the
@@ -16,9 +16,15 @@
   letter-spacing: var(--uc-letter-spacing-greeting);
 }
 
-.uc-text-question {
-  font-size: var(--uc-font-size-question);
-  font-weight: var(--uc-font-weight-semibold);
+.uc-text-title-lg {
+  font-size: var(--uc-font-size-title-lg);
+  font-weight: var(--uc-font-weight-bold);
+  letter-spacing: var(--uc-letter-spacing-greeting);
+}
+
+.uc-text-title {
+  font-size: var(--uc-font-size-title);
+  font-weight: var(--uc-font-weight-bold);
 }
 
 .uc-text-body {
@@ -27,13 +33,17 @@
   line-height: var(--uc-line-height-body);
 }
 
+.uc-text-small {
+  font-size: var(--uc-font-size-small);
+  font-weight: var(--uc-font-weight-regular);
+}
+
 .uc-text-meta {
   font-size: var(--uc-font-size-meta);
   font-weight: var(--uc-font-weight-regular);
 }
 
-.uc-text-label-caps {
-  font-size: var(--uc-font-size-label-caps);
-  font-weight: var(--uc-font-weight-caps);
-  letter-spacing: var(--uc-letter-spacing-label-caps);
+.uc-text-label {
+  font-size: var(--uc-font-size-label);
+  font-weight: var(--uc-font-weight-semibold);
 }

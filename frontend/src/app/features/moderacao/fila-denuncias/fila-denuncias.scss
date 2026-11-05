@@ -35,9 +35,9 @@
 }
 
 .fila__filtro--ativo {
-  background: var(--uc-color-orange-tint);
-  border-color: var(--uc-color-orange);
-  color: var(--uc-color-orange);
+  background: var(--uc-color-maroon-tint);
+  border-color: var(--uc-color-maroon);
+  color: var(--uc-color-maroon);
   font-weight: var(--uc-font-weight-semibold);
 }
 
@@ -104,12 +104,11 @@
 }
 
 .fila__item--selecionado {
-  background: var(--uc-color-orange-tint);
-  border-left-color: var(--uc-color-orange);
+  background: var(--uc-color-maroon-tint);
+  border-left-color: var(--uc-color-maroon);
 }
 
 .fila__item-motivo {
-  text-transform: uppercase;
   color: var(--uc-color-maroon);
   overflow: hidden;
   text-overflow: ellipsis;
@@ -126,4 +125,10 @@
 
 .fila__item-horario {
   color: var(--uc-color-ink-faint);
+}
+
+// Sobre o fundo do item selecionado (--uc-color-maroon-tint) o ink-faint fica em
+// 4.25:1; o ink-soft passa de 4.5:1 (WCAG 1.4.3).
+.fila__item--selecionado .fila__item-horario {
+  color: var(--uc-color-ink-soft);
 }

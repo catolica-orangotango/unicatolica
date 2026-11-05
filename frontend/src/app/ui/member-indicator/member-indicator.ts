@@ -1,25 +1,51 @@
-import { Component, input } from '@angular/core';
+import { Component, ElementRef, input, output, signal, viewChild } from '@angular/core';
+import { UcButton } from '../button/button';
+import { UcIcon } from '../icon/icon';
+import { UcMenu, type UcMenuItem } from '../menu/menu';
+
+export type UcMemberIndicatorEstado =
+  'nao-membro' | 'entrando' | 'membro' | 'membro-menu' | 'restrito';
 
 /**
- * Story 14.2 - member indicator ("you are a member").
+ * Indicador de membro (KAN-91): estado do botão "Participar".
  *
- * Replaces the "Participar" button once the user has joined. State is conveyed
- * by the text `label` (default `Membro`) plus an inline check `<svg>` drawn in
- * `currentColor` - never by colour alone (epic-14 accessibility floor). Green
- * text (`--uc-color-green-ok`), no background (see member-indicator.scss).
+ * - `nao-membro`: botão secundário "Participar" (emite `participar`).
+ * - `entrando`: o mesmo botão, "Entrando…", com `aria-disabled` (não `disabled`,
+ *   para o foco permanecer) e sem emitir.
+ * - `membro`: texto verde com ícone check e `label` (padrão `Membro`).
+ * - `membro-menu`: botão "Membro" que abre um menu com "Sair" (emite `sair`).
+ * - `restrito`: texto "Só para alunos deste curso".
+ *
+ * Todo estado tem texto: nunca depende só de cor (RNF06).
  */
 @Component({
   selector: 'uc-member-indicator',
+  imports: [UcButton, UcIcon, UcMenu],
   templateUrl: './member-indicator.html',
   styleUrl: './member-indicator.scss',
 })
 export class UcMemberIndicator {
+  readonly estado = input<UcMemberIndicatorEstado>('membro');
   /**
-   * Visible label. An empty / whitespace-only value falls back to `Membro` so
-   * the indicator can never render as an icon + empty text - which would leave
-   * the state carried by colour alone (forbidden by this story's boundary).
+   * Texto do estado `membro`. Vazio ou só espaço cai para `Membro`, para que o
+   * estado nunca fique só na cor.
    */
   readonly label = input('Membro', {
     transform: (value: string): string => (value?.trim() ? value : 'Membro'),
   });
+  readonly participar = output<void>();
+  readonly sair = output<void>();
+
+  /** Botão do menu: o UcMenu precisa dele como `gatilho` (clique fora e foco). */
+  protected readonly gatilho = viewChild('botaoMenu', { read: ElementRef<HTMLElement> });
+  protected readonly menuAberto = signal(false);
+  protected readonly itensMenu: readonly UcMenuItem[] = [
+    { id: 'sair', rotulo: 'Sair', perigo: true },
+  ];
+
+  protected aoParticipar(): void {
+    if (this.estado() === 'nao-membro') {
+      this.participar.emit();
+    }
+  }
 }

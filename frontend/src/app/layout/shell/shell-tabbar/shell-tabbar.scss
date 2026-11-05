@@ -1,0 +1,69 @@
+// Barra de abas do celular (KAN-91), conforme .tabbar de docs/design/kan-84/base.css.
+// O host não gera caixa: a <nav> é fixa no rodapé e não ocupa célula na grade
+// da casca. Só tokens var(--uc-*).
+@use '../../../../styles/breakpoints' as bp;
+
+:host {
+  display: contents;
+}
+
+.abas {
+  display: none;
+}
+
+.abas__item {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: calc(var(--uc-space-unit) * 0.75);
+  min-height: var(--uc-touch-target);
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--uc-color-ink-soft);
+  font: inherit;
+  font-size: var(--uc-font-size-label);
+  font-weight: var(--uc-font-weight-medium);
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.abas__item--ativa {
+  color: var(--uc-color-ink);
+  font-weight: var(--uc-font-weight-semibold);
+}
+
+// O <svg> é do template do UcIcon, por isso o ::ng-deep (escopo continua nesta barra).
+.abas__item--ativa ::ng-deep svg {
+  stroke-width: 2.25;
+}
+
+// Contador sobre o canto do ícone (.tabbar .badge): 18px, seletor composto
+// para vencer o tamanho de 22px do próprio UcBadge.
+.abas__item .abas__contador {
+  position: absolute;
+  top: calc(var(--uc-space-unit) * 1.5);
+  // layout-literal: logo à direita do centro do ícone, como no mockup
+  left: calc(50% + var(--uc-space-unit));
+  // layout-literal: contador de 18px do mockup (base.css .tabbar .badge)
+  min-width: calc(var(--uc-space-unit) * 4.5);
+  height: calc(var(--uc-space-unit) * 4.5);
+  padding: 0 calc(var(--uc-space-unit) * 1.25);
+}
+
+@media (max-width: bp.$uc-bp-mobile) {
+  .abas {
+    display: grid;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 1; // acima do conteúdo rolado
+    height: calc(var(--uc-space-unit) * 16);
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    background: var(--uc-color-bg);
+    border-top: 1px solid var(--uc-color-border);
+  }
+}

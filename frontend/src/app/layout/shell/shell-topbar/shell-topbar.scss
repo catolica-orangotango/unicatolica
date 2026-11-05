@@ -1,0 +1,81 @@
+// Barra superior do celular (KAN-91), conforme .mtop de docs/design/kan-84/base.css.
+// Fundo sólido --uc-color-bg (o mockup usa branco translúcido com blur, que
+// exigiria cor fora dos tokens). Só tokens var(--uc-*).
+@use '../../../../styles/breakpoints' as bp;
+
+:host {
+  display: none;
+}
+
+.topo {
+  align-items: center;
+  gap: calc(var(--uc-space-unit) * 2.5);
+  padding: 0 var(--uc-space-2) 0 var(--uc-space-4);
+  color: var(--uc-color-ink);
+  font-size: var(--uc-font-size-title);
+  font-weight: var(--uc-font-weight-bold);
+}
+
+.topo__marca {
+  display: grid;
+  place-items: center;
+  width: calc(var(--uc-space-unit) * 7);
+  height: calc(var(--uc-space-unit) * 7);
+  border-radius: var(--uc-radius-sm);
+  background: var(--uc-color-maroon);
+  color: var(--uc-color-surface);
+  font-size: var(--uc-font-size-small);
+}
+
+// Alvos de toque de 44px (.tap do mockup), só com o ícone ou o avatar.
+.topo__botao {
+  display: grid;
+  place-items: center;
+  width: var(--uc-touch-target);
+  height: var(--uc-touch-target);
+  padding: 0;
+  border: 0;
+  border-radius: var(--uc-radius-full);
+  background: transparent;
+  color: var(--uc-color-ink-nav);
+  cursor: pointer;
+}
+
+.topo__botao:hover {
+  background: var(--uc-color-surface-muted);
+}
+
+// `auto`, não um comprimento: empurra os dois botões para a direita.
+.topo__gaveta {
+  margin-left: auto;
+}
+
+.topo__conta {
+  position: relative;
+}
+
+// Âncora de tamanho zero no canto inferior direito do avatar: o painel do
+// UcMenu (direcao 'abaixo') abre logo abaixo dele, alinhado à direita.
+.topo__menu {
+  position: absolute;
+  inset-block-end: 0;
+  inset-inline-end: 0;
+}
+
+@media (max-width: bp.$uc-bp-mobile) {
+  :host {
+    display: block;
+    grid-column: 1;
+    grid-row: 1;
+    position: sticky;
+    top: 0;
+    z-index: 1; // acima do conteúdo rolado
+  }
+
+  .topo {
+    display: flex;
+    height: calc(var(--uc-space-unit) * 14);
+    background: var(--uc-color-bg);
+    border-bottom: 1px solid var(--uc-color-border);
+  }
+}

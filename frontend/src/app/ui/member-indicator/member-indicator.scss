@@ -1,20 +1,42 @@
-// UniCatolica - Campus Clean base component (Story 14.2).
-// "You are a member" indicator: green text + inline check icon, NO background.
-// Meaning is carried by the text label, never by colour alone (epic-14
-// accessibility floor). Every value is a var(--uc-*) token from Story 14.1;
-// the gap composes from --uc-space-unit via calc().
+// UniCatolica - indicador de membro do redesign (KAN-91), baseado em
+// .member / .locked do mockup. Só tokens var(--uc-*). O estado nunca é só cor:
+// todo estado tem texto (RNF06).
 
+// A cor fica no host e o estado "membro" herda: assim a tela que põe o
+// indicador sobre fundo escuro (cabeçalho bordô da comunidade) troca a cor só
+// no seletor do elemento, sem perder o contraste (axe color-contrast).
 :host {
   display: inline-flex;
   align-items: center;
-  gap: calc(var(--uc-space-unit) * 1.5);
   color: var(--uc-color-green-ok);
-  font-size: var(--uc-font-size-meta);
+}
+
+.uc-member-indicator__membro {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--uc-space-2);
+  color: inherit;
+  font-size: var(--uc-font-size-small);
   font-weight: var(--uc-font-weight-semibold);
 }
 
-.uc-member-indicator__icon {
-  width: var(--uc-font-size-body);
-  height: var(--uc-font-size-body);
-  flex: none;
+.uc-member-indicator__restrito {
+  color: var(--uc-color-ink-soft);
+  font-size: var(--uc-font-size-meta);
+}
+
+.uc-member-indicator__menu-ancora {
+  position: relative;
+  display: inline-flex;
+}
+
+// Âncora de largura zero na base do botão: o painel do menu abre logo abaixo.
+.uc-member-indicator__menu {
+  position: absolute;
+  inset-block-end: 0;
+  inset-inline-end: 0;
+}
+
+button[uc-button] {
+  gap: var(--uc-space-2);
 }

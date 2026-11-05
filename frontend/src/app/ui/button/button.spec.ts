@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { Component, signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { vi } from 'vitest';
-import { UcButton } from './button';
+import { UcButton, UcButtonVariant } from './button';
 
 @Component({
   imports: [UcButton],
@@ -13,6 +13,32 @@ import { UcButton } from './button';
 class HostComponent {
   readonly disabled = signal(false);
 }
+
+@Component({
+  imports: [UcButton],
+  template: `<button uc-button [variant]="variant()" [size]="size()">Acao</button>`,
+})
+class VariantHostComponent {
+  readonly variant = signal<UcButtonVariant>('secondary');
+  readonly size = signal<'default' | 'large'>('large');
+}
+
+describe('UcButton variantes', () => {
+  it('reflete variant e size como classes do host', async () => {
+    await TestBed.configureTestingModule({ imports: [VariantHostComponent] }).compileComponents();
+    const f = TestBed.createComponent(VariantHostComponent);
+    f.detectChanges();
+    const el = f.nativeElement.querySelector('button') as HTMLButtonElement;
+    expect(el.classList.contains('uc-button--secondary')).toBe(true);
+    expect(el.classList.contains('uc-button--primary')).toBe(false);
+    expect(el.classList.contains('uc-button--large')).toBe(true);
+    f.componentInstance.variant.set('danger');
+    f.componentInstance.size.set('default');
+    f.detectChanges();
+    expect(el.classList.contains('uc-button--danger')).toBe(true);
+    expect(el.classList.contains('uc-button--large')).toBe(false);
+  });
+});
 
 describe('UcButton', () => {
   let fixture: ComponentFixture<HostComponent>;
@@ -42,6 +68,11 @@ describe('UcButton', () => {
     expect(buttonEl().getAttribute('type')).toBeNull();
   });
 
+  it('sem inputs continua sendo o primario no tamanho padrao', () => {
+    expect(buttonEl().classList.contains('uc-button--primary')).toBe(true);
+    expect(buttonEl().classList.contains('uc-button--large')).toBe(false);
+  });
+
   it('e focavel via teclado, sem tabindex explicito', () => {
     buttonEl().focus();
     expect(document.activeElement).toBe(buttonEl());
@@ -64,39 +95,76 @@ describe('UcButton', () => {
   });
 });
 
-// jsdom does not resolve computed styles from an external stylesheet, so the
-// visual half of the I/O matrix (strong-action fill, pill, the :focus-visible
-// maroon outline, the [disabled] dim) is pinned against the SCSS source - same
-// approach as Story 14.1's tokens.spec.ts.
+// jsdom nao resolve estilos computados de folhas externas, entao a metade visual
+// e fixada contra o fonte SCSS (mesma abordagem do tokens.spec.ts).
 describe('button.scss style contract', () => {
   const dir = dirname(fileURLToPath(import.meta.url));
   const scss = readFileSync(join(dir, 'button.scss'), 'utf8');
   const norm = scss.replace(/\s+/g, ' ');
 
-  it('is wired to the component via styleUrl', () => {
+  function bloco(seletor: string): string {
+    const i = norm.indexOf(seletor + ' {');
+    expect(i, `seletor ausente: ${seletor}`).toBeGreaterThanOrEqual(0);
+    return norm.slice(i, norm.indexOf('}', i));
+  }
+
+  it('esta ligado ao componente via styleUrl', () => {
     expect(readFileSync(join(dir, 'button.ts'), 'utf8')).toContain("styleUrl: './button.scss'");
   });
 
-  it('fills with the orange token, surface text, pill radius', () => {
-    expect(norm).toContain('background: var(--uc-color-orange)');
-    expect(norm).toContain('color: var(--uc-color-surface)');
-    expect(norm).toContain('border-radius: var(--uc-radius-full)');
-  });
-
-  it('shows a var(--uc-color-maroon) keyboard-focus outline on :focus-visible', () => {
-    expect(norm).toMatch(
-      /:host\(:focus-visible\)\s*\{[^}]*outline: 2px solid var\(--uc-color-maroon\)/,
+  it('primario: fundo maroon, texto surface, pilula, hover maroon-hover', () => {
+    const b = bloco(':host');
+    expect(b).toContain('background: var(--uc-color-maroon)');
+    expect(b).toContain('color: var(--uc-color-surface)');
+    expect(b).toContain('border-radius: var(--uc-radius-full)');
+    expect(b).toContain('font-size: var(--uc-font-size-small)');
+    expect(b).toContain('font-weight: var(--uc-font-weight-semibold)');
+    expect(b).toContain('calc(var(--uc-space-unit) * 9)');
+    expect(bloco(':host(.uc-button--primary:hover:not(:disabled):not([aria-disabled=\'true\']))')).toContain(
+      'background: var(--uc-color-maroon-hover)',
     );
-    expect(norm).toMatch(/:host\(:focus-visible\)\s*\{[^}]*outline-offset: 2px/);
   });
 
-  it('never suppresses the focus ring with outline: none / outline: 0', () => {
+  it('primario com foco: outline maroon 2px', () => {
+    const b = bloco(':host(:focus-visible)');
+    expect(b).toContain('outline: 2px solid var(--uc-color-maroon)');
+    expect(b).toContain('outline-offset: 2px');
     expect(norm).not.toMatch(/outline:\s*(none|0)\b/);
   });
 
-  it('dims and blocks the cursor on :disabled (matches [disabled] and fieldset[disabled])', () => {
-    expect(norm).toMatch(/:host\(:disabled\)\s*\{[^}]*opacity: 0\.5/);
-    expect(norm).toMatch(/:host\(:disabled\)\s*\{[^}]*cursor: not-allowed/);
-    expect(norm).not.toMatch(/:host\(\[disabled\]\)/);
+  it('secundario: fundo surface, borda border-strong, hover surface-muted', () => {
+    const b = bloco(':host(.uc-button--secondary)');
+    expect(b).toContain('background: var(--uc-color-surface)');
+    expect(b).toContain('color: var(--uc-color-ink)');
+    expect(b).toContain('border-color: var(--uc-color-border-strong)');
+    expect(norm).toMatch(/uc-button--secondary:hover[^{]*\{[^}]*background: var\(--uc-color-surface-muted\)/);
+  });
+
+  it('perigo: texto error, borda error-border, hover error-tint', () => {
+    const b = bloco(':host(.uc-button--danger)');
+    expect(b).toContain('color: var(--uc-color-error)');
+    expect(b).toContain('border-color: var(--uc-color-error-border)');
+    expect(norm).toMatch(/uc-button--danger:hover[^{]*\{[^}]*background: var\(--uc-color-error-tint\)/);
+  });
+
+  it('desabilitado (:disabled e aria-disabled): surface-strong, ink-disabled, sem opacidade', () => {
+    const b = bloco(":host(:disabled), :host([aria-disabled='true'])");
+    expect(b).toContain('background: var(--uc-color-surface-strong)');
+    expect(b).toContain('color: var(--uc-color-ink-disabled)');
+    expect(b).toContain('border-color: transparent');
+    expect(b).toContain('cursor: not-allowed');
+    expect(norm).not.toContain('opacity');
+  });
+
+  it('grande: 44px (touch-target) e fonte body', () => {
+    const b = bloco(':host(.uc-button--large)');
+    expect(b).toContain('height: var(--uc-touch-target)');
+    expect(b).toContain('font-size: var(--uc-font-size-body)');
+  });
+
+  it('no mobile todo botao tem var(--uc-touch-target) de altura', () => {
+    expect(norm).toMatch(
+      /@media \(max-width: bp\.\$uc-bp-mobile\) \{ :host \{[^}]*height: var\(--uc-touch-target\)/,
+    );
   });
 });

@@ -71,25 +71,92 @@ describe('UcBadge', () => {
   });
 });
 
-// jsdom cannot read computed styles from an external stylesheet, so the pill /
-// orange-tint / per-variant text-colour half of the I/O matrix is pinned to the
-// SCSS source (as Story 14.1's tokens.spec.ts does).
+describe('UcBadge variante state', () => {
+  it('renderiza o ícone eyeoff (UcIcon sm) antes do texto', async () => {
+    await TestBed.configureTestingModule({ imports: [HostComponent] }).compileComponents();
+    const f = TestBed.createComponent(HostComponent);
+    f.componentInstance.variant.set('state');
+    f.componentInstance.label.set('Oculto');
+    f.detectChanges();
+    const el = f.nativeElement.querySelector('uc-badge') as HTMLElement;
+    expect(el.classList.contains('uc-badge--state')).toBe(true);
+    const icone = el.querySelector('uc-icon') as HTMLElement;
+    expect(icone).not.toBeNull();
+    expect(icone.classList.contains('uc-icon--sm')).toBe(true);
+    expect(el.firstElementChild).toBe(icone);
+    expect(el.textContent?.trim()).toBe('Oculto');
+  });
+
+  it.each(['counter', 'role', 'course', 'open'] as const)('%s não renderiza ícone', async (v) => {
+    await TestBed.configureTestingModule({ imports: [HostComponent] }).compileComponents();
+    const f = TestBed.createComponent(HostComponent);
+    f.componentInstance.variant.set(v);
+    f.detectChanges();
+    expect(f.nativeElement.querySelector('uc-icon')).toBeNull();
+    expect([...(f.nativeElement.querySelector('uc-badge') as HTMLElement).classList]).toContain(
+      `uc-badge--${v}`,
+    );
+  });
+});
+
+// jsdom não lê estilos computados de folha externa, então o contrato visual
+// é fixado no SCSS de origem, bloco por bloco.
 describe('badge.scss style contract', () => {
   const dir = dirname(fileURLToPath(import.meta.url));
   const scss = readFileSync(join(dir, 'badge.scss'), 'utf8');
   const norm = scss.replace(/\s+/g, ' ');
 
-  it('is wired to the component via styleUrl', () => {
+  function bloco(seletor: string): string {
+    const re = new RegExp(
+      seletor.replace(/[.()]/g, '\\$&') + '\\s*\\{([^}]*)\\}',
+    );
+    const m = norm.match(re);
+    expect(m, `bloco ${seletor}`).not.toBeNull();
+    return m![1];
+  }
+
+  it('está ligado ao componente via styleUrl', () => {
     expect(readFileSync(join(dir, 'badge.ts'), 'utf8')).toContain("styleUrl: './badge.scss'");
   });
 
-  it('is a pill with the orange-tint token background', () => {
-    expect(norm).toContain('border-radius: var(--uc-radius-full)');
-    expect(norm).toContain('background: var(--uc-color-orange-tint)');
+  it('base: pílula, font-size-label, semibold, sem caixa alta nem letter-spacing', () => {
+    const b = bloco(':host');
+    expect(b).toContain('border-radius: var(--uc-radius-full)');
+    expect(b).toContain('font-size: var(--uc-font-size-label)');
+    expect(b).toContain('font-weight: var(--uc-font-weight-semibold)');
+    expect(norm).not.toContain('text-transform');
+    expect(norm).not.toContain('letter-spacing');
   });
 
-  it('course text is maroon, open text is orange, on the two modifier classes', () => {
-    expect(norm).toMatch(/:host\(\.uc-badge--course\)\s*\{[^}]*color: var\(--uc-color-maroon\)/);
-    expect(norm).toMatch(/:host\(\.uc-badge--open\)\s*\{[^}]*color: var\(--uc-color-orange\)/);
+  it('base: o rótulo nunca quebra linha (o selo não vira uma pílula torta em coluna estreita)', () => {
+    expect(bloco(':host')).toContain('white-space: nowrap');
+  });
+
+  it('counter: fundo maroon, texto surface, 22px mínimos', () => {
+    const b = bloco(':host(.uc-badge--counter)');
+    expect(b).toContain('background: var(--uc-color-maroon)');
+    expect(b).toContain('color: var(--uc-color-surface)');
+    expect(b).toMatch(/min-width: 22px/);
+    expect(b).toMatch(/height: 22px/);
+  });
+
+  it.each(['role', 'course'])('%s: fundo maroon-tint, texto maroon', (v) => {
+    const b = bloco(`:host(.uc-badge--${v})`);
+    expect(b).toContain('background: var(--uc-color-maroon-tint)');
+    expect(b).toContain('color: var(--uc-color-maroon)');
+  });
+
+  it('open: fundo surface-strong, texto ink-nav', () => {
+    const b = bloco(':host(.uc-badge--open)');
+    expect(b).toContain('background: var(--uc-color-surface-strong)');
+    expect(b).toContain('color: var(--uc-color-ink-nav)');
+  });
+
+  it('state: fundo surface, borda border-strong, texto ink-nav, inline-flex', () => {
+    const b = bloco(':host(.uc-badge--state)');
+    expect(b).toContain('background: var(--uc-color-surface)');
+    expect(b).toContain('border: 1px solid var(--uc-color-border-strong)');
+    expect(b).toContain('color: var(--uc-color-ink-nav)');
+    expect(b).toContain('display: inline-flex');
   });
 });

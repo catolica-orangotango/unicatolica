@@ -1,0 +1,40 @@
+<header class="topo">
+  <span class="topo__marca" aria-hidden="true">U</span>
+  <span class="topo__nome">UniCatólica</span>
+
+  <button
+    #botaoGaveta
+    type="button"
+    class="topo__botao topo__gaveta"
+    aria-label="Suas comunidades"
+    aria-controls="shell-sidebar-nav"
+    [attr.aria-expanded]="gavetaAberta() ? 'true' : 'false'"
+    (click)="alternouGaveta.emit($event)"
+  >
+    <uc-icon name="users" />
+  </button>
+
+  <div class="topo__conta">
+    <button
+      #avatar
+      type="button"
+      class="topo__botao topo__avatar"
+      aria-label="Menu da conta"
+      aria-haspopup="menu"
+      aria-controls="shell-menu"
+      [attr.aria-expanded]="contaAberta() ? 'true' : 'false'"
+      (click)="alternouConta.emit($event)"
+    >
+      <uc-avatar tamanho="sm" [cor]="cor()" [iniciais]="iniciais()" />
+    </button>
+    <uc-menu
+      id="shell-menu"
+      class="topo__menu"
+      rotulo="Conta"
+      [itens]="itens()"
+      [(aberto)]="contaAberta"
+      [gatilho]="avatar"
+      (selecionou)="selecionou.emit($event)"
+    />
+  </div>
+</header>

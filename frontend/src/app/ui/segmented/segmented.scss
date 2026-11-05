@@ -1,0 +1,72 @@
+// UniCatolica - filtro segmentado do redesign (KAN-91).
+// Trilho em pílula (surface-strong) com opções de 38px. A opção selecionada
+// usa surface + borda border-strong, sem sombra (decisão do redesign); as
+// demais têm borda transparente para o tamanho não pular. Só tokens
+// var(--uc-*); 38px = calc(space-unit * 9.5), 3px = calc(space-unit * 0.75).
+// Literais estruturais: borda de 1px e o anel de foco de 2px.
+@use '../../../styles/breakpoints' as bp;
+
+:host {
+  display: inline-block;
+}
+
+.uc-segmented {
+  display: inline-flex;
+  gap: calc(var(--uc-space-unit) * 0.5);
+  padding: calc(var(--uc-space-unit) * 0.75);
+  border-radius: var(--uc-radius-full);
+  background: var(--uc-color-surface-strong);
+}
+
+.uc-segmented__opcao {
+  display: flex;
+  align-items: center;
+  height: calc(var(--uc-space-unit) * 9.5);
+  padding: 0 calc(var(--uc-space-unit) * 3.5);
+  border: 1px solid transparent;
+  border-radius: var(--uc-radius-full);
+  background: transparent;
+  color: var(--uc-color-ink-soft);
+  font-family: inherit;
+  font-size: var(--uc-font-size-small);
+  font-weight: var(--uc-font-weight-medium);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.uc-segmented__opcao--on {
+  background: var(--uc-color-surface);
+  color: var(--uc-color-ink);
+  font-weight: var(--uc-font-weight-semibold);
+  border-color: var(--uc-color-border-strong);
+}
+
+.uc-segmented__opcao:focus-visible {
+  outline: 2px solid var(--uc-color-maroon);
+  outline-offset: 2px;
+}
+
+.uc-segmented__contador {
+  margin-inline-start: calc(var(--uc-space-unit) * 1.5);
+  font-size: var(--uc-font-size-label);
+  font-weight: var(--uc-font-weight-semibold);
+  color: var(--uc-color-maroon);
+}
+
+@media (max-width: bp.$uc-bp-mobile) {
+  :host {
+    display: block;
+  }
+
+  .uc-segmented {
+    // layout-literal: grupo ocupa a largura toda no mobile
+    width: 100%;
+  }
+
+  .uc-segmented__opcao {
+    flex: 1;
+    justify-content: center;
+    height: var(--uc-touch-target);
+    padding: 0 calc(var(--uc-space-unit) * 2);
+  }
+}

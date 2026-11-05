@@ -1,0 +1,23 @@
+@if (aberto()) {
+  <div
+    class="uc-menu__painel"
+    role="menu"
+    [attr.aria-label]="rotulo()"
+    (keydown)="aoTeclar($event)"
+    (focusout)="aoSairFoco($event)"
+    (click)="$event.stopPropagation()"
+  >
+    @for (item of itens(); track item.id) {
+      <button
+        type="button"
+        role="menuitem"
+        class="uc-menu__item"
+        [class.uc-menu__item--perigo]="item.perigo"
+        [attr.aria-disabled]="item.desabilitado ? 'true' : null"
+        (click)="selecionar(item)"
+      >
+        {{ item.rotulo }}
+      </button>
+    }
+  </div>
+}

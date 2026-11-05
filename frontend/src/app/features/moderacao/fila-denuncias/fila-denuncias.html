@@ -37,7 +37,7 @@
                 [attr.aria-current]="denuncia.id === selecionadaId() ? 'true' : null"
                 (click)="selecionar(denuncia)"
               >
-                <span class="uc-text-label-caps fila__item-motivo">{{ denuncia.motivo }}</span>
+                <span class="uc-text-label fila__item-motivo">{{ denuncia.motivo }}</span>
                 <span class="uc-text-meta fila__item-trecho">“{{ denuncia.conteudo.texto }}”</span>
                 <time class="uc-text-meta fila__item-horario" [attr.datetime]="denuncia.criadoEm">{{
                   tempoRelativo(denuncia.criadoEm)

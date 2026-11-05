@@ -6,8 +6,7 @@
 // literal de cor, fonte, espaçamento ou raio.
 //
 // O botão de envio é o `button[uc-button]` da Story 14.2, o único estilo de
-// ação forte do sistema, e é a única ação laranja da tela (DESIGN.md: no
-// máximo uma por tela). O anel de foco é o global de `styles/_base.scss`.
+// ação forte do sistema, e é a única ação primária (bordô) da tela. O anel de foco é o global de `styles/_base.scss`.
 
 :host {
   display: block;
@@ -105,8 +104,8 @@
   color: var(--uc-color-ink-soft);
 }
 
-// Ação secundária: nunca laranja. O laranja da tela já é o botão Entrar, e o
-// DESIGN.md admite no máximo uma ação laranja por tela.
+// Ação secundária: nunca preenchida. A ação primária da tela já é o botão
+// Entrar (bordô).
 .login__link {
   color: var(--uc-color-ink);
   font-weight: var(--uc-font-weight-semibold);

@@ -1,0 +1,24 @@
+// UniCatolica - estado vazio do redesign (KAN-91): borda tracejada border-strong,
+// raio xl, conteúdo centralizado. Só tokens var(--uc-*); espaços via calc().
+
+:host {
+  display: block;
+  text-align: center;
+  padding: calc(var(--uc-space-unit) * 8) calc(var(--uc-space-unit) * 4);
+  border: 1px dashed var(--uc-color-border-strong);
+  border-radius: var(--uc-radius-xl);
+}
+
+b {
+  display: block;
+  margin-bottom: var(--uc-space-unit);
+  font-size: var(--uc-font-size-title);
+  font-weight: var(--uc-font-weight-bold);
+  color: var(--uc-color-ink);
+}
+
+p {
+  margin: 0 0 var(--uc-space-3);
+  font-size: var(--uc-font-size-small);
+  color: var(--uc-color-ink-soft);
+}

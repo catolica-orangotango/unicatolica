@@ -15,7 +15,7 @@
   width: calc(var(--uc-space-unit) * 14);
   height: calc(var(--uc-space-unit) * 14);
   border-radius: var(--uc-radius-full);
-  background: linear-gradient(135deg, var(--uc-color-orange), var(--uc-color-maroon));
+  background: var(--uc-color-maroon);
   color: var(--uc-color-surface);
   font-size: var(--uc-font-size-greeting);
   font-weight: var(--uc-font-weight-semibold);
@@ -41,9 +41,7 @@
 }
 
 .cartao__dados dt {
-  font-size: var(--uc-font-size-label-caps);
-  text-transform: uppercase;
-  letter-spacing: var(--uc-letter-spacing-label-caps);
+  font-size: var(--uc-font-size-label);
   color: var(--uc-color-ink-soft);
   align-self: center;
 }
@@ -65,7 +63,7 @@
 .cartao__interesse {
   padding: calc(var(--uc-space-unit) / 2) calc(var(--uc-space-unit) * 2.5);
   border-radius: var(--uc-radius-full);
-  background: var(--uc-color-orange-tint);
+  background: var(--uc-color-maroon-tint);
   color: var(--uc-color-ink);
   font-size: var(--uc-font-size-meta);
 }

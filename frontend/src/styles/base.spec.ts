@@ -8,7 +8,7 @@
  * What it pins:
  *  - `body` exists and paints the canvas with tokens only (bg / ink / the font
  *    stack / body size / body line-height). Without this rule the three public
- *    screens never get the Campus Clean canvas or the token font.
+ *    screens never get the redesign canvas or the token font.
  *  - the `box-sizing` reset and the `margin: 0` on `html, body` exist;
  *  - one global `:focus-visible` ring exists, maroon, token-valued;
  *  - form controls inherit the document font;
@@ -129,7 +129,10 @@ describe('the base layer introduces no design value of its own', () => {
   });
 
   it('declares no --uc-* custom property outside the :root token block', () => {
-    expect([...outsideRoot().matchAll(/--uc-[a-z0-9-]+\s*:/g)].map((m) => m[0])).toEqual([]);
+    // Única exceção: a sobrescrita da margem de página no @media do celular (tokens.spec.ts a fixa).
+    expect([...outsideRoot().matchAll(/--uc-[a-z0-9-]+\s*:/g)].map((m) => m[0])).toEqual([
+      '--uc-space-page-margin:',
+    ]);
   });
 });
 
@@ -192,5 +195,23 @@ describe('the entry point is wired into the build', () => {
       styles,
       'src/styles.scss is not a build style - the whole base layer ships unwired',
     ).toContain('src/styles.scss');
+  });
+});
+
+/**
+ * KAN-91: a familia `Inter` do token so existe de fato se o `index.html` a
+ * carregar (Google Fonts, `display=swap`); o fallback `system-ui` cobre a espera.
+ */
+describe('fonte Inter', () => {
+  it('index.html carrega a Inter e o token de familia tem o fallback system-ui', () => {
+    const indexHtml = readFileSync(join(stylesDir, '..', 'index.html'), 'utf8');
+    expect(indexHtml).toContain('href="https://fonts.googleapis.com"');
+    expect(indexHtml).toContain('href="https://fonts.gstatic.com"');
+    expect(indexHtml).toMatch(
+      /fonts\.googleapis\.com\/css2\?family=Inter:wght@400;500;600;700&display=swap/,
+    );
+
+    const tokens = readFileSync(join(stylesDir, '_tokens.scss'), 'utf8');
+    expect(tokens).toMatch(/--uc-font-family-base:\s*Inter,\s*system-ui/);
   });
 });

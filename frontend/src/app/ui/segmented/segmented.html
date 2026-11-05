@@ -1,0 +1,19 @@
+<div class="uc-segmented" role="radiogroup" [attr.aria-label]="rotulo()">
+  @for (opcao of opcoes(); track opcao.valor; let i = $index) {
+    <button
+      type="button"
+      role="radio"
+      class="uc-segmented__opcao"
+      [class.uc-segmented__opcao--on]="opcao.valor === valor()"
+      [attr.aria-checked]="opcao.valor === valor()"
+      [tabindex]="i === indiceAtivo() ? 0 : -1"
+      (click)="selecionar(opcao)"
+      (keydown)="aoTeclar($event, i)"
+    >
+      {{ opcao.rotulo }}
+      @if (opcao.contador !== undefined) {
+        <span class="uc-segmented__contador">{{ opcao.contador }}</span>
+      }
+    </button>
+  }
+</div>

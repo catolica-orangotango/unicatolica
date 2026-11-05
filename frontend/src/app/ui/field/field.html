@@ -1,0 +1,10 @@
+<label class="uc-field__rotulo" [attr.for]="controlId">{{ label() }}</label>
+<ng-content></ng-content>
+@if (hint(); as dica) {
+  <span class="uc-field__dica" [id]="controlId + '-dica'">{{ dica }}</span>
+}
+@if (error(); as erro) {
+  <span class="uc-field__erro" [id]="controlId + '-erro'">
+    <uc-icon name="alert" size="sm" />{{ erro }}
+  </span>
+}

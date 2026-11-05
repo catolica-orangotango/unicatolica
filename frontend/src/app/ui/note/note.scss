@@ -1,0 +1,48 @@
+// UniCatolica - aviso do redesign (KAN-91): três tons (neutro, alerta, erro).
+// O tom define fundo e cor do ícone. Só tokens var(--uc-*).
+
+:host {
+  display: flex;
+  gap: var(--uc-space-3);
+  align-items: flex-start;
+  padding: var(--uc-space-3) calc(var(--uc-space-unit) * 7 / 2);
+  border-radius: var(--uc-radius-lg);
+  background: var(--uc-color-surface-muted);
+  color: var(--uc-color-ink);
+  font-size: var(--uc-font-size-small);
+}
+
+:host(.uc-note--alerta) {
+  background: var(--uc-color-warn-tint);
+}
+
+:host(.uc-note--erro) {
+  background: var(--uc-color-error-tint);
+}
+
+.uc-note__icone {
+  flex: none;
+  margin-top: calc(var(--uc-space-unit) / 4);
+  color: var(--uc-color-ink-soft);
+}
+
+:host(.uc-note--alerta) .uc-note__icone {
+  color: var(--uc-color-warn);
+}
+
+:host(.uc-note--erro) .uc-note__icone {
+  color: var(--uc-color-error);
+}
+
+.uc-note__corpo {
+  min-width: 0;
+}
+
+b {
+  display: block;
+  font-weight: var(--uc-font-weight-semibold);
+}
+
+.uc-note__acao:not(:empty) {
+  margin-top: var(--uc-space-2);
+}

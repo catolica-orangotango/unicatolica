@@ -1,19 +1,24 @@
 <div class="uc-toast-host" role="status" aria-live="polite" aria-atomic="false">
   @for (toast of service.toasts(); track toast.id) {
-    <div class="uc-toast-host__item">
-      <svg
+    <div
+      class="uc-toast-host__item"
+      [attr.data-toast-id]="toast.id"
+      [attr.role]="toast.tipo === 'erro' ? 'alert' : null"
+      (focusin)="service.pausar(toast.id)"
+      (focusout)="aoSairDoFoco($event, toast.id)"
+    >
+      <uc-icon
         class="uc-toast-host__icon"
-        viewBox="0 0 16 16"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="2"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-        aria-hidden="true"
-      >
-        <path d="M3 8.5 6.5 12 13 4.5" />
-      </svg>
-      <span>{{ toast.mensagem }}</span>
+        [class.uc-toast-host__icon--ok]="toast.tipo === 'sucesso'"
+        [class.uc-toast-host__icon--erro]="toast.tipo === 'erro'"
+        [name]="toast.tipo === 'erro' ? 'alert' : 'check'"
+      />
+      <span class="uc-toast-host__texto">{{ toast.mensagem }}</span>
+      @if (toast.acao; as acao) {
+        <button type="button" class="uc-toast-host__acao" (click)="acionar(toast)">
+          {{ acao.rotulo }}
+        </button>
+      }
     </div>
   }
 </div>
