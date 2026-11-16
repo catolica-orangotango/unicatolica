@@ -625,12 +625,12 @@ describe('Shell', () => {
       expect(f.nativeElement.classList).not.toContain('shell--larga');
     });
 
-    it('app.routes marca como largas só comunidades, admin, admin/cursos, admin/usuarios e moderacao/denuncias', () => {
+    it('app.routes marca como largas só comunidades, admin, admin/cursos, admin/usuarios, admin/auditoria e moderacao/denuncias', () => {
       const casca = rotasDoApp.find((r) => r.children)!;
       const largas = casca.children!.filter((r) => r.data?.['largo'] === true).map((r) => r.path);
 
       expect(largas.sort()).toEqual(
-        ['admin', 'admin/cursos', 'admin/usuarios', 'comunidades', 'moderacao/denuncias'].sort(),
+        ['admin', 'admin/cursos', 'admin/usuarios', 'admin/auditoria', 'comunidades', 'moderacao/denuncias'].sort(),
       );
     });
   });

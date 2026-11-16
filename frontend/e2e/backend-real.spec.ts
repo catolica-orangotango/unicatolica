@@ -81,6 +81,34 @@ test.describe('backend real', { tag: '@backend' }, () => {
     await page.getByRole('button', { name: 'Confirmar' }).click();
     await expect(page.getByText(`Curso ${renomeado} desativado`)).toBeVisible();
   });
+
+  test('administrador altera um perfil e o log aparece filtrando por PERFIL_ALTERADO (KAN-90)', async ({
+    page,
+    request,
+  }) => {
+    const email = await cadastrarConfirmado(request, 'auditoria');
+
+    await entrar(page, 'admin.teste@catolicasc.edu.br');
+    await page.goto('/admin/usuarios');
+    await page.getByLabel('Buscar por nome ou e-mail').fill(email);
+    await page.getByRole('button', { name: 'Filtrar' }).click();
+    const linha = page.getByRole('row', { name: new RegExp(email) });
+    await linha.getByRole('button', { name: /Alterar perfil/ }).click();
+    await page.getByLabel('Novo perfil').selectOption('MODERADOR');
+    await page.getByRole('button', { name: 'Confirmar alteração' }).click();
+    await expect(linha).toContainText('Moderador');
+
+    await page.goto('/admin/auditoria');
+    await page.getByLabel('Módulo', { exact: true }).selectOption('identidade');
+    await page.getByLabel('Ação', { exact: true }).selectOption('PERFIL_ALTERADO');
+
+    await expect(page).toHaveURL(/modulo=identidade&acao=PERFIL_ALTERADO/);
+    const registro = page.locator('tbody tr').first();
+    await expect(registro).toContainText('PERFIL_ALTERADO');
+    await expect(registro).toContainText('ALUNO -> MODERADOR');
+    await expect(registro).toContainText('admin.teste@catolicasc.edu.br');
+    await expect(registro).toContainText('Usuario #');
+  });
 });
 
 async function entrar(page: Page, email: string): Promise<void> {

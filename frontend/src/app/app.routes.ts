@@ -80,6 +80,15 @@ export const routes: Routes = [
         loadComponent: () => import('./features/admin/usuarios/usuarios').then((m) => m.Usuarios),
       },
       {
+        // Consulta de logs de auditoria (KAN-90, RF83): só leitura, só ADMINISTRADOR.
+        path: 'admin/auditoria',
+        data: { largo: true },
+        title: 'Logs de auditoria',
+        canActivate: [adminGuard],
+        loadComponent: () =>
+          import('./features/admin/auditoria-admin/auditoria-admin').then((m) => m.AuditoriaAdmin),
+      },
+      {
         // Fila de denúncias do moderador (Stories 12.4/12.5) — URL do mockup key-denuncias.
         path: 'moderacao/denuncias',
         data: { largo: true },

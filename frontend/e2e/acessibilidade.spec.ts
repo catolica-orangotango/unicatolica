@@ -3,6 +3,7 @@ import { esperarSemViolacoes } from './support/acessibilidade';
 import { VIEWPORT_CELULAR, VIEWPORT_DESKTOP, gatilhoDaConta, menuDaConta } from './support/casca';
 import {
   mockAdminUsuarios,
+  mockAuditoria,
   mockComunidadeComFeed,
   mockConfirmacaoOk,
   mockCursosOk,
@@ -268,6 +269,46 @@ for (const viewport of [VIEWPORT_DESKTOP, VIEWPORT_CELULAR]) {
 
       await page.getByRole('button', { name: 'Cancelar' }).click();
       await page.getByRole('button', { name: 'Desativar conta de Ana Aluna' }).click();
+      await esperarSemViolacoes(page);
+    });
+
+    test('administrador: logs de auditoria, lista e estado vazio', async ({ page }) => {
+      await mockFeedOk(page);
+      await mockAuditoria(page, [
+        {
+          id: 1,
+          criadoEm: '2026-03-10T02:30:00Z',
+          autor: { id: 1, nome: 'Administrador Teste', email: 'admin.teste@catolicasc.edu.br' },
+          modulo: 'identidade',
+          acao: 'PERFIL_ALTERADO',
+          entidadeAfetada: 'Usuario',
+          entidadeId: 7,
+          detalhes: 'ALUNO -> MODERADOR',
+        },
+        {
+          id: 2,
+          criadoEm: '2026-03-11T13:00:00Z',
+          autor: null,
+          modulo: 'comunidades',
+          acao: 'COMUNIDADE_CURSO_RENOMEADA',
+          entidadeAfetada: null,
+          entidadeId: null,
+          detalhes: null,
+        },
+      ]);
+      await plantarToken(page, ['ADMINISTRADOR']);
+      await page.goto('/admin/auditoria');
+      await expect(page.getByRole('heading', { level: 1, name: 'Logs de auditoria' })).toBeVisible();
+      await expect(page).toHaveTitle('Logs de auditoria — UniCatólica');
+      await expect(page.locator('tbody tr')).toHaveCount(2);
+      await esperarSemViolacoes(page);
+
+      await page.goto('/admin/auditoria?modulo=identidade&acao=COMUNIDADE_CURSO_RENOMEADA');
+      await expect(page.getByText('Nenhum log para esses filtros')).toBeVisible();
+      await esperarSemViolacoes(page);
+
+      await page.goto('/admin/auditoria?de=2026-03-12&ate=2026-03-10');
+      await expect(page.getByText('A data inicial não pode ser depois da data final.')).toBeVisible();
       await esperarSemViolacoes(page);
     });
 
