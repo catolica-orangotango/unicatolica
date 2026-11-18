@@ -1,0 +1,67 @@
+# Blueprint do Render (AD-6, KAN-98). Descreve os dois serviços do PACEXT; plano de deploy em
+# docs/decisoes/2026-11-16-planejamento-de-deploy.md e variáveis em docs/variaveis-de-ambiente.md.
+#
+# Segredos usam `sync: false`: o Render pede o valor no painel ao aplicar o Blueprint, e o valor
+# nunca entra neste arquivo. NÃO declarar QUARKUS_LIQUIBASE_CONTEXTS: a variável venceria o
+# application.properties e, com `dev`, o seed com senha pública rodaria em produção (DT-6).
+#
+# Os nomes dos serviços definem as URLs públicas (https://<nome>.onrender.com). Se o Render
+# acrescentar sufixo por colisão de nome, ajustar CORS_ORIGINS, FRONTEND_URL e
+# frontend/src/environments/environment.production.ts.
+services:
+  # --- Backend: Quarkus em Docker -------------------------------------------------------------
+  - type: web
+    name: pacext-api
+    runtime: docker
+    plan: free
+    # Escolha a região mais próxima do projeto Neon (menos latência por consulta).
+    region: oregon
+    dockerContext: ./backend
+    dockerfilePath: ./backend/Dockerfile
+    healthCheckPath: /q/health
+    # Publica só depois que os checks do GitHub passam (CI verde, AD-8).
+    autoDeployTrigger: checksPass
+    envVars:
+      # Banco (Neon). Endpoint DIRETO (sem -pooler), com ?sslmode=require:
+      # jdbc:postgresql://<host>/<banco>?sslmode=require
+      - key: QUARKUS_DATASOURCE_JDBC_URL
+        sync: false
+      - key: DB_USER
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+      # Par JWT NOVO de produção, em base64 numa linha (docs/variaveis-de-ambiente.md, seção 2).
+      - key: JWT_PRIVATE_KEY
+        sync: false
+      - key: JWT_PUBLIC_KEY
+        sync: false
+      # URL do Static Site abaixo.
+      - key: CORS_ORIGINS
+        value: https://pacext-web.onrender.com
+      - key: FRONTEND_URL
+        value: https://pacext-web.onrender.com
+      # E-mail de confirmação: o Render bloqueia SMTP de saída, então API da Brevo (DT-4).
+      - key: EMAIL_TRANSPORTE
+        value: brevo-api
+      - key: BREVO_API_KEY
+        sync: false
+      - key: MAIL_FROM
+        sync: false
+
+  # --- Frontend: Angular como Static Site -----------------------------------------------------
+  - type: web
+    name: pacext-web
+    runtime: static
+    rootDir: frontend
+    buildCommand: npm ci && npm run build
+    staticPublishPath: dist/frontend/browser
+    autoDeployTrigger: checksPass
+    envVars:
+      # Mesmo Node do .nvmrc (Angular 22 recusa versões antigas).
+      - key: NODE_VERSION
+        value: "24"
+    routes:
+      # SPA: recarregar /admin/usuarios devolve o index.html em vez de 404.
+      - type: rewrite
+        source: /*
+        destination: /index.html
