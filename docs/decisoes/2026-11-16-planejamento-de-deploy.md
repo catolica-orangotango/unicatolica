@@ -61,6 +61,33 @@ Na ordem. Os itens com DT são os da [DT-6](../dividas-tecnicas.md#dt-6-produç�
 8. Roteiro de fumaça em produção: login, `/admin`, criar comunidade, publicar, recarregar uma rota profunda (testa o rewrite) e abrir `/admin/auditoria`.
 9. Registrar as URLs finais em `docs/variaveis-de-ambiente.md` e remover DT-4 e DT-6 da tabela de dívidas.
 
+## Ensaio no Neon (17/11/2026)
+
+O backend foi ensaiado contra um branch descartável do Neon (`ensaio`, criado a partir de `production` e já apagado), com o jar `prod` e sem alterar `application.properties`.
+
+| Verificação | Resultado |
+|---|---|
+| `/q/health` | `UP`, incluindo a conexão com o banco |
+| Liquibase | 25 changesets aplicados; `pg_trgm` criada (o usuário do projeto Neon basta, item 5 da decisão confirmado) |
+| `GET /cursos` e `POST /auth/registro` | leitura e escrita funcionando; linha conferida com `psql` |
+| Seeds de dev | ausentes: nenhum `*.teste@`, login `admin.teste` dá 401 (DT-6) |
+
+Como repetir, sem commitar nada:
+
+1. Conectar a CLI: `npm i -g neon@latest` e login no navegador (`neon branches list --project-id <id>` testa o acesso).
+2. Criar o branch de ensaio: `neon branches create --project-id <id> --name ensaio`. Pegar a connection string **direta** (sem `-pooler`): `neon connection-string ensaio --project-id <id>`.
+3. Converter `postgresql://usuario:senha@host/banco` em três variáveis, porque o JDBC não aceita usuário e senha na URL:
+   `QUARKUS_DATASOURCE_JDBC_URL=jdbc:postgresql://host/banco?sslmode=require`, `DB_USER` e `DB_PASSWORD`.
+4. `cd backend && ./mvnw package -DskipTests` e `java -jar target/quarkus-app/quarkus-run.jar` com essas variáveis (mais `CORS_ORIGINS`, `FRONTEND_URL`, JWT). **Não** definir `QUARKUS_LIQUIBASE_CONTEXTS` e **não** usar `quarkus:dev`, que roda os seeds de dev.
+5. Conferir `/q/health`, `GET /cursos`, um cadastro e `select count(*) from databasechangelog`.
+6. Apagar o branch: `neon branches delete ensaio --project-id <id>`.
+
+Cuidados:
+
+- `neon init` cria `neon.ts`, `package.json` e `node_modules/` na raiz e grava `DATABASE_URL*` no `.env`. Esses arquivos não são do projeto e não devem ser commitados; remover as variáveis do `.env` ao apagar o branch.
+- A produção real usa o branch `production`. O backend lê a URL pelas variáveis do Render, não pelo `.env`.
+- O serviço de object-storage do Neon fica fora: Materiais não está no escopo deste plano (ver Consequências).
+
 ## Tickets sugeridos
 
 | Ordem | Ticket | Depende de |
@@ -93,6 +120,8 @@ Os itens 1 e 2 são independentes e podem andar em paralelo.
 ## Perguntas para o time
 
 1. Quem tem conta (e acesso de administrador) no Render, no Neon e na Brevo? Há mais de uma pessoa em cada?
+   *Parcial (17/11):* Luis tem conta na Brevo. Render: a confirmar. Neon: Luis opera o projeto pela CLI (ver [Ensaio no Neon](#ensaio-no-neon-17112026)), falta saber se é administrador e se há mais alguém. Como conferir: Render em *Workspace Settings → Members* (papel Owner/Admin); Neon em *Settings → Members*.
 2. O Render e o Neon já têm algum serviço ou banco criado? Se sim, com quais nomes e URLs?
+   *Neon (17/11):* existe o projeto `blue-cloud-71865208` (org `org-spring-cell-61391370`) com o branch `production`, vazio até o ensaio. Render: a confirmar.
 3. Qual é a data da demonstração ou da entrega? Ela define se vale o ping contra a hibernação.
 4. Quem será o primeiro administrador de produção (DT-6) e qual e-mail institucional ele usa?
