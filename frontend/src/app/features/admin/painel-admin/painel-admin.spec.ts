@@ -32,4 +32,11 @@ describe('PainelAdmin', () => {
     const atalho = el.querySelector('a[href="/admin/usuarios"]');
     expect(atalho?.textContent?.trim()).toBe('Usuários');
   });
+
+  it('oferece o atalho para os logs de auditoria', async () => {
+    const el = await montar();
+
+    const atalho = el.querySelector('a[href="/admin/auditoria"]');
+    expect(atalho?.textContent?.trim()).toBe('Logs de auditoria');
+  });
 });

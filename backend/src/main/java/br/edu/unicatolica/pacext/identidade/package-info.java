@@ -40,6 +40,11 @@
  * do usuário (mesmo mecanismo do logout), vão para a auditoria, e o sistema nunca fica sem
  * administrador ativo. Conta desativada ({@code usuario.ativo = false}) não faz login
  * ({@code ContaDesativadaException}, 401 {@code CONTA_DESATIVADA}).
+ * A consulta de logs de auditoria (KAN-90, RF83, {@code AuditoriaAdminService}) mora aqui
+ * porque a administração de plataforma é de Identidade: {@code GET /admin/auditoria} e
+ * {@code GET /admin/auditoria/filtros}, só {@code ADMINISTRADOR}, somente leitura. Lê pela
+ * interface {@code compartilhado.auditoria.AuditoriaConsulta} e completa o autor (nome e
+ * e-mail) pela tabela {@code usuario}; consultar não gera log.
  * Também a lista de cursos ({@code GET /cursos}, público só para leitura), usada
  * pelo select do cadastro, e a manutenção dela pelo administrador (KAN-44):
  * {@code POST /cursos}, {@code PUT /cursos/{id}} (renomear, ativar/desativar) e

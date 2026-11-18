@@ -600,6 +600,91 @@ export async function mockAdminUsuarios(
   return chamadas;
 }
 
+/** Log no formato de `LogAuditoriaResponse` do `openapi.yaml` (KAN-90). */
+export interface LogAuditoriaMock {
+  id: number;
+  criadoEm: string;
+  autor: { id: number; nome: string | null; email: string | null } | null;
+  modulo: string;
+  acao: string;
+  entidadeAfetada: string | null;
+  entidadeId: number | null;
+  detalhes: string | null;
+}
+
+/**
+ * `GET /admin/auditoria` e `/admin/auditoria/filtros` (KAN-90) sobre logs em memória: mais
+ * recentes primeiro, filtros combinados com E, 20 por página e `tamanho` limitado a 20, 422 para
+ * `de` depois de `ate`, como o backend. Exige o header `Authorization` (sem ele, 401), para o
+ * teste pegar uma tela que esqueça o token. Devolve as query strings recebidas em `/admin/auditoria`.
+ * Registrar depois de `mockFeedOk`.
+ */
+export async function mockAuditoria(page: Page, logs: LogAuditoriaMock[]): Promise<URLSearchParams[]> {
+  const consultas: URLSearchParams[] = [];
+  const erro = (status: number, code: string, message: string) =>
+    json(status, { error: { code, message, details: null } });
+
+  await page.route(
+    (url) => ehApi(url) && url.pathname.startsWith('/admin/auditoria'),
+    (route) => {
+      const request = route.request();
+      const url = new URL(request.url());
+      if (request.method() === 'OPTIONS') {
+        return route.fulfill({ status: 204, headers: CORS });
+      }
+      if (!request.headers()['authorization']) {
+        return route.fulfill(erro(401, 'NAO_AUTENTICADO', 'Token ausente.'));
+      }
+
+      if (url.pathname === '/admin/auditoria/filtros') {
+        const acoesPorModulo: Record<string, string[]> = {};
+        for (const { modulo, acao } of logs) {
+          const acoes = (acoesPorModulo[modulo] ??= []);
+          if (!acoes.includes(acao)) acoes.push(acao);
+        }
+        const entidades = [...new Set(logs.map((l) => l.entidadeAfetada).filter((e): e is string => !!e))].sort();
+        return route.fulfill(
+          json(200, { modulos: Object.keys(acoesPorModulo).sort(), acoesPorModulo, entidadesAfetadas: entidades }),
+        );
+      }
+
+      const q = url.searchParams;
+      consultas.push(q);
+      const de = q.get('de');
+      const ate = q.get('ate');
+      if (de && ate && de > ate) {
+        return route.fulfill(erro(422, 'INTERVALO_DE_DATAS_INVALIDO', 'A data inicial não pode ser depois da data final.'));
+      }
+      const detalhes = (q.get('detalhes') ?? '').toLowerCase();
+      // Dia inclusivo no fuso de Brasília (UTC-3): converte o instante antes de comparar.
+      const diaEmBrasilia = (iso: string) => new Date(new Date(iso).getTime() - 3 * 3_600_000).toISOString().slice(0, 10);
+      const filtrados = logs
+        .filter(
+          (l) =>
+            (!q.get('modulo') || l.modulo === q.get('modulo')) &&
+            (!q.get('acao') || l.acao === q.get('acao')) &&
+            (!q.get('entidadeAfetada') || l.entidadeAfetada === q.get('entidadeAfetada')) &&
+            (detalhes.length < 3 || (l.detalhes ?? '').toLowerCase().includes(detalhes)) &&
+            (!de || diaEmBrasilia(l.criadoEm) >= de) &&
+            (!ate || diaEmBrasilia(l.criadoEm) <= ate),
+        )
+        .sort((a, b) => b.criadoEm.localeCompare(a.criadoEm) || b.id - a.id);
+      const tamanho = Math.min(Number(q.get('tamanho') ?? 20) || 20, 20);
+      const numero = Number(q.get('pagina') ?? 0) || 0;
+      return route.fulfill(
+        json(200, {
+          content: filtrados.slice(numero * tamanho, (numero + 1) * tamanho),
+          page: numero,
+          size: tamanho,
+          totalElements: filtrados.length,
+          totalPages: Math.ceil(filtrados.length / tamanho),
+        }),
+      );
+    },
+  );
+  return consultas;
+}
+
 /** Curso no formato de `CursoAdmin` do `openapi.yaml` (KAN-44). */
 export interface CursoAdminMock {
   id: number;
