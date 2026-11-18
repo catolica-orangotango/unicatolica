@@ -11,7 +11,7 @@
 services:
   # --- Backend: Quarkus em Docker -------------------------------------------------------------
   - type: web
-    name: pacext-api
+    name: pacext-unicatolica-api
     runtime: docker
     plan: free
     # Escolha a região mais próxima do projeto Neon (menos latência por consulta).
@@ -37,9 +37,9 @@ services:
         sync: false
       # URL do Static Site abaixo.
       - key: CORS_ORIGINS
-        value: https://pacext-web.onrender.com
+        value: https://pacext-unicatolica-web.onrender.com
       - key: FRONTEND_URL
-        value: https://pacext-web.onrender.com
+        value: https://pacext-unicatolica-web.onrender.com
       # E-mail de confirmação: o Render bloqueia SMTP de saída, então API da Brevo (DT-4).
       - key: EMAIL_TRANSPORTE
         value: brevo-api
@@ -50,7 +50,7 @@ services:
 
   # --- Frontend: Angular como Static Site -----------------------------------------------------
   - type: web
-    name: pacext-web
+    name: pacext-unicatolica-web
     runtime: static
     rootDir: frontend
     buildCommand: npm ci && npm run build
