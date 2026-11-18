@@ -8,5 +8,23 @@ package br.edu.unicatolica.pacext.notificacoes;
 public enum TipoNotificacao {
 
     /** Story 4.3/10.1 (RF20.1) — perfil acadêmico sem interesses após o 2º login. */
-    ONBOARDING_PERFIL
+    ONBOARDING_PERFIL,
+
+    /**
+     * Story 10.1 (RF65) — reservado, sem emissor ainda: depende de Publicações ganhar
+     * resposta/comentário em postagem, que não existe hoje.
+     */
+    RESPOSTA_POSTAGEM,
+
+    /**
+     * Story 10.1 (RF66) — reservado, sem emissor ainda: depende de um módulo com conteúdo
+     * em texto livre (Publicações/Discussões) reconhecer menção a usuário, que não existe hoje.
+     */
+    MENCAO,
+
+    /**
+     * Story 10.1 (RF67) — reservado, sem emissor ainda: depende do módulo Enquetes, que não
+     * existe hoje (nem pacote no backend).
+     */
+    CONVITE_ENQUETE
 }
