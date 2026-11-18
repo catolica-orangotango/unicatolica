@@ -1514,7 +1514,11 @@ components:
           format: int64
         tipo:
           type: string
-          enum: [ONBOARDING_PERFIL]
+          enum: [ONBOARDING_PERFIL, RESPOSTA_POSTAGEM, MENCAO, CONVITE_ENQUETE]
+          description: >-
+            RESPOSTA_POSTAGEM, MENCAO e CONVITE_ENQUETE (RF65–RF67) estão reservados no enum do
+            backend mas sem emissor ainda (KAN-47) — nenhuma notificação com esses tipos é
+            gerada hoje.
         texto:
           type: string
         link:
