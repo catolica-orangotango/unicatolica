@@ -1,5 +1,5 @@
-*
-!target/*-runner
-!target/*-runner.jar
-!target/lib/*
-!target/quarkus-app/*
+# Contexto do Dockerfile (backend/): fora tudo que o build refaz ou que não pode ir na imagem.
+target/
+.env
+.idea/
+*.iml
