@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Índices da consulta de logs pelo administrador (KAN-90, RNF83.1: p95 até 500 ms com 100 mil
+    registros). Fica em infraestrutura/ porque o includeAll roda em ordem de caminho e esta
+    migration precisa vir depois da infraestrutura-001, que cria a tabela.
+-->
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="infraestrutura-002-indices-consulta-auditoria" author="pacext" dbms="postgresql">
+        <!-- Trigramas: fazem o ILIKE '%texto%' de "detalhes" usar índice. -->
+        <sql>CREATE EXTENSION IF NOT EXISTS pg_trgm</sql>
+
+        <!-- Ordem padrão e filtro de data; substitui o índice simples de criado_em. -->
+        <sql>DROP INDEX IF EXISTS idx_log_auditoria_criado_em</sql>
+        <sql>CREATE INDEX idx_log_auditoria_criado_em_id ON log_auditoria (criado_em DESC, id DESC)</sql>
+
+        <!-- Filtros de módulo e ação. -->
+        <sql>CREATE INDEX idx_log_auditoria_modulo_acao_criado_em
+            ON log_auditoria (modulo, acao, criado_em DESC)</sql>
+
+        <!-- Filtro de entidade afetada. -->
+        <sql>CREATE INDEX idx_log_auditoria_entidade_criado_em
+            ON log_auditoria (entidade_afetada, criado_em DESC)</sql>
+
+        <!-- Filtro "contém" em detalhes (a partir de 3 caracteres). -->
+        <sql>CREATE INDEX idx_log_auditoria_detalhes_trgm
+            ON log_auditoria USING gin (detalhes gin_trgm_ops)</sql>
+
+        <rollback>
+            <sql>DROP INDEX IF EXISTS idx_log_auditoria_detalhes_trgm</sql>
+            <sql>DROP INDEX IF EXISTS idx_log_auditoria_entidade_criado_em</sql>
+            <sql>DROP INDEX IF EXISTS idx_log_auditoria_modulo_acao_criado_em</sql>
+            <sql>DROP INDEX IF EXISTS idx_log_auditoria_criado_em_id</sql>
+            <sql>CREATE INDEX idx_log_auditoria_criado_em ON log_auditoria (criado_em)</sql>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

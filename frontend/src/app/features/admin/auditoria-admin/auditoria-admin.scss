@@ -1,0 +1,180 @@
+// Tela "Logs de auditoria" de /admin (KAN-90). Só tokens --uc-*; em telas estreitas a tabela vira
+// lista de registros empilhados e os filtros ficam num painel recolhível.
+@use '../../../../styles/breakpoints' as bp;
+
+:host {
+  display: block;
+}
+
+.auditoria__voltar {
+  display: inline-block;
+  margin-bottom: calc(var(--uc-space-unit) * 2);
+  color: var(--uc-color-ink-soft);
+  font-size: var(--uc-font-size-meta);
+}
+
+.auditoria__titulo {
+  margin: 0 0 var(--uc-space-section-gap);
+}
+
+.auditoria__alternar {
+  display: none;
+  margin-bottom: calc(var(--uc-space-unit) * 3);
+}
+
+.auditoria__filtros {
+  display: grid;
+  // layout-literal: colunas fluidas de filtro; DESIGN.md não define largura de campo de filtro.
+  grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr));
+  align-items: start;
+  gap: calc(var(--uc-space-unit) * 3);
+  margin-bottom: var(--uc-space-section-gap);
+}
+
+.auditoria__limpar {
+  align-self: end;
+  justify-self: start;
+}
+
+.auditoria__total {
+  margin: 0 0 calc(var(--uc-space-unit) * 2);
+  color: var(--uc-color-ink-soft);
+  min-height: var(--uc-space-5);
+}
+
+.auditoria__esqueleto {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--uc-space-unit) * 2);
+}
+
+.auditoria__esqueleto-linha {
+  display: block;
+  height: var(--uc-space-8);
+}
+
+.auditoria__erro {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: calc(var(--uc-space-unit) * 3);
+  padding: calc(var(--uc-space-unit) * 4);
+  border: 1px solid var(--uc-color-error);
+  border-radius: var(--uc-radius-md);
+  color: var(--uc-color-error);
+
+  p {
+    margin: 0;
+  }
+}
+
+.auditoria__rolagem {
+  overflow-x: auto;
+  background: var(--uc-color-surface);
+  border: 1px solid var(--uc-color-border);
+  border-radius: var(--uc-radius-md);
+}
+
+.auditoria__tabela {
+  // layout-literal: a tabela ocupa a largura do contêiner; DESIGN.md não define largura de tabela.
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--uc-font-size-body);
+  color: var(--uc-color-ink);
+  text-align: left;
+}
+
+.auditoria__tabela th,
+.auditoria__tabela td {
+  padding: calc(var(--uc-space-unit) * 2.5) calc(var(--uc-space-unit) * 3);
+  border-bottom: 1px solid var(--uc-color-border);
+  vertical-align: top;
+}
+
+.auditoria__tabela thead th {
+  font-size: var(--uc-font-size-meta);
+  font-weight: var(--uc-font-weight-semibold);
+  color: var(--uc-color-ink-soft);
+}
+
+.auditoria__tabela tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.auditoria__autor,
+.auditoria__email {
+  display: block;
+}
+
+.auditoria__autor {
+  font-weight: var(--uc-font-weight-semibold);
+}
+
+.auditoria__email {
+  font-size: var(--uc-font-size-meta);
+  color: var(--uc-color-ink-soft);
+}
+
+// Detalhes é texto puro de tamanho livre: quebra em vez de alargar a tabela.
+.auditoria__detalhes {
+  overflow-wrap: anywhere;
+}
+
+.auditoria__paginacao {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: calc(var(--uc-space-unit) * 4);
+  margin-top: var(--uc-space-section-gap);
+}
+
+@media (max-width: bp.$uc-bp-mobile) {
+  .auditoria__alternar {
+    display: inline-flex;
+  }
+
+  .auditoria__filtros--recolhido {
+    display: none;
+  }
+
+  .auditoria__rolagem {
+    overflow-x: visible;
+    background: transparent;
+    border: none;
+  }
+
+  .auditoria__tabela,
+  .auditoria__tabela tbody,
+  .auditoria__tabela tr,
+  .auditoria__tabela td {
+    display: block;
+  }
+
+  .auditoria__tabela thead {
+    display: none;
+  }
+
+  .auditoria__tabela tr {
+    margin-bottom: calc(var(--uc-space-unit) * 3);
+    background: var(--uc-color-surface);
+    border: 1px solid var(--uc-color-border);
+    border-radius: var(--uc-radius-md);
+  }
+
+  .auditoria__tabela td,
+  .auditoria__tabela tbody tr:last-child td {
+    border-bottom: 1px solid var(--uc-color-border);
+  }
+
+  .auditoria__tabela tr td:last-child {
+    border-bottom: none;
+  }
+
+  .auditoria__tabela td::before {
+    content: attr(data-rotulo);
+    display: block;
+    font-size: var(--uc-font-size-meta);
+    font-weight: var(--uc-font-weight-semibold);
+    color: var(--uc-color-ink-soft);
+  }
+}

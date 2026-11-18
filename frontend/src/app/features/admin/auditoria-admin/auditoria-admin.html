@@ -1,0 +1,158 @@
+<div class="auditoria">
+  <a class="auditoria__voltar" routerLink="/admin">&larr; Administração</a>
+  <h1 class="uc-text-greeting auditoria__titulo">Logs de auditoria</h1>
+
+  <button
+    type="button"
+    uc-button
+    variant="secondary"
+    class="auditoria__alternar"
+    aria-controls="auditoria-filtros"
+    [attr.aria-expanded]="filtrosAbertos()"
+    (click)="alternarFiltros()"
+  >
+    {{ filtrosAbertos() ? 'Ocultar filtros' : 'Mostrar filtros' }}
+  </button>
+
+  <form
+    id="auditoria-filtros"
+    class="auditoria__filtros"
+    [class.auditoria__filtros--recolhido]="!filtrosAbertos() && !erroIntervalo()"
+    aria-label="Filtros dos logs"
+    (submit)="$event.preventDefault()"
+  >
+    <uc-field label="Módulo">
+      <select ucInput (change)="escolherModulo($any($event.target).value)">
+        <option value="" [selected]="!consulta().modulo">Todos os módulos</option>
+        @for (modulo of opcoes()?.modulos ?? []; track modulo) {
+          <option [value]="modulo" [selected]="modulo === consulta().modulo">{{ modulo }}</option>
+        }
+      </select>
+    </uc-field>
+
+    <uc-field label="Ação">
+      <select ucInput (change)="escolherAcao($any($event.target).value)">
+        <option value="" [selected]="!consulta().acao">Todas as ações</option>
+        @for (acao of acoesDisponiveis(); track acao) {
+          <option [value]="acao" [selected]="acao === consulta().acao">{{ acao }}</option>
+        }
+      </select>
+    </uc-field>
+
+    <uc-field label="Entidade afetada">
+      <select ucInput (change)="escolherEntidade($any($event.target).value)">
+        <option value="" [selected]="!consulta().entidadeAfetada">Todas as entidades</option>
+        @for (entidade of opcoes()?.entidadesAfetadas ?? []; track entidade) {
+          <option [value]="entidade" [selected]="entidade === consulta().entidadeAfetada">{{ entidade }}</option>
+        }
+      </select>
+    </uc-field>
+
+    <uc-field label="Detalhes contêm" [error]="avisoDetalhes()">
+      <input
+        ucInput
+        type="text"
+        autocomplete="off"
+        [value]="detalhesDigitado()"
+        (input)="digitarDetalhes($any($event.target).value)"
+      />
+    </uc-field>
+
+    <uc-field label="De">
+      <input ucInput type="date" [value]="consulta().de ?? ''" (change)="escolherDe($any($event.target).value)" />
+    </uc-field>
+
+    <uc-field label="Até" [error]="erroIntervalo()">
+      <input ucInput type="date" [value]="consulta().ate ?? ''" (change)="escolherAte($any($event.target).value)" />
+    </uc-field>
+
+    <button type="button" uc-button variant="secondary" class="auditoria__limpar" (click)="limpar()">
+      Limpar filtros
+    </button>
+  </form>
+
+  <p class="uc-text-meta auditoria__total" role="status" aria-live="polite">
+    @if (pagina(); as resultado) {
+      {{ resultado.totalElements }} {{ resultado.totalElements === 1 ? 'registro encontrado' : 'registros encontrados' }}
+    }
+  </p>
+
+  @if (carregando()) {
+    <div class="auditoria__esqueleto" aria-busy="true" role="status" aria-label="Carregando logs">
+      @for (linha of [1, 2, 3, 4, 5, 6]; track linha) {
+        <uc-skeleton class="auditoria__esqueleto-linha" />
+      }
+    </div>
+  } @else if (erro(); as mensagem) {
+    <div class="auditoria__erro" role="alert">
+      <p>{{ mensagem }}</p>
+      <button type="button" uc-button variant="secondary" (click)="tentarDeNovo()">Tentar de novo</button>
+    </div>
+  } @else if (pagina(); as resultado) {
+    @if (resultado.content.length === 0) {
+      @if (temFiltro()) {
+        <uc-empty-state titulo="Nenhum log para esses filtros" descricao="Ajuste ou limpe os filtros para ver mais registros.">
+          <button acao type="button" uc-button variant="secondary" (click)="limpar()">Limpar filtros</button>
+        </uc-empty-state>
+      } @else {
+        <uc-empty-state titulo="Nenhum log registrado ainda" descricao="As ações auditadas da plataforma aparecem aqui." />
+      }
+    } @else {
+      <div class="auditoria__rolagem" role="region" aria-label="Lista de logs de auditoria" tabindex="0">
+        <table class="auditoria__tabela">
+          <thead>
+            <tr>
+              <th scope="col">Data e hora</th>
+              <th scope="col">Autor</th>
+              <th scope="col">Módulo</th>
+              <th scope="col">Ação</th>
+              <th scope="col">Entidade afetada</th>
+              <th scope="col">Detalhes</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (log of resultado.content; track log.id) {
+              <tr>
+                <td data-rotulo="Data e hora">
+                  <time [attr.datetime]="log.criadoEm">{{ quando(log.criadoEm) }}</time>
+                </td>
+                <td data-rotulo="Autor">
+                  @if (log.autor === null) {
+                    Sistema
+                  } @else if (log.autor.nome === null) {
+                    Usuário #{{ log.autor.id }}
+                  } @else {
+                    <span class="auditoria__autor">{{ log.autor.nome }}</span>
+                    <span class="auditoria__email">{{ log.autor.email }}</span>
+                  }
+                </td>
+                <td data-rotulo="Módulo">{{ log.modulo }}</td>
+                <td data-rotulo="Ação">{{ log.acao }}</td>
+                <td data-rotulo="Entidade afetada">{{ entidade(log) }}</td>
+                <td data-rotulo="Detalhes" class="auditoria__detalhes">{{ log.detalhes ?? '—' }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      @if (resultado.totalPages > 1) {
+        <nav class="auditoria__paginacao" aria-label="Paginação dos logs">
+          <button type="button" uc-button variant="secondary" [disabled]="resultado.page === 0" (click)="irParaPagina(resultado.page - 1)">
+            &larr; Anterior
+          </button>
+          <span class="uc-text-body">Página {{ resultado.page + 1 }} de {{ resultado.totalPages }}</span>
+          <button
+            type="button"
+            uc-button
+            variant="secondary"
+            [disabled]="resultado.page + 1 >= resultado.totalPages"
+            (click)="irParaPagina(resultado.page + 1)"
+          >
+            Próxima &rarr;
+          </button>
+        </nav>
+      }
+    }
+  }
+</div>

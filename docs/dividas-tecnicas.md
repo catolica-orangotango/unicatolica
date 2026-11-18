@@ -92,3 +92,15 @@ Problemas conhecidos que ainda não têm história nem PR. Quando um item virar 
   1. Abrir o painel como overlay ancorado ao item (ou ao lado do menu), com alvo de pelo menos 24px nos itens que ele cobre, ou limitar a altura pelo espaço livre da janela.
   2. Conferir no e2e da casca em 1440 x 700 e no axe.
 - **Prazo:** no ticket do Início do redesign ou no do módulo de notificações, o que vier primeiro. **Estado:** sem história ainda.
+
+## DT-13. Método HTTP não permitido devolve 500 em vez de 405
+
+- **Hoje:** `ErroInternoExceptionMapper` pega também a `NotAllowedException` do JAX-RS. Um `POST`/`PUT`/`DELETE` numa rota que só tem `GET` (ex.: `/admin/auditoria`) responde 500 `ERRO_INTERNO` em vez de 405. Nunca chega a 2xx, então não abre brecha, mas polui o log de erros e o `AuditoriaAdminResourceTest.nenhumaRotaAlteraOuApagaLog` só consegue afirmar `>= 400`.
+- **Correção esperada:** deixar `WebApplicationException` (405, 404 de rota, 415) passar com o próprio status, no envelope `{"error": {...}}`, e trocar o teste por `405`.
+- **Prazo:** sem prazo; qualquer ticket que mexa nos mappers de `compartilhado/erro/`. **Estado:** sem história ainda.
+
+## DT-14. Logs de auditoria crescem sem retenção nem exportação
+
+- **Hoje:** `log_auditoria` só cresce, e a tela do KAN-90 só consulta. Sem política de retenção, arquivamento ou exportação (fora do escopo do KAN-90).
+- **Correção esperada:** definir retenção e exportação quando o volume preocupar (referência: a meta de 100 mil registros do RNF83.1) e rever os índices de `infraestrutura-002`.
+- **Prazo:** quando o volume de produção chegar perto de 100 mil registros. **Estado:** sem história ainda.

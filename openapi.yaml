@@ -353,6 +353,95 @@ paths:
         '409':
           $ref: '#/components/responses/Conflito'
 
+  /admin/auditoria:
+    get:
+      operationId: listarLogsAuditoria
+      summary: Consulta os logs de auditoria, paginado, só ADMINISTRADOR (KAN-90)
+      tags: [Administracao]
+      description: >
+        Somente leitura, do mais recente para o mais antigo (`criadoEm` e `id` decrescentes).
+        Todos os filtros são opcionais e se combinam com E; valor vazio ou só com espaços conta
+        como sem filtro. `modulo`, `acao` e `entidadeAfetada` casam pelo valor exato; `detalhes`
+        casa por trecho, sem diferenciar maiúsculas; com menos de 3 caracteres é ignorado. `de` e `ate`
+        são dias inclusivos no fuso America/Sao_Paulo. Consultar não gera log (RN11).
+      parameters:
+        - name: modulo
+          in: query
+          schema:
+            type: string
+        - name: acao
+          in: query
+          schema:
+            type: string
+        - name: entidadeAfetada
+          in: query
+          schema:
+            type: string
+        - name: detalhes
+          in: query
+          schema:
+            type: string
+        - name: de
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: ate
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: pagina
+          in: query
+          schema:
+            type: integer
+            format: int32
+            minimum: 0
+            default: 0
+        - name: tamanho
+          in: query
+          description: Acima de 20 vira 20.
+          schema:
+            type: integer
+            format: int32
+            minimum: 1
+            maximum: 20
+            default: 20
+      responses:
+        '200':
+          description: Página de logs de auditoria.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LogAuditoriaPageResponse'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        # 422: `de` depois de `ate` (INTERVALO_DE_DATAS_INVALIDO).
+        '422':
+          $ref: '#/components/responses/ErroValidacao'
+
+  /admin/auditoria/filtros:
+    get:
+      operationId: listarFiltrosAuditoria
+      summary: Opções dos filtros da consulta de auditoria, só ADMINISTRADOR (KAN-90)
+      tags: [Administracao]
+      description: >
+        Valores que existem hoje em `log_auditoria`, para montar as listas de seleção.
+        As ações vêm agrupadas por módulo.
+      responses:
+        '200':
+          description: Módulos, ações por módulo e entidades afetadas existentes.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FiltrosAuditoriaResponse'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+
   /comunidades:
     post:
       operationId: criarComunidade
@@ -1237,6 +1326,84 @@ components:
               items:
                 $ref: '#/components/schemas/UsuarioAdminResponse'
 
+    AutorAuditoria:
+      type: object
+      required: [id]
+      description: >
+        Quem praticou a ação. `nome` e `email` vêm nulos quando o usuário não existe mais;
+        a tela mostra "Usuário #id".
+      properties:
+        id:
+          type: integer
+          format: int64
+        nome:
+          type: [string, 'null']
+        email:
+          type: [string, 'null']
+
+    LogAuditoriaResponse:
+      type: object
+      required: [id, criadoEm, modulo, acao]
+      properties:
+        id:
+          type: integer
+          format: int64
+        criadoEm:
+          type: string
+          format: date-time
+          description: UTC, ISO-8601.
+        autor:
+          oneOf:
+            - $ref: '#/components/schemas/AutorAuditoria'
+            - type: 'null'
+          description: Nulo é evento do sistema (a tela mostra "Sistema").
+        modulo:
+          type: string
+          example: identidade
+        acao:
+          type: string
+          example: PERFIL_ALTERADO
+        entidadeAfetada:
+          type: [string, 'null']
+          example: Usuario
+        entidadeId:
+          type: [integer, 'null']
+          format: int64
+        detalhes:
+          type: [string, 'null']
+          description: Texto puro; a tela não interpreta HTML.
+          example: ALUNO -> MODERADOR
+
+    LogAuditoriaPageResponse:
+      allOf:
+        - $ref: '#/components/schemas/PageResponse'
+        - type: object
+          properties:
+            content:
+              type: array
+              items:
+                $ref: '#/components/schemas/LogAuditoriaResponse'
+
+    FiltrosAuditoriaResponse:
+      type: object
+      required: [modulos, acoesPorModulo, entidadesAfetadas]
+      properties:
+        modulos:
+          type: array
+          items:
+            type: string
+        acoesPorModulo:
+          type: object
+          description: Módulo → ações que existem nele.
+          additionalProperties:
+            type: array
+            items:
+              type: string
+        entidadesAfetadas:
+          type: array
+          items:
+            type: string
+
     AlterarPerfilRequest:
       type: object
       required: [perfil]
@@ -1514,7 +1681,11 @@ components:
           format: int64
         tipo:
           type: string
-          enum: [ONBOARDING_PERFIL]
+          enum: [ONBOARDING_PERFIL, RESPOSTA_POSTAGEM, MENCAO, CONVITE_ENQUETE]
+          description: >-
+            RESPOSTA_POSTAGEM, MENCAO e CONVITE_ENQUETE (RF65–RF67) estão reservados no enum do
+            backend mas sem emissor ainda (KAN-47) — nenhuma notificação com esses tipos é
+            gerada hoje.
         texto:
           type: string
         link:

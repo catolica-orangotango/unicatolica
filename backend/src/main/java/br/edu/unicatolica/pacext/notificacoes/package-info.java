@@ -11,5 +11,11 @@
  * {@code web}, {@code aplicacao}, {@code dominio}. Endpoints próprios ({@code GET
  * /notificacoes/me}, {@code POST /notificacoes/{id}/lida}) servem a lista da sininho da
  * shell do frontend.</p>
+ *
+ * <p>{@link TipoNotificacao#RESPOSTA_POSTAGEM}, {@link TipoNotificacao#MENCAO} e
+ * {@link TipoNotificacao#CONVITE_ENQUETE} (RF65–RF67, Story 10.1/KAN-47) estão reservados no
+ * enum mas sem emissor: dependem de Publicações ganhar resposta/comentário, de um módulo com
+ * texto livre reconhecer menção, e do módulo Enquetes existir, respectivamente — nenhum dos
+ * três tem código ainda.</p>
  */
 package br.edu.unicatolica.pacext.notificacoes;
