@@ -15,7 +15,10 @@
  * {@code enquete_voto} guarda só a opção escolhida, sem ligação entre as duas; nunca adicionar a
  * {@code enquete_voto} coluna de identidade, de data/hora ou de agrupamento por voto
  * ({@code EnqueteAnonimatoTest} protege isso). Só enquete {@code ATIVA} aceita voto (RF55.3).
- * Fixação (8.2), voto de não membro em enquete fixada (8.4), resultado (8.5) e encerramento (8.6)
+ * Story 8.5: a listagem devolve {@code resultado} por enquete ({@code EnqueteService#resultados}) —
+ * contagem por opção só para quem já votou numa enquete ativa e só a partir de 5 votos (RF58.1);
+ * abaixo disso sai só o total, e quem não votou não recebe nem o total. Enquete encerrada mostra o
+ * resultado a todos. Fixação (8.2), voto de não membro em enquete fixada (8.4) e encerramento (8.6)
  * ainda não existem.</p>
  */
 package br.edu.unicatolica.pacext.enquetes;

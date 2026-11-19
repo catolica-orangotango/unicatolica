@@ -18,6 +18,7 @@ import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import java.util.List;
+import java.util.Set;
 
 /** Endpoints da Story 8.1 (Epic 8) — enquetes de uma comunidade. */
 @Path("/comunidades/{id}/enquetes")
@@ -43,7 +44,7 @@ public class EnqueteResource {
                 : enqueteService.criar(autorId, comunidadeId, request.pergunta(), request.tipo(),
                         request.limiteSelecao(), request.opcoes());
         UsuarioResumo autor = usuarioConsulta.buscarResumos(List.of(autorId)).get(autorId);
-        return Response.status(Response.Status.CREATED).entity(EnqueteResponse.de(enquete, autor, false)).build();
+        return Response.status(Response.Status.CREATED).entity(EnqueteResponse.de(enquete, autor, false, null)).build();
     }
 
     /** Enquetes da comunidade, mais recente primeiro. */
@@ -54,7 +55,8 @@ public class EnqueteResource {
             @QueryParam("pagina") @DefaultValue("0") int pagina,
             @QueryParam("tamanho") @DefaultValue("20") int tamanho) {
         PageResponse<Enquete> resultado = enqueteService.listarDaComunidade(comunidadeId, pagina, tamanho);
-        return EnqueteResponse.pagina(resultado, usuarioConsulta,
-                enqueteService.enquetesVotadas(usuarioAutenticado.id(), resultado.content()));
+        Set<Long> votadas = enqueteService.enquetesVotadas(usuarioAutenticado.id(), resultado.content());
+        return EnqueteResponse.pagina(resultado, usuarioConsulta, votadas,
+                enqueteService.resultados(resultado.content(), votadas));
     }
 }

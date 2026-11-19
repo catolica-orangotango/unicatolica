@@ -27,6 +27,7 @@ function ativa(id: number, comunidadeId: number): EnqueteMock {
     opcoes: [{ id: 1, texto: 'Sim' }, { id: 2, texto: 'Não' }],
     situacao: 'ATIVA',
     jaVotei: false,
+    resultado: null,
     criadaEm: '2026-11-19T12:00:00Z',
   };
 }
@@ -298,6 +299,38 @@ test('enquete em que já votou aparece sem opção de votar de novo (RF56.1)', a
 
   await expect(page.getByText('Você já votou nesta enquete.')).toBeVisible();
   await expect(page.getByRole('radio')).toHaveCount(0);
+});
+
+test('votou e a enquete tem 5 votos ou mais: mostra o resultado em barras (RF57, RF58)', async ({ page }) => {
+  const enquete = enqueteComOpcoes(5, 27, { jaVotei: true });
+  const [a, b] = enquete.opcoes;
+  enquete.resultado = {
+    totalVotantes: 5,
+    votosNecessarios: 5,
+    liberado: true,
+    opcoes: [
+      { opcaoId: a.id, votos: 4 },
+      { opcaoId: b.id, votos: 1 },
+    ],
+  };
+  await mockMinhasComunidades(page, COMUNIDADES);
+  await mockComunidadeComFeed(page, { id: 27, nome: 'Clube de Xadrez', tipo: 'ABERTA', souMembro: true, enquetes: [enquete] });
+  await page.goto('/comunidades/27');
+
+  await expect(page.getByText('4 votos (80%)')).toBeVisible();
+  await expect(page.getByText('1 voto (20%)')).toBeVisible();
+  await expect(page.getByRole('radio')).toHaveCount(0);
+});
+
+test('votou mas há menos de 5 votos: mostra "X de 5 votos necessários" no lugar do resultado (RF58.1)', async ({ page }) => {
+  const enquete = enqueteComOpcoes(5, 27, { jaVotei: true });
+  enquete.resultado = { totalVotantes: 3, votosNecessarios: 5, liberado: false, opcoes: [] };
+  await mockMinhasComunidades(page, COMUNIDADES);
+  await mockComunidadeComFeed(page, { id: 27, nome: 'Clube de Xadrez', tipo: 'ABERTA', souMembro: true, enquetes: [enquete] });
+  await page.goto('/comunidades/27');
+
+  await expect(page.getByText('3 de 5 votos necessários para mostrar o resultado.')).toBeVisible();
+  await expect(page.getByText(/\d+ votos? \(/)).toHaveCount(0);
 });
 
 test('enquete encerrada ou ocultada não aceita voto', async ({ page }) => {

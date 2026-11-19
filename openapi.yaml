@@ -1903,9 +1903,44 @@ components:
         texto:
           type: string
 
+    EnqueteResultado:
+      type: object
+      required: [totalVotantes, votosNecessarios, liberado, opcoes]
+      description: >
+        Contagem consolidada, sem identificar ninguém (RF57.1). Abaixo do mínimo de votos
+        (RF58.1) numa enquete ATIVA, liberado é false e opcoes vem vazio, para a contagem por
+        opção não permitir deduzir em quem alguém votou; só totalVotantes aparece ("X de 5
+        necessários").
+      properties:
+        totalVotantes:
+          type: integer
+          format: int32
+          description: Quantas pessoas votaram (em escolha múltipla, não soma as opções).
+        votosNecessarios:
+          type: integer
+          format: int32
+          description: Mínimo de votos para liberar o resultado numa enquete ATIVA (RF58.1).
+        liberado:
+          type: boolean
+        opcoes:
+          type: array
+          items:
+            $ref: '#/components/schemas/EnqueteOpcaoResultado'
+
+    EnqueteOpcaoResultado:
+      type: object
+      required: [opcaoId, votos]
+      properties:
+        opcaoId:
+          type: integer
+          format: int64
+        votos:
+          type: integer
+          format: int32
+
     EnqueteResponse:
       type: object
-      required: [id, comunidadeId, autor, pergunta, tipo, opcoes, situacao, jaVotei, criadaEm]
+      required: [id, comunidadeId, autor, pergunta, tipo, opcoes, situacao, jaVotei, resultado, criadaEm]
       properties:
         id:
           type: integer
@@ -1938,6 +1973,15 @@ components:
           description: >
             Se o usuário autenticado já votou nesta enquete (RF56.1). Só diz que votou, nunca
             em quem (RF57.1).
+        resultado:
+          oneOf:
+            - $ref: '#/components/schemas/EnqueteResultado'
+            - type: 'null'
+          description: >
+            Resultado consolidado (Story 8.5, RF57/RF58). Null quando o usuário ainda não pode
+            vê-lo: enquete ATIVA em que não votou (nem o total de votos é revelado) ou OCULTA.
+            Enquete ATIVA em que o usuário já votou traz o resultado; enquete ENCERRADA (8.6),
+            para todos.
         criadaEm:
           type: string
           format: date-time

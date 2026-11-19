@@ -11,6 +11,7 @@ import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.QueryParam;
+import java.util.Set;
 import jakarta.ws.rs.core.MediaType;
 
 /** Story 8.1 — as enquetes ativas do usuário autenticado, em todas as comunidades (RF53.3). */
@@ -33,6 +34,8 @@ public class MinhasEnquetesResource {
             @QueryParam("tamanho") @DefaultValue("20") int tamanho) {
         Long usuarioId = usuarioAutenticado.id();
         PageResponse<Enquete> resultado = enqueteService.listarAtivasDoUsuario(usuarioId, pagina, tamanho);
-        return EnqueteResponse.pagina(resultado, usuarioConsulta, enqueteService.enquetesVotadas(usuarioId, resultado.content()));
+        Set<Long> votadas = enqueteService.enquetesVotadas(usuarioId, resultado.content());
+        return EnqueteResponse.pagina(resultado, usuarioConsulta, votadas,
+                enqueteService.resultados(resultado.content(), votadas));
     }
 }

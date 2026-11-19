@@ -503,6 +503,12 @@ export interface EnqueteMock {
   opcoes: { id: number; texto: string }[];
   situacao: 'ATIVA' | 'ENCERRADA' | 'OCULTA';
   jaVotei: boolean;
+  resultado: {
+    totalVotantes: number;
+    votosNecessarios: number;
+    liberado: boolean;
+    opcoes: { opcaoId: number; votos: number }[];
+  } | null;
   criadaEm: string;
 }
 
@@ -561,6 +567,7 @@ export async function mockCriarEnquete(
         opcoes: corpo.opcoes.map((texto, i) => ({ id: i + 1, texto })),
         situacao: 'ATIVA',
         jaVotei: false,
+        resultado: null,
         criadaEm: new Date().toISOString(),
       };
       return route.fulfill(json(201, criada));
