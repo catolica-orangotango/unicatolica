@@ -41,9 +41,11 @@
           @if (comunidade.tipo === 'ABERTA') {
             @if (souMembro(comunidade)) {
               <uc-member-indicator label="Você é membro" />
-              <button type="button" class="lista__botao-sair" [disabled]="processandoId() === comunidade.id" (click)="sair(comunidade)">
-                {{ processandoId() === comunidade.id ? 'Saindo…' : 'Sair' }}
-              </button>
+              @if (!souAdministrador(comunidade)) {
+                <button type="button" class="lista__botao-sair" [disabled]="processandoId() === comunidade.id" (click)="sair(comunidade)">
+                  {{ processandoId() === comunidade.id ? 'Saindo…' : 'Sair' }}
+                </button>
+              }
             } @else {
               <button type="button" uc-button class="lista__botao-participar" [disabled]="processandoId() === comunidade.id" (click)="ingressar(comunidade)">
                 {{ processandoId() === comunidade.id ? 'Entrando…' : 'Participar' }}

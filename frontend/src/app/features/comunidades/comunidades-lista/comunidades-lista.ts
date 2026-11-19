@@ -39,6 +39,16 @@ export class ComunidadesLista {
     () => new Set(this.comunidadesService.minhasComunidades().map((comunidade) => comunidade.id)),
   );
 
+  private readonly administradasIds = computed(
+    () =>
+      new Set(
+        this.comunidadesService
+          .minhasComunidades()
+          .filter((comunidade) => comunidade.souAdministrador === true)
+          .map((comunidade) => comunidade.id),
+      ),
+  );
+
   constructor() {
     this.carregar();
   }
@@ -81,6 +91,11 @@ export class ComunidadesLista {
 
   protected souMembro(comunidade: Comunidade): boolean {
     return this.minhasIds().has(comunidade.id);
+  }
+
+  /** O administrador não sai: exclui a comunidade (Story 2.6), então a lista não oferece "Sair". */
+  protected souAdministrador(comunidade: Comunidade): boolean {
+    return this.administradasIds().has(comunidade.id);
   }
 
   /**
