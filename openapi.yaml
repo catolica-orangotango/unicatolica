@@ -841,6 +841,131 @@ paths:
         '404':
           $ref: '#/components/responses/NaoEncontrado'
 
+  /comunidades/{id}/enquetes:
+    post:
+      operationId: criarEnquete
+      summary: Cria uma enquete na comunidade (Story 8.1, RF53.1/RF53.3/RF54/RF54.1/RF54.2/RF54.3)
+      tags: [Enquetes]
+      description: >
+        O autor é sempre o usuário autenticado — o corpo não aceita autor nem comunidade; a
+        comunidade vem do path. Só membro da comunidade cria enquete nela (RF53.1). Cada
+        usuário mantém no máximo duas enquetes ativas por comunidade (RF53.3): a terceira
+        recebe 409 LIMITE_ENQUETES_ATIVAS. Fixação na homepage (Story 8.2), voto (8.3) e
+        encerramento (8.6) não fazem parte deste endpoint.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Id da comunidade.
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EnqueteRequest'
+      responses:
+        '201':
+          description: Enquete criada e publicada na comunidade.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnqueteResponse'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        # 403 NAO_E_MEMBRO: usuário não é membro. 404 COMUNIDADE_NAO_ENCONTRADA.
+        # 409 LIMITE_ENQUETES_ATIVAS: já tem duas enquetes ativas na comunidade (RF53.3).
+        # 422: pergunta ausente ou longa, tipo inválido, opções fora de 2–5 (RF54.3), opção
+        # em branco, longa ou repetida, limite de seleção inválido (RF54.2).
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Conflito'
+        '422':
+          $ref: '#/components/responses/ErroValidacao'
+    get:
+      operationId: listarEnquetesDaComunidade
+      summary: Lista as enquetes da comunidade, mais recente primeiro, paginado (Story 8.1)
+      tags: [Enquetes]
+      description: >
+        Qualquer usuário autenticado lê as enquetes da comunidade, membro ou não. Ordem:
+        criadaEm decrescente, id decrescente no empate. Voto e resultado não fazem parte
+        desta story (8.3 e 8.5).
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Id da comunidade.
+          schema:
+            type: integer
+            format: int64
+        - name: pagina
+          in: query
+          schema:
+            type: integer
+            format: int32
+            minimum: 0
+            default: 0
+        - name: tamanho
+          in: query
+          schema:
+            type: integer
+            format: int32
+            minimum: 1
+            maximum: 100
+            default: 20
+      responses:
+        '200':
+          description: Página de enquetes da comunidade.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnquetePageResponse'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+
+  /enquetes/minhas:
+    get:
+      operationId: listarMinhasEnquetesAtivas
+      summary: Lista as enquetes ativas do usuário autenticado, em todas as comunidades (Story 8.1, RF53.3)
+      tags: [Enquetes]
+      description: >
+        Base de "comunidade desabilitada no formulário": a tela conta quantas enquetes
+        ativas o usuário tem em cada comunidade e desabilita as que chegaram a duas.
+        Como o limite é de duas por comunidade, a lista é curta; mesmo assim segue o
+        envelope paginado padrão (AD-4). Enquete encerrada (Story 8.6) não aparece.
+      parameters:
+        - name: pagina
+          in: query
+          schema:
+            type: integer
+            format: int32
+            minimum: 0
+            default: 0
+        - name: tamanho
+          in: query
+          schema:
+            type: integer
+            format: int32
+            minimum: 1
+            maximum: 100
+            default: 20
+      responses:
+        '200':
+          description: Página das enquetes ativas do usuário.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnquetePageResponse'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+
   /cursos:
     get:
       operationId: listarCursos
@@ -1671,6 +1796,89 @@ components:
               type: array
               items:
                 $ref: '#/components/schemas/PublicacaoResponse'
+
+    EnqueteRequest:
+      type: object
+      required: [pergunta, tipo, opcoes]
+      properties:
+        pergunta:
+          type: string
+          minLength: 1
+          maxLength: 300
+          description: Pergunta da enquete — texto só com espaços é rejeitado com 422.
+        tipo:
+          type: string
+          enum: [UNICA, MULTIPLA]
+          description: Escolha única ou múltipla (RF54.1).
+        limiteSelecao:
+          type: [integer, 'null']
+          format: int32
+          minimum: 2
+          maximum: 5
+          description: >
+            Obrigatório quando tipo é MULTIPLA (RF54.2): entre 2 e a quantidade de opções.
+            Ignorado quando tipo é UNICA.
+        opcoes:
+          type: array
+          minItems: 2
+          maxItems: 5
+          description: Entre 2 e 5 opções (RF54.3), sem repetição (ignora caixa e espaços nas pontas).
+          items:
+            type: string
+            minLength: 1
+            maxLength: 100
+
+    EnqueteOpcaoResponse:
+      type: object
+      required: [id, texto]
+      properties:
+        id:
+          type: integer
+          format: int64
+        texto:
+          type: string
+
+    EnqueteResponse:
+      type: object
+      required: [id, comunidadeId, autor, pergunta, tipo, opcoes, situacao, criadaEm]
+      properties:
+        id:
+          type: integer
+          format: int64
+        comunidadeId:
+          type: integer
+          format: int64
+        autor:
+          $ref: '#/components/schemas/AutorResumo'
+        pergunta:
+          type: string
+        tipo:
+          type: string
+          enum: [UNICA, MULTIPLA]
+        limiteSelecao:
+          type: [integer, 'null']
+          format: int32
+        opcoes:
+          type: array
+          items:
+            $ref: '#/components/schemas/EnqueteOpcaoResponse'
+        situacao:
+          type: string
+          enum: [ATIVA, ENCERRADA]
+          description: Toda enquete nasce ATIVA; ENCERRADA chega com a Story 8.6.
+        criadaEm:
+          type: string
+          format: date-time
+
+    EnquetePageResponse:
+      allOf:
+        - $ref: '#/components/schemas/PageResponse'
+        - type: object
+          properties:
+            content:
+              type: array
+              items:
+                $ref: '#/components/schemas/EnqueteResponse'
 
     NotificacaoResponse:
       type: object

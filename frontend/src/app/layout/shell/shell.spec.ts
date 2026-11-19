@@ -17,16 +17,16 @@ import { ShellLateralService } from './shell-lateral.service';
 const TOKEN_KEY = 'pacext.token';
 
 /** Menu principal do aluno (KAN-91), na ordem do mockup aprovado. */
-const MENU_ALUNO = ['Início', 'Comunidades', 'Notificações', 'Perfil'];
+const MENU_ALUNO = ['Início', 'Comunidades', 'Criar enquete', 'Notificações', 'Perfil'];
 
 /** O moderador ganha "Denúncias" logo depois de "Comunidades". */
-const MENU_MODERADOR = ['Início', 'Comunidades', 'Denúncias', 'Notificações', 'Perfil'];
+const MENU_MODERADOR = ['Início', 'Comunidades', 'Criar enquete', 'Denúncias', 'Notificações', 'Perfil'];
 
 /** O administrador: o do moderador mais "Administração" no fim. */
 const MENU_ADMINISTRADOR = [...MENU_MODERADOR, 'Administração'];
 
 /** Seção "Em breve" (itens inertes) do aluno. */
-const EM_BREVE_ALUNO = ['Busca', 'Mensagens', 'Criar enquete'];
+const EM_BREVE_ALUNO = ['Busca', 'Mensagens'];
 
 /** Moderador e administrador ainda veem "Solicitações de fixação". */
 const EM_BREVE_PRIVILEGIADO = [...EM_BREVE_ALUNO, 'Solicitações de fixação'];
@@ -224,7 +224,7 @@ describe('Shell', () => {
   });
 
   describe('Em breve', () => {
-    it('aluno: Busca, Mensagens e Criar enquete', async () => {
+    it('aluno: Busca e Mensagens', async () => {
       const f = await montar(tokenComPerfis(['ALUNO']));
 
       expect(textos(f, '.shell__breve-item')).toEqual(EM_BREVE_ALUNO);

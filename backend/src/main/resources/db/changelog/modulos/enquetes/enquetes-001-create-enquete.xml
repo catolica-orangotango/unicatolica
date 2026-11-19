@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Tabelas enquete e enquete_opcao — módulo Enquetes (Epic 8, Story 8.1: criar enquete).
+    comunidade_id e autor_usuario_id são só ids, sem FK: comunidade é de Comunidades e
+    usuario é de Identidade (AD-3 — dado de outro módulo é referenciado só pelo id).
+    enquete_opcao.enquete_id tem FK porque as duas tabelas são do mesmo módulo.
+    Voto e participação (Story 8.3) ficam em tabelas próprias, adicionadas depois.
+-->
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="enquetes-001-create-enquete" author="pacext">
+        <createTable tableName="enquete">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="comunidade_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="autor_usuario_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="pergunta" type="VARCHAR(300)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="tipo" type="VARCHAR(10)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="limite_selecao" type="INTEGER"/>
+            <column name="situacao" type="VARCHAR(20)" defaultValue="ATIVA">
+                <constraints nullable="false"/>
+            </column>
+            <column name="criada_em" type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <!-- Rede de segurança: o Service valida antes (RF54.1, RF54.2). -->
+        <sql>ALTER TABLE enquete ADD CONSTRAINT ck_enquete_tipo CHECK (tipo IN ('UNICA', 'MULTIPLA'))</sql>
+        <sql>ALTER TABLE enquete ADD CONSTRAINT ck_enquete_situacao CHECK (situacao IN ('ATIVA', 'ENCERRADA'))</sql>
+        <sql>ALTER TABLE enquete ADD CONSTRAINT ck_enquete_limite_selecao
+            CHECK ((tipo = 'MULTIPLA' AND limite_selecao >= 2) OR (tipo = 'UNICA' AND limite_selecao IS NULL))</sql>
+        <rollback>
+            <dropTable tableName="enquete"/>
+        </rollback>
+        <!-- Enquetes da comunidade, mais recente primeiro. -->
+        <createIndex indexName="idx_enquete_comunidade_criada_em" tableName="enquete">
+            <column name="comunidade_id"/>
+            <column name="criada_em" descending="true"/>
+        </createIndex>
+        <!-- Limite de duas ativas por autor e comunidade (RF53.3) e "minhas enquetes ativas". -->
+        <createIndex indexName="idx_enquete_autor_situacao" tableName="enquete">
+            <column name="autor_usuario_id"/>
+            <column name="situacao"/>
+            <column name="comunidade_id"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="enquetes-002-create-enquete-opcao" author="pacext">
+        <createTable tableName="enquete_opcao">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="enquete_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="fk_enquete_opcao_enquete"
+                             references="enquete(id)" deleteCascade="true"/>
+            </column>
+            <column name="texto" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="posicao" type="INTEGER">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addUniqueConstraint tableName="enquete_opcao" columnNames="enquete_id, posicao"
+                             constraintName="uq_enquete_opcao_posicao"/>
+    </changeSet>
+
+</databaseChangeLog>

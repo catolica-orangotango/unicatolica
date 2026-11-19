@@ -98,6 +98,12 @@ export const routes: Routes = [
           import('./features/moderacao/fila-denuncias/fila-denuncias').then((m) => m.FilaDenuncias),
       },
       {
+        // Criar enquete (Story 8.1): só membro cria, no máximo duas ativas por comunidade.
+        path: 'enquetes/nova',
+        title: 'Criar enquete',
+        loadComponent: () => import('./features/enquetes/criar-enquete/criar-enquete').then((m) => m.CriarEnquete),
+      },
+      {
         // Criar comunidade (Story 2.2). Fica antes de ':id', senão 'nova' casa como id.
         path: 'comunidades/nova',
         title: 'Criar comunidade',

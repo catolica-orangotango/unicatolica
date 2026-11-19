@@ -1,0 +1,27 @@
+@if (erro()) {
+  <p class="enquetes__erro" role="alert">Não foi possível carregar as enquetes agora.</p>
+} @else if (enquetes().length > 0) {
+  <section class="enquetes" aria-labelledby="enquetes-titulo">
+    <h2 id="enquetes-titulo" class="enquetes__titulo">Enquetes</h2>
+    <ul class="enquetes__lista">
+      @for (enquete of enquetes(); track enquete.id) {
+        <li>
+          <uc-card class="enquetes__card">
+            <p class="enquetes__pergunta">{{ enquete.pergunta }}</p>
+            <p class="enquetes__tipo">{{ descricaoDoTipo(enquete) }}</p>
+            <ul class="enquetes__opcoes">
+              @for (opcao of enquete.opcoes; track opcao.id) {
+                <li class="enquetes__opcao">{{ opcao.texto }}</li>
+              }
+            </ul>
+            <p class="enquetes__meta">
+              <a [routerLink]="['/usuarios', enquete.autor.id]">{{ enquete.autor.nome }}</a>
+              ·
+              <time [attr.datetime]="enquete.criadaEm">{{ tempoRelativo(enquete.criadaEm) }}</time>
+            </p>
+          </uc-card>
+        </li>
+      }
+    </ul>
+  </section>
+}

@@ -4,6 +4,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Comunidade, ComunidadesService } from '../comunidades.service';
 import { ToastService, UcButton, UcMemberIndicator } from '../../../ui';
+import { EnquetesComunidade } from '../../enquetes/enquetes-comunidade/enquetes-comunidade';
 import { FeedComunidade } from '../../publicacoes/feed-comunidade/feed-comunidade';
 import { AdministrarComunidade } from '../administrar-comunidade/administrar-comunidade';
 
@@ -16,7 +17,7 @@ import { AdministrarComunidade } from '../administrar-comunidade/administrar-com
  */
 @Component({
   selector: 'app-comunidade-detalhe',
-  imports: [AdministrarComunidade, DatePipe, FeedComunidade, UcButton, UcMemberIndicator],
+  imports: [AdministrarComunidade, DatePipe, EnquetesComunidade, FeedComunidade, UcButton, UcMemberIndicator],
   templateUrl: './comunidade-detalhe.html',
   styleUrl: './comunidade-detalhe.scss',
 })
