@@ -96,6 +96,11 @@
   margin: 0 var(--uc-space-page-margin) var(--uc-space-section-gap);
 }
 
+.detalhe__enquetes {
+  // Mesma margem lateral do feed: o `.detalhe` sangra até a borda por causa do cabeçalho.
+  margin: 0 var(--uc-space-page-margin);
+}
+
 .detalhe__feed {
   margin: 0 var(--uc-space-page-margin);
 }

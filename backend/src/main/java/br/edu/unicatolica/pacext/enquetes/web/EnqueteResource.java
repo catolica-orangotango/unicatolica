@@ -43,7 +43,7 @@ public class EnqueteResource {
                 : enqueteService.criar(autorId, comunidadeId, request.pergunta(), request.tipo(),
                         request.limiteSelecao(), request.opcoes());
         UsuarioResumo autor = usuarioConsulta.buscarResumos(List.of(autorId)).get(autorId);
-        return Response.status(Response.Status.CREATED).entity(EnqueteResponse.de(enquete, autor)).build();
+        return Response.status(Response.Status.CREATED).entity(EnqueteResponse.de(enquete, autor, false)).build();
     }
 
     /** Enquetes da comunidade, mais recente primeiro. */
@@ -53,6 +53,8 @@ public class EnqueteResource {
             @PathParam("id") Long comunidadeId,
             @QueryParam("pagina") @DefaultValue("0") int pagina,
             @QueryParam("tamanho") @DefaultValue("20") int tamanho) {
-        return EnqueteResponse.pagina(enqueteService.listarDaComunidade(comunidadeId, pagina, tamanho), usuarioConsulta);
+        PageResponse<Enquete> resultado = enqueteService.listarDaComunidade(comunidadeId, pagina, tamanho);
+        return EnqueteResponse.pagina(resultado, usuarioConsulta,
+                enqueteService.enquetesVotadas(usuarioAutenticado.id(), resultado.content()));
     }
 }

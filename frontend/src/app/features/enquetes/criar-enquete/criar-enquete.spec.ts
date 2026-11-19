@@ -25,6 +25,7 @@ function enqueteAtiva(id: number, comunidadeId: number): Enquete {
     limiteSelecao: null,
     opcoes: [],
     situacao: 'ATIVA',
+    jaVotei: false,
     criadaEm: '2026-11-19T12:00:00Z',
   };
 }

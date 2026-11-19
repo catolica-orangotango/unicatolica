@@ -5,20 +5,26 @@ import br.edu.unicatolica.pacext.compartilhado.erro.ApiException;
 import br.edu.unicatolica.pacext.compartilhado.paginacao.PageResponse;
 import br.edu.unicatolica.pacext.enquetes.dominio.Enquete;
 import br.edu.unicatolica.pacext.enquetes.dominio.EnqueteOpcao;
+import br.edu.unicatolica.pacext.enquetes.dominio.EnqueteParticipacao;
+import br.edu.unicatolica.pacext.enquetes.dominio.EnqueteParticipacaoRepository;
 import br.edu.unicatolica.pacext.enquetes.dominio.EnqueteRepository;
+import br.edu.unicatolica.pacext.enquetes.dominio.EnqueteVoto;
+import br.edu.unicatolica.pacext.enquetes.dominio.EnqueteVotoRepository;
 import br.edu.unicatolica.pacext.enquetes.dominio.SituacaoEnquete;
 import br.edu.unicatolica.pacext.enquetes.dominio.TipoEnquete;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import jakarta.persistence.PersistenceException;
 import jakarta.transaction.Transactional;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 
-/** Regras de negócio da Story 8.1 (criar enquete) do Epic 8, mais as listagens que a tela precisa. */
+/** Regras de negócio das Stories 8.1 (criar enquete) e 8.3 (votar) do Epic 8, mais as listagens que a tela precisa. */
 @ApplicationScoped
 public class EnqueteService {
 
@@ -38,6 +44,12 @@ public class EnqueteService {
 
     @Inject
     EnqueteRepository enqueteRepository;
+
+    @Inject
+    EnqueteParticipacaoRepository participacaoRepository;
+
+    @Inject
+    EnqueteVotoRepository votoRepository;
 
     @Inject
     ComunidadeConsulta comunidadeConsulta;
@@ -80,6 +92,51 @@ public class EnqueteService {
         }
         enqueteRepository.persist(enquete);
         return enquete;
+    }
+
+    /**
+     * Story 8.3 (RF55, RF55.1, RF55.3, RF56, RF56.1, RF57.1) — o voto é anônimo: grava, sem ligação
+     * entre si, que o usuário participou ({@code enquete_participacao}) e qual opção foi escolhida
+     * ({@code enquete_voto}). Só membro da comunidade de origem vota; enquanto não existe fixação na
+     * homepage (Story 8.2), toda enquete é "não fixada" e exige ser membro (a votação de não membro em
+     * enquete fixada é a Story 8.4).
+     */
+    @Transactional
+    public void votar(Long usuarioId, Long enqueteId, List<Long> opcaoIds) {
+        Enquete enquete = enqueteRepository.findById(enqueteId);
+        if (enquete == null) {
+            throw ApiException.naoEncontrado("ENQUETE_NAO_ENCONTRADA", "Enquete não encontrada.", null);
+        }
+        if (!comunidadeConsulta.ehMembro(enquete.comunidadeId, usuarioId)) {
+            throw ApiException.semPermissao("NAO_E_MEMBRO", "Só membros da comunidade podem votar nesta enquete.", null);
+        }
+        List<Long> escolhidas = validarEscolha(enquete, opcaoIds);
+        if (enquete.situacao != SituacaoEnquete.ATIVA) {
+            throw ApiException.conflito("ENQUETE_NAO_ACEITA_VOTOS", "Esta enquete não aceita mais votos.", null);
+        }
+        if (participacaoRepository.jaVotou(enqueteId, usuarioId)) {
+            throw jaVotou();
+        }
+
+        EnqueteParticipacao participacao = new EnqueteParticipacao();
+        participacao.enqueteId = enqueteId;
+        participacao.usuarioId = usuarioId;
+        try {
+            // Flush na hora: dois votos ao mesmo tempo esbarram na restrição única, não duplicam o voto (RF56.1).
+            participacaoRepository.persistAndFlush(participacao);
+        } catch (PersistenceException e) {
+            throw jaVotou();
+        }
+        for (Long opcaoId : escolhidas) {
+            EnqueteVoto voto = new EnqueteVoto();
+            voto.opcaoId = opcaoId;
+            votoRepository.persist(voto);
+        }
+    }
+
+    /** Das enquetes dadas, as em que o usuário já votou — para o "jaVotei" da página (RF56.1). */
+    public Set<Long> enquetesVotadas(Long usuarioId, Collection<Enquete> enquetes) {
+        return participacaoRepository.enquetesVotadas(usuarioId, enquetes.stream().map(e -> e.id).toList());
     }
 
     /**
@@ -164,6 +221,34 @@ public class EnqueteService {
                     "O limite deve ficar entre 2 e o número de opções (" + totalOpcoes + ").", "limiteSelecao");
         }
         return limite;
+    }
+
+    /** RF56 e RF54.2 — uma opção em escolha única; de uma até o limite em escolha múltipla; só da própria enquete. */
+    private List<Long> validarEscolha(Enquete enquete, List<Long> opcaoIds) {
+        if (opcaoIds == null || opcaoIds.isEmpty()) {
+            throw ApiException.validacao("OPCAO_INVALIDA", "Escolha ao menos uma opção.", "opcaoIds");
+        }
+        if (opcaoIds.stream().anyMatch(java.util.Objects::isNull) || new HashSet<>(opcaoIds).size() != opcaoIds.size()) {
+            throw ApiException.validacao("OPCAO_INVALIDA", "Escolha cada opção uma só vez.", "opcaoIds");
+        }
+        Set<Long> daEnquete = new HashSet<>();
+        enquete.opcoes.forEach(o -> daEnquete.add(o.id));
+        if (!daEnquete.containsAll(opcaoIds)) {
+            throw ApiException.validacao("OPCAO_INVALIDA", "Escolha apenas opções desta enquete.", "opcaoIds");
+        }
+        if (enquete.tipo == TipoEnquete.UNICA && opcaoIds.size() > 1) {
+            throw ApiException.validacao("SELECAO_MULTIPLA_NAO_PERMITIDA",
+                    "Esta enquete é de escolha única: escolha só uma opção.", "opcaoIds");
+        }
+        if (enquete.tipo == TipoEnquete.MULTIPLA && opcaoIds.size() > enquete.limiteSelecao) {
+            throw ApiException.validacao("LIMITE_SELECAO_EXCEDIDO",
+                    "Você pode escolher até " + enquete.limiteSelecao + " opções.", "opcaoIds");
+        }
+        return List.copyOf(opcaoIds);
+    }
+
+    private static ApiException jaVotou() {
+        return ApiException.conflito("JA_VOTOU", "Você já votou nesta enquete.", null);
     }
 
     private void garantirComunidadeExiste(Long comunidadeId) {

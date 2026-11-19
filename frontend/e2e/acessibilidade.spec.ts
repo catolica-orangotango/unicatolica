@@ -160,6 +160,40 @@ for (const viewport of [VIEWPORT_DESKTOP, VIEWPORT_CELULAR]) {
         await esperarSemViolacoes(page);
       });
 
+      test('enquetes na comunidade: membro votando, já votou e não membro', async ({ page }) => {
+        const enquete = {
+          id: 5,
+          comunidadeId: 27,
+          autor: { id: 2, nome: 'Maria Souza', curso: 'Direito' },
+          pergunta: 'Melhor dia?',
+          tipo: 'UNICA' as const,
+          limiteSelecao: null,
+          opcoes: [{ id: 50, texto: 'Segunda' }, { id: 51, texto: 'Terça' }],
+          situacao: 'ATIVA' as const,
+          jaVotei: false,
+          criadaEm: new Date(Date.now() - 3_600_000).toISOString(),
+        };
+        await mockComunidadeComFeed(page, {
+          id: 27,
+          nome: 'Xadrez',
+          tipo: 'ABERTA',
+          souMembro: true,
+          enquetes: [enquete, { ...enquete, id: 6, pergunta: 'Quais dias?', tipo: 'MULTIPLA', limiteSelecao: 2, jaVotei: true }],
+        });
+        await page.goto('/comunidades/27');
+        await expect(page.getByRole('radiogroup', { name: 'Melhor dia?' })).toBeVisible();
+        await esperarSemViolacoes(page);
+
+        await page.getByRole('button', { name: 'Votar' }).click();
+        await expect(page.getByRole('alert')).toHaveText('Escolha uma opção para votar.');
+        await esperarSemViolacoes(page);
+
+        // Opção marcada, ao lado da enquete "já votou". O voto em si, com toast, é coberto em enquetes.spec.ts.
+        await page.getByLabel('Terça').check();
+        await expect(page.getByText('Você já votou nesta enquete.')).toBeVisible();
+        await esperarSemViolacoes(page);
+      });
+
       test('detalhe da comunidade com feed', async ({ page }) => {
         await mockComunidadeComFeed(page, {
           id: 27,

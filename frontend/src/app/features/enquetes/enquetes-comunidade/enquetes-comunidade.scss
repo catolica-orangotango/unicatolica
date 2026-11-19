@@ -51,6 +51,25 @@
   color: var(--uc-color-ink);
 }
 
+.enquetes__rotulo {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--uc-space-unit) * 2);
+  cursor: pointer;
+}
+
+.enquetes__estado {
+  margin: calc(var(--uc-space-unit) * 2) 0;
+  font-size: var(--uc-font-size-meta);
+  color: var(--uc-color-ink-soft);
+}
+
+.enquetes__erro-voto {
+  margin: var(--uc-space-unit) 0 calc(var(--uc-space-unit) * 2);
+  font-size: var(--uc-font-size-meta);
+  color: var(--uc-color-error);
+}
+
 .enquetes__erro {
   margin: 0 0 var(--uc-space-section-gap);
   color: var(--uc-color-error);
