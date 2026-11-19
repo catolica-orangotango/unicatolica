@@ -93,6 +93,21 @@ describe('ComunidadesLista', () => {
     expect(compiled.querySelector('uc-member-indicator')?.textContent).toContain('Você é membro');
   });
 
+  it('administrador da comunidade vê "Você é membro" mas não o botão Sair', async () => {
+    await montar(paginaUnica);
+    const compiled = fixture.nativeElement as HTMLElement;
+
+    (compiled.querySelector('.lista__botao-participar') as HTMLButtonElement).click();
+    httpMock.expectOne(`${API_BASE_URL}/comunidades/2/membros`).flush(null);
+    httpMock
+      .expectOne(`${API_BASE_URL}/comunidades/minhas`)
+      .flush([{ ...paginaUnica.content[1], souMembro: true, souAdministrador: true }]);
+    fixture.detectChanges();
+
+    expect(compiled.querySelector('uc-member-indicator')?.textContent).toContain('Você é membro');
+    expect(compiled.querySelector('.lista__botao-sair')).toBeNull();
+  });
+
   it('mostra o toast "Você entrou em {comunidade}" ao ingressar (Story 2.4)', async () => {
     await montar(paginaUnica);
     const toastService = TestBed.inject(ToastService);
