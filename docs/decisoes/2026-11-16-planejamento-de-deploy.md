@@ -88,6 +88,23 @@ Cuidados:
 - A produção real usa o branch `production`. O backend lê a URL pelas variáveis do Render, não pelo `.env`.
 - O serviço de object-storage do Neon fica fora: Materiais não está no escopo deste plano (ver Consequências).
 
+## Primeiro deploy no Render (18/11/2026)
+
+Blueprint aplicado a partir do `main` (serviços `pacext-unicatolica-api` e `pacext-unicatolica-web`). A API subiu com Liquibase aplicado, `/q/health` em `UP`, cadastro com e-mail de confirmação pela Brevo e login funcionando. Quatro falhas apareceram pelo caminho; cada uma tem causa e correção abaixo.
+
+| Sintoma | Causa | Correção |
+|---|---|---|
+| `Driver does not support the provided URL` | `QUARKUS_DATASOURCE_JDBC_URL` recebeu a connection string do Neon (`postgresql://usuario:senha@...`). O JDBC não aceita usuário e senha na URL. | Separar em três variáveis: `jdbc:postgresql://<host-direto>/<banco>?sslmode=require`, `DB_USER` e `DB_PASSWORD`. Host sem `-pooler` e sem `channel_binding`. |
+| `Acquisition timeout while waiting for new connection` | O padrão de 5 s do pool não cobre o Render gratuito (pouca CPU, TLS) com o Neon acordando do repouso. | `%prod.quarkus.datasource.jdbc.acquisition-timeout=30S` no `application.properties` (PR #84). |
+| E-mail de confirmação não chegava: Brevo `HTTP 401` ("unrecognised IP address") e depois `HTTP 400` (remetente inválido) | A Brevo bloqueia chamadas de API de IPs não autorizados, e o IP de saída do Render gratuito não é fixo. O `MAIL_FROM` era um Gmail não verificado. | Em *Security → Authorised IPs*, desativar o bloqueio para chaves de API. `MAIL_FROM` com um remetente verificado na Brevo. |
+| Login funcionava e a home redirecionava para o login (`SRJWT07004: Failed to load a key from the key content`) | `JWT_PUBLIC_KEY` ilegível para o Quarkus. | Gerar o par novo e colar cada chave em uma linha, sem `BEGIN`/`END`, como o `scripts/dev-setup.sh` (privada com cerca de 1600 caracteres, pública com cerca de 390). |
+
+### Pendências que a entrega ao cliente exige
+
+- **Domínio próprio na Brevo** (registros DKIM, SPF e DMARC no DNS) e `MAIL_FROM` nesse domínio. O remetente atual é um endereço individual: o e-mail chega, mas pode cair no spam, e o bloqueio por IP precisa ficar desligado enquanto o IP de saída não for fixo.
+- **Rotação de segredos que vazaram em transcrições e logs** durante o primeiro deploy (senha do banco e chave da Brevo): trocar no Neon e na Brevo e atualizar as variáveis no Render. Segredo nunca é colado em chat nem em log.
+- Roteiro de fumaça em produção, primeiro administrador e fechamento de DT-4 e DT-6 (KAN-103, KAN-104).
+
 ## Tickets sugeridos
 
 | Ordem | Ticket | Depende de |
