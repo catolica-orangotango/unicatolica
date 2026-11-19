@@ -21,11 +21,11 @@ test.beforeEach(async ({ page }) => {
   await mockFeedOk(page);
 });
 
-const MENU_ALUNO = ['Início', 'Comunidades', 'Notificações', 'Perfil'];
-const MENU_MODERADOR = ['Início', 'Comunidades', 'Denúncias', 'Notificações', 'Perfil'];
+const MENU_ALUNO = ['Início', 'Comunidades', 'Criar enquete', 'Notificações', 'Perfil'];
+const MENU_MODERADOR = ['Início', 'Comunidades', 'Criar enquete', 'Denúncias', 'Notificações', 'Perfil'];
 const MENU_ADMINISTRADOR = [...MENU_MODERADOR, 'Administração'];
 
-const EM_BREVE_ALUNO = ['Busca', 'Mensagens', 'Criar enquete'];
+const EM_BREVE_ALUNO = ['Busca', 'Mensagens'];
 const EM_BREVE_PRIVILEGIADO = [...EM_BREVE_ALUNO, 'Solicitações de fixação'];
 
 const COMUNIDADES = [
@@ -46,7 +46,7 @@ for (const viewport of [VIEWPORT_DESKTOP, VIEWPORT_TABLET]) {
   test.describe(`menu completo em ${viewport.width}px`, () => {
     test.use({ viewport });
 
-    test('aluno vê Início, Comunidades, Notificações e Perfil, sem os itens de moderação', async ({ page }) => {
+    test('aluno vê Início, Comunidades, Criar enquete, Notificações e Perfil, sem os itens de moderação', async ({ page }) => {
       await plantarToken(page, ['ALUNO']);
       await page.goto('/feed');
 
@@ -57,7 +57,7 @@ for (const viewport of [VIEWPORT_DESKTOP, VIEWPORT_TABLET]) {
       await expect(navPrincipal(page).getByText('Suas comunidades', { exact: true })).toBeVisible();
     });
 
-    test('MODERADOR vê Denúncias em terceiro e "Solicitações de fixação" em "Em breve"', async ({ page }) => {
+    test('MODERADOR vê Denúncias em quarto e "Solicitações de fixação" em "Em breve"', async ({ page }) => {
       await plantarToken(page, ['MODERADOR']);
       await page.goto('/feed');
 
@@ -127,8 +127,8 @@ test.describe('desktop (1440px)', () => {
     await expect(comunidades).toHaveAttribute('href', '/comunidades');
     await expect(comunidades).not.toHaveAttribute('aria-current', 'page');
 
-    // Notificações é botão (abre o painel); sem comunidades, os links são Início, Comunidades e Perfil.
-    await expect(navPrincipal(page).getByRole('link')).toHaveCount(3);
+    // Notificações é botão (abre o painel); sem comunidades, os links são Início, Comunidades, Criar enquete e Perfil.
+    await expect(navPrincipal(page).getByRole('link')).toHaveCount(4);
     await expect(navPrincipal(page).getByRole('button', { name: 'Notificações' })).toBeVisible();
   });
 

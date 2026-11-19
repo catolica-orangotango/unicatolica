@@ -46,12 +46,13 @@ interface ItemEmBreve {
 
 /**
  * Menu principal do redesign (KAN-91, docs/design/kan-84/inicio-*.html), na
- * ordem aprovada: Início, Comunidades, Denúncias (moderador e administrador),
+ * ordem aprovada: Início, Comunidades, Criar enquete (Story 8.1), Denúncias (moderador e administrador),
  * Notificações, Perfil e Administração (só administrador).
  */
 const NAV_ITENS: readonly NavItem[] = [
   { label: 'Início', icone: 'home', path: '/feed' },
   { label: 'Comunidades', icone: 'users', path: '/comunidades' },
+  { label: 'Criar enquete', icone: 'plus', path: '/enquetes/nova' },
   { label: 'Denúncias', icone: 'flag', path: '/moderacao/denuncias', privileged: true, contaDenuncias: true },
   { label: 'Notificações', icone: 'bell', path: null, abrePainelNotificacoes: true },
   { label: 'Perfil', icone: 'user', path: '/perfil' },
@@ -62,7 +63,6 @@ const NAV_ITENS: readonly NavItem[] = [
 const ITENS_EM_BREVE: readonly ItemEmBreve[] = [
   { label: 'Busca' },
   { label: 'Mensagens' },
-  { label: 'Criar enquete' },
   { label: 'Solicitações de fixação', privileged: true },
 ];
 

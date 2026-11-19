@@ -7,9 +7,11 @@ import {
   mockComunidadeComFeed,
   mockConfirmacaoOk,
   mockCursosOk,
+  mockCriarEnquete,
   mockCursosAdmin,
   mockFeedOk,
   mockMeuPerfil,
+  mockMinhasComunidades,
   mockModeracao,
   mockPerfilDeUsuario,
 } from './support/mocks';
@@ -139,6 +141,22 @@ for (const viewport of [VIEWPORT_DESKTOP, VIEWPORT_CELULAR]) {
 
         await page.getByRole('button', { name: 'Criar comunidade' }).click();
         await expect(page.getByLabel('Nome')).toHaveAttribute('aria-invalid', 'true');
+        await esperarSemViolacoes(page);
+      });
+
+      test('criar enquete, vazio e com erro de validação', async ({ page }) => {
+        await mockMinhasComunidades(page, [{ id: 27, nome: 'Clube de Xadrez', tipo: 'ABERTA' }]);
+        await mockCriarEnquete(page);
+        await page.goto('/enquetes/nova');
+        await expect(page.getByRole('heading', { level: 1, name: 'Criar enquete' })).toBeVisible();
+        await expect(page).toHaveTitle('Criar enquete — UniCatólica');
+        await esperarSemViolacoes(page);
+
+        await page.getByRole('button', { name: 'Criar enquete' }).click();
+        await expect(page.getByLabel('Pergunta')).toHaveAttribute('aria-invalid', 'true');
+        await esperarSemViolacoes(page);
+
+        await page.getByLabel('Escolha múltipla').check();
         await esperarSemViolacoes(page);
       });
 

@@ -1,0 +1,124 @@
+<form class="criar" [formGroup]="form" (ngSubmit)="criar()" novalidate>
+  <h1 class="criar__titulo">Criar enquete</h1>
+  <p class="criar__intro">Pergunte aos membros de uma comunidade. Cada pessoa pode ter até {{ maximoAtivas }} enquetes ativas por comunidade.</p>
+
+  @if (carregando()) {
+    <p class="criar__estado">Carregando suas comunidades…</p>
+  } @else if (erroCarregar(); as mensagem) {
+    <p class="criar__estado criar__estado--erro" role="alert">{{ mensagem }}</p>
+  } @else if (comunidades().length === 0) {
+    <div class="criar__vazio">
+      <p>Você ainda não participa de nenhuma comunidade. Entre em uma para poder criar enquetes nela.</p>
+      <a class="botao-primario" routerLink="/comunidades">Conhecer comunidades</a>
+    </div>
+  } @else {
+    <label class="criar__label" for="comunidade">Comunidade</label>
+    <select
+      id="comunidade"
+      class="criar__campo"
+      formControlName="comunidadeId"
+      [attr.aria-invalid]="campoInvalido('comunidadeId') ? 'true' : null"
+      [attr.aria-describedby]="campoInvalido('comunidadeId') ? 'erro-comunidade' : null"
+    >
+      <option [ngValue]="null" disabled>Selecione a comunidade</option>
+      @for (comunidade of comunidades(); track comunidade.id) {
+        <option [ngValue]="comunidade.id" [disabled]="noLimite(comunidade)">
+          {{ comunidade.nome }}{{ noLimite(comunidade) ? ' (limite de ' + maximoAtivas + ' enquetes ativas)' : '' }}
+        </option>
+      }
+    </select>
+    @if (campoInvalido('comunidadeId')) {
+      <span class="campo-erro" role="alert" id="erro-comunidade">Selecione a comunidade da enquete.</span>
+    }
+
+    <label class="criar__label" for="pergunta">Pergunta</label>
+    <input
+      id="pergunta"
+      class="criar__campo"
+      type="text"
+      formControlName="pergunta"
+      [attr.maxlength]="limitePergunta"
+      [attr.aria-invalid]="campoInvalido('pergunta') ? 'true' : null"
+      [attr.aria-describedby]="campoInvalido('pergunta') ? 'erro-pergunta' : null"
+    />
+    @if (campoInvalido('pergunta')) {
+      <span class="campo-erro" role="alert" id="erro-pergunta">Escreva a pergunta da enquete.</span>
+    }
+
+    <fieldset class="criar__grupo">
+      <legend class="criar__label">Tipo de resposta</legend>
+      <label class="criar__radio">
+        <input type="radio" name="tipo" value="UNICA" [checked]="tipoEscolhido() === 'UNICA'" (change)="escolherTipo('UNICA')" />
+        Escolha única
+      </label>
+      <label class="criar__radio">
+        <input type="radio" name="tipo" value="MULTIPLA" [checked]="tipoEscolhido() === 'MULTIPLA'" (change)="escolherTipo('MULTIPLA')" />
+        Escolha múltipla
+      </label>
+    </fieldset>
+
+    <fieldset class="criar__grupo">
+      <legend class="criar__label">Opções</legend>
+      <p class="criar__ajuda" id="ajuda-opcoes">De {{ minimoOpcoes }} a {{ maximoOpcoes }} opções, sem repetir.</p>
+      <ul class="criar__opcoes" formArrayName="opcoes" aria-describedby="ajuda-opcoes">
+        @for (opcao of opcoes.controls; track $index) {
+          <li class="criar__opcao">
+            <label class="criar__rotulo-opcao" [for]="'opcao-' + $index">Opção {{ $index + 1 }}</label>
+            <input
+              [id]="'opcao-' + $index"
+              class="criar__campo criar__campo--opcao"
+              type="text"
+              [formControlName]="$index"
+              [attr.maxlength]="limiteOpcao"
+              [attr.aria-invalid]="opcaoInvalida($index) ? 'true' : null"
+              [attr.aria-describedby]="opcaoInvalida($index) ? 'erro-opcao-' + $index : null"
+            />
+            <button
+              type="button"
+              class="botao-secundario"
+              [disabled]="opcoes.length <= minimoOpcoes"
+              [attr.aria-label]="'Remover opção ' + ($index + 1)"
+              (click)="removerOpcao($index)"
+            >
+              Remover
+            </button>
+            @if (opcaoInvalida($index)) {
+              <span class="campo-erro" role="alert" [id]="'erro-opcao-' + $index">Preencha a opção {{ $index + 1 }} ou remova-a.</span>
+            }
+          </li>
+        }
+      </ul>
+      <button type="button" class="botao-secundario" [disabled]="opcoes.length >= maximoOpcoes" (click)="adicionarOpcao()">
+        Adicionar opção
+      </button>
+    </fieldset>
+
+    @if (tipoEscolhido() === 'MULTIPLA') {
+      <label class="criar__label" for="limite">Quantas opções cada pessoa pode escolher</label>
+      <select
+        id="limite"
+        class="criar__campo"
+        formControlName="limiteSelecao"
+        [attr.aria-invalid]="campoInvalido('limiteSelecao') ? 'true' : null"
+        [attr.aria-describedby]="campoInvalido('limiteSelecao') ? 'erro-limite' : null"
+      >
+        <option [ngValue]="null" disabled>Selecione o limite</option>
+        @for (limite of limitesPossiveis(); track limite) {
+          <option [ngValue]="limite">Até {{ limite }}</option>
+        }
+      </select>
+      @if (campoInvalido('limiteSelecao')) {
+        <span class="campo-erro" role="alert" id="erro-limite">Informe quantas opções cada pessoa pode escolher.</span>
+      }
+    }
+
+    @if (erroSalvar(); as mensagem) {
+      <p class="criar__erro" role="alert">{{ mensagem }}</p>
+    }
+
+    <div class="criar__acoes">
+      <button type="submit" uc-button [disabled]="salvando()">{{ salvando() ? 'Criando…' : 'Criar enquete' }}</button>
+      <a class="botao-secundario" routerLink="/comunidades">Cancelar</a>
+    </div>
+  }
+</form>

@@ -34,10 +34,16 @@ describe('ComunidadeDetalhe', () => {
     return criado;
   }
 
-  /** A tela embute o `FeedComunidade`, que busca as postagens assim que a comunidade aparece. */
+  /**
+   * A tela embute o `FeedComunidade` e as `EnquetesComunidade` (Story 8.1), que buscam as
+   * postagens e as enquetes assim que a comunidade aparece.
+   */
   function responderFeed(id: number): void {
     httpMock
       .expectOne((r) => r.url === `${API_BASE_URL}/comunidades/${id}/publicacoes`)
+      .flush({ content: [], page: 0, size: 20, totalElements: 0, totalPages: 0 });
+    httpMock
+      .expectOne((r) => r.url === `${API_BASE_URL}/comunidades/${id}/enquetes`)
       .flush({ content: [], page: 0, size: 20, totalElements: 0, totalPages: 0 });
   }
 

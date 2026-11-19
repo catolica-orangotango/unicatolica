@@ -1,0 +1,58 @@
+:host {
+  display: block;
+}
+
+.enquetes {
+  margin-bottom: var(--uc-space-section-gap);
+}
+
+.enquetes__titulo {
+  margin: 0 0 calc(var(--uc-space-unit) * 3);
+  font-size: var(--uc-font-size-body);
+  font-weight: var(--uc-font-weight-semibold);
+  color: var(--uc-color-ink);
+}
+
+.enquetes__lista,
+.enquetes__opcoes {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.enquetes__lista {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--uc-space-unit) * 3);
+}
+
+.enquetes__pergunta {
+  margin: 0 0 var(--uc-space-unit);
+  font-weight: var(--uc-font-weight-semibold);
+  color: var(--uc-color-ink);
+}
+
+.enquetes__tipo,
+.enquetes__meta {
+  margin: 0 0 calc(var(--uc-space-unit) * 2);
+  font-size: var(--uc-font-size-meta);
+  color: var(--uc-color-ink-soft);
+}
+
+.enquetes__meta a {
+  color: var(--uc-color-ink);
+}
+
+.enquetes__opcao {
+  margin-bottom: var(--uc-space-unit);
+  padding: calc(var(--uc-space-unit) * 2) calc(var(--uc-space-unit) * 3);
+  border: 1px solid var(--uc-color-border);
+  border-radius: var(--uc-radius-default);
+  color: var(--uc-color-ink);
+}
+
+.enquetes__erro {
+  margin: 0 0 var(--uc-space-section-gap);
+  color: var(--uc-color-error);
+  font-size: var(--uc-font-size-meta);
+}

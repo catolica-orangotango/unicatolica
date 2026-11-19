@@ -143,7 +143,14 @@ export interface PublicacaoMock {
  */
 export async function mockComunidadeComFeed(
   page: Page,
-  opcoes: { id: number; nome: string; tipo: 'CURSO' | 'ABERTA'; souMembro: boolean; publicacoes?: PublicacaoMock[] },
+  opcoes: {
+    id: number;
+    nome: string;
+    tipo: 'CURSO' | 'ABERTA';
+    souMembro: boolean;
+    publicacoes?: PublicacaoMock[];
+    enquetes?: EnqueteMock[];
+  },
 ): Promise<PublicacaoMock[]> {
   const publicacoes = [...(opcoes.publicacoes ?? [])];
   const comunidade = {
@@ -156,6 +163,24 @@ export async function mockComunidadeComFeed(
   };
 
   await rota(page, (url) => ehApi(url) && url.pathname === `/comunidades/${opcoes.id}`, 200, JSON.stringify(comunidade));
+  // A Home da comunidade também lista as enquetes dela (Story 8.1); sem mock, a tela mostraria o erro.
+  const enquetes = opcoes.enquetes ?? [];
+  await page.route(
+    (url) => ehApi(url) && url.pathname === `/comunidades/${opcoes.id}/enquetes`,
+    (route) => {
+      const metodo = route.request().method();
+      if (metodo === 'OPTIONS') {
+        return route.fulfill({ status: 204, headers: CORS });
+      }
+      // O POST é do `mockCriarEnquete`, que pode estar registrado antes.
+      if (metodo !== 'GET') {
+        return route.fallback();
+      }
+      return route.fulfill(
+        json(200, { content: enquetes, page: 0, size: 20, totalElements: enquetes.length, totalPages: enquetes.length > 0 ? 1 : 0 }),
+      );
+    },
+  );
   await page.route(
     (url) => ehApi(url) && url.pathname === `/comunidades/${opcoes.id}/publicacoes`,
     (route) => {
@@ -463,6 +488,81 @@ export async function mockCriarComunidade(
       route.request().method() === 'OPTIONS'
         ? route.fulfill({ status: 204, headers: CORS })
         : route.fulfill(json(200, minhas)),
+  );
+  return recebidas;
+}
+
+/** Enquete no formato de `EnqueteResponse` do `openapi.yaml` (Story 8.1). */
+export interface EnqueteMock {
+  id: number;
+  comunidadeId: number;
+  autor: { id: number; nome: string; curso: string | null };
+  pergunta: string;
+  tipo: 'UNICA' | 'MULTIPLA';
+  limiteSelecao: number | null;
+  opcoes: { id: number; texto: string }[];
+  situacao: 'ATIVA' | 'ENCERRADA';
+  criadaEm: string;
+}
+
+/** Corpo recebido por `POST /comunidades/{id}/enquetes`, com a comunidade do path. */
+export interface EnqueteRecebida {
+  comunidadeId: number;
+  corpo: { pergunta: string; tipo: string; limiteSelecao: number | null; opcoes: string[] };
+}
+
+/**
+ * Criar enquete (Story 8.1): `GET /enquetes/minhas` (as ativas, base do limite de duas por
+ * comunidade) e `POST /comunidades/{id}/enquetes`. Com `conflito`, o POST devolve 409
+ * `LIMITE_ENQUETES_ATIVAS`. Devolve o que o POST recebeu. Registrar depois de `mockFeedOk`.
+ */
+export async function mockCriarEnquete(
+  page: Page,
+  opcoes: { ativas?: EnqueteMock[]; conflito?: boolean } = {},
+): Promise<EnqueteRecebida[]> {
+  const recebidas: EnqueteRecebida[] = [];
+  const ativas = opcoes.ativas ?? [];
+
+  await page.route(
+    (url) => ehApi(url) && url.pathname === '/enquetes/minhas',
+    (route) =>
+      route.request().method() === 'OPTIONS'
+        ? route.fulfill({ status: 204, headers: CORS })
+        : route.fulfill(json(200, { content: ativas, page: 0, size: 100, totalElements: ativas.length, totalPages: 1 })),
+  );
+  await page.route(
+    (url) => ehApi(url) && /^\/comunidades\/\d+\/enquetes$/.test(url.pathname),
+    (route) => {
+      const request = route.request();
+      if (request.method() === 'OPTIONS') {
+        return route.fulfill({ status: 204, headers: CORS });
+      }
+      if (request.method() !== 'POST') {
+        return route.fallback();
+      }
+      const comunidadeId = Number(new URL(request.url()).pathname.split('/')[2]);
+      const corpo = request.postDataJSON() as EnqueteRecebida['corpo'];
+      recebidas.push({ comunidadeId, corpo });
+      if (opcoes.conflito) {
+        return route.fulfill({
+          status: 409,
+          headers: { ...CORS, 'content-type': 'application/json' },
+          body: envelopeErro('LIMITE_ENQUETES_ATIVAS', 'Você já tem 2 enquetes ativas nesta comunidade.'),
+        });
+      }
+      const criada: EnqueteMock = {
+        id: 900 + recebidas.length,
+        comunidadeId,
+        autor: { id: 1, nome: 'Usuário Teste', curso: null },
+        pergunta: corpo.pergunta,
+        tipo: corpo.tipo as EnqueteMock['tipo'],
+        limiteSelecao: corpo.limiteSelecao,
+        opcoes: corpo.opcoes.map((texto, i) => ({ id: i + 1, texto })),
+        situacao: 'ATIVA',
+        criadaEm: new Date().toISOString(),
+      };
+      return route.fulfill(json(201, criada));
+    },
   );
   return recebidas;
 }
