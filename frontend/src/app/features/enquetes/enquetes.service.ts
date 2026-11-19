@@ -23,7 +23,10 @@ export interface Enquete {
   tipo: TipoEnquete;
   limiteSelecao: number | null;
   opcoes: OpcaoEnquete[];
-  situacao: 'ATIVA' | 'ENCERRADA';
+  /** Só a `ATIVA` aceita voto; `ENCERRADA` (Story 8.6) e `OCULTA` (moderação, RF55.3) não. */
+  situacao: 'ATIVA' | 'ENCERRADA' | 'OCULTA';
+  /** Se o usuário já votou (RF56.1) — só diz que votou, nunca em quem (RF57.1). */
+  jaVotei: boolean;
   criadaEm: string;
 }
 
@@ -54,6 +57,18 @@ export class EnquetesService {
     return this.http.post<Enquete>(`${API_BASE_URL}/comunidades/${comunidadeId}/enquetes`, corpo, {
       headers: this.authService.obterCabecalhoAutorizacao(),
     });
+  }
+
+  /**
+   * `POST /enquetes/{id}/votos` (Story 8.3) — só membro (403), uma vez por usuário (409 `JA_VOTOU`); em escolha
+   * única uma opção, em múltipla até `limiteSelecao` (422). O voto é anônimo: a resposta é 204 sem corpo.
+   */
+  votar(enqueteId: number, opcaoIds: number[]): Observable<void> {
+    return this.http.post<void>(
+      `${API_BASE_URL}/enquetes/${enqueteId}/votos`,
+      { opcaoIds },
+      { headers: this.authService.obterCabecalhoAutorizacao() },
+    );
   }
 
   /** `GET /comunidades/{id}/enquetes` — mais recente primeiro. */

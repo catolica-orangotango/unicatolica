@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Enquete ocultada por moderação não aceita voto (RF55.3, Story 8.3). A situação OCULTA entra
+    agora para o voto já nascer sabendo recusá-la; quem a grava é a Moderação (Story 12.5).
+-->
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="enquetes-003-situacao-oculta" author="pacext">
+        <sql>ALTER TABLE enquete DROP CONSTRAINT ck_enquete_situacao</sql>
+        <sql>ALTER TABLE enquete ADD CONSTRAINT ck_enquete_situacao CHECK (situacao IN ('ATIVA', 'ENCERRADA', 'OCULTA'))</sql>
+        <rollback>
+            <sql>ALTER TABLE enquete DROP CONSTRAINT ck_enquete_situacao</sql>
+            <sql>ALTER TABLE enquete ADD CONSTRAINT ck_enquete_situacao CHECK (situacao IN ('ATIVA', 'ENCERRADA'))</sql>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

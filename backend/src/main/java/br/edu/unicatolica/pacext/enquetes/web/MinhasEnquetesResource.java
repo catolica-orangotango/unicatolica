@@ -3,6 +3,7 @@ package br.edu.unicatolica.pacext.enquetes.web;
 import br.edu.unicatolica.pacext.compartilhado.paginacao.PageResponse;
 import br.edu.unicatolica.pacext.compartilhado.seguranca.UsuarioAutenticado;
 import br.edu.unicatolica.pacext.enquetes.aplicacao.EnqueteService;
+import br.edu.unicatolica.pacext.enquetes.dominio.Enquete;
 import br.edu.unicatolica.pacext.identidade.UsuarioConsulta;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.DefaultValue;
@@ -30,7 +31,8 @@ public class MinhasEnquetesResource {
     public PageResponse<EnqueteResponse> listar(
             @QueryParam("pagina") @DefaultValue("0") int pagina,
             @QueryParam("tamanho") @DefaultValue("20") int tamanho) {
-        return EnqueteResponse.pagina(
-                enqueteService.listarAtivasDoUsuario(usuarioAutenticado.id(), pagina, tamanho), usuarioConsulta);
+        Long usuarioId = usuarioAutenticado.id();
+        PageResponse<Enquete> resultado = enqueteService.listarAtivasDoUsuario(usuarioId, pagina, tamanho);
+        return EnqueteResponse.pagina(resultado, usuarioConsulta, enqueteService.enquetesVotadas(usuarioId, resultado.content()));
     }
 }

@@ -6,6 +6,8 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -14,11 +16,18 @@ import static org.mockito.Mockito.when;
 import br.edu.unicatolica.pacext.comunidades.ComunidadeConsulta;
 import br.edu.unicatolica.pacext.compartilhado.erro.ApiException;
 import br.edu.unicatolica.pacext.enquetes.dominio.Enquete;
+import br.edu.unicatolica.pacext.enquetes.dominio.EnqueteOpcao;
+import br.edu.unicatolica.pacext.enquetes.dominio.EnqueteParticipacao;
+import br.edu.unicatolica.pacext.enquetes.dominio.EnqueteParticipacaoRepository;
 import br.edu.unicatolica.pacext.enquetes.dominio.EnqueteRepository;
+import br.edu.unicatolica.pacext.enquetes.dominio.EnqueteVoto;
+import br.edu.unicatolica.pacext.enquetes.dominio.EnqueteVotoRepository;
 import br.edu.unicatolica.pacext.enquetes.dominio.SituacaoEnquete;
 import br.edu.unicatolica.pacext.enquetes.dominio.TipoEnquete;
+import jakarta.persistence.PersistenceException;
 import java.util.Arrays;
 import java.util.List;
+import org.mockito.ArgumentCaptor;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -31,6 +40,8 @@ class EnqueteServiceTest {
 
     private EnqueteService service;
     private EnqueteRepository repository;
+    private EnqueteParticipacaoRepository participacaoRepository;
+    private EnqueteVotoRepository votoRepository;
     private ComunidadeConsulta comunidadeConsulta;
 
     @BeforeEach
@@ -38,7 +49,11 @@ class EnqueteServiceTest {
         service = new EnqueteService();
         repository = mock(EnqueteRepository.class);
         comunidadeConsulta = mock(ComunidadeConsulta.class);
+        participacaoRepository = mock(EnqueteParticipacaoRepository.class);
+        votoRepository = mock(EnqueteVotoRepository.class);
         service.enqueteRepository = repository;
+        service.participacaoRepository = participacaoRepository;
+        service.votoRepository = votoRepository;
         service.comunidadeConsulta = comunidadeConsulta;
 
         when(comunidadeConsulta.existe(COMUNIDADE_ID)).thenReturn(true);
@@ -187,6 +202,127 @@ class EnqueteServiceTest {
         service.listarDaComunidade(COMUNIDADE_ID, -5, 9999);
 
         verify(repository).listarPorComunidade(COMUNIDADE_ID, 0, EnqueteService.TAMANHO_MAXIMO_PAGINA);
+    }
+
+    // ---- Story 8.3: votar ----
+
+    private static final Long ENQUETE_ID = 100L;
+
+    /** Enquete {@code ATIVA} da comunidade de teste, com opções de id 1, 2 e 3. */
+    private Enquete enqueteParaVotar(TipoEnquete tipo, Integer limite) {
+        Enquete enquete = new Enquete();
+        enquete.id = ENQUETE_ID;
+        enquete.comunidadeId = COMUNIDADE_ID;
+        enquete.autorUsuarioId = 1L;
+        enquete.tipo = tipo;
+        enquete.limiteSelecao = limite;
+        enquete.situacao = SituacaoEnquete.ATIVA;
+        for (long id = 1; id <= 3; id++) {
+            EnqueteOpcao opcao = new EnqueteOpcao();
+            opcao.id = id;
+            opcao.enquete = enquete;
+            opcao.texto = "Opção " + id;
+            enquete.opcoes.add(opcao);
+        }
+        when(repository.findById(ENQUETE_ID)).thenReturn(enquete);
+        return enquete;
+    }
+
+    @Test
+    void membroVotaEFicaRegistradoQuemVotouEQualOpcaoSemLigacaoEntreAsDuas() {
+        enqueteParaVotar(TipoEnquete.UNICA, null);
+
+        service.votar(USUARIO_ID, ENQUETE_ID, List.of(2L));
+
+        ArgumentCaptor<EnqueteParticipacao> participacao = ArgumentCaptor.forClass(EnqueteParticipacao.class);
+        verify(participacaoRepository).persistAndFlush(participacao.capture());
+        assertEquals(ENQUETE_ID, participacao.getValue().enqueteId);
+        assertEquals(USUARIO_ID, participacao.getValue().usuarioId);
+        ArgumentCaptor<EnqueteVoto> voto = ArgumentCaptor.forClass(EnqueteVoto.class);
+        verify(votoRepository).persist(voto.capture());
+        assertEquals(2L, voto.getValue().opcaoId);
+    }
+
+    @Test
+    void escolhaMultiplaGravaUmVotoPorOpcaoAteOLimite() {
+        enqueteParaVotar(TipoEnquete.MULTIPLA, 2);
+
+        service.votar(USUARIO_ID, ENQUETE_ID, List.of(1L, 3L));
+
+        verify(votoRepository, times(2)).persist(any(EnqueteVoto.class));
+    }
+
+    @Test
+    void enqueteInexistenteDa404() {
+        when(repository.findById(ENQUETE_ID)).thenReturn(null);
+
+        assertCodigo(404, "ENQUETE_NAO_ENCONTRADA", () -> service.votar(USUARIO_ID, ENQUETE_ID, List.of(1L)));
+    }
+
+    @Test
+    void naoMembroDa403SemRevelarOEstadoDaEnquete() {
+        Enquete enquete = enqueteParaVotar(TipoEnquete.UNICA, null);
+        enquete.situacao = SituacaoEnquete.ENCERRADA;
+        when(comunidadeConsulta.ehMembro(COMUNIDADE_ID, USUARIO_ID)).thenReturn(false);
+
+        assertCodigo(403, "NAO_E_MEMBRO", () -> service.votar(USUARIO_ID, ENQUETE_ID, List.of(1L)));
+        verify(participacaoRepository, never()).persistAndFlush(any(EnqueteParticipacao.class));
+    }
+
+    @Test
+    void escolhaUnicaComMaisDeUmaOpcaoDa422() {
+        enqueteParaVotar(TipoEnquete.UNICA, null);
+
+        assertCodigo(422, "SELECAO_MULTIPLA_NAO_PERMITIDA", () -> service.votar(USUARIO_ID, ENQUETE_ID, List.of(1L, 2L)));
+        verify(votoRepository, never()).persist(any(EnqueteVoto.class));
+    }
+
+    @Test
+    void escolhaMultiplaAcimaDoLimiteDa422() {
+        enqueteParaVotar(TipoEnquete.MULTIPLA, 2);
+
+        assertCodigo(422, "LIMITE_SELECAO_EXCEDIDO", () -> service.votar(USUARIO_ID, ENQUETE_ID, List.of(1L, 2L, 3L)));
+    }
+
+    @Test
+    void semOpcaoOuOpcaoDeOutraEnqueteOuRepetidaDa422() {
+        enqueteParaVotar(TipoEnquete.MULTIPLA, 3);
+
+        assertCodigo(422, "OPCAO_INVALIDA", () -> service.votar(USUARIO_ID, ENQUETE_ID, null));
+        assertCodigo(422, "OPCAO_INVALIDA", () -> service.votar(USUARIO_ID, ENQUETE_ID, List.of()));
+        assertCodigo(422, "OPCAO_INVALIDA", () -> service.votar(USUARIO_ID, ENQUETE_ID, List.of(999L)));
+        assertCodigo(422, "OPCAO_INVALIDA", () -> service.votar(USUARIO_ID, ENQUETE_ID, List.of(1L, 1L)));
+        assertCodigo(422, "OPCAO_INVALIDA", () -> service.votar(USUARIO_ID, ENQUETE_ID, Arrays.asList(1L, null)));
+    }
+
+    @Test
+    void segundoVotoDoMesmoUsuarioDa409() {
+        enqueteParaVotar(TipoEnquete.UNICA, null);
+        when(participacaoRepository.jaVotou(ENQUETE_ID, USUARIO_ID)).thenReturn(true);
+
+        assertCodigo(409, "JA_VOTOU", () -> service.votar(USUARIO_ID, ENQUETE_ID, List.of(1L)));
+        verify(votoRepository, never()).persist(any(EnqueteVoto.class));
+    }
+
+    @Test
+    void doisVotosAoMesmoTempoNaoDuplicam() {
+        enqueteParaVotar(TipoEnquete.UNICA, null);
+        doThrow(new PersistenceException("uq_enquete_participacao_enquete_usuario"))
+                .when(participacaoRepository).persistAndFlush(any(EnqueteParticipacao.class));
+
+        assertCodigo(409, "JA_VOTOU", () -> service.votar(USUARIO_ID, ENQUETE_ID, List.of(1L)));
+        verify(votoRepository, never()).persist(any(EnqueteVoto.class));
+    }
+
+    @Test
+    void enqueteEncerradaOuOcultadaNaoAceitaVoto() {
+        for (SituacaoEnquete situacao : List.of(SituacaoEnquete.ENCERRADA, SituacaoEnquete.OCULTA)) {
+            Enquete enquete = enqueteParaVotar(TipoEnquete.UNICA, null);
+            enquete.situacao = situacao;
+
+            assertCodigo(409, "ENQUETE_NAO_ACEITA_VOTOS", () -> service.votar(USUARIO_ID, ENQUETE_ID, List.of(1L)));
+        }
+        verify(votoRepository, never()).persist(any(EnqueteVoto.class));
     }
 
     private static void assertCodigo(int status, String code, Runnable acao) {

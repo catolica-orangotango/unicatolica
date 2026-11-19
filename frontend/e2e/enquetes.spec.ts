@@ -5,6 +5,7 @@ import {
   mockCriarEnquete,
   mockFeedOk,
   mockMinhasComunidades,
+  mockVotarEnquete,
 } from './support/mocks';
 import { plantarToken } from './support/seed';
 
@@ -25,6 +26,7 @@ function ativa(id: number, comunidadeId: number): EnqueteMock {
     limiteSelecao: null,
     opcoes: [{ id: 1, texto: 'Sim' }, { id: 2, texto: 'Não' }],
     situacao: 'ATIVA',
+    jaVotei: false,
     criadaEm: '2026-11-19T12:00:00Z',
   };
 }
@@ -162,4 +164,174 @@ test('a enquete criada aparece na Home da comunidade', async ({ page }) => {
   await expect(page.getByText('Qual abertura estudar?')).toBeVisible();
   await expect(page.getByText('Escolha única')).toBeVisible();
   await expect(page.getByText('Siciliana')).toBeVisible();
+});
+
+/** Votar em enquete (Story 8.3, KAN-112). */
+
+function enqueteComOpcoes(id: number, comunidadeId: number, extra: Partial<EnqueteMock> = {}): EnqueteMock {
+  return {
+    ...ativa(id, comunidadeId),
+    pergunta: 'Melhor dia?',
+    opcoes: [{ id: id * 10, texto: 'Segunda' }, { id: id * 10 + 1, texto: 'Terça' }, { id: id * 10 + 2, texto: 'Quarta' }],
+    ...extra,
+  };
+}
+
+test('membro escolhe uma opção, vota e a tela confirma sem mostrar resultado', async ({ page }) => {
+  await mockMinhasComunidades(page, COMUNIDADES);
+  await mockComunidadeComFeed(page, {
+    id: 27,
+    nome: 'Clube de Xadrez',
+    tipo: 'ABERTA',
+    souMembro: true,
+    enquetes: [enqueteComOpcoes(5, 27)],
+  });
+  const votos = await mockVotarEnquete(page);
+  await page.goto('/comunidades/27');
+
+  await expect(page.getByRole('radiogroup', { name: 'Melhor dia?' })).toBeVisible();
+  await page.getByLabel('Terça').check();
+  await page.getByRole('button', { name: 'Votar' }).click();
+
+  await expect(page.getByText('Voto registrado')).toBeVisible();
+  await expect(page.getByText('Você já votou nesta enquete.')).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Votar' })).toHaveCount(0);
+  expect(votos).toEqual([{ enqueteId: 5, opcaoIds: [51] }]);
+});
+
+test('vota só pelo teclado, com foco visível em cada controle', async ({ page }) => {
+  await mockMinhasComunidades(page, COMUNIDADES);
+  await mockComunidadeComFeed(page, {
+    id: 27,
+    nome: 'Clube de Xadrez',
+    tipo: 'ABERTA',
+    souMembro: true,
+    enquetes: [enqueteComOpcoes(5, 27)],
+  });
+  const votos = await mockVotarEnquete(page);
+  await page.goto('/comunidades/27');
+
+  const segunda = page.getByLabel('Segunda');
+  await segunda.focus();
+  await expect(segunda).toBeFocused();
+  const outline = await segunda.evaluate((el) => {
+    const s = getComputedStyle(el);
+    return { estilo: s.outlineStyle, largura: s.outlineWidth };
+  });
+  expect(outline.estilo !== 'none' && outline.largura !== '0px').toBe(true);
+
+  await page.keyboard.press('Space');
+  await expect(segunda).toBeChecked();
+  const votar = page.getByRole('button', { name: 'Votar' });
+  await votar.focus();
+  await page.keyboard.press('Enter');
+
+  await expect(page.getByText('Você já votou nesta enquete.')).toBeVisible();
+  expect(votos).toEqual([{ enqueteId: 5, opcaoIds: [50] }]);
+});
+
+test('escolha múltipla trava as demais opções no limite e envia as marcadas', async ({ page }) => {
+  await mockMinhasComunidades(page, COMUNIDADES);
+  await mockComunidadeComFeed(page, {
+    id: 27,
+    nome: 'Clube de Xadrez',
+    tipo: 'ABERTA',
+    souMembro: true,
+    enquetes: [enqueteComOpcoes(6, 27, { tipo: 'MULTIPLA', limiteSelecao: 2 })],
+  });
+  const votos = await mockVotarEnquete(page);
+  await page.goto('/comunidades/27');
+
+  await page.getByLabel('Segunda').check();
+  await page.getByLabel('Quarta').check();
+  await expect(page.getByLabel('Terça')).toBeDisabled();
+
+  await page.getByRole('button', { name: 'Votar' }).click();
+  await expect(page.getByText('Você já votou nesta enquete.')).toBeVisible();
+  expect(votos).toEqual([{ enqueteId: 6, opcaoIds: [60, 62] }]);
+});
+
+test('sem escolher nenhuma opção não envia e o aviso é anunciado', async ({ page }) => {
+  await mockMinhasComunidades(page, COMUNIDADES);
+  await mockComunidadeComFeed(page, {
+    id: 27,
+    nome: 'Clube de Xadrez',
+    tipo: 'ABERTA',
+    souMembro: true,
+    enquetes: [enqueteComOpcoes(5, 27)],
+  });
+  const votos = await mockVotarEnquete(page);
+  await page.goto('/comunidades/27');
+
+  await page.getByRole('button', { name: 'Votar' }).click();
+
+  await expect(page.getByRole('alert')).toHaveText('Escolha uma opção para votar.');
+  expect(votos).toEqual([]);
+});
+
+test('quem não é membro vê as opções e o aviso, sem poder votar (RF55.1)', async ({ page }) => {
+  await mockComunidadeComFeed(page, {
+    id: 27,
+    nome: 'Clube de Xadrez',
+    tipo: 'ABERTA',
+    souMembro: false,
+    enquetes: [enqueteComOpcoes(5, 27)],
+  });
+  await page.goto('/comunidades/27');
+
+  await expect(page.getByText('Só membros da comunidade podem votar nesta enquete.')).toBeVisible();
+  await expect(page.getByText('Terça')).toBeVisible();
+  await expect(page.getByRole('radio')).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Votar' })).toHaveCount(0);
+});
+
+test('enquete em que já votou aparece sem opção de votar de novo (RF56.1)', async ({ page }) => {
+  await mockMinhasComunidades(page, COMUNIDADES);
+  await mockComunidadeComFeed(page, {
+    id: 27,
+    nome: 'Clube de Xadrez',
+    tipo: 'ABERTA',
+    souMembro: true,
+    enquetes: [enqueteComOpcoes(5, 27, { jaVotei: true })],
+  });
+  await page.goto('/comunidades/27');
+
+  await expect(page.getByText('Você já votou nesta enquete.')).toBeVisible();
+  await expect(page.getByRole('radio')).toHaveCount(0);
+});
+
+test('enquete encerrada ou ocultada não aceita voto', async ({ page }) => {
+  await mockMinhasComunidades(page, COMUNIDADES);
+  await mockComunidadeComFeed(page, {
+    id: 27,
+    nome: 'Clube de Xadrez',
+    tipo: 'ABERTA',
+    souMembro: true,
+    enquetes: [enqueteComOpcoes(5, 27, { situacao: 'OCULTA' })],
+  });
+  await page.goto('/comunidades/27');
+
+  await expect(page.getByText('Esta enquete não aceita mais votos.')).toBeVisible();
+  await expect(page.getByRole('radio')).toHaveCount(0);
+});
+
+test('o servidor recusa o voto (422) e a tela mostra o motivo, mantendo a escolha', async ({ page }) => {
+  await mockMinhasComunidades(page, COMUNIDADES);
+  await mockComunidadeComFeed(page, {
+    id: 27,
+    nome: 'Clube de Xadrez',
+    tipo: 'ABERTA',
+    souMembro: true,
+    enquetes: [enqueteComOpcoes(5, 27)],
+  });
+  await mockVotarEnquete(page, {
+    erro: { status: 422, code: 'OPCAO_INVALIDA', message: 'Escolha apenas opções desta enquete.' },
+  });
+  await page.goto('/comunidades/27');
+
+  await page.getByLabel('Segunda').check();
+  await page.getByRole('button', { name: 'Votar' }).click();
+
+  await expect(page.getByRole('alert')).toHaveText('Escolha apenas opções desta enquete.');
+  await expect(page.getByLabel('Segunda')).toBeChecked();
 });

@@ -7,13 +7,55 @@
       @for (enquete of enquetes(); track enquete.id) {
         <li>
           <uc-card class="enquetes__card">
-            <p class="enquetes__pergunta">{{ enquete.pergunta }}</p>
+            <p class="enquetes__pergunta" [id]="'pergunta-' + enquete.id">{{ enquete.pergunta }}</p>
             <p class="enquetes__tipo">{{ descricaoDoTipo(enquete) }}</p>
-            <ul class="enquetes__opcoes">
-              @for (opcao of enquete.opcoes; track opcao.id) {
-                <li class="enquetes__opcao">{{ opcao.texto }}</li>
+
+            @if (!jaVotou(enquete) && enquete.situacao === 'ATIVA' && souMembro()) {
+              <form (submit)="$event.preventDefault(); votar(enquete)">
+                <div
+                  [attr.role]="enquete.tipo === 'UNICA' ? 'radiogroup' : 'group'"
+                  [attr.aria-labelledby]="'pergunta-' + enquete.id"
+                >
+                <ul class="enquetes__opcoes">
+                  @for (opcao of enquete.opcoes; track opcao.id) {
+                    <li class="enquetes__opcao">
+                      <label class="enquetes__rotulo">
+                        <input
+                          [type]="enquete.tipo === 'UNICA' ? 'radio' : 'checkbox'"
+                          [name]="'enquete-' + enquete.id"
+                          [value]="opcao.id"
+                          [checked]="escolhida(enquete, opcao.id)"
+                          [disabled]="desabilitada(enquete, opcao.id) || votando().has(enquete.id)"
+                          (change)="marcar(enquete, opcao.id, $any($event.target).checked)"
+                        />
+                        {{ opcao.texto }}
+                      </label>
+                    </li>
+                  }
+                </ul>
+                </div>
+                @if (erros()[enquete.id]; as mensagem) {
+                  <p class="enquetes__erro-voto" role="alert">{{ mensagem }}</p>
+                }
+                <button type="submit" uc-button [disabled]="votando().has(enquete.id)">
+                  {{ votando().has(enquete.id) ? 'Votando…' : 'Votar' }}
+                </button>
+              </form>
+            } @else {
+              <ul class="enquetes__opcoes">
+                @for (opcao of enquete.opcoes; track opcao.id) {
+                  <li class="enquetes__opcao">{{ opcao.texto }}</li>
+                }
+              </ul>
+              @if (jaVotou(enquete)) {
+                <p class="enquetes__estado" role="status">Você já votou nesta enquete.</p>
+              } @else if (enquete.situacao !== 'ATIVA') {
+                <p class="enquetes__estado">Esta enquete não aceita mais votos.</p>
+              } @else if (!souMembro()) {
+                <p class="enquetes__estado">Só membros da comunidade podem votar nesta enquete.</p>
               }
-            </ul>
+            }
+
             <p class="enquetes__meta">
               <a [routerLink]="['/usuarios', enquete.autor.id]">{{ enquete.autor.nome }}</a>
               ·

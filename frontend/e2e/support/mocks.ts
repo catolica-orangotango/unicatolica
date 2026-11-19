@@ -501,7 +501,8 @@ export interface EnqueteMock {
   tipo: 'UNICA' | 'MULTIPLA';
   limiteSelecao: number | null;
   opcoes: { id: number; texto: string }[];
-  situacao: 'ATIVA' | 'ENCERRADA';
+  situacao: 'ATIVA' | 'ENCERRADA' | 'OCULTA';
+  jaVotei: boolean;
   criadaEm: string;
 }
 
@@ -559,12 +560,52 @@ export async function mockCriarEnquete(
         limiteSelecao: corpo.limiteSelecao,
         opcoes: corpo.opcoes.map((texto, i) => ({ id: i + 1, texto })),
         situacao: 'ATIVA',
+        jaVotei: false,
         criadaEm: new Date().toISOString(),
       };
       return route.fulfill(json(201, criada));
     },
   );
   return recebidas;
+}
+
+/** Voto recebido por `POST /enquetes/{id}/votos`. */
+export interface VotoRecebido {
+  enqueteId: number;
+  opcaoIds: number[];
+}
+
+/**
+ * Votar em enquete (Story 8.3): `POST /enquetes/{id}/votos` -> 204. Com `erro`, devolve esse status e
+ * código no envelope de erro (ex.: 409 `JA_VOTOU`). Devolve os votos recebidos. Registrar depois de
+ * `mockComunidadeComFeed`.
+ */
+export async function mockVotarEnquete(
+  page: Page,
+  opcoes: { erro?: { status: number; code: string; message: string } } = {},
+): Promise<VotoRecebido[]> {
+  const recebidos: VotoRecebido[] = [];
+  await page.route(
+    (url) => ehApi(url) && /^\/enquetes\/\d+\/votos$/.test(url.pathname),
+    (route) => {
+      const request = route.request();
+      if (request.method() === 'OPTIONS') {
+        return route.fulfill({ status: 204, headers: CORS });
+      }
+      const enqueteId = Number(new URL(request.url()).pathname.split('/')[2]);
+      const { opcaoIds } = request.postDataJSON() as { opcaoIds: number[] };
+      recebidos.push({ enqueteId, opcaoIds });
+      if (opcoes.erro) {
+        return route.fulfill({
+          status: opcoes.erro.status,
+          headers: { ...CORS, 'content-type': 'application/json' },
+          body: envelopeErro(opcoes.erro.code, opcoes.erro.message),
+        });
+      }
+      return route.fulfill({ status: 204, headers: CORS });
+    },
+  );
+  return recebidos;
 }
 
 /** Membro no formato de `MembroComunidadeResponse` do `openapi.yaml`. */

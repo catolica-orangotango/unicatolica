@@ -930,6 +930,56 @@ paths:
         '404':
           $ref: '#/components/responses/NaoEncontrado'
 
+  /enquetes/{id}/votos:
+    post:
+      operationId: votarEnquete
+      summary: Registra o voto do usuário numa enquete (Story 8.3, RF55/RF55.1/RF55.3/RF56/RF56.1/RF57.1)
+      tags: [Enquetes]
+      description: >
+        Só membro da comunidade de origem vota (RF55.1); a votação de não membro em enquete
+        fixada na homepage chega com a Story 8.4 — enquanto a fixação (8.2) não existe, toda
+        enquete exige ser membro. Cada usuário vota uma vez por enquete (RF56.1). Em escolha
+        única, exatamente uma opção (RF56); em escolha múltipla, de uma até limiteSelecao
+        opções. O voto é anônimo (RF57.1): o servidor registra em tabelas separadas que o
+        usuário participou e qual opção foi escolhida, sem ligação entre as duas, e nenhuma
+        resposta devolve em quem o usuário votou. Enquete que não está ATIVA (encerrada ou
+        ocultada por moderação, RF55.3) não aceita voto.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Id da enquete.
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VotoRequest'
+      responses:
+        '204':
+          description: Voto registrado.
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        # 403 NAO_E_MEMBRO: não é membro da comunidade de origem (RF55.1).
+        # 404 ENQUETE_NAO_ENCONTRADA.
+        # 409 JA_VOTOU: já votou nesta enquete (RF56.1). 409 ENQUETE_NAO_ACEITA_VOTOS:
+        # encerrada ou ocultada (RF55.3).
+        # 422: nenhuma opção, opção repetida ou de outra enquete (OPCAO_INVALIDA),
+        # mais de uma em escolha única (RF56, SELECAO_MULTIPLA_NAO_PERMITIDA) ou acima de
+        # limiteSelecao em escolha múltipla (LIMITE_SELECAO_EXCEDIDO).
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Conflito'
+        '422':
+          $ref: '#/components/responses/ErroValidacao'
+
+
   /enquetes/minhas:
     get:
       operationId: listarMinhasEnquetesAtivas
@@ -1828,6 +1878,21 @@ components:
             minLength: 1
             maxLength: 100
 
+    VotoRequest:
+      type: object
+      required: [opcaoIds]
+      properties:
+        opcaoIds:
+          type: array
+          minItems: 1
+          maxItems: 5
+          description: >
+            Ids das opções escolhidas (de EnqueteResponse.opcoes), sem repetição. Uma só em
+            escolha única; até limiteSelecao em escolha múltipla.
+          items:
+            type: integer
+            format: int64
+
     EnqueteOpcaoResponse:
       type: object
       required: [id, texto]
@@ -1840,7 +1905,7 @@ components:
 
     EnqueteResponse:
       type: object
-      required: [id, comunidadeId, autor, pergunta, tipo, opcoes, situacao, criadaEm]
+      required: [id, comunidadeId, autor, pergunta, tipo, opcoes, situacao, jaVotei, criadaEm]
       properties:
         id:
           type: integer
@@ -1864,8 +1929,15 @@ components:
             $ref: '#/components/schemas/EnqueteOpcaoResponse'
         situacao:
           type: string
-          enum: [ATIVA, ENCERRADA]
-          description: Toda enquete nasce ATIVA; ENCERRADA chega com a Story 8.6.
+          enum: [ATIVA, ENCERRADA, OCULTA]
+          description: >
+            Toda enquete nasce ATIVA. ENCERRADA chega com a Story 8.6 e OCULTA com a
+            moderação (RF55.3); nenhuma das duas aceita voto.
+        jaVotei:
+          type: boolean
+          description: >
+            Se o usuário autenticado já votou nesta enquete (RF56.1). Só diz que votou, nunca
+            em quem (RF57.1).
         criadaEm:
           type: string
           format: date-time
