@@ -58,6 +58,26 @@ describe('MidiaService', () => {
       expect(MensagemFormatosAceitos).toContain('PNG');
     });
 
+    it('sem type, deduz pela extensão (maiúsculas incluídas)', () => {
+      expect(validarArquivo(arquivo('a.png', '', LIMITE_IMAGEM_BYTES))).toBeNull();
+      expect(validarArquivo(arquivo('A.JPEG', ''))).toBeNull();
+      expect(validarArquivo(arquivo('a.jpg', ''))).toBeNull();
+      expect(validarArquivo(arquivo('a.pdf', '', LIMITE_PDF_BYTES))).toBeNull();
+      expect(validarArquivo(arquivo('a.png', '', LIMITE_IMAGEM_BYTES + 1))).toContain('2 MB');
+      expect(validarArquivo(arquivo('a.PDF', '', LIMITE_PDF_BYTES + 1))).toContain('5 MB');
+    });
+
+    it('sem type e extensão desconhecida ou ausente é recusado', () => {
+      expect(validarArquivo(arquivo('a.txt', ''))).toBe(MensagemFormatosAceitos);
+      expect(validarArquivo(arquivo('semextensao', ''))).toBe(MensagemFormatosAceitos);
+    });
+
+    it('foto de perfil recusa PDF, com ou sem type', () => {
+      expect(validarArquivo(arquivo('a.pdf', 'application/pdf'), 'FOTO_PERFIL')).toContain('foto de perfil');
+      expect(validarArquivo(arquivo('a.pdf', ''), 'FOTO_PERFIL')).toContain('foto de perfil');
+      expect(validarArquivo(arquivo('a.png', ''), 'FOTO_PERFIL')).toBeNull();
+    });
+
     it('recusa imagem acima de 2 MB e PDF acima de 5 MB', () => {
       expect(validarArquivo(arquivo('a.png', 'image/png', LIMITE_IMAGEM_BYTES + 1))).toContain('2 MB');
       expect(validarArquivo(arquivo('a.pdf', 'application/pdf', LIMITE_PDF_BYTES + 1))).toContain('5 MB');

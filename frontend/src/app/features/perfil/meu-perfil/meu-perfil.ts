@@ -5,18 +5,14 @@ import { forkJoin, switchMap } from 'rxjs';
 import { ToastService, UcButton } from '../../../ui';
 import { ComunidadesService } from '../../comunidades/comunidades.service';
 import { Curso, CursoService } from '../../identidade/curso.service';
-import { MidiaService, validarArquivo } from '../../midia/midia.service';
+import { MidiaService, mensagemDoServidor, validarArquivo } from '../../midia/midia.service';
 import { NotificacoesService } from '../../notificacoes/notificacoes.service';
 import { PerfilCartao } from '../perfil-cartao/perfil-cartao';
 import { LIMITES_PERFIL, Perfil, PerfilService } from '../perfil.service';
 
-const MENSAGEM_FOTO_FORMATO = 'Formato não aceito. A foto de perfil deve ser PNG ou JPEG.';
 
 function mensagemDeErroDaFoto(erro: HttpErrorResponse, acao: 'atualizar' | 'remover'): string {
-  const mensagem: unknown = erro.error?.error?.message;
-  return erro.status >= 400 && erro.status < 500 && erro.status !== 401 && typeof mensagem === 'string'
-    ? mensagem
-    : `Não foi possível ${acao} sua foto agora. Tente novamente em instantes.`;
+  return mensagemDoServidor(erro, `Não foi possível ${acao} sua foto agora. Tente novamente em instantes.`);
 }
 
 /**
@@ -104,7 +100,7 @@ export class MeuPerfil {
     if (!arquivo) {
       return;
     }
-    const erro = arquivo.type === 'application/pdf' ? MENSAGEM_FOTO_FORMATO : validarArquivo(arquivo);
+    const erro = validarArquivo(arquivo, 'FOTO_PERFIL');
     this.erroFoto.set(erro);
     if (erro !== null) {
       return;
