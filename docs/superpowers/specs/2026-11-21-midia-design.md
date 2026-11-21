@@ -1,6 +1,6 @@
 # Mídia no MVP: anexo em postagem e foto de perfil (design)
 
-Status: **aprovado em 2026-11-21** (provedor a confirmar pelo responsável pelo deploy). Nada foi implementado.
+Status: **aprovado em 2026-11-21 e implementado** (KAN-128; provedor a confirmar pelo responsável pelo deploy, KAN-129). Decisão e checklist em `docs/decisoes/2026-11-21-armazenamento-de-arquivos.md`.
 
 ## Intenção
 
@@ -69,7 +69,7 @@ Dentro da B, três decisões minhas (a equipe não as tomou; corrijam se discord
 
 ## Infraestrutura (o que o dev de deploy recebe)
 
-Nomes **provisórios**; a lista final sai quando a implementação terminar, junto com a atualização de `render.yaml`, `.env.example` e `docs/variaveis-de-ambiente.md`.
+Nomes **finais** (conferidos no `application.properties`; replicados em `render.yaml`, `.env.example` e `docs/variaveis-de-ambiente.md`). Opcional: `QUARKUS_S3_PATH_STYLE_ACCESS=true` se o provedor exigir path-style.
 
 | Variável | Segredo | Uso |
 |---|---|---|

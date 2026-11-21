@@ -47,6 +47,19 @@ services:
         sync: false
       - key: MAIL_FROM
         sync: false
+      # Armazenamento de arquivos (KAN-128): bucket S3-compatível PRIVADO, sem CORS. Sem estas cinco
+      # o backend não sobe em produção. Passo a passo em
+      # docs/decisoes/2026-11-21-armazenamento-de-arquivos.md. ACCESS_KEY e SECRET_KEY são segredos.
+      - key: ARMAZENAMENTO_ENDPOINT
+        sync: false
+      - key: ARMAZENAMENTO_REGIAO
+        sync: false
+      - key: ARMAZENAMENTO_BUCKET
+        sync: false
+      - key: ARMAZENAMENTO_ACCESS_KEY
+        sync: false
+      - key: ARMAZENAMENTO_SECRET_KEY
+        sync: false
 
   # --- Frontend: Angular como Static Site -----------------------------------------------------
   - type: web

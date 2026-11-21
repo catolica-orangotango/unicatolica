@@ -13,6 +13,7 @@ Problemas conhecidos que ainda não têm história nem PR. Quando um item virar 
 | DT-10 | Coluna lateral vazia até uma tela registrar conteúdo | Aberta, depende do KAN-93 |
 | DT-11 | Contratos implícitos do `UcInput` (id) e do `UcMenu` (`gatilho`) | Aberta, sem história ainda |
 | DT-12 | Painel de notificações do desktop empurra o menu lateral | Aberta, sem história ainda |
+| DT-15 | Mídia: limitações conhecidas do MVP | Aberta, sem história ainda |
 
 ## DT-4. E-mail de confirmação do cadastro não chega ao usuário
 
@@ -104,3 +105,20 @@ Problemas conhecidos que ainda não têm história nem PR. Quando um item virar 
 - **Hoje:** `log_auditoria` só cresce, e a tela do KAN-90 só consulta. Sem política de retenção, arquivamento ou exportação (fora do escopo do KAN-90).
 - **Correção esperada:** definir retenção e exportação quando o volume preocupar (referência: a meta de 100 mil registros do RNF83.1) e rever os índices de `infraestrutura-002`.
 - **Prazo:** quando o volume de produção chegar perto de 100 mil registros. **Estado:** sem história ainda.
+
+## DT-15. Mídia: limitações conhecidas do MVP
+
+- **Hoje:** o KAN-128 entregou anexo de postagem e foto de perfil com estas lacunas aceitas:
+  1. **Arquivo órfão:** arquivo enviado e nunca associado (usuário desistiu da postagem) e foto substituída ou removida continuam no bucket e na tabela `arquivo`; nada limpa.
+  2. **Um anexo por postagem** e sem miniaturas: o card carrega a imagem original (até 2 MB).
+  3. **Limite de corpo global:** `quarkus.http.limits.max-body-size=6M` vale para toda a API, não só para `POST /arquivos`. Cliente que não manda `Expect: 100-continue` pode ver a conexão cair (reset) em corpo acima de 6 MB em vez do 400; por isso o front valida o tamanho antes de enviar.
+  4. **Upload dentro da transação:** `ArquivoService` grava no S3 dentro da transação do banco (troca consciente, por simplicidade). Falha do banco depois do upload deixa objeto órfão, e a transação fica aberta durante a chamada de rede.
+  5. **Foto não aparece em todo lugar:** a barra superior e o avatar do feed da Home ainda usam iniciais, porque `/usuarios/me` não devolve `fotoUrl`. Autores em Enquetes e Moderação também não têm `fotoUrl`.
+  6. **`docker-compose up` não tem S3:** o compose desliga o Dev Services e não configura armazenamento, então `POST /arquivos` responde 500 nesse modo (o resto funciona). Use `quarkus:dev` no host, ou aponte `ARMAZENAMENTO_*` e `QUARKUS_S3_PATH_STYLE_ACCESS=true` para um MinIO próprio.
+  7. **Docker obrigatório e imagem grande:** `quarkus:dev`, `./mvnw test` e o job "E2E backend" do CI sobem LocalStack (cerca de 400 MB no primeiro pull).
+- **Correção esperada:**
+  1. Rotina periódica que apaga arquivo com `em_uso=false` mais velho que um prazo, e apaga o objeto ao trocar ou remover a foto.
+  2. Lista de anexos por postagem e geração de miniaturas, se o produto pedir.
+  3. Limitar o corpo só em `/arquivos` (ou tratar o reset) e, se valer, mover o upload para depois do commit, com compensação.
+  4. Devolver `fotoUrl` em `/usuarios/me` e nos autores de enquetes e moderação; decidir se o compose ganha um serviço MinIO.
+- **Prazo:** sem prazo; a limpeza de órfãos antes de o bucket pesar no plano gratuito. **Estado:** sem história ainda.
