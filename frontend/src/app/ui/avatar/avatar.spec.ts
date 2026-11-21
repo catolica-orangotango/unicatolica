@@ -7,12 +7,13 @@ import { UcAvatar, corDoAvatar, type UcAvatarCor } from './avatar';
 
 @Component({
   imports: [UcAvatar],
-  template: `<uc-avatar iniciais="GT" [cor]="cor()" [forma]="forma()" [tamanho]="tamanho()" />`,
+  template: `<uc-avatar iniciais="GT" [cor]="cor()" [forma]="forma()" [tamanho]="tamanho()" [fotoUrl]="fotoUrl()" />`,
 })
 class HostComponent {
   readonly cor = signal<UcAvatarCor>('neutro');
   readonly forma = signal<'circulo' | 'quadrado'>('circulo');
   readonly tamanho = signal<'sm' | 'md' | 'lg'>('md');
+  readonly fotoUrl = signal<string | null>(null);
 }
 
 describe('UcAvatar', () => {
@@ -44,6 +45,29 @@ describe('UcAvatar', () => {
     host.tamanho.set('lg');
     fixture.detectChanges();
     expect(mods()).toEqual(['uc-avatar--lg', 'uc-avatar--quadrado', 'uc-avatar--violeta']);
+  });
+
+  it('com fotoUrl mostra a imagem decorativa (alt vazio) no lugar das iniciais', () => {
+    host.fotoUrl.set('https://s3.exemplo/foto.png');
+    fixture.detectChanges();
+    const img = el().querySelector('img') as HTMLImageElement;
+    expect(img.getAttribute('src')).toBe('https://s3.exemplo/foto.png');
+    expect(img.getAttribute('alt')).toBe('');
+    expect(el().textContent?.trim()).toBe('');
+  });
+
+  it('sem fotoUrl mostra as iniciais e nenhuma imagem', () => {
+    expect(el().querySelector('img')).toBeNull();
+    expect(el().textContent?.trim()).toBe('GT');
+  });
+
+  it('se a imagem falhar ao carregar, volta às iniciais', () => {
+    host.fotoUrl.set('https://s3.exemplo/quebrada.png');
+    fixture.detectChanges();
+    el().querySelector('img')!.dispatchEvent(new Event('error'));
+    fixture.detectChanges();
+    expect(el().querySelector('img')).toBeNull();
+    expect(el().textContent?.trim()).toBe('GT');
   });
 
   it('corDoAvatar mapeia (id - 1) % 4', () => {

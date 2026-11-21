@@ -100,20 +100,6 @@
   margin-bottom: calc(var(--uc-space-unit) * 2.5);
 }
 
-.feed__avatar {
-  flex-shrink: 0;
-  width: calc(var(--uc-space-unit) * 9);
-  height: calc(var(--uc-space-unit) * 9);
-  border-radius: var(--uc-radius-full);
-  background: var(--uc-color-maroon);
-  color: var(--uc-color-surface);
-  font-size: var(--uc-font-size-meta);
-  font-weight: var(--uc-font-weight-semibold);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
 .feed__meta {
   display: flex;
   flex-direction: column;

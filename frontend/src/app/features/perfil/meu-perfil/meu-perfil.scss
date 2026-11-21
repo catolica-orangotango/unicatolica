@@ -24,6 +24,21 @@
   margin-top: var(--uc-space-section-gap);
 }
 
+.meu-perfil__arquivo {
+  display: none;
+}
+
+.meu-perfil__foto {
+  display: flex;
+  flex-wrap: wrap;
+  gap: calc(var(--uc-space-unit) * 3);
+  margin-top: var(--uc-space-section-gap);
+}
+
+.meu-perfil__foto + .meu-perfil__erro {
+  margin-top: calc(var(--uc-space-unit) * 3);
+}
+
 .meu-perfil__form {
   display: flex;
   flex-direction: column;

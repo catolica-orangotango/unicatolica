@@ -78,7 +78,13 @@
         <li>
           <uc-card class="feed__post">
             <div class="feed__cabecalho-post">
-              <span class="feed__avatar" aria-hidden="true">{{ iniciais(publicacao.autor.nome) }}</span>
+              <uc-avatar
+                class="feed__avatar"
+                tamanho="sm"
+                cor="marca"
+                [iniciais]="iniciais(publicacao.autor.nome)"
+                [fotoUrl]="publicacao.autor.fotoUrl ?? null"
+              />
               <div class="feed__meta">
                 <a class="feed__autor" [routerLink]="['/usuarios', publicacao.autor.id]">{{
                   publicacao.autor.nome

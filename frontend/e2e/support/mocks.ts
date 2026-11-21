@@ -290,6 +290,10 @@ export function mockCursosOk(page: Page): Promise<void> {
   return rota(page, (url) => ehApi(url) && url.pathname === '/cursos', 200, JSON.stringify(CURSOS_MOCK));
 }
 
+/** PNG 1x1 em data URI: foto de perfil dos mocks, carrega sem rede. */
+export const FOTO_PIXEL =
+  'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
+
 /** Perfil no formato de `Perfil` do `openapi.yaml`. */
 export interface PerfilMock {
   usuarioId: number;
@@ -297,6 +301,7 @@ export interface PerfilMock {
   curso: { id: number; nome: string } | null;
   periodo: number | null;
   interesses: string[];
+  fotoUrl?: string | null;
 }
 
 /**
@@ -312,8 +317,32 @@ export async function mockMeuPerfil(
   page: Page,
   inicial: PerfilMock,
   opcoes?: { marcarLidaAoSalvar?: { notificacoes: NotificacaoMock[]; id: number } },
-): Promise<void> {
+): Promise<{ fotos: { metodo: string; arquivoId?: number }[] }> {
   let atual = { ...inicial };
+  const fotos: { metodo: string; arquivoId?: number }[] = [];
+  // KAN-128: `PUT`/`DELETE /perfil/me/foto` mudam o `fotoUrl` do perfil em memória.
+  await page.route(
+    (url) => ehApi(url) && url.pathname === '/perfil/me/foto',
+    (route) => {
+      const request = route.request();
+      if (request.method() === 'OPTIONS') {
+        return route.fulfill({ status: 204, headers: { ...CORS, 'access-control-allow-methods': 'PUT,DELETE,OPTIONS' } });
+      }
+      if (request.method() === 'PUT') {
+        const { arquivoId } = request.postDataJSON() as { arquivoId: number };
+        fotos.push({ metodo: 'PUT', arquivoId });
+        atual = { ...atual, fotoUrl: FOTO_PIXEL };
+      } else {
+        fotos.push({ metodo: 'DELETE' });
+        atual = { ...atual, fotoUrl: null };
+      }
+      return route.fulfill({
+        status: 200,
+        headers: { ...CORS, 'content-type': 'application/json' },
+        body: JSON.stringify(atual),
+      });
+    },
+  );
   await page.route(
     (url) => ehApi(url) && url.pathname === '/perfil/me',
     (route) => {
@@ -329,6 +358,7 @@ export async function mockMeuPerfil(
           curso: CURSOS_MOCK.find((c) => c.id === corpo.cursoId) ?? null,
           periodo: corpo.periodo,
           interesses: [...corpo.interesses].sort((a, b) => a.localeCompare(b)),
+          fotoUrl: atual.fotoUrl ?? null,
         };
         if (opcoes?.marcarLidaAoSalvar) {
           const { notificacoes, id } = opcoes.marcarLidaAoSalvar;
@@ -345,6 +375,7 @@ export async function mockMeuPerfil(
       });
     },
   );
+  return { fotos };
 }
 
 /** `GET /usuarios/{id}/perfil` (Story 4.4) -> 200 com o perfil dado. */

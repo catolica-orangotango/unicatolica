@@ -91,12 +91,25 @@ describe('FeedComunidade', () => {
     expect(posts.length).toBe(2);
     expect(posts[0].querySelector('.feed__autor')?.textContent?.trim()).toBe('Ana Lima');
     expect(posts[0].querySelector('.feed__avatar')?.textContent?.trim()).toBe('AL');
+    expect(posts[0].querySelector('.feed__avatar img')).toBeNull();
     expect(posts[0].querySelector('uc-badge')?.textContent?.trim()).toBe('Clube de Xadrez');
     expect(posts[0].querySelector('time')?.textContent?.trim()).toBe('agora');
     expect(posts[0].querySelector('.feed__conteudo')?.textContent).toBe('Alguém para uma partida hoje?');
     expect(posts[1].querySelector('.feed__autor')?.textContent?.trim()).toBe('Bruno Reis');
     // Story 4.4: o nome do autor abre o perfil dele.
     expect(posts[0].querySelector('a.feed__autor')?.getAttribute('href')).toBe('/usuarios/102');
+  });
+
+  it('mostra a foto do autor no avatar quando ele tem fotoUrl', async () => {
+    const el = await montar({ souMembro: true });
+    const comFoto = post(1, 'Oi');
+    comFoto.autor.fotoUrl = 'https://s3.exemplo/ana.png';
+    requisicaoFeed().flush(pagina([comFoto]));
+    fixture.detectChanges();
+
+    const img = el.querySelector('.feed__post .feed__avatar img') as HTMLImageElement;
+    expect(img.getAttribute('src')).toBe('https://s3.exemplo/ana.png');
+    expect(img.getAttribute('alt')).toBe('');
   });
 
   it('membro sem postagens vê o convite para começar a conversa', async () => {

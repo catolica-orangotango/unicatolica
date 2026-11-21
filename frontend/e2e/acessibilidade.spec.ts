@@ -11,6 +11,7 @@ import {
   mockCursosAdmin,
   mockFeedOk,
   mockMeuPerfil,
+  FOTO_PIXEL,
   mockMinhasComunidades,
   mockModeracao,
   mockPerfilDeUsuario,
@@ -275,6 +276,29 @@ for (const viewport of [VIEWPORT_DESKTOP, VIEWPORT_CELULAR]) {
         await page.getByRole('button', { name: 'Adicionar' }).click();
         await page.getByRole('button', { name: 'Salvar' }).click();
         await expect(page.getByRole('button', { name: 'Editar perfil' })).toBeVisible();
+        await esperarSemViolacoes(page);
+      });
+
+      test('meu perfil com foto, e depois do erro de formato', async ({ page }) => {
+        await mockMeuPerfil(page, {
+          usuarioId: 1,
+          nome: 'Usuário Teste',
+          curso: { id: 14, nome: 'Engenharia de Software' },
+          periodo: 3,
+          interesses: ['Java'],
+          fotoUrl: FOTO_PIXEL,
+        });
+        await page.goto('/perfil');
+        await expect(page.getByRole('button', { name: 'Remover foto' })).toBeVisible();
+        await expect(page.locator('app-perfil-cartao uc-avatar img')).toBeVisible();
+        await esperarSemViolacoes(page);
+
+        await page.locator('input[type="file"]').setInputFiles({
+          name: 'edital.pdf',
+          mimeType: 'application/pdf',
+          buffer: Buffer.from('%PDF-1.4'),
+        });
+        await expect(page.getByRole('alert')).toContainText('PNG ou JPEG');
         await esperarSemViolacoes(page);
       });
 

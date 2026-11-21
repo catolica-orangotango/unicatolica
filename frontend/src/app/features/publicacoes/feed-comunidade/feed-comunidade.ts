@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { Observable, of, switchMap } from 'rxjs';
 import { AuthService } from '../../../core/auth/auth.service';
-import { ToastService, UcBadge, UcButton, UcCard, UcIcon } from '../../../ui';
+import { ToastService, UcAvatar, UcBadge, UcButton, UcCard, UcIcon } from '../../../ui';
 import { MidiaService, validarArquivo } from '../../midia/midia.service';
 import { ModeracaoService, TAMANHO_MAXIMO_MOTIVO } from '../../moderacao/moderacao.service';
 import { Publicacao, PublicacoesService, TAMANHO_MAXIMO_CONTEUDO } from '../publicacoes.service';
@@ -21,7 +21,7 @@ const TAMANHO_PAGINA = 20;
  */
 @Component({
   selector: 'app-feed-comunidade',
-  imports: [FormsModule, RouterLink, UcBadge, UcButton, UcCard, UcIcon],
+  imports: [FormsModule, RouterLink, UcAvatar, UcBadge, UcButton, UcCard, UcIcon],
   templateUrl: './feed-comunidade.html',
   styleUrl: './feed-comunidade.scss',
 })
