@@ -11,5 +11,10 @@
  * (RF27.1) vêm de {@code comunidades.ComunidadeConsulta}. Publica {@link PublicacaoModeracao}:
  * a Moderação lê a postagem denunciada e a oculta/restaura (Story 12.5, RF78/RF78.1) pela
  * coluna {@code situacao}; postagem oculta sai do feed.</p>
+ *
+ * <p>Anexo opcional da postagem: coluna {@code arquivo_id} (nullable), só o id do arquivo, sem
+ * FK nem relação JPA. Depende da API pública do módulo {@code midia}: reivindica o arquivo com
+ * {@code midia.MidiaAssociacao} ao criar e resolve os anexos de uma página do feed com uma
+ * única chamada a {@code midia.MidiaConsulta}.</p>
  */
 package br.edu.unicatolica.pacext.publicacoes;

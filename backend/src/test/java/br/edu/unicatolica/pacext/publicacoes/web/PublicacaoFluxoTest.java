@@ -2,10 +2,17 @@ package br.edu.unicatolica.pacext.publicacoes.web;
 
 import static io.restassured.RestAssured.given;
 import static io.restassured.http.ContentType.JSON;
+import static org.hamcrest.Matchers.emptyOrNullString;
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.not;
+import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.Matchers.notNullValue;
 
+import br.edu.unicatolica.pacext.compartilhado.UsuarioDeTeste;
 import io.quarkus.test.junit.QuarkusTest;
+import io.restassured.http.ContentType;
+import jakarta.inject.Inject;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
@@ -21,6 +28,9 @@ class PublicacaoFluxoTest {
     private static final String EMAIL = "aluno.teste@catolicasc.edu.br";
     private static final String SENHA = "Senha123!";
     private static final long COMUNIDADE_INEXISTENTE = 999_999L;
+
+    @Inject
+    UsuarioDeTeste usuarioDeTeste;
 
     private String token;
     private Integer comunidadeMembro;
@@ -134,5 +144,72 @@ class PublicacaoFluxoTest {
                 .when().post("/comunidades/{id}/publicacoes", comunidadeMembro)
                 .then().statusCode(422)
                 .body("error.code", equalTo("CONTEUDO_MUITO_LONGO"));
+    }
+
+    @Test
+    void postagemComAnexoDevolveAnexoNaCriacaoENoFeed() {
+        Integer arquivoId = enviarPng(token);
+
+        given().header("Authorization", "Bearer " + token).contentType(JSON)
+                .body(Map.of("conteudo", "com anexo", "arquivoId", arquivoId))
+                .when().post("/comunidades/{id}/publicacoes", comunidadeMembro)
+                .then().statusCode(201)
+                .body("anexo.id", equalTo(arquivoId))
+                .body("anexo.tipo", equalTo("image/png"))
+                .body("anexo.nome", equalTo("anexo.png"))
+                .body("anexo.url", not(emptyOrNullString()));
+
+        given().header("Authorization", "Bearer " + token)
+                .when().get("/comunidades/{id}/publicacoes", comunidadeMembro)
+                .then().statusCode(200)
+                .body("content[0].anexo.id", equalTo(arquivoId))
+                .body("content[0].anexo.tipo", equalTo("image/png"))
+                .body("content[0].anexo.url", not(emptyOrNullString()));
+    }
+
+    @Test
+    void postagemSemAnexoNaoTemAnexo() {
+        given().header("Authorization", "Bearer " + token).contentType(JSON)
+                .body(Map.of("conteudo", "sem anexo"))
+                .when().post("/comunidades/{id}/publicacoes", comunidadeMembro)
+                .then().statusCode(201)
+                .body("anexo", nullValue());
+    }
+
+    @Test
+    void arquivoDeOutroUsuarioDa404() {
+        Integer arquivoDeOutro = enviarPng(usuarioDeTeste.novo("Administração").token());
+
+        given().header("Authorization", "Bearer " + token).contentType(JSON)
+                .body(Map.of("conteudo", "roubando", "arquivoId", arquivoDeOutro))
+                .when().post("/comunidades/{id}/publicacoes", comunidadeMembro)
+                .then().statusCode(404)
+                .body("error.code", equalTo("ARQUIVO_NAO_ENCONTRADO"));
+    }
+
+    @Test
+    void reutilizarOMesmoArquivoDa409() {
+        Integer arquivoId = enviarPng(token);
+        Map<String, Object> corpo = Map.of("conteudo", "primeira", "arquivoId", arquivoId);
+
+        given().header("Authorization", "Bearer " + token).contentType(JSON).body(corpo)
+                .when().post("/comunidades/{id}/publicacoes", comunidadeMembro)
+                .then().statusCode(201);
+
+        given().header("Authorization", "Bearer " + token).contentType(JSON).body(corpo)
+                .when().post("/comunidades/{id}/publicacoes", comunidadeMembro)
+                .then().statusCode(409)
+                .body("error.code", equalTo("ARQUIVO_EM_USO"));
+    }
+
+    private static Integer enviarPng(String bearer) {
+        byte[] png = Arrays.copyOf(new byte[] {(byte) 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A}, 64);
+        return given().header("Authorization", "Bearer " + bearer)
+                .contentType(ContentType.MULTIPART)
+                .multiPart("finalidade", "ANEXO_POSTAGEM")
+                .multiPart("arquivo", "anexo.png", png, "image/png")
+                .when().post("/arquivos")
+                .then().statusCode(201)
+                .extract().path("id");
     }
 }
