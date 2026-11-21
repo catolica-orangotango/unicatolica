@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Tabela arquivo — módulo Mídia (RF48–RF51, KAN-128). Só metadados: os bytes ficam no
+    armazenamento de objetos, na chave. dono_id é só o id do usuario, sem FK (AD-3).
+    em_uso marca o arquivo já vinculado a uma postagem ou a um perfil (um uso por arquivo).
+-->
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="midia-001-create-arquivo" author="pacext">
+        <createTable tableName="arquivo">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="chave" type="VARCHAR(100)">
+                <constraints nullable="false" unique="true" uniqueConstraintName="uk_arquivo_chave"/>
+            </column>
+            <column name="tipo_conteudo" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="tamanho_bytes" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="nome_original" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="dono_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="finalidade" type="VARCHAR(20)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="em_uso" type="BOOLEAN" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+            <column name="criado_em" type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <createIndex indexName="idx_arquivo_dono_id" tableName="arquivo">
+            <column name="dono_id"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>
