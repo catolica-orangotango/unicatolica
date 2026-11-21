@@ -830,10 +830,14 @@ paths:
           $ref: '#/components/responses/NaoAutenticado'
         # 403: usuário não é membro da comunidade (RF27.1). 404: comunidade não existe.
         # 422: conteúdo ausente, em branco ou acima do limite (RF33).
+        # 404 também: ARQUIVO_NAO_ENCONTRADO (arquivoId inexistente, de outro usuário ou de
+        # outra finalidade). 409 ARQUIVO_EM_USO: arquivoId já anexado a outra postagem.
         '403':
           $ref: '#/components/responses/SemPermissao'
         '404':
           $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Conflito'
         '422':
           $ref: '#/components/responses/ErroValidacao'
     get:
@@ -1895,7 +1899,8 @@ components:
           description: >
             Anexo opcional: id de um arquivo enviado em POST /arquivos com finalidade
             ANEXO_POSTAGEM, do próprio usuário e ainda não anexado a outra postagem.
-            Inexistente, de outro usuário ou com outra finalidade, 422.
+            Inexistente, de outro usuário ou com outra finalidade, 404
+            ARQUIVO_NAO_ENCONTRADO; já anexado a outra postagem, 409 ARQUIVO_EM_USO.
 
     Arquivo:
       type: object
