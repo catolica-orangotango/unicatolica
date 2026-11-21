@@ -15,6 +15,8 @@
  * {@code midia.limite.*}). A associação com a postagem (RF51) e com o perfil é feita por quem
  * usa o arquivo, pela interface publicada na raiz. RF49 (link externo) não é deste módulo.</p>
  *
- * <p>Interface publicada (raiz): {@link FinalidadeArquivo}.</p>
+ * <p>Interface publicada (raiz): {@link FinalidadeArquivo}, {@link ArquivoAnexado},
+ * {@link MidiaConsulta} (resolver ids em URL assinada) e {@link MidiaAssociacao} (reivindicar e
+ * liberar; reivindicar usa lock pessimista na linha).</p>
  */
 package br.edu.unicatolica.pacext.midia;
