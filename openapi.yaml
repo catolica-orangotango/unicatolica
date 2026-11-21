@@ -1229,7 +1229,7 @@ paths:
         # 404 ARQUIVO_NAO_ENCONTRADO: arquivo inexistente ou de outro usuário (existência oculta).
         '404':
           $ref: '#/components/responses/NaoEncontrado'
-        # 409 ARQUIVO_EM_USO: arquivo já anexado a uma postagem.
+        # 409 ARQUIVO_EM_USO: arquivo já em uso (anexo de postagem ou foto de perfil, inclusive a foto atual).
         '409':
           $ref: '#/components/responses/Conflito'
         '422':
@@ -2466,7 +2466,9 @@ components:
           schema:
             $ref: '#/components/schemas/Erro'
     ErroValidacao:
-      description: Corpo da requisição inválido (400/422).
+      description: >-
+        Corpo da requisição inválido (400/422). Qualquer endpoint JSON pode responder 400
+        `CORPO_MUITO_GRANDE` para corpo acima de 6 MB.
       content:
         application/json:
           schema:
