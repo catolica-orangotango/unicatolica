@@ -2,8 +2,10 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { Component, computed, effect, inject, input, signal, untracked } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
+import { Observable, of, switchMap } from 'rxjs';
 import { AuthService } from '../../../core/auth/auth.service';
-import { ToastService, UcBadge, UcButton, UcCard } from '../../../ui';
+import { ToastService, UcBadge, UcButton, UcCard, UcIcon } from '../../../ui';
+import { MidiaService, validarArquivo } from '../../midia/midia.service';
 import { ModeracaoService, TAMANHO_MAXIMO_MOTIVO } from '../../moderacao/moderacao.service';
 import { Publicacao, PublicacoesService, TAMANHO_MAXIMO_CONTEUDO } from '../publicacoes.service';
 import { iniciais, tempoRelativo } from '../tempo-relativo';
@@ -19,7 +21,7 @@ const TAMANHO_PAGINA = 20;
  */
 @Component({
   selector: 'app-feed-comunidade',
-  imports: [FormsModule, RouterLink, UcBadge, UcButton, UcCard],
+  imports: [FormsModule, RouterLink, UcBadge, UcButton, UcCard, UcIcon],
   templateUrl: './feed-comunidade.html',
   styleUrl: './feed-comunidade.scss',
 })
@@ -28,6 +30,7 @@ export class FeedComunidade {
   private readonly toastService = inject(ToastService);
   private readonly moderacaoService = inject(ModeracaoService);
   private readonly authService = inject(AuthService);
+  private readonly midiaService = inject(MidiaService);
 
   readonly comunidadeId = input.required<number>();
   readonly comunidadeNome = input.required<string>();
@@ -49,6 +52,11 @@ export class FeedComunidade {
   protected readonly podePublicar = computed(
     () => !this.publicando() && this.conteudo().trim().length > 0 && this.restantes() >= 0,
   );
+
+  /** Arquivo escolhido para anexar; `anexoEnviadoId` guarda o upload já feito dele, para a nova tentativa não reenviar. */
+  protected readonly anexo = signal<File | null>(null);
+  protected readonly erroAnexo = signal<string | null>(null);
+  private anexoEnviadoId: number | null = null;
 
   /** Quem está logado — a própria postagem não mostra "Denunciar" (o backend daria 403). */
   protected readonly usuarioId = this.authService.usuarioId();
@@ -114,16 +122,41 @@ export class FeedComunidade {
     });
   }
 
+  protected escolherAnexo(evento: Event): void {
+    const input = evento.target as HTMLInputElement;
+    const arquivo = input.files?.[0];
+    input.value = ''; // permite escolher o mesmo arquivo de novo depois de remover
+    if (!arquivo) {
+      return;
+    }
+    const erro = validarArquivo(arquivo);
+    this.erroAnexo.set(erro);
+    if (erro === null) {
+      this.anexo.set(arquivo);
+      this.anexoEnviadoId = null;
+    }
+  }
+
+  protected removerAnexo(): void {
+    this.anexo.set(null);
+    this.anexoEnviadoId = null;
+    this.erroAnexo.set(null);
+  }
+
   protected publicar(): void {
     if (!this.podePublicar()) {
       return;
     }
     this.publicando.set(true);
     this.erroPublicar.set(null);
-    this.publicacoesService.criar(this.comunidadeId(), this.conteudo()).subscribe({
+    this.erroAnexo.set(null);
+    this.enviarAnexo()
+      .pipe(switchMap((arquivoId) => this.publicacoesService.criar(this.comunidadeId(), this.conteudo(), arquivoId)))
+      .subscribe({
       next: (publicacao) => {
         this.publicando.set(false);
         this.conteudo.set('');
+        this.removerAnexo();
         this.publicacoes.update((atuais) => [publicacao, ...atuais]);
         this.toastService.mostrar('Postagem publicada');
       },
@@ -132,6 +165,23 @@ export class FeedComunidade {
         this.erroPublicar.set(this.mensagemDeErro(erro));
       },
     });
+  }
+
+  /** Primeiro o upload (só se há arquivo e ainda não foi enviado); emite o `arquivoId` ou `undefined`. */
+  private enviarAnexo(): Observable<number | undefined> {
+    const arquivo = this.anexo();
+    if (arquivo === null) {
+      return of(undefined);
+    }
+    if (this.anexoEnviadoId !== null) {
+      return of(this.anexoEnviadoId);
+    }
+    return this.midiaService.enviar(arquivo, 'ANEXO_POSTAGEM').pipe(
+      switchMap((enviado) => {
+        this.anexoEnviadoId = enviado.id;
+        return of(enviado.id);
+      }),
+    );
   }
 
   protected abrirDenuncia(publicacaoId: number): void {

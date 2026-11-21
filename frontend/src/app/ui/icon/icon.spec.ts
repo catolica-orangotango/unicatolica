@@ -4,7 +4,7 @@ import { UcIcon, type UcIconName } from './icon';
 
 const NOMES: UcIconName[] = [
   'home', 'users', 'bell', 'user', 'search', 'dots', 'flag', 'eyeoff', 'check',
-  'x', 'alert', 'info', 'down', 'trash', 'plus', 'lock', 'shield', 'edit',
+  'x', 'alert', 'info', 'down', 'trash', 'plus', 'lock', 'shield', 'edit', 'paperclip', 'file',
 ];
 
 @Component({
