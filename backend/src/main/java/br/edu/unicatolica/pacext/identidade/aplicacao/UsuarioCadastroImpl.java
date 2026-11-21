@@ -54,8 +54,19 @@ class UsuarioCadastroImpl implements UsuarioCadastro {
         return dados(usuario);
     }
 
+    @Override
+    @Transactional
+    public Long atualizarFoto(Long usuarioId, Long fotoArquivoId) {
+        Usuario usuario = usuarioRepository.findByIdOptional(usuarioId)
+                .orElseThrow(() -> ApiException.naoEncontrado("USUARIO_NAO_ENCONTRADO", "Usuário não encontrado.", null));
+        Long anterior = usuario.fotoArquivoId;
+        usuario.fotoArquivoId = fotoArquivoId;
+        usuario.atualizadoEm = Instant.now();
+        return anterior;
+    }
+
     private static DadosCadastrais dados(Usuario usuario) {
         return new DadosCadastrais(usuario.id, usuario.nome, usuario.cursoId,
-                usuario.cursoId == null ? null : usuario.cursoNome);
+                usuario.cursoId == null ? null : usuario.cursoNome, usuario.fotoArquivoId);
     }
 }

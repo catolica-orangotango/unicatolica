@@ -21,9 +21,11 @@ public record PublicacaoResponse(Long id, Long comunidadeId, AutorResumo autor, 
         }
     }
 
-    static PublicacaoResponse de(Publicacao publicacao, UsuarioResumo autor, ArquivoAnexado arquivo) {
+    static PublicacaoResponse de(Publicacao publicacao, UsuarioResumo autor, ArquivoAnexado arquivo,
+            ArquivoAnexado fotoAutor) {
         return new PublicacaoResponse(publicacao.id, publicacao.comunidadeId,
-                AutorResumo.de(publicacao.autorUsuarioId, autor), publicacao.conteudo, publicacao.criadoEm,
+                AutorResumo.de(publicacao.autorUsuarioId, autor, fotoAutor == null ? null : fotoAutor.url()),
+                publicacao.conteudo, publicacao.criadoEm,
                 Anexo.de(arquivo));
     }
 }

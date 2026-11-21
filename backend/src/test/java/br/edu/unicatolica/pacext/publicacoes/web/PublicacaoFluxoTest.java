@@ -202,11 +202,37 @@ class PublicacaoFluxoTest {
                 .body("error.code", equalTo("ARQUIVO_EM_USO"));
     }
 
+    @Test
+    void autorComFotoTemFotoUrlNoFeedESemFotoNula() {
+        given().header("Authorization", "Bearer " + token).contentType(JSON)
+                .body(Map.of("conteudo", "sem foto"))
+                .when().post("/comunidades/{id}/publicacoes", comunidadeMembro).then().statusCode(201);
+        given().header("Authorization", "Bearer " + token)
+                .when().get("/comunidades/{id}/publicacoes", comunidadeMembro)
+                .then().statusCode(200).body("content[0].autor.fotoUrl", nullValue());
+
+        Integer foto = enviarPng(token, "FOTO_PERFIL");
+        given().header("Authorization", "Bearer " + token).contentType(JSON)
+                .body(Map.of("arquivoId", foto))
+                .when().put("/perfil/me/foto").then().statusCode(200);
+        try {
+            given().header("Authorization", "Bearer " + token)
+                    .when().get("/comunidades/{id}/publicacoes", comunidadeMembro)
+                    .then().statusCode(200).body("content[0].autor.fotoUrl", notNullValue());
+        } finally {
+            given().header("Authorization", "Bearer " + token).when().delete("/perfil/me/foto");
+        }
+    }
+
     private static Integer enviarPng(String bearer) {
+        return enviarPng(bearer, "ANEXO_POSTAGEM");
+    }
+
+    private static Integer enviarPng(String bearer, String finalidade) {
         byte[] png = Arrays.copyOf(new byte[] {(byte) 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A}, 64);
         return given().header("Authorization", "Bearer " + bearer)
                 .contentType(ContentType.MULTIPART)
-                .multiPart("finalidade", "ANEXO_POSTAGEM")
+                .multiPart("finalidade", finalidade)
                 .multiPart("arquivo", "anexo.png", png, "image/png")
                 .when().post("/arquivos")
                 .then().statusCode(201)

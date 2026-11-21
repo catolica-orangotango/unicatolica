@@ -5,6 +5,7 @@ import static io.restassured.http.ContentType.JSON;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.not;
+import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.nullValue;
 
 import br.edu.unicatolica.pacext.identidade.dominio.PasswordHasher;
@@ -13,7 +14,9 @@ import br.edu.unicatolica.pacext.identidade.dominio.UsuarioRepository;
 import io.quarkus.narayana.jta.QuarkusTransaction;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
+import io.restassured.http.ContentType;
 import java.time.Instant;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.IntStream;
@@ -145,6 +148,83 @@ class PerfilFluxoTest {
 
         // Nenhuma tentativa inválida criou o perfil.
         autenticado().when().get("/perfil/me").then().body("periodo", nullValue());
+    }
+
+    @Test
+    void definirFotoApareceNoPerfilProprioEPublico() {
+        Integer arquivoId = enviar(token, "FOTO_PERFIL");
+
+        autenticado().contentType(JSON).body(Map.of("arquivoId", arquivoId))
+                .when().put("/perfil/me/foto")
+                .then().statusCode(200)
+                .body("fotoUrl", notNullValue());
+
+        autenticado().when().get("/perfil/me").then().statusCode(200).body("fotoUrl", notNullValue());
+        given().header("Authorization", "Bearer " + tokenDoSeed())
+                .when().get("/usuarios/{id}/perfil", usuarioId)
+                .then().statusCode(200).body("fotoUrl", notNullValue());
+    }
+
+    @Test
+    void arquivoDeOutraFinalidadeDa404() {
+        Integer anexo = enviar(token, "ANEXO_POSTAGEM");
+
+        autenticado().contentType(JSON).body(Map.of("arquivoId", anexo))
+                .when().put("/perfil/me/foto")
+                .then().statusCode(404)
+                .body("error.code", equalTo("ARQUIVO_NAO_ENCONTRADO"));
+    }
+
+    @Test
+    void semArquivoIdDa422() {
+        autenticado().contentType(JSON).body(Map.of())
+                .when().put("/perfil/me/foto")
+                .then().statusCode(422);
+    }
+
+    @Test
+    void trocarAFotoDeixaAPrimeiraInacessivel() {
+        Integer primeira = enviar(token, "FOTO_PERFIL");
+        Integer segunda = enviar(token, "FOTO_PERFIL");
+        autenticado().contentType(JSON).body(Map.of("arquivoId", primeira))
+                .when().put("/perfil/me/foto").then().statusCode(200);
+
+        autenticado().contentType(JSON).body(Map.of("arquivoId", segunda))
+                .when().put("/perfil/me/foto").then().statusCode(200);
+
+        // A primeira foi liberada (arquivo apagado): nao da mais para reivindica-la.
+        autenticado().contentType(JSON).body(Map.of("arquivoId", primeira))
+                .when().put("/perfil/me/foto")
+                .then().statusCode(404)
+                .body("error.code", equalTo("ARQUIVO_NAO_ENCONTRADO"));
+        autenticado().when().get("/perfil/me").then().body("fotoUrl", notNullValue());
+    }
+
+    @Test
+    void removerFotoVoltaFotoUrlNulaEEhIdempotente() {
+        autenticado().contentType(JSON).body(Map.of("arquivoId", enviar(token, "FOTO_PERFIL")))
+                .when().put("/perfil/me/foto").then().statusCode(200);
+
+        autenticado().when().delete("/perfil/me/foto").then().statusCode(200).body("fotoUrl", nullValue());
+        autenticado().when().delete("/perfil/me/foto").then().statusCode(200).body("fotoUrl", nullValue());
+        autenticado().when().get("/perfil/me").then().body("fotoUrl", nullValue());
+    }
+
+    @Test
+    void fotoSemTokenDa401() {
+        given().contentType(JSON).body(Map.of("arquivoId", 1)).when().put("/perfil/me/foto").then().statusCode(401);
+        given().when().delete("/perfil/me/foto").then().statusCode(401);
+    }
+
+    private static Integer enviar(String bearer, String finalidade) {
+        byte[] png = Arrays.copyOf(new byte[] {(byte) 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A}, 64);
+        return given().header("Authorization", "Bearer " + bearer)
+                .contentType(ContentType.MULTIPART)
+                .multiPart("finalidade", finalidade)
+                .multiPart("arquivo", "foto.png", png, "image/png")
+                .when().post("/arquivos")
+                .then().statusCode(201)
+                .extract().path("id");
     }
 
     private void salvar(Integer cursoId) {

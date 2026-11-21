@@ -88,6 +88,13 @@ public class Usuario {
     @Column(name = "total_logins", nullable = false)
     public int totalLogins;
 
+    /**
+     * Id do arquivo da foto de perfil, em {@code midia} (só o id, sem FK — AD-3). Nulo sem foto;
+     * gravado por {@code UsuarioCadastro.atualizarFoto}.
+     */
+    @Column(name = "foto_arquivo_id")
+    public Long fotoArquivoId;
+
     @Column(name = "criado_em", nullable = false)
     public Instant criadoEm;
 

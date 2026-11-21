@@ -20,4 +20,12 @@ public interface UsuarioCadastro {
      *     ou 404 {@code USUARIO_NAO_ENCONTRADO}
      */
     DadosCadastrais atualizarNomeECurso(Long usuarioId, String nome, Long cursoId);
+
+    /**
+     * Grava o id do arquivo da foto de perfil ({@code null} remove) e devolve o id anterior
+     * (nulo se não havia foto), para quem chama liberar o arquivo antigo.
+     *
+     * @throws br.edu.unicatolica.pacext.compartilhado.erro.ApiException 404 {@code USUARIO_NAO_ENCONTRADO}
+     */
+    Long atualizarFoto(Long usuarioId, Long fotoArquivoId);
 }
