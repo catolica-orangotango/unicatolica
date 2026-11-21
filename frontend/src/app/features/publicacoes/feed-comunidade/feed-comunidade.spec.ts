@@ -334,6 +334,59 @@ describe('FeedComunidade', () => {
       expect(botaoPublicar(el).disabled).toBe(false);
     });
 
+    it('400 no upload mostra o motivo do servidor', async () => {
+      const el = await montarMembro();
+      digitar(el, 'texto');
+      escolher(el, arquivo('foto.png', 'image/png'));
+      botaoPublicar(el).click();
+      httpMock
+        .expectOne(URL_ARQUIVOS)
+        .flush(
+          { error: { code: 'FORMATO_NAO_SUPORTADO', message: 'Formato não suportado.' } },
+          { status: 400, statusText: 'Bad Request' },
+        );
+      fixture.detectChanges();
+      expect(el.querySelector('.feed__erro')?.textContent).toContain('Formato não suportado.');
+    });
+
+    it('404 na criação mostra o motivo do servidor', async () => {
+      const el = await montarMembro();
+      digitar(el, 'texto');
+      escolher(el, arquivo('foto.png', 'image/png'));
+      botaoPublicar(el).click();
+      httpMock.expectOne(URL_ARQUIVOS).flush({ id: 4, nome: 'foto.png', tipo: 'image/png', tamanho: 10 });
+      httpMock
+        .expectOne((r) => r.url === URL_FEED && r.method === 'POST')
+        .flush(
+          { error: { code: 'ARQUIVO_NAO_ENCONTRADO', message: 'Arquivo não encontrado.' } },
+          { status: 404, statusText: 'Not Found' },
+        );
+      fixture.detectChanges();
+      expect(el.querySelector('.feed__erro')?.textContent).toContain('Arquivo não encontrado.');
+    });
+
+    it('409 na criação mostra o motivo e a nova tentativa reenvia o arquivo', async () => {
+      const el = await montarMembro();
+      digitar(el, 'texto');
+      escolher(el, arquivo('foto.png', 'image/png'));
+      botaoPublicar(el).click();
+      httpMock.expectOne(URL_ARQUIVOS).flush({ id: 4, nome: 'foto.png', tipo: 'image/png', tamanho: 10 });
+      httpMock
+        .expectOne((r) => r.url === URL_FEED && r.method === 'POST')
+        .flush(
+          { error: { code: 'ARQUIVO_EM_USO', message: 'Arquivo já em uso.' } },
+          { status: 409, statusText: 'Conflict' },
+        );
+      fixture.detectChanges();
+      expect(el.querySelector('.feed__erro')?.textContent).toContain('Arquivo já em uso.');
+      expect(el.querySelector('.feed__anexo-nome')?.textContent).toContain('foto.png');
+
+      botaoPublicar(el).click();
+      httpMock.expectOne(URL_ARQUIVOS).flush({ id: 7, nome: 'foto.png', tipo: 'image/png', tamanho: 10 });
+      const req = httpMock.expectOne((r) => r.url === URL_FEED && r.method === 'POST');
+      expect(req.request.body).toEqual({ conteudo: 'texto', arquivoId: 7 });
+    });
+
     it('falha na criação após o upload mantém o arquivo e a nova tentativa não reenvia', async () => {
       const el = await montarMembro();
       digitar(el, 'texto');

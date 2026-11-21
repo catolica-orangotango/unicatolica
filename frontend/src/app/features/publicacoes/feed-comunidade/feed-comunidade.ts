@@ -5,7 +5,7 @@ import { RouterLink } from '@angular/router';
 import { Observable, of, switchMap } from 'rxjs';
 import { AuthService } from '../../../core/auth/auth.service';
 import { ToastService, UcAvatar, UcBadge, UcButton, UcCard, UcIcon } from '../../../ui';
-import { MidiaService, validarArquivo } from '../../midia/midia.service';
+import { MidiaService, mensagemDoServidor, validarArquivo } from '../../midia/midia.service';
 import { ModeracaoService, TAMANHO_MAXIMO_MOTIVO } from '../../moderacao/moderacao.service';
 import { Publicacao, PublicacoesService, TAMANHO_MAXIMO_CONTEUDO } from '../publicacoes.service';
 import { iniciais, tempoRelativo } from '../tempo-relativo';
@@ -239,10 +239,10 @@ export class FeedComunidade {
   }
 
   private mensagemDeErro(erro: HttpErrorResponse): string {
-    const mensagemApi: unknown = erro.error?.error?.message;
-    if ((erro.status === 403 || erro.status === 422) && typeof mensagemApi === 'string') {
-      return mensagemApi;
+    if (erro.status === 404 || erro.status === 409) {
+      // O arquivo já enviado não serve mais (sumiu ou está em uso): o próximo envio refaz o upload.
+      this.anexoEnviadoId = null;
     }
-    return 'Não foi possível publicar agora. Tente novamente em instantes.';
+    return mensagemDoServidor(erro, 'Não foi possível publicar agora. Tente novamente em instantes.');
   }
 }
