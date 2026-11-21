@@ -1,5 +1,5 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, computed, effect, inject, input, signal, untracked } from '@angular/core';
+import { Component, computed, effect, ElementRef, inject, input, signal, untracked, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { Observable, of, switchMap } from 'rxjs';
@@ -57,6 +57,7 @@ export class FeedComunidade {
   protected readonly anexo = signal<File | null>(null);
   protected readonly erroAnexo = signal<string | null>(null);
   private anexoEnviadoId: number | null = null;
+  private readonly botaoAnexar = viewChild<ElementRef<HTMLButtonElement>>('botaoAnexar');
 
   /** Quem está logado — a própria postagem não mostra "Denunciar" (o backend daria 403). */
   protected readonly usuarioId = this.authService.usuarioId();
@@ -137,7 +138,13 @@ export class FeedComunidade {
     }
   }
 
-  protected removerAnexo(): void {
+  /** Remoção pelo usuário: o botão "Remover anexo" some, então o foco volta para "Anexar arquivo". */
+  protected removerAnexoPeloUsuario(): void {
+    this.removerAnexo();
+    this.botaoAnexar()?.nativeElement.focus();
+  }
+
+  private removerAnexo(): void {
     this.anexo.set(null);
     this.anexoEnviadoId = null;
     this.erroAnexo.set(null);

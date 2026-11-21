@@ -249,6 +249,16 @@ describe('FeedComunidade', () => {
       expect(botaoComTexto(el, 'Remover anexo')).toBeUndefined();
     });
 
+    it('remover o anexo devolve o foco ao botão "Anexar arquivo"', async () => {
+      const el = await montarMembro();
+      escolher(el, arquivo('apostila.pdf', 'application/pdf'));
+
+      botaoComTexto(el, 'Remover anexo')?.click();
+      fixture.detectChanges();
+
+      expect(document.activeElement).toBe(botaoComTexto(el, 'Anexar arquivo'));
+    });
+
     it('tipo fora de PNG/JPEG/PDF mostra os formatos aceitos e não anexa', async () => {
       const el = await montarMembro();
       escolher(el, arquivo('a.gif', 'image/gif'));

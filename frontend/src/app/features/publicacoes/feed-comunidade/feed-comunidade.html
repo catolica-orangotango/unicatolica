@@ -22,13 +22,13 @@
         tabindex="-1"
         (change)="escolherAnexo($event)"
       />
-      <button type="button" class="uc-text-meta feed__acao feed__anexar-botao" [disabled]="publicando()" (click)="seletor.click()">
+      <button type="button" #botaoAnexar class="uc-text-meta feed__acao feed__anexar-botao" [disabled]="publicando()" (click)="seletor.click()">
         <uc-icon name="paperclip" size="sm" />
         Anexar arquivo
       </button>
       @if (anexo(); as arquivo) {
         <span class="uc-text-meta feed__anexo-nome">{{ arquivo.name }}</span>
-        <button type="button" class="uc-text-meta feed__acao" [disabled]="publicando()" (click)="removerAnexo()">
+        <button type="button" class="uc-text-meta feed__acao" [disabled]="publicando()" (click)="removerAnexoPeloUsuario()">
           Remover anexo
         </button>
       }

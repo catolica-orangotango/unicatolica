@@ -86,6 +86,7 @@ test('anexa um PDF, remove, anexa de novo e publica com o arquivo no card', asyn
   await expect(page.getByText('edital.pdf')).toBeVisible();
   await page.getByRole('button', { name: 'Remover anexo' }).click();
   await expect(page.getByText('edital.pdf')).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Anexar arquivo' })).toBeFocused();
 
   await seletor.setInputFiles({ name: 'edital.pdf', mimeType: 'application/pdf', buffer: Buffer.from('%PDF-1.4 teste') });
   await page.getByLabel('Escreva uma postagem').fill('Edital novo');
