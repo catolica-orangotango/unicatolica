@@ -12,6 +12,30 @@
       (ngModelChange)="conteudo.set($event)"
       [disabled]="publicando()"
     ></textarea>
+    <div class="feed__anexar">
+      <input
+        #seletor
+        type="file"
+        class="feed__arquivo"
+        accept="image/png,image/jpeg,application/pdf"
+        aria-label="Anexar arquivo (PNG, JPEG ou PDF)"
+        tabindex="-1"
+        (change)="escolherAnexo($event)"
+      />
+      <button type="button" #botaoAnexar class="uc-text-meta feed__acao feed__anexar-botao" [disabled]="publicando()" (click)="seletor.click()">
+        <uc-icon name="paperclip" size="sm" />
+        Anexar arquivo
+      </button>
+      @if (anexo(); as arquivo) {
+        <span class="uc-text-meta feed__anexo-nome">{{ arquivo.name }}</span>
+        <button type="button" class="uc-text-meta feed__acao" [disabled]="publicando()" (click)="removerAnexoPeloUsuario()">
+          Remover anexo
+        </button>
+      }
+    </div>
+    @if (erroAnexo(); as mensagem) {
+      <p class="feed__erro" role="alert">{{ mensagem }}</p>
+    }
     <div class="feed__rodape-caixa">
       <span
         id="feed-restantes"
@@ -54,7 +78,13 @@
         <li>
           <uc-card class="feed__post">
             <div class="feed__cabecalho-post">
-              <span class="feed__avatar" aria-hidden="true">{{ iniciais(publicacao.autor.nome) }}</span>
+              <uc-avatar
+                class="feed__avatar"
+                tamanho="sm"
+                cor="marca"
+                [iniciais]="iniciais(publicacao.autor.nome)"
+                [fotoUrl]="publicacao.autor.fotoUrl ?? null"
+              />
               <div class="feed__meta">
                 <a class="feed__autor" [routerLink]="['/usuarios', publicacao.autor.id]">{{
                   publicacao.autor.nome
@@ -68,6 +98,16 @@
               </div>
             </div>
             <p class="feed__conteudo">{{ publicacao.conteudo }}</p>
+            @if (publicacao.anexo; as anexoPost) {
+              @if (anexoPost.tipo === 'application/pdf') {
+                <a class="uc-text-meta feed__anexo-link" [href]="anexoPost.url" target="_blank" rel="noopener">
+                  <uc-icon name="file" size="sm" />
+                  {{ anexoPost.nome }}
+                </a>
+              } @else {
+                <img class="feed__anexo-imagem" [src]="anexoPost.url" [alt]="anexoPost.nome" loading="lazy" />
+              }
+            }
             @if (publicacao.autor.id !== usuarioId) {
               @if (denunciandoId() === publicacao.id) {
                 <form class="feed__denuncia" (ngSubmit)="enviarDenuncia()">

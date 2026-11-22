@@ -13,6 +13,8 @@ export interface Perfil {
   /** `null` enquanto o perfil acadêmico não foi criado (Story 4.1). */
   periodo: number | null;
   interesses: string[];
+  /** URL da foto de perfil (KAN-128); `null` sem foto. */
+  fotoUrl: string | null;
 }
 
 /** Espelha `PerfilRequest` do `openapi.yaml`. */
@@ -54,6 +56,20 @@ export class PerfilService {
   /** `GET /usuarios/{id}/perfil` (Story 4.4, RF20.2) — somente leitura. */
   deUsuario(usuarioId: number): Observable<Perfil> {
     return this.http.get<Perfil>(`${API_BASE_URL}/usuarios/${usuarioId}/perfil`, {
+      headers: this.authService.obterCabecalhoAutorizacao(),
+    });
+  }
+
+  /** `PUT /perfil/me/foto` (KAN-128): usa um arquivo já enviado com finalidade `FOTO_PERFIL`. */
+  definirFoto(arquivoId: number): Observable<Perfil> {
+    return this.http.put<Perfil>(`${API_BASE_URL}/perfil/me/foto`, { arquivoId }, {
+      headers: this.authService.obterCabecalhoAutorizacao(),
+    });
+  }
+
+  /** `DELETE /perfil/me/foto` (KAN-128). */
+  removerFoto(): Observable<Perfil> {
+    return this.http.delete<Perfil>(`${API_BASE_URL}/perfil/me/foto`, {
       headers: this.authService.obterCabecalhoAutorizacao(),
     });
   }

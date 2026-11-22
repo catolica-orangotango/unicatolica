@@ -6,7 +6,10 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -14,6 +17,8 @@ import static org.mockito.Mockito.when;
 import br.edu.unicatolica.pacext.comunidades.ComunidadeConsulta;
 import br.edu.unicatolica.pacext.compartilhado.erro.ApiException;
 import br.edu.unicatolica.pacext.compartilhado.paginacao.PageResponse;
+import br.edu.unicatolica.pacext.midia.FinalidadeArquivo;
+import br.edu.unicatolica.pacext.midia.MidiaAssociacao;
 import br.edu.unicatolica.pacext.publicacoes.dominio.Publicacao;
 import br.edu.unicatolica.pacext.publicacoes.dominio.PublicacaoRepository;
 import java.util.List;
@@ -29,6 +34,7 @@ class PublicacaoServiceTest {
     private PublicacaoService service;
     private PublicacaoRepository repository;
     private ComunidadeConsulta comunidadeConsulta;
+    private MidiaAssociacao midiaAssociacao;
 
     @BeforeEach
     void setUp() {
@@ -37,6 +43,8 @@ class PublicacaoServiceTest {
         comunidadeConsulta = mock(ComunidadeConsulta.class);
         service.publicacaoRepository = repository;
         service.comunidadeConsulta = comunidadeConsulta;
+        midiaAssociacao = mock(MidiaAssociacao.class);
+        service.midiaAssociacao = midiaAssociacao;
 
         when(comunidadeConsulta.existe(COMUNIDADE_ID)).thenReturn(true);
         when(comunidadeConsulta.ehMembro(COMUNIDADE_ID, USUARIO_ID)).thenReturn(true);
@@ -44,7 +52,7 @@ class PublicacaoServiceTest {
 
     @Test
     void membroCriaPostagemAssociadaAEleEAComunidade() {
-        Publicacao publicacao = service.criar(USUARIO_ID, COMUNIDADE_ID, "  Alguém tem o material de Cálculo?  ");
+        Publicacao publicacao = service.criar(USUARIO_ID, COMUNIDADE_ID, "  Alguém tem o material de Cálculo?  ", null);
 
         verify(repository).persist(publicacao);
         assertEquals(USUARIO_ID, publicacao.autorUsuarioId);
@@ -55,40 +63,82 @@ class PublicacaoServiceTest {
 
     @Test
     void conteudoAusenteDa422() {
-        assertCodigo(422, "CAMPO_OBRIGATORIO", () -> service.criar(USUARIO_ID, COMUNIDADE_ID, null));
+        assertCodigo(422, "CAMPO_OBRIGATORIO", () -> service.criar(USUARIO_ID, COMUNIDADE_ID, null, null));
     }
 
     @Test
     void conteudoEmBrancoDa422() {
-        assertCodigo(422, "CAMPO_OBRIGATORIO", () -> service.criar(USUARIO_ID, COMUNIDADE_ID, " \n\t "));
+        assertCodigo(422, "CAMPO_OBRIGATORIO", () -> service.criar(USUARIO_ID, COMUNIDADE_ID, " \n\t ", null));
     }
 
     @Test
     void conteudoAcimaDoLimiteDa422() {
         String longo = "a".repeat(PublicacaoService.TAMANHO_MAXIMO_CONTEUDO + 1);
 
-        assertCodigo(422, "CONTEUDO_MUITO_LONGO", () -> service.criar(USUARIO_ID, COMUNIDADE_ID, longo));
+        assertCodigo(422, "CONTEUDO_MUITO_LONGO", () -> service.criar(USUARIO_ID, COMUNIDADE_ID, longo, null));
     }
 
     @Test
     void conteudoNoLimiteEAceito() {
         String noLimite = "a".repeat(PublicacaoService.TAMANHO_MAXIMO_CONTEUDO);
 
-        assertEquals(noLimite, service.criar(USUARIO_ID, COMUNIDADE_ID, noLimite).conteudo);
+        assertEquals(noLimite, service.criar(USUARIO_ID, COMUNIDADE_ID, noLimite, null).conteudo);
     }
 
     @Test
     void comunidadeInexistenteDa404AoCriar() {
         when(comunidadeConsulta.existe(COMUNIDADE_ID)).thenReturn(false);
 
-        assertCodigo(404, "COMUNIDADE_NAO_ENCONTRADA", () -> service.criar(USUARIO_ID, COMUNIDADE_ID, "oi"));
+        assertCodigo(404, "COMUNIDADE_NAO_ENCONTRADA", () -> service.criar(USUARIO_ID, COMUNIDADE_ID, "oi", null));
     }
 
     @Test
     void naoMembroDa403() {
         when(comunidadeConsulta.ehMembro(COMUNIDADE_ID, USUARIO_ID)).thenReturn(false);
 
-        assertCodigo(403, "NAO_E_MEMBRO", () -> service.criar(USUARIO_ID, COMUNIDADE_ID, "oi"));
+        assertCodigo(403, "NAO_E_MEMBRO", () -> service.criar(USUARIO_ID, COMUNIDADE_ID, "oi", null));
+        verify(repository, never()).persist(any(Publicacao.class));
+    }
+
+    @Test
+    void criarComArquivoReivindicaEGravaArquivoId() {
+        Publicacao publicacao = service.criar(USUARIO_ID, COMUNIDADE_ID, "oi", 99L);
+
+        verify(midiaAssociacao).reivindicar(99L, USUARIO_ID, FinalidadeArquivo.ANEXO_POSTAGEM);
+        assertEquals(99L, publicacao.arquivoId);
+    }
+
+    @Test
+    void criarSemArquivoNaoChamaMidia() {
+        Publicacao publicacao = service.criar(USUARIO_ID, COMUNIDADE_ID, "oi", null);
+
+        verifyNoInteractions(midiaAssociacao);
+        assertNull(publicacao.arquivoId);
+    }
+
+    @Test
+    void naoMembroNaoReivindicaOArquivo() {
+        when(comunidadeConsulta.ehMembro(COMUNIDADE_ID, USUARIO_ID)).thenReturn(false);
+
+        assertCodigo(403, "NAO_E_MEMBRO", () -> service.criar(USUARIO_ID, COMUNIDADE_ID, "oi", 99L));
+        verifyNoInteractions(midiaAssociacao);
+    }
+
+    @Test
+    void erroAoReivindicarPropagaENadaEPersistido() {
+        doThrow(ApiException.naoEncontrado("ARQUIVO_NAO_ENCONTRADO", "Arquivo não encontrado.", null))
+                .when(midiaAssociacao).reivindicar(99L, USUARIO_ID, FinalidadeArquivo.ANEXO_POSTAGEM);
+
+        assertCodigo(404, "ARQUIVO_NAO_ENCONTRADO", () -> service.criar(USUARIO_ID, COMUNIDADE_ID, "oi", 99L));
+        verify(repository, never()).persist(any(Publicacao.class));
+    }
+
+    @Test
+    void arquivoEmUsoDa409() {
+        doThrow(ApiException.conflito("ARQUIVO_EM_USO", "Arquivo já em uso.", null))
+                .when(midiaAssociacao).reivindicar(99L, USUARIO_ID, FinalidadeArquivo.ANEXO_POSTAGEM);
+
+        assertCodigo(409, "ARQUIVO_EM_USO", () -> service.criar(USUARIO_ID, COMUNIDADE_ID, "oi", 99L));
         verify(repository, never()).persist(any(Publicacao.class));
     }
 

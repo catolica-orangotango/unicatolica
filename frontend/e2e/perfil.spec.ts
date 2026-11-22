@@ -2,6 +2,7 @@ import { expect, test } from '@playwright/test';
 import {
   mockComunidadeComFeed,
   mockCursosOk,
+  mockEnviarArquivo,
   mockFeedOk,
   mockMeuPerfil,
   mockPerfilDeUsuario,
@@ -80,4 +81,42 @@ test('clicar no autor de uma postagem abre o perfil dele, somente leitura', asyn
   await expect(page.getByText('5º semestre')).toBeVisible();
   await expect(page.getByText('Xadrez')).toBeVisible();
   await expect(page.getByRole('button', { name: 'Editar perfil' })).toHaveCount(0);
+});
+
+test('envia e remove a foto de perfil; o foco volta a "Alterar foto" ao remover', async ({ page }) => {
+  const enviados = await mockEnviarArquivo(page);
+  const { fotos } = await mockMeuPerfil(page, {
+    usuarioId: 1,
+    nome: 'Usuário Teste',
+    curso: { id: 14, nome: 'Engenharia de Software' },
+    periodo: 3,
+    interesses: [],
+    fotoUrl: null,
+  });
+  await page.goto('/perfil');
+  await expect(page.getByRole('button', { name: 'Remover foto' })).toHaveCount(0);
+
+  // PDF é recusado no navegador, com os formatos aceitos.
+  await page.locator('input[type="file"]').setInputFiles({
+    name: 'edital.pdf',
+    mimeType: 'application/pdf',
+    buffer: Buffer.from('%PDF-1.4'),
+  });
+  await expect(page.getByRole('alert')).toContainText('PNG ou JPEG');
+  expect(enviados).toHaveLength(0);
+
+  await page.locator('input[type="file"]').setInputFiles({
+    name: 'eu.png',
+    mimeType: 'image/png',
+    buffer: Buffer.from('png'),
+  });
+  await expect(page.getByText('Foto atualizada')).toBeVisible();
+  await expect(page.locator('app-perfil-cartao uc-avatar img')).toBeVisible();
+  expect(enviados).toEqual([{ finalidade: 'FOTO_PERFIL', nome: 'eu.png' }]);
+  expect(fotos).toEqual([{ metodo: 'PUT', arquivoId: 500 }]);
+
+  await page.getByRole('button', { name: 'Remover foto' }).click();
+  await expect(page.locator('app-perfil-cartao uc-avatar img')).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Alterar foto' })).toBeFocused();
+  expect(fotos.at(-1)).toEqual({ metodo: 'DELETE' });
 });

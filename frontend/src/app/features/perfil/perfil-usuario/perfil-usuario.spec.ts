@@ -31,6 +31,7 @@ describe('PerfilUsuario', () => {
       curso: { id: 1, nome: 'Administração' },
       periodo: 5,
       interesses: ['Xadrez'],
+      fotoUrl: null,
     });
     f.detectChanges();
 
@@ -48,7 +49,7 @@ describe('PerfilUsuario', () => {
     const f = await montar('51');
     httpMock
       .expectOne(`${API_BASE_URL}/usuarios/51/perfil`)
-      .flush({ usuarioId: 51, nome: 'Carla', curso: null, periodo: null, interesses: [] });
+      .flush({ usuarioId: 51, nome: 'Carla', curso: null, periodo: null, interesses: [], fotoUrl: null });
     f.detectChanges();
 
     const el = f.nativeElement as HTMLElement;

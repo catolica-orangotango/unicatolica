@@ -3,6 +3,10 @@ package br.edu.unicatolica.pacext.perfil.aplicacao;
 import br.edu.unicatolica.pacext.compartilhado.erro.ApiException;
 import br.edu.unicatolica.pacext.identidade.DadosCadastrais;
 import br.edu.unicatolica.pacext.identidade.UsuarioCadastro;
+import br.edu.unicatolica.pacext.midia.ArquivoAnexado;
+import br.edu.unicatolica.pacext.midia.FinalidadeArquivo;
+import br.edu.unicatolica.pacext.midia.MidiaAssociacao;
+import br.edu.unicatolica.pacext.midia.MidiaConsulta;
 import br.edu.unicatolica.pacext.notificacoes.NotificacaoEmissor;
 import br.edu.unicatolica.pacext.notificacoes.TipoNotificacao;
 import br.edu.unicatolica.pacext.perfil.dominio.PerfilAcademico;
@@ -38,6 +42,12 @@ public class PerfilService {
 
     @Inject
     NotificacaoEmissor notificacaoEmissor;
+
+    @Inject
+    MidiaAssociacao midiaAssociacao;
+
+    @Inject
+    MidiaConsulta midiaConsulta;
 
     /** Story 4.2 (RF20) — sem perfil acadêmico ainda, devolve período nulo e interesses vazio. */
     public PerfilCompleto obter(Long usuarioId) {
@@ -83,6 +93,34 @@ public class PerfilService {
         return montar(dados, Optional.of(perfil));
     }
 
+    /**
+     * Foto de perfil (KAN-128): o arquivo vem de {@code POST /arquivos} com finalidade
+     * {@code FOTO_PERFIL}. Reivindica primeiro — se falhar (404/409), a foto atual fica como
+     * está — e só então grava e libera a anterior, tudo na mesma transação.
+     */
+    @Transactional
+    public PerfilCompleto definirFoto(Long usuarioId, Long arquivoId) {
+        if (arquivoId == null) {
+            throw ApiException.validacao("CAMPO_OBRIGATORIO", "Informe o arquivo da foto.", "arquivoId");
+        }
+        midiaAssociacao.reivindicar(arquivoId, usuarioId, FinalidadeArquivo.FOTO_PERFIL);
+        liberarSePreciso(usuarioCadastro.atualizarFoto(usuarioId, arquivoId));
+        return obter(usuarioId);
+    }
+
+    /** Remove a foto; idempotente (sem foto, nada a liberar). */
+    @Transactional
+    public PerfilCompleto removerFoto(Long usuarioId) {
+        liberarSePreciso(usuarioCadastro.atualizarFoto(usuarioId, null));
+        return obter(usuarioId);
+    }
+
+    private void liberarSePreciso(Long arquivoAnteriorId) {
+        if (arquivoAnteriorId != null) {
+            midiaAssociacao.liberar(arquivoAnteriorId);
+        }
+    }
+
     private void validarNome(String nome) {
         if (nome == null || nome.isBlank()) {
             throw ApiException.validacao("CAMPO_OBRIGATORIO", "Informe seu nome.", "nome");
@@ -125,13 +163,18 @@ public class PerfilService {
         return new ArrayList<>(porChave.values());
     }
 
-    private static PerfilCompleto montar(DadosCadastrais dados, Optional<PerfilAcademico> perfil) {
+    private PerfilCompleto montar(DadosCadastrais dados, Optional<PerfilAcademico> perfil) {
         // perfil_interesse não guarda ordem: devolve em ordem alfabética para a resposta ser estável.
         List<String> interesses = perfil.map(p -> p.interesses.stream()
                         .sorted(Comparator.comparing(i -> i.toLowerCase(Locale.ROOT)))
                         .toList())
                 .orElse(List.of());
+        String fotoUrl = null;
+        if (dados.fotoArquivoId() != null) {
+            ArquivoAnexado foto = midiaConsulta.resolver(List.of(dados.fotoArquivoId())).get(dados.fotoArquivoId());
+            fotoUrl = foto == null ? null : foto.url();
+        }
         return new PerfilCompleto(dados.usuarioId(), dados.nome(), dados.cursoId(), dados.cursoNome(),
-                perfil.map(p -> p.periodo).orElse(null), interesses);
+                perfil.map(p -> p.periodo).orElse(null), interesses, fotoUrl);
     }
 }

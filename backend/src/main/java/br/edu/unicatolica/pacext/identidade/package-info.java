@@ -11,8 +11,10 @@
  * <p><b>API pública</b> (raiz do pacote): {@link br.edu.unicatolica.pacext.identidade.UsuarioConsulta}
  * e {@link br.edu.unicatolica.pacext.identidade.UsuarioResumo} (leitura em lote), e
  * {@link br.edu.unicatolica.pacext.identidade.UsuarioCadastro} com
- * {@link br.edu.unicatolica.pacext.identidade.DadosCadastrais} (nome e curso, lidos e
- * gravados pelo Perfil Acadêmico). Também implementa
+ * {@link br.edu.unicatolica.pacext.identidade.DadosCadastrais} (nome, curso e foto, lidos e
+ * gravados pelo Perfil Acadêmico). A foto de perfil é só a coluna {@code usuario.foto_arquivo_id}
+ * (id do arquivo em {@code midia}, sem FK), gravada por {@code UsuarioCadastro.atualizarFoto} e
+ * exposta como {@code fotoArquivoId} em {@code UsuarioResumo}/{@code DadosCadastrais}. Também implementa
  * {@code compartilhado.seguranca.SessaoConsulta}, usada pelo filtro de logout.</p>
  *
  * <p><b>Eventos que dispara</b> (CDI, síncronos, na transação de quem dispara):

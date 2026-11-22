@@ -10,20 +10,6 @@
   margin-bottom: var(--uc-space-section-gap);
 }
 
-.cartao__avatar {
-  flex-shrink: 0;
-  width: calc(var(--uc-space-unit) * 14);
-  height: calc(var(--uc-space-unit) * 14);
-  border-radius: var(--uc-radius-full);
-  background: var(--uc-color-maroon);
-  color: var(--uc-color-surface);
-  font-size: var(--uc-font-size-greeting);
-  font-weight: var(--uc-font-weight-semibold);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
 .cartao__nome {
   margin: 0;
   font-size: var(--uc-font-size-greeting);

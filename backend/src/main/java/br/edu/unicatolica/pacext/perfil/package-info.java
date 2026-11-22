@@ -12,6 +12,14 @@
  * auto-join pelo evento {@code identidade.CursoDoUsuarioAlterado}. Ainda não publica
  * interface na raiz.</p>
  *
+ * <p>Foto de perfil (KAN-128): {@code PUT}/{@code DELETE /perfil/me/foto}
+ * ({@code web.FotoPerfilResource}). O arquivo vem de {@code POST /arquivos} (módulo {@code midia})
+ * com finalidade {@code FOTO_PERFIL}; {@code PerfilService} reivindica-o por
+ * {@code midia.MidiaAssociacao}, grava só o id por {@code identidade.UsuarioCadastro.atualizarFoto}
+ * (coluna {@code usuario.foto_arquivo_id}, de Identidade) e libera o arquivo anterior. A
+ * {@code fotoUrl} do perfil é resolvida por {@code midia.MidiaConsulta}; visível a qualquer
+ * autenticado.</p>
+ *
  * <p>Desde a Story 10.1 (RF20.1), também depende de {@code notificacoes.NotificacaoEmissor}:
  * {@code aplicacao.NotificarPerfilIncompletoNoLogin} observa {@code identidade.LoginRealizado}
  * e pede um aviso de onboarding a partir do 2º login sem interesses cadastrados;

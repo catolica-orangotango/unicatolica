@@ -1,5 +1,5 @@
 import { Component, input } from '@angular/core';
-import { UcCard } from '../../../ui';
+import { UcAvatar, UcCard } from '../../../ui';
 import { iniciais } from '../../publicacoes/tempo-relativo';
 import { Perfil } from '../perfil.service';
 
@@ -9,7 +9,7 @@ import { Perfil } from '../perfil.service';
  */
 @Component({
   selector: 'app-perfil-cartao',
-  imports: [UcCard],
+  imports: [UcAvatar, UcCard],
   templateUrl: './perfil-cartao.html',
   styleUrl: './perfil-cartao.scss',
 })

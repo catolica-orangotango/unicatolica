@@ -13,6 +13,9 @@ Problemas conhecidos que ainda não têm história nem PR. Quando um item virar 
 | DT-10 | Coluna lateral vazia até uma tela registrar conteúdo | Aberta, depende do KAN-93 |
 | DT-11 | Contratos implícitos do `UcInput` (id) e do `UcMenu` (`gatilho`) | Aberta, sem história ainda |
 | DT-12 | Painel de notificações do desktop empurra o menu lateral | Aberta, sem história ainda |
+| DT-15 | Mídia: limitações conhecidas do MVP | Aberta, sem história ainda |
+| DT-16 | Mídia: URLs assinadas expiram em 10 minutos | Aberta, sem história ainda |
+| DT-17 | Mídia: moderador não vê o anexo da postagem denunciada | Aberta, sem história ainda |
 
 ## DT-4. E-mail de confirmação do cadastro não chega ao usuário
 
@@ -104,3 +107,32 @@ Problemas conhecidos que ainda não têm história nem PR. Quando um item virar 
 - **Hoje:** `log_auditoria` só cresce, e a tela do KAN-90 só consulta. Sem política de retenção, arquivamento ou exportação (fora do escopo do KAN-90).
 - **Correção esperada:** definir retenção e exportação quando o volume preocupar (referência: a meta de 100 mil registros do RNF83.1) e rever os índices de `infraestrutura-002`.
 - **Prazo:** quando o volume de produção chegar perto de 100 mil registros. **Estado:** sem história ainda.
+
+## DT-15. Mídia: limitações conhecidas do MVP
+
+- **Hoje:** o KAN-128 entregou anexo de postagem e foto de perfil com estas lacunas aceitas:
+  1. **Arquivo órfão:** arquivo enviado e nunca associado a uma postagem ou ao perfil (usuário desistiu da postagem, ou a criação falhou depois do upload) continua no bucket e na tabela `arquivo`; nada limpa. Foto substituída ou removida não entra aqui: `PerfilService.definirFoto`/`removerFoto` chamam `MidiaServiceImpl.liberar`, que apaga o objeto e a linha.
+  2. **Um anexo por postagem** e sem miniaturas: o card carrega a imagem original (até 2 MB). O mesmo vale para a foto de perfil: avatares de 34 px baixam o original, e a URL assinada é refeita a cada requisição, então o navegador nunca reaproveita o cache.
+  3. **Limite de corpo global:** `quarkus.http.limits.max-body-size=6M` vale para toda a API, não só para `POST /arquivos`. Cliente que não manda `Expect: 100-continue` pode ver a conexão cair (reset) em corpo acima de 6 MB em vez do 400; por isso o front valida o tamanho antes de enviar. O `LimiteDeCorpoHandler` só intercepta corpo com `Content-Length`: corpo chunked (sem esse cabeçalho) acima do limite cai no 413 puro do Quarkus ou no reset de conexão. Os códigos `CORPO_MUITO_GRANDE` do handler constam só na descrição de erro compartilhada do contrato.
+  4. **Upload dentro da transação:** `ArquivoService` grava no S3 dentro da transação do banco (troca consciente, por simplicidade). Falha do banco depois do upload deixa objeto órfão, e a transação fica aberta durante a chamada de rede. O mesmo vale para a remoção: `MidiaServiceImpl.liberar`, chamado por `PerfilService.definirFoto`, apaga o objeto antigo dentro da transação ainda aberta; se o commit falhar depois, o banco desfaz mas o objeto já se foi (a foto anterior fica com URL quebrada).
+  5. **Foto não aparece em todo lugar:** a barra superior e o avatar do feed da Home ainda usam iniciais, porque `/usuarios/me` não devolve `fotoUrl`. Autores em Enquetes e Moderação também não têm `fotoUrl`.
+  6. **`docker-compose up` não tem S3:** o compose desliga o Dev Services e não configura armazenamento, então `POST /arquivos` responde 500 nesse modo (o resto funciona). Use `quarkus:dev` no host, ou aponte `ARMAZENAMENTO_*` e `QUARKUS_S3_PATH_STYLE_ACCESS=true` para um MinIO próprio.
+  7. **Docker obrigatório e imagem grande:** `quarkus:dev`, `./mvnw test` e o job "E2E backend" do CI sobem LocalStack (cerca de 400 MB no primeiro pull).
+- **Correção esperada:**
+  1. Rotina periódica que apaga arquivo com `em_uso=false` mais velho que um prazo.
+  2. Lista de anexos por postagem e geração de miniaturas, se o produto pedir. Para o cache das fotos, arredondar o instante da assinatura a uma janela (a URL repete dentro dela) ou um endpoint de redirecionamento com `Cache-Control`.
+  3. Limitar o corpo só em `/arquivos` (ou tratar o reset) e, se valer, mover o upload para depois do commit, com compensação (e apagar o objeto antigo só depois do commit em `liberar`). Para corpo chunked, limite no nível do servidor.
+  4. Devolver `fotoUrl` em `/usuarios/me` e nos autores de enquetes e moderação; decidir se o compose ganha um serviço MinIO.
+- **Prazo:** sem prazo; a limpeza de órfãos antes de o bucket pesar no plano gratuito. **Estado:** sem história ainda.
+
+## DT-16. Mídia: URLs assinadas expiram em 10 minutos
+
+- **Hoje:** `midia.url-validade-minutos` vale 10. Um feed deixado aberto por mais tempo mostra links de PDF mortos e imagens de anexo quebradas até recarregar a lista.
+- **Correção esperada:** (a) endpoint `GET /arquivos/{id}/conteudo` que confere o acesso e responde 302 para uma URL assinada nova (exige mudança de contrato); ou (b) o front refazer a busca/tentar de novo ao falhar; ou (c) validade maior, como 60 minutos (uma propriedade; testes e docs fixam 10).
+- **Prazo:** sem prazo. **Estado:** sem história ainda.
+
+## DT-17. Mídia: moderador não vê o anexo da postagem denunciada
+
+- **Hoje:** `PublicacaoModeravel`/`PublicacaoModeracao` não carregam `arquivoId` e `features/moderacao` não renderiza anexo; o moderador julga só pelo texto.
+- **Correção esperada:** incluir `arquivoId` em `PublicacaoModeravel`, resolver pela `midia.MidiaConsulta` no resource de moderação, atualizar o contrato e as telas de moderação. Precisa de ticket próprio.
+- **Prazo:** sem prazo; antes de a moderação depender de anexos. **Estado:** sem história ainda.

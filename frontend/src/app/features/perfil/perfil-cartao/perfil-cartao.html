@@ -1,6 +1,6 @@
 <uc-card class="cartao">
   <div class="cartao__topo">
-    <span class="cartao__avatar" aria-hidden="true">{{ iniciais(perfil().nome) }}</span>
+    <uc-avatar class="cartao__avatar" tamanho="lg" cor="marca" [iniciais]="iniciais(perfil().nome)" [fotoUrl]="perfil().fotoUrl" />
     <h1 class="cartao__nome">{{ perfil().nome }}</h1>
   </div>
 

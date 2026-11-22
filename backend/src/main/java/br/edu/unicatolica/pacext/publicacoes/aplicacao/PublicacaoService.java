@@ -3,6 +3,8 @@ package br.edu.unicatolica.pacext.publicacoes.aplicacao;
 import br.edu.unicatolica.pacext.comunidades.ComunidadeConsulta;
 import br.edu.unicatolica.pacext.compartilhado.erro.ApiException;
 import br.edu.unicatolica.pacext.compartilhado.paginacao.PageResponse;
+import br.edu.unicatolica.pacext.midia.FinalidadeArquivo;
+import br.edu.unicatolica.pacext.midia.MidiaAssociacao;
 import br.edu.unicatolica.pacext.publicacoes.dominio.Publicacao;
 import br.edu.unicatolica.pacext.publicacoes.dominio.PublicacaoRepository;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -26,16 +28,28 @@ public class PublicacaoService {
     @Inject
     ComunidadeConsulta comunidadeConsulta;
 
-    /** Story 3.1 (RF32–RF35) — autor é sempre quem está autenticado; só membro publica (RF27.1). */
+    @Inject
+    MidiaAssociacao midiaAssociacao;
+
+    /**
+     * Story 3.1 (RF32–RF35) — autor é sempre quem está autenticado; só membro publica (RF27.1).
+     * O anexo opcional só é reivindicado depois de comunidade e participação passarem, na mesma
+     * transação: se a reivindicação falhar (404/409), nada é gravado.
+     */
     @Transactional
-    public Publicacao criar(Long usuarioId, Long comunidadeId, String conteudo) {
+    public Publicacao criar(Long usuarioId, Long comunidadeId, String conteudo, Long arquivoId) {
         String texto = validarConteudo(conteudo);
         garantirComunidadeExiste(comunidadeId);
         if (!comunidadeConsulta.ehMembro(comunidadeId, usuarioId)) {
             throw ApiException.semPermissao("NAO_E_MEMBRO", "Só membros da comunidade podem publicar nela.", null);
         }
 
+        if (arquivoId != null) {
+            midiaAssociacao.reivindicar(arquivoId, usuarioId, FinalidadeArquivo.ANEXO_POSTAGEM);
+        }
+
         Publicacao publicacao = new Publicacao();
+        publicacao.arquivoId = arquivoId;
         publicacao.comunidadeId = comunidadeId;
         publicacao.autorUsuarioId = usuarioId;
         publicacao.conteudo = texto;

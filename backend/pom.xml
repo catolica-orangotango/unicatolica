@@ -27,6 +27,15 @@
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
+            <dependency>
+                <!-- Membro da plataforma Quarkus para as extensões Quarkiverse Amazon Services
+                     (S3 do módulo midia): mesma versão da plataforma, versões gerenciadas aqui. -->
+                <groupId>${quarkus.platform.group-id}</groupId>
+                <artifactId>quarkus-amazon-services-bom</artifactId>
+                <version>${quarkus.platform.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
@@ -90,6 +99,18 @@
             <groupId>at.favre.lib</groupId>
             <artifactId>bcrypt</artifactId>
             <version>0.10.2</version>
+        </dependency>
+        <dependency>
+            <!-- Armazenamento de objetos S3-compatível do módulo midia (anexos e foto de perfil).
+                 Em dev/teste o Dev Services sobe um S3 local (LocalStack); em produção o
+                 provedor entra só por variáveis de ambiente. -->
+            <groupId>io.quarkiverse.amazonservices</groupId>
+            <artifactId>quarkus-amazon-s3</artifactId>
+        </dependency>
+        <dependency>
+            <!-- Cliente HTTP síncrono exigido pela extensão S3 (sync-client.type=url, padrão). -->
+            <groupId>software.amazon.awssdk</groupId>
+            <artifactId>url-connection-client</artifactId>
         </dependency>
         <dependency>
             <groupId>io.quarkus</groupId>

@@ -100,20 +100,6 @@
   margin-bottom: calc(var(--uc-space-unit) * 2.5);
 }
 
-.feed__avatar {
-  flex-shrink: 0;
-  width: calc(var(--uc-space-unit) * 9);
-  height: calc(var(--uc-space-unit) * 9);
-  border-radius: var(--uc-radius-full);
-  background: var(--uc-color-maroon);
-  color: var(--uc-color-surface);
-  font-size: var(--uc-font-size-meta);
-  font-weight: var(--uc-font-weight-semibold);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
 .feed__meta {
   display: flex;
   flex-direction: column;
@@ -197,4 +183,48 @@
   margin-top: calc(var(--uc-space-unit) * 3);
   padding-top: calc(var(--uc-space-unit) * 3);
   border-top: 1px solid var(--uc-color-border);
+}
+
+// Anexo (KAN-128): o <input type="file"> fica fora da tela e o botão "Anexar arquivo" o aciona.
+.feed__arquivo {
+  display: none;
+}
+
+.feed__anexar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: calc(var(--uc-space-unit) * 2);
+  margin-top: calc(var(--uc-space-unit) * 2.5);
+}
+
+.feed__anexar-botao {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--uc-space-unit);
+  color: var(--uc-color-ink-soft);
+}
+
+.feed__anexo-nome {
+  color: var(--uc-color-ink);
+  overflow-wrap: anywhere;
+}
+
+.feed__anexo-imagem {
+  display: block;
+  // layout-literal: a imagem nunca passa da largura do cartão
+  max-width: 100%;
+  max-height: calc(var(--uc-space-unit) * 80);
+  margin-top: calc(var(--uc-space-unit) * 3);
+  border-radius: var(--uc-radius-sm);
+  border: 1px solid var(--uc-color-border);
+}
+
+.feed__anexo-link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--uc-space-unit);
+  margin-top: calc(var(--uc-space-unit) * 3);
+  color: var(--uc-color-ink);
+  overflow-wrap: anywhere;
 }

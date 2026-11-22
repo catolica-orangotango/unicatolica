@@ -11,6 +11,7 @@ import {
   mockCursosAdmin,
   mockFeedOk,
   mockMeuPerfil,
+  FOTO_PIXEL,
   mockMinhasComunidades,
   mockModeracao,
   mockPerfilDeUsuario,
@@ -216,6 +217,46 @@ for (const viewport of [VIEWPORT_DESKTOP, VIEWPORT_CELULAR]) {
         await esperarSemViolacoes(page);
       });
 
+      test('detalhe da comunidade com anexo escolhido e postagens com imagem e PDF', async ({ page }) => {
+        const autor = { id: 2, nome: 'Maria Souza', curso: 'Direito' };
+        const criadoEm = new Date(Date.now() - 3_600_000).toISOString();
+        const pixel =
+          'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
+        await mockComunidadeComFeed(page, {
+          id: 27,
+          nome: 'Xadrez',
+          tipo: 'ABERTA',
+          souMembro: true,
+          publicacoes: [
+            {
+              id: 1,
+              comunidadeId: 27,
+              autor,
+              conteudo: 'Tabuleiro novo',
+              criadoEm,
+              anexo: { id: 1, nome: 'tabuleiro.png', tipo: 'image/png', tamanho: 4, url: pixel },
+            },
+            {
+              id: 2,
+              comunidadeId: 27,
+              autor,
+              conteudo: 'Regulamento do torneio',
+              criadoEm,
+              anexo: { id: 2, nome: 'regulamento.pdf', tipo: 'application/pdf', tamanho: 4, url: 'http://localhost:8080/arquivos-mock/2' },
+            },
+          ],
+        });
+        await page.goto('/comunidades/27');
+        await page.locator('input[type="file"]').setInputFiles({
+          name: 'edital.pdf',
+          mimeType: 'application/pdf',
+          buffer: Buffer.from('%PDF-1.4'),
+        });
+        await expect(page.getByRole('button', { name: 'Remover anexo' })).toBeVisible();
+        await expect(page.getByRole('link', { name: 'regulamento.pdf' })).toBeVisible();
+        await esperarSemViolacoes(page);
+      });
+
       test('meu perfil, editando e salvo', async ({ page }) => {
         await mockMeuPerfil(page, {
           usuarioId: 1,
@@ -235,6 +276,29 @@ for (const viewport of [VIEWPORT_DESKTOP, VIEWPORT_CELULAR]) {
         await page.getByRole('button', { name: 'Adicionar' }).click();
         await page.getByRole('button', { name: 'Salvar' }).click();
         await expect(page.getByRole('button', { name: 'Editar perfil' })).toBeVisible();
+        await esperarSemViolacoes(page);
+      });
+
+      test('meu perfil com foto, e depois do erro de formato', async ({ page }) => {
+        await mockMeuPerfil(page, {
+          usuarioId: 1,
+          nome: 'Usuário Teste',
+          curso: { id: 14, nome: 'Engenharia de Software' },
+          periodo: 3,
+          interesses: ['Java'],
+          fotoUrl: FOTO_PIXEL,
+        });
+        await page.goto('/perfil');
+        await expect(page.getByRole('button', { name: 'Remover foto' })).toBeVisible();
+        await expect(page.locator('app-perfil-cartao uc-avatar img')).toBeVisible();
+        await esperarSemViolacoes(page);
+
+        await page.locator('input[type="file"]').setInputFiles({
+          name: 'edital.pdf',
+          mimeType: 'application/pdf',
+          buffer: Buffer.from('%PDF-1.4'),
+        });
+        await expect(page.getByRole('alert')).toContainText('PNG ou JPEG');
         await esperarSemViolacoes(page);
       });
 

@@ -1,5 +1,6 @@
 // Avatar de iniciais (KAN-91), conforme .av e .sq de docs/design/kan-84/base.css.
 :host {
+  overflow: hidden;
   display: grid;
   place-items: center;
   flex: none;
@@ -70,4 +71,12 @@
 :host(.uc-avatar--violeta) {
   background: var(--uc-color-avatar-violet-bg);
   color: var(--uc-color-avatar-violet);
+}
+
+.uc-avatar__foto {
+  // layout-literal: a foto preenche o círculo do avatar, seja qual for o tamanho
+  width: 100%;
+  // layout-literal: a foto preenche o círculo do avatar, seja qual for o tamanho
+  height: 100%;
+  object-fit: cover;
 }

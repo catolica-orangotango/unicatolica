@@ -108,3 +108,21 @@ Não estão no `.env.example`.
 | `EMAIL_DOMINIO_INSTITUCIONAL` | Tem padrão | `catolicasc.edu.br` | Domínio de e-mail aceito no cadastro. |
 | `SENHA_TAMANHO_MINIMO` | Tem padrão | `8` | Tamanho mínimo da senha. |
 | `CONFIRMACAO_TOKEN_VALIDADE_HORAS` | Tem padrão | `24` | Validade do link de confirmação, em horas. |
+
+
+## 6. Armazenamento de arquivos (anexo de postagem e foto de perfil)
+
+Em dev no host e nos testes, o Quarkus Dev Services sobe sozinho um S3 local (LocalStack, precisa do Docker; a imagem tem cerca de 400 MB no primeiro download) e cria o bucket `pacext-midia`. Não precisa de nenhuma variável. Em **produção** as cinco primeiras variáveis abaixo são obrigatórias: o backend não sobe sem elas. Decisão e checklist de quem faz o deploy em [`decisoes/2026-11-21-armazenamento-de-arquivos.md`](decisoes/2026-11-21-armazenamento-de-arquivos.md).
+
+| Variável | Situação | Valor para rodar local | O que é / produção |
+|---|---|---|---|
+| `ARMAZENAMENTO_ENDPOINT` | Obrigatória em produção | Não definir (Dev Services) | URL S3 do provedor. R2: `https://<conta>.r2.cloudflarestorage.com`. |
+| `ARMAZENAMENTO_REGIAO` | Obrigatória em produção | Não definir | Região do bucket. R2: `auto`. |
+| `ARMAZENAMENTO_BUCKET` | Obrigatória em produção | Não definir (local: `pacext-midia`) | Nome do bucket, que deve ser **privado**. |
+| `ARMAZENAMENTO_ACCESS_KEY` | Obrigatória em produção | Não definir | Chave de acesso do token restrito ao bucket. Segredo. |
+| `ARMAZENAMENTO_SECRET_KEY` | Obrigatória em produção | Não definir | Chave secreta do mesmo token. Segredo. |
+| `QUARKUS_S3_PATH_STYLE_ACCESS` | Opcional | Já ligado em dev e teste | `true` só se o provedor exigir endereço path-style (MinIO). R2, B2 e S3 funcionam sem. |
+
+Limites de tamanho e validade da URL assinada (PDF 5 MB, imagem 2 MB, URL válida por 10 minutos) ficam em `midia.*` no `application.properties` e não são variáveis de ambiente.
+
+O `docker-compose up` desliga o Dev Services e não configura S3: o envio de arquivo responde 500 nesse modo. Ver [DT-15](dividas-tecnicas.md#dt-15-mídia-limitações-conhecidas-do-mvp).

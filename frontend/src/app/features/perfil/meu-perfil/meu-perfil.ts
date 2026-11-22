@@ -1,13 +1,19 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, ElementRef, inject, signal, viewChild } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { forkJoin } from 'rxjs';
+import { forkJoin, switchMap } from 'rxjs';
 import { ToastService, UcButton } from '../../../ui';
 import { ComunidadesService } from '../../comunidades/comunidades.service';
 import { Curso, CursoService } from '../../identidade/curso.service';
+import { MidiaService, mensagemDoServidor, validarArquivo } from '../../midia/midia.service';
 import { NotificacoesService } from '../../notificacoes/notificacoes.service';
 import { PerfilCartao } from '../perfil-cartao/perfil-cartao';
 import { LIMITES_PERFIL, Perfil, PerfilService } from '../perfil.service';
+
+
+function mensagemDeErroDaFoto(erro: HttpErrorResponse, acao: 'atualizar' | 'remover'): string {
+  return mensagemDoServidor(erro, `Não foi possível ${acao} sua foto agora. Tente novamente em instantes.`);
+}
 
 /**
  * Próprio perfil acadêmico — rota `/perfil`, aberta pelo menu da conta. Mostra o perfil
@@ -25,6 +31,7 @@ export class MeuPerfil {
   private readonly cursoService = inject(CursoService);
   private readonly comunidadesService = inject(ComunidadesService);
   private readonly notificacoesService = inject(NotificacoesService);
+  private readonly midiaService = inject(MidiaService);
   private readonly toastService = inject(ToastService);
   private readonly formBuilder = inject(FormBuilder);
 
@@ -38,6 +45,11 @@ export class MeuPerfil {
   protected readonly editando = signal(false);
   protected readonly salvando = signal(false);
   protected readonly erroSalvar = signal<string | null>(null);
+
+  protected readonly erroFoto = signal<string | null>(null);
+  protected readonly enviandoFoto = signal(false);
+  protected readonly removendoFoto = signal(false);
+  private readonly botaoAlterarFoto = viewChild<ElementRef<HTMLButtonElement>>('botaoAlterarFoto');
 
   protected readonly interesses = signal<string[]>([]);
   protected readonly avisoInteresse = signal<string | null>(null);
@@ -76,6 +88,54 @@ export class MeuPerfil {
       error: () => {
         this.carregando.set(false);
         this.erroCarregar.set('Não foi possível carregar seu perfil agora. Tente novamente em instantes.');
+      },
+    });
+  }
+
+  /** Foto de perfil (KAN-128): só PNG/JPEG até 2 MB; envia com `FOTO_PERFIL` e depois define a foto. */
+  protected escolherFoto(evento: Event): void {
+    const input = evento.target as HTMLInputElement;
+    const arquivo = input.files?.[0];
+    input.value = ''; // permite escolher o mesmo arquivo de novo
+    if (!arquivo) {
+      return;
+    }
+    const erro = validarArquivo(arquivo, 'FOTO_PERFIL');
+    this.erroFoto.set(erro);
+    if (erro !== null) {
+      return;
+    }
+    this.enviandoFoto.set(true);
+    this.midiaService
+      .enviar(arquivo, 'FOTO_PERFIL')
+      .pipe(switchMap((enviado) => this.perfilService.definirFoto(enviado.id)))
+      .subscribe({
+        next: (perfil) => {
+          this.perfil.set(perfil);
+          this.enviandoFoto.set(false);
+          this.toastService.mostrar('Foto atualizada');
+        },
+        error: (erro: HttpErrorResponse) => {
+          this.enviandoFoto.set(false);
+          this.erroFoto.set(mensagemDeErroDaFoto(erro, 'atualizar'));
+        },
+      });
+  }
+
+  protected removerFoto(): void {
+    this.removendoFoto.set(true);
+    this.erroFoto.set(null);
+    this.perfilService.removerFoto().subscribe({
+      next: (perfil) => {
+        this.perfil.set(perfil);
+        this.removendoFoto.set(false);
+        this.toastService.mostrar('Foto removida');
+        // "Remover foto" some: o foco não pode ficar no <body>.
+        this.botaoAlterarFoto()?.nativeElement.focus();
+      },
+      error: (erro: HttpErrorResponse) => {
+        this.removendoFoto.set(false);
+        this.erroFoto.set(mensagemDeErroDaFoto(erro, 'remover'));
       },
     });
   }

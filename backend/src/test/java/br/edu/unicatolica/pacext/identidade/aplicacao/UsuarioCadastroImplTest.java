@@ -56,7 +56,7 @@ class UsuarioCadastroImplTest {
         assertEquals("Ana Lima", usuario.nome);
         assertEquals(14L, usuario.cursoId);
         assertEquals("Engenharia de Software", usuario.cursoNome);
-        assertEquals(new DadosCadastrais(42L, "Ana Lima", 14L, "Engenharia de Software"), dados);
+        assertEquals(new DadosCadastrais(42L, "Ana Lima", 14L, "Engenharia de Software", null), dados);
         verify(evento).fire(new CursoDoUsuarioAlterado(42L, 1L, 14L));
     }
 
@@ -103,7 +103,29 @@ class UsuarioCadastroImplTest {
         usuario.cursoId = null;
         usuario.cursoNome = "nome que sobrou em memória";
 
-        assertEquals(new DadosCadastrais(42L, "Ana", null, null), impl.buscar(42L).orElseThrow());
+        assertEquals(new DadosCadastrais(42L, "Ana", null, null, null), impl.buscar(42L).orElseThrow());
+    }
+
+    @Test
+    void atualizarFotoGravaOIdEDevolveOAnterior() {
+        usuario.fotoArquivoId = 5L;
+
+        assertEquals(5L, impl.atualizarFoto(42L, 9L));
+        assertEquals(9L, usuario.fotoArquivoId);
+        assertEquals(9L, impl.buscar(42L).orElseThrow().fotoArquivoId());
+    }
+
+    @Test
+    void atualizarFotoComNuloRemoveESemAnteriorDevolveNulo() {
+        assertEquals(null, impl.atualizarFoto(42L, null));
+        assertEquals(null, usuario.fotoArquivoId);
+    }
+
+    @Test
+    void atualizarFotoDeUsuarioInexistenteDa404() {
+        ApiException erro = assertThrows(ApiException.class, () -> impl.atualizarFoto(7L, 9L));
+
+        assertEquals("USUARIO_NAO_ENCONTRADO", erro.getCode());
     }
 
     private static Curso curso(Long id, String nome) {

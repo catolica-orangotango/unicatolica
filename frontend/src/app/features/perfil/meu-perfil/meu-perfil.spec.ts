@@ -4,6 +4,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { API_BASE_URL } from '../../../core/config/api.config';
 import { ToastService } from '../../../ui';
 import { NotificacoesService } from '../../notificacoes/notificacoes.service';
+import { MensagemFormatosAceitos } from '../../midia/midia.service';
 import { Perfil } from '../perfil.service';
 import { MeuPerfil } from './meu-perfil';
 
@@ -12,13 +13,14 @@ const CURSOS = [
   { id: 14, nome: 'Engenharia de Software' },
 ];
 
-const SEM_PERFIL: Perfil = { usuarioId: 7, nome: 'Ana Lima', curso: null, periodo: null, interesses: [] };
+const SEM_PERFIL: Perfil = { usuarioId: 7, nome: 'Ana Lima', curso: null, periodo: null, interesses: [], fotoUrl: null };
 const COM_PERFIL: Perfil = {
   usuarioId: 7,
   nome: 'Ana Lima',
   curso: { id: 14, nome: 'Engenharia de Software' },
   periodo: 3,
   interesses: ['Java', 'Robótica'],
+  fotoUrl: null,
 };
 
 describe('MeuPerfil', () => {
@@ -232,6 +234,91 @@ describe('MeuPerfil', () => {
 
     const opcoes = [...(el.querySelector('#cursoId') as HTMLSelectElement).options].map((o) => o.textContent?.trim());
     expect(opcoes).toContain('Curso Antigo');
+  });
+
+  describe('foto de perfil (KAN-128)', () => {
+    const COM_FOTO: Perfil = { ...COM_PERFIL, fotoUrl: 'https://s3.exemplo/foto.png' };
+
+    function escolherFoto(el: HTMLElement, arquivo: File): void {
+      const input = el.querySelector('input[type="file"]') as HTMLInputElement;
+      // jsdom não tem DataTransfer: define `files` direto.
+      Object.defineProperty(input, 'files', { value: [arquivo], configurable: true });
+      input.dispatchEvent(new Event('change'));
+      fixture.detectChanges();
+    }
+
+    const botao = (el: HTMLElement, texto: string) =>
+      [...el.querySelectorAll('button')].find((b) => b.textContent?.trim() === texto);
+
+    it('o seletor aceita só PNG e JPEG', async () => {
+      const el = await montar(COM_PERFIL);
+      expect((el.querySelector('input[type="file"]') as HTMLInputElement).accept).toBe('image/png,image/jpeg');
+    });
+
+    it('escolher imagem envia com finalidade FOTO_PERFIL e depois chama PUT /perfil/me/foto', async () => {
+      const el = await montar(COM_PERFIL);
+
+      escolherFoto(el, new File([new Uint8Array(10)], 'eu.png', { type: 'image/png' }));
+
+      const upload = httpMock.expectOne(`${API_BASE_URL}/arquivos`);
+      expect((upload.request.body as FormData).get('finalidade')).toBe('FOTO_PERFIL');
+      upload.flush({ id: 9, nome: 'eu.png', tipo: 'image/png', tamanho: 10 });
+      const put = httpMock.expectOne(`${API_BASE_URL}/perfil/me/foto`);
+      expect(put.request.method).toBe('PUT');
+      expect(put.request.body).toEqual({ arquivoId: 9 });
+      put.flush(COM_FOTO);
+      fixture.detectChanges();
+
+      expect(el.querySelector('app-perfil-cartao img')?.getAttribute('src')).toBe('https://s3.exemplo/foto.png');
+      expect(toasts).toEqual(['Foto atualizada']);
+    });
+
+    it('PDF é recusado no cliente, com os formatos aceitos, sem chamar a API', async () => {
+      const el = await montar(COM_PERFIL);
+
+      escolherFoto(el, new File([new Uint8Array(10)], 'edital.pdf', { type: 'application/pdf' }));
+
+      expect(el.querySelector('.meu-perfil__erro[role="alert"]')?.textContent).toContain('PNG ou JPEG');
+      expect(MensagemFormatosAceitos).toContain('PDF');
+    });
+
+    it('imagem acima de 2 MB é recusada no cliente', async () => {
+      const el = await montar(COM_PERFIL);
+
+      escolherFoto(el, new File([new Uint8Array(2 * 1024 * 1024 + 1)], 'grande.png', { type: 'image/png' }));
+
+      expect(el.querySelector('.meu-perfil__erro[role="alert"]')?.textContent).toContain('2 MB');
+    });
+
+    it('"Remover foto" só aparece com foto', async () => {
+      const el = await montar(COM_PERFIL);
+      expect(botao(el, 'Remover foto')).toBeUndefined();
+      expect(botao(el, 'Alterar foto')).toBeDefined();
+    });
+
+    it('"Remover foto" chama DELETE e devolve o foco a "Alterar foto"', async () => {
+      const el = await montar(COM_FOTO);
+
+      botao(el, 'Remover foto')!.click();
+      const del = httpMock.expectOne(`${API_BASE_URL}/perfil/me/foto`);
+      expect(del.request.method).toBe('DELETE');
+      del.flush(COM_PERFIL);
+      fixture.detectChanges();
+
+      expect(botao(el, 'Remover foto')).toBeUndefined();
+      expect(el.querySelector('app-perfil-cartao img')).toBeNull();
+      expect(document.activeElement).toBe(botao(el, 'Alterar foto'));
+    });
+
+    it('falha no envio mostra erro em role=alert', async () => {
+      const el = await montar(COM_PERFIL);
+
+      escolherFoto(el, new File([new Uint8Array(10)], 'eu.png', { type: 'image/png' }));
+      httpMock.expectOne(`${API_BASE_URL}/arquivos`).flush({}, { status: 500, statusText: 'Erro' });
+      fixture.detectChanges();
+
+      expect(el.querySelector('.meu-perfil__erro[role="alert"]')?.textContent).toContain('foto');
+    });
   });
 });
 
