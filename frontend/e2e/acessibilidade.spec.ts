@@ -96,6 +96,28 @@ for (const viewport of [VIEWPORT_DESKTOP, VIEWPORT_CELULAR]) {
         await esperarSemViolacoes(page);
       });
 
+      test('início com as publicações da comunidade do curso (KAN-93)', async ({ page }) => {
+        await mockMinhasComunidades(page, [{ id: 14, nome: 'Engenharia de Software', tipo: 'CURSO' }]);
+        await mockComunidadeComFeed(page, {
+          id: 14,
+          nome: 'Engenharia de Software',
+          tipo: 'CURSO',
+          souMembro: true,
+          publicacoes: [
+            {
+              id: 1,
+              comunidadeId: 14,
+              autor: { id: 50, nome: 'Ana Lima', curso: 'Engenharia de Software' },
+              conteudo: 'Prova de Cálculo adiada para sexta.',
+              criadoEm: new Date(Date.now() - 5 * 60_000).toISOString(),
+            },
+          ],
+        });
+        await page.goto('/feed');
+        await expect(page.locator('.feed__post')).toHaveCount(1);
+        await esperarSemViolacoes(page);
+      });
+
       test('gaveta "Suas comunidades" aberta (só no celular)', async ({ page }) => {
         test.skip(viewport.width > 760, 'a gaveta só existe até 760px');
         await page.route(

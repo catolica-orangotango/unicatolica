@@ -14,10 +14,22 @@
       <div class="home__avatar" aria-hidden="true">{{ iniciais() }}</div>
     </div>
 
-    <uc-card class="home__aviso">
-      <p><strong>Publicações chegam em breve.</strong></p>
-      <p>Por enquanto, participe das comunidades do seu curso e descubra outras abertas abaixo.</p>
-    </uc-card>
+    @if (comunidadeDoFeed(); as comunidade) {
+      <section class="home__secao" aria-labelledby="titulo-feed-home">
+        <h2 id="titulo-feed-home">Publicações de {{ comunidade.nome }}</h2>
+        <app-feed-comunidade
+          [comunidadeId]="comunidade.id"
+          [comunidadeNome]="comunidade.nome"
+          [tipo]="comunidade.tipo"
+          [souMembro]="true"
+        />
+      </section>
+    } @else {
+      <uc-card class="home__aviso">
+        <p><strong>Você ainda não participa de nenhuma comunidade.</strong></p>
+        <p>Participe de uma comunidade abaixo para ver e fazer publicações aqui.</p>
+      </uc-card>
+    }
 
     <section class="home__secao">
       <h2>Descubra comunidades</h2>

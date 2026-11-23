@@ -4,6 +4,7 @@ import { forkJoin } from 'rxjs';
 import { Comunidade, ComunidadesService } from '../comunidades/comunidades.service';
 import { Usuario, UsuarioService } from '../identidade/usuario.service';
 import { ToastService, UcBadge, UcButton, UcCard } from '../../ui';
+import { FeedComunidade } from '../publicacoes/feed-comunidade/feed-comunidade';
 
 /** Prefixo da chave de localStorage que marca "já mostrei o toast de auto-join desta comunidade". */
 const CHAVE_TOAST_AUTOJOIN = 'pacext.autojoin-toast.';
@@ -16,14 +17,15 @@ const CHAVE_TOAST_AUTOJOIN = 'pacext.autojoin-toast.';
  * sobre os primitivos oficiais do Design System (Story 14.2: `uc-card`, `uc-badge`,
  * `uc-button`, `uc-member-indicator`) depois que eles aterrissaram na main.
  *
- * Só mostra o que já é real: saudação (RF12), "Suas comunidades" e descoberta de
- * comunidades abertas (Epic 2). O feed de publicações do mockup é fabricado
- * (Publicações é outro Épico, ainda sem backend) — por isso vira um aviso "em breve"
- * em vez de posts inventados.
+ * Mostra a saudação (RF12), as publicações reais da comunidade do curso (KAN-93:
+ * o mesmo `FeedComunidade` da tela da comunidade, com caixa de postar, denúncia e anexo) e a
+ * descoberta de comunidades abertas (Epic 2). Sem comunidade de curso (ex.: administrador sem
+ * curso), usa a primeira comunidade de que o usuário participa; sem nenhuma, mostra um convite
+ * para participar de uma.
  */
 @Component({
   selector: 'app-feed',
-  imports: [RouterLink, UcBadge, UcButton, UcCard],
+  imports: [RouterLink, FeedComunidade, UcBadge, UcButton, UcCard],
   templateUrl: './feed.html',
   styleUrl: './feed.scss',
 })
@@ -36,6 +38,8 @@ export class Feed {
   protected readonly erro = signal<string | null>(null);
   protected readonly usuario = signal<Usuario | null>(null);
   protected readonly descobrir = signal<Comunidade[]>([]);
+  /** Comunidade cujas publicações abrem a Home: a do curso, ou a primeira de que participo. */
+  protected readonly comunidadeDoFeed = signal<Comunidade | null>(null);
   protected readonly ingressandoId = signal<number | null>(null);
 
   protected readonly iniciais = computed(() => {
@@ -66,6 +70,7 @@ export class Feed {
       next: ({ usuario, minhas, abertas }) => {
         const idsQueJaSouMembro = new Set(minhas.map((comunidade) => comunidade.id));
         this.usuario.set(usuario);
+        this.comunidadeDoFeed.set(minhas.find((comunidade) => comunidade.tipo === 'CURSO') ?? minhas[0] ?? null);
         this.descobrir.set(abertas.content.filter((comunidade) => !idsQueJaSouMembro.has(comunidade.id)));
         this.mostrarToastAutoJoinSeNecessario(minhas);
         this.carregando.set(false);
@@ -117,6 +122,8 @@ export class Feed {
       next: () => {
         this.ingressandoId.set(null);
         this.descobrir.update((lista) => lista.filter((item) => item.id !== comunidade.id));
+        // Quem não tinha comunidade passa a ter feed assim que entra na primeira.
+        this.comunidadeDoFeed.update((atual) => atual ?? { ...comunidade, souMembro: true });
         // Cache de "minhas comunidades" (sidebar) já foi atualizada pelo próprio
         // ComunidadesService.ingressar() — nada a fazer aqui além do filtro acima.
       },
