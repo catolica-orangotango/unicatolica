@@ -95,6 +95,16 @@ public class Usuario {
     @Column(name = "foto_arquivo_id")
     public Long fotoArquivoId;
 
+    /**
+     * Aceite dos Termos de Uso e da Política de Privacidade no cadastro (KAN-131): instante e
+     * versão dos textos aceitos. Nulos em conta anterior ao KAN-131.
+     */
+    @Column(name = "termos_aceitos_em")
+    public Instant termosAceitosEm;
+
+    @Column(name = "termos_versao", length = 50)
+    public String termosVersao;
+
     @Column(name = "criado_em", nullable = false)
     public Instant criadoEm;
 
