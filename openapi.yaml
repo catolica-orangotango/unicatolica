@@ -756,6 +756,46 @@ paths:
         '422':
           $ref: '#/components/responses/ErroValidacao'
 
+  /arquivos:
+    post:
+      operationId: enviarArquivo
+      summary: Envia um arquivo (anexo de postagem ou foto de perfil)
+      tags: [Arquivos]
+      description: >
+        multipart/form-data com finalidade e arquivo. O formato é validado pelo conteúdo,
+        não pela extensão. ANEXO_POSTAGEM aceita PDF (até 5 MB), PNG e JPEG (até 2 MB);
+        FOTO_PERFIL aceita só PNG e JPEG (até 2 MB). O arquivo fica do usuário
+        autenticado; o vínculo com a postagem (arquivoId em PublicacaoRequest) ou com o
+        perfil (PUT /perfil/me/foto) é feito em seguida.
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [finalidade, arquivo]
+              properties:
+                finalidade:
+                  type: string
+                  enum: [ANEXO_POSTAGEM, FOTO_PERFIL]
+                arquivo:
+                  type: string
+                  format: binary
+      responses:
+        '201':
+          description: Arquivo recebido.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Arquivo'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        # 400: ARQUIVO_OBRIGATORIO (parte arquivo ausente ou vazia), FORMATO_NAO_SUPORTADO
+        # (tipo fora do permitido para a finalidade), ARQUIVO_MUITO_GRANDE (PDF > 5 MB,
+        # imagem > 2 MB) e FINALIDADE_INVALIDA (ausente ou fora do enum).
+        '400':
+          $ref: '#/components/responses/ErroValidacao'
+
   /comunidades/{id}/publicacoes:
     post:
       operationId: criarPublicacao
@@ -790,10 +830,14 @@ paths:
           $ref: '#/components/responses/NaoAutenticado'
         # 403: usuário não é membro da comunidade (RF27.1). 404: comunidade não existe.
         # 422: conteúdo ausente, em branco ou acima do limite (RF33).
+        # 404 também: ARQUIVO_NAO_ENCONTRADO (arquivoId inexistente, de outro usuário ou de
+        # outra finalidade). 409 ARQUIVO_EM_USO: arquivoId já anexado a outra postagem.
         '403':
           $ref: '#/components/responses/SemPermissao'
         '404':
           $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Conflito'
         '422':
           $ref: '#/components/responses/ErroValidacao'
     get:
@@ -1158,6 +1202,53 @@ paths:
         # fora de 1–12, mais de 10 interesses ou interesse em branco/acima de 50 caracteres.
         '422':
           $ref: '#/components/responses/ErroValidacao'
+
+  /perfil/me/foto:
+    put:
+      operationId: definirMinhaFoto
+      summary: Define a foto de perfil do usuário autenticado a partir de um arquivo enviado
+      tags: [Perfil]
+      description: >
+        O arquivo vem de POST /arquivos com finalidade FOTO_PERFIL (só PNG ou JPEG) e
+        precisa ser do próprio usuário. Substitui a foto anterior, se houver.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FotoPerfilRequest'
+      responses:
+        '200':
+          description: Perfil com fotoUrl preenchida.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Perfil'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        # 404 ARQUIVO_NAO_ENCONTRADO: arquivo inexistente ou de outro usuário (existência oculta).
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        # 409 ARQUIVO_EM_USO: arquivo já em uso (anexo de postagem ou foto de perfil, inclusive a foto atual).
+        '409':
+          $ref: '#/components/responses/Conflito'
+        '422':
+          $ref: '#/components/responses/ErroValidacao'
+    delete:
+      operationId: removerMinhaFoto
+      summary: Remove a foto de perfil do usuário autenticado
+      tags: [Perfil]
+      description: >
+        Idempotente: sem foto, também responde 200. O perfil volta com fotoUrl null.
+      responses:
+        '200':
+          description: Perfil sem foto.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Perfil'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
 
   /usuarios/{id}/perfil:
     get:
@@ -1802,12 +1893,60 @@ components:
           minLength: 1
           maxLength: 5000
           description: Corpo da postagem (RF33) — texto só com espaços é rejeitado com 422.
+        arquivoId:
+          type: integer
+          format: int64
+          description: >
+            Anexo opcional: id de um arquivo enviado em POST /arquivos com finalidade
+            ANEXO_POSTAGEM, do próprio usuário e ainda não anexado a outra postagem.
+            Inexistente, de outro usuário ou com outra finalidade, 404
+            ARQUIVO_NAO_ENCONTRADO; já anexado a outra postagem, 409 ARQUIVO_EM_USO.
+
+    Arquivo:
+      type: object
+      description: Arquivo enviado por POST /arquivos, ainda não vinculado a postagem ou perfil.
+      required: [id, nome, tipo, tamanho]
+      properties:
+        id:
+          type: integer
+          format: int64
+        nome:
+          type: string
+          description: Nome original do arquivo.
+        tipo:
+          type: string
+          description: Tipo MIME detectado pelo conteúdo, ex. application/pdf, image/png.
+        tamanho:
+          type: integer
+          format: int64
+          description: Tamanho em bytes.
+
+    Anexo:
+      type: object
+      description: Arquivo anexado a uma postagem.
+      required: [id, nome, tipo, tamanho, url]
+      properties:
+        id:
+          type: integer
+          format: int64
+        nome:
+          type: string
+        tipo:
+          type: string
+          description: Tipo MIME, ex. application/pdf, image/png, image/jpeg.
+        tamanho:
+          type: integer
+          format: int64
+          description: Tamanho em bytes.
+        url:
+          type: string
+          description: URL para baixar ou exibir o arquivo.
 
     AutorResumo:
       type: object
       description: >
-        Nome e curso do autor, vindos de identidade.UsuarioConsulta (AD-3). Sem foto:
-        o avatar é montado no front a partir das iniciais do nome.
+        Nome, curso e foto do autor, vindos de identidade.UsuarioConsulta (AD-3). Sem
+        foto (fotoUrl null), o avatar é montado no front a partir das iniciais do nome.
       required: [id, nome]
       properties:
         id:
@@ -1816,6 +1955,8 @@ components:
         nome:
           type: string
         curso:
+          type: [string, 'null']
+        fotoUrl:
           type: [string, 'null']
 
     PublicacaoResponse:
@@ -1836,6 +1977,9 @@ components:
           type: string
           format: date-time
           description: Base do horário relativo exibido no feed (RF36).
+        anexo:
+          $ref: '#/components/schemas/Anexo'
+          description: Ausente quando a postagem não tem anexo.
 
     PublicacaoPageResponse:
       allOf:
@@ -2132,6 +2276,18 @@ components:
           type: array
           items:
             type: string
+        fotoUrl:
+          type: [string, 'null']
+          description: URL da foto de perfil; null quando o usuário não tem foto (o front usa as iniciais).
+
+    FotoPerfilRequest:
+      type: object
+      required: [arquivoId]
+      properties:
+        arquivoId:
+          type: integer
+          format: int64
+          description: Id de um arquivo enviado em POST /arquivos com finalidade FOTO_PERFIL, do próprio usuário.
 
     TipoConteudo:
       type: string
@@ -2354,7 +2510,9 @@ components:
           schema:
             $ref: '#/components/schemas/Erro'
     ErroValidacao:
-      description: Corpo da requisição inválido (400/422).
+      description: >-
+        Corpo da requisição inválido (400/422). Qualquer endpoint JSON pode responder 400
+        `CORPO_MUITO_GRANDE` para corpo acima de 6 MB.
       content:
         application/json:
           schema:

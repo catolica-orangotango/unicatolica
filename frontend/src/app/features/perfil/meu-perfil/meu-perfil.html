@@ -5,6 +5,34 @@
 } @else if (!editando() && perfil(); as p) {
   <div class="meu-perfil">
     <app-perfil-cartao [perfil]="p" />
+    <div class="meu-perfil__foto">
+      <input
+        #seletorFoto
+        type="file"
+        class="meu-perfil__arquivo"
+        accept="image/png,image/jpeg"
+        aria-label="Escolher foto de perfil (PNG ou JPEG, até 2 MB)"
+        tabindex="-1"
+        (change)="escolherFoto($event)"
+      />
+      <button
+        type="button"
+        #botaoAlterarFoto
+        class="botao-secundario"
+        [disabled]="enviandoFoto()"
+        (click)="seletorFoto.click()"
+      >
+        {{ enviandoFoto() ? 'Enviando…' : 'Alterar foto' }}
+      </button>
+      @if (p.fotoUrl) {
+        <button type="button" class="botao-secundario" [disabled]="removendoFoto()" (click)="removerFoto()">
+          Remover foto
+        </button>
+      }
+    </div>
+    @if (erroFoto(); as mensagem) {
+      <p class="meu-perfil__erro" role="alert">{{ mensagem }}</p>
+    }
     <button type="button" uc-button class="meu-perfil__editar" (click)="abrirEdicao()">Editar perfil</button>
   </div>
 } @else {

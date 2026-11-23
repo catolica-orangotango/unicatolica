@@ -132,6 +132,62 @@ export interface PublicacaoMock {
   autor: { id: number; nome: string; curso: string | null };
   conteudo: string;
   criadoEm: string;
+  anexo?: { id: number; nome: string; tipo: string; tamanho: number; url: string };
+}
+
+/** Arquivo enviado por `POST /arquivos` (guardado pelo `mockEnviarArquivo`). */
+export interface ArquivoMock {
+  id: number;
+  nome: string;
+  tipo: string;
+  tamanho: number;
+}
+
+/** Arquivos já aceitos por página, indexados por id (para o `POST` da postagem montar o `anexo`). */
+const arquivosPorPagina = new WeakMap<Page, Map<number, ArquivoMock>>();
+
+/**
+ * `POST /arquivos` (Mídia, KAN-128): aceita o multipart, devolve `{id, nome, tipo, tamanho}` e
+ * lembra o arquivo para o `POST` da postagem com `arquivoId` devolver o `anexo`. Devolve as
+ * finalidades recebidas. Pode ser registrado antes ou depois de `mockComunidadeComFeed`.
+ */
+export async function mockEnviarArquivo(
+  page: Page,
+  opcoes: { erro?: { status: number; code: string; message: string } } = {},
+): Promise<{ finalidade: string; nome: string }[]> {
+  const recebidos: { finalidade: string; nome: string }[] = [];
+  const arquivos = arquivosPorPagina.get(page) ?? new Map<number, ArquivoMock>();
+  arquivosPorPagina.set(page, arquivos);
+  await page.route(
+    (url) => ehApi(url) && url.pathname === '/arquivos',
+    (route) => {
+      const request = route.request();
+      if (request.method() === 'OPTIONS') {
+        return route.fulfill({ status: 204, headers: CORS });
+      }
+      if (opcoes.erro) {
+        return route.fulfill({
+          status: opcoes.erro.status,
+          headers: { ...CORS, 'content-type': 'application/json' },
+          body: envelopeErro(opcoes.erro.code, opcoes.erro.message),
+        });
+      }
+      // multipart cru: o nome vem de `filename="..."` e a finalidade de `name="finalidade"`.
+      const corpo = request.postDataBuffer()?.toString('latin1') ?? '';
+      const nome = /filename="([^"]*)"/.exec(corpo)?.[1] ?? 'arquivo';
+      const finalidade = /name="finalidade"\r\n\r\n([^\r]*)/.exec(corpo)?.[1] ?? '';
+      const tipo = /Content-Type: ([^\r]*)/i.exec(corpo.slice(corpo.indexOf('filename=')))?.[1] ?? 'application/octet-stream';
+      recebidos.push({ finalidade, nome });
+      const arquivo: ArquivoMock = { id: 500 + arquivos.size, nome, tipo, tamanho: 1024 };
+      arquivos.set(arquivo.id, arquivo);
+      return route.fulfill({
+        status: 201,
+        headers: { ...CORS, 'content-type': 'application/json' },
+        body: JSON.stringify(arquivo),
+      });
+    },
+  );
+  return recebidos;
 }
 
 /**
@@ -189,13 +245,15 @@ export async function mockComunidadeComFeed(
         return route.fulfill({ status: 204, headers: CORS });
       }
       if (request.method() === 'POST') {
-        const { conteudo } = request.postDataJSON() as { conteudo: string };
+        const { conteudo, arquivoId } = request.postDataJSON() as { conteudo: string; arquivoId?: number };
+        const arquivo = arquivoId === undefined ? undefined : arquivosPorPagina.get(page)?.get(arquivoId);
         const nova: PublicacaoMock = {
           id: 1000 + publicacoes.length,
           comunidadeId: opcoes.id,
           autor: { id: 1, nome: 'Usuário Teste', curso: null },
           conteudo: conteudo.trim(),
           criadoEm: new Date().toISOString(),
+          ...(arquivo ? { anexo: { ...arquivo, url: `http://localhost:8080/arquivos-mock/${arquivo.id}` } } : {}),
         };
         publicacoes.unshift(nova);
         return route.fulfill({
@@ -232,6 +290,10 @@ export function mockCursosOk(page: Page): Promise<void> {
   return rota(page, (url) => ehApi(url) && url.pathname === '/cursos', 200, JSON.stringify(CURSOS_MOCK));
 }
 
+/** PNG 1x1 em data URI: foto de perfil dos mocks, carrega sem rede. */
+export const FOTO_PIXEL =
+  'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
+
 /** Perfil no formato de `Perfil` do `openapi.yaml`. */
 export interface PerfilMock {
   usuarioId: number;
@@ -239,6 +301,7 @@ export interface PerfilMock {
   curso: { id: number; nome: string } | null;
   periodo: number | null;
   interesses: string[];
+  fotoUrl?: string | null;
 }
 
 /**
@@ -254,8 +317,32 @@ export async function mockMeuPerfil(
   page: Page,
   inicial: PerfilMock,
   opcoes?: { marcarLidaAoSalvar?: { notificacoes: NotificacaoMock[]; id: number } },
-): Promise<void> {
+): Promise<{ fotos: { metodo: string; arquivoId?: number }[] }> {
   let atual = { ...inicial };
+  const fotos: { metodo: string; arquivoId?: number }[] = [];
+  // KAN-128: `PUT`/`DELETE /perfil/me/foto` mudam o `fotoUrl` do perfil em memória.
+  await page.route(
+    (url) => ehApi(url) && url.pathname === '/perfil/me/foto',
+    (route) => {
+      const request = route.request();
+      if (request.method() === 'OPTIONS') {
+        return route.fulfill({ status: 204, headers: { ...CORS, 'access-control-allow-methods': 'PUT,DELETE,OPTIONS' } });
+      }
+      if (request.method() === 'PUT') {
+        const { arquivoId } = request.postDataJSON() as { arquivoId: number };
+        fotos.push({ metodo: 'PUT', arquivoId });
+        atual = { ...atual, fotoUrl: FOTO_PIXEL };
+      } else {
+        fotos.push({ metodo: 'DELETE' });
+        atual = { ...atual, fotoUrl: null };
+      }
+      return route.fulfill({
+        status: 200,
+        headers: { ...CORS, 'content-type': 'application/json' },
+        body: JSON.stringify(atual),
+      });
+    },
+  );
   await page.route(
     (url) => ehApi(url) && url.pathname === '/perfil/me',
     (route) => {
@@ -271,6 +358,7 @@ export async function mockMeuPerfil(
           curso: CURSOS_MOCK.find((c) => c.id === corpo.cursoId) ?? null,
           periodo: corpo.periodo,
           interesses: [...corpo.interesses].sort((a, b) => a.localeCompare(b)),
+          fotoUrl: atual.fotoUrl ?? null,
         };
         if (opcoes?.marcarLidaAoSalvar) {
           const { notificacoes, id } = opcoes.marcarLidaAoSalvar;
@@ -287,6 +375,7 @@ export async function mockMeuPerfil(
       });
     },
   );
+  return { fotos };
 }
 
 /** `GET /usuarios/{id}/perfil` (Story 4.4) -> 200 com o perfil dado. */

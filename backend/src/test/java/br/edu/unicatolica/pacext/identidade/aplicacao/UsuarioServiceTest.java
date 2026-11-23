@@ -84,13 +84,18 @@ class UsuarioServiceTest {
     @Test
     void buscarResumosIndexaPorId() {
         when(usuarioRepository.buscarPorIds(Set.of(1L, 2L, 3L)))
-                .thenReturn(List.of(usuario(1L, "Ana", "Direito"), usuario(2L, "Beto", null)));
+                .thenReturn(List.of(comFoto(usuario(1L, "Ana", "Direito"), 77L), usuario(2L, "Beto", null)));
 
         Map<Long, UsuarioResumo> resumos = service.buscarResumos(Set.of(1L, 2L, 3L));
 
         assertEquals(2, resumos.size());
-        assertEquals(new UsuarioResumo(1L, "Ana", "Direito"), resumos.get(1L));
-        assertEquals(new UsuarioResumo(2L, "Beto", null), resumos.get(2L));
+        assertEquals(new UsuarioResumo(1L, "Ana", "Direito", 77L), resumos.get(1L));
+        assertEquals(new UsuarioResumo(2L, "Beto", null, null), resumos.get(2L));
+    }
+
+    private static Usuario comFoto(Usuario usuario, Long fotoArquivoId) {
+        usuario.fotoArquivoId = fotoArquivoId;
+        return usuario;
     }
 
     @Test

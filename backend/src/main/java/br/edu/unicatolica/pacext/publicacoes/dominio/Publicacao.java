@@ -31,6 +31,10 @@ public class Publicacao {
     @Column(name = "conteudo", nullable = false, columnDefinition = "TEXT")
     public String conteudo;
 
+    /** Id de {@code arquivo} (módulo midia) — anexo opcional, sem FK nem relação JPA (AD-3). */
+    @Column(name = "arquivo_id")
+    public Long arquivoId;
+
     @Column(name = "criado_em", nullable = false)
     public Instant criadoEm;
 

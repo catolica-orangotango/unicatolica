@@ -25,6 +25,7 @@ function tokenDoUsuario(id: number): string {
   return `${parte({ alg: 'none' })}.${parte({ sub: String(id), roles: ['ALUNO'] })}.x`;
 }
 
+const URL_ARQUIVOS = `${API_BASE_URL}/arquivos`;
 const URL_DENUNCIA = `${API_BASE_URL}/denuncias`;
 
 function pagina(content: Publicacao[], page = 0, totalPages = 1) {
@@ -90,12 +91,25 @@ describe('FeedComunidade', () => {
     expect(posts.length).toBe(2);
     expect(posts[0].querySelector('.feed__autor')?.textContent?.trim()).toBe('Ana Lima');
     expect(posts[0].querySelector('.feed__avatar')?.textContent?.trim()).toBe('AL');
+    expect(posts[0].querySelector('.feed__avatar img')).toBeNull();
     expect(posts[0].querySelector('uc-badge')?.textContent?.trim()).toBe('Clube de Xadrez');
     expect(posts[0].querySelector('time')?.textContent?.trim()).toBe('agora');
     expect(posts[0].querySelector('.feed__conteudo')?.textContent).toBe('Alguém para uma partida hoje?');
     expect(posts[1].querySelector('.feed__autor')?.textContent?.trim()).toBe('Bruno Reis');
     // Story 4.4: o nome do autor abre o perfil dele.
     expect(posts[0].querySelector('a.feed__autor')?.getAttribute('href')).toBe('/usuarios/102');
+  });
+
+  it('mostra a foto do autor no avatar quando ele tem fotoUrl', async () => {
+    const el = await montar({ souMembro: true });
+    const comFoto = post(1, 'Oi');
+    comFoto.autor.fotoUrl = 'https://s3.exemplo/ana.png';
+    requisicaoFeed().flush(pagina([comFoto]));
+    fixture.detectChanges();
+
+    const img = el.querySelector('.feed__post .feed__avatar img') as HTMLImageElement;
+    expect(img.getAttribute('src')).toBe('https://s3.exemplo/ana.png');
+    expect(img.getAttribute('alt')).toBe('');
   });
 
   it('membro sem postagens vê o convite para começar a conversa', async () => {
@@ -202,6 +216,214 @@ describe('FeedComunidade', () => {
     const conteudos = [...el.querySelectorAll('.feed__conteudo')].map((p) => p.textContent);
     expect(conteudos).toEqual(['terceira', 'segunda', 'primeira']);
     expect(el.querySelector('.feed__mais')).toBeNull();
+  });
+
+  describe('Anexo (KAN-128)', () => {
+    function arquivo(nome: string, tipo: string, tamanho = 10): File {
+      const f = new File(['x'], nome, { type: tipo });
+      Object.defineProperty(f, 'size', { value: tamanho });
+      return f;
+    }
+
+    function escolher(el: HTMLElement, f: File): void {
+      const input = el.querySelector('input[type="file"]') as HTMLInputElement;
+      // jsdom não tem DataTransfer: define `files` direto.
+      Object.defineProperty(input, 'files', { value: [f], configurable: true });
+      input.dispatchEvent(new Event('change'));
+      fixture.detectChanges();
+    }
+
+    function botaoComTexto(el: HTMLElement, texto: string): HTMLButtonElement | undefined {
+      return [...el.querySelectorAll('button')].find((b) => b.textContent?.trim() === texto);
+    }
+
+    async function montarMembro(): Promise<HTMLElement> {
+      const el = await montar({ souMembro: true });
+      requisicaoFeed().flush(pagina([]));
+      fixture.detectChanges();
+      return el;
+    }
+
+    it('o seletor aceita só PNG, JPEG e PDF', async () => {
+      const el = await montarMembro();
+      const input = el.querySelector('input[type="file"]') as HTMLInputElement;
+      expect(input.accept).toBe('image/png,image/jpeg,application/pdf');
+    });
+
+    it('escolher arquivo mostra o nome e "Remover anexo"; remover limpa', async () => {
+      const el = await montarMembro();
+      escolher(el, arquivo('apostila.pdf', 'application/pdf'));
+
+      expect(el.querySelector('.feed__anexo-nome')?.textContent).toContain('apostila.pdf');
+      botaoComTexto(el, 'Remover anexo')?.click();
+      fixture.detectChanges();
+
+      expect(el.querySelector('.feed__anexo-nome')).toBeNull();
+      expect(botaoComTexto(el, 'Remover anexo')).toBeUndefined();
+    });
+
+    it('remover o anexo devolve o foco ao botão "Anexar arquivo"', async () => {
+      const el = await montarMembro();
+      escolher(el, arquivo('apostila.pdf', 'application/pdf'));
+
+      botaoComTexto(el, 'Remover anexo')?.click();
+      fixture.detectChanges();
+
+      expect(document.activeElement).toBe(botaoComTexto(el, 'Anexar arquivo'));
+    });
+
+    it('tipo fora de PNG/JPEG/PDF mostra os formatos aceitos e não anexa', async () => {
+      const el = await montarMembro();
+      escolher(el, arquivo('a.gif', 'image/gif'));
+
+      expect(el.querySelector('.feed__erro')?.textContent).toContain('PNG, JPEG ou PDF');
+      expect(el.querySelector('.feed__anexo-nome')).toBeNull();
+      expect(httpMock.match(URL_ARQUIVOS).length).toBe(0);
+    });
+
+    it('imagem acima de 2 MB e PDF acima de 5 MB são recusados sem chamar a API', async () => {
+      const el = await montarMembro();
+      escolher(el, arquivo('grande.png', 'image/png', 2 * 1024 * 1024 + 1));
+      expect(el.querySelector('.feed__erro')?.textContent).toContain('2 MB');
+      escolher(el, arquivo('grande.pdf', 'application/pdf', 5 * 1024 * 1024 + 1));
+      expect(el.querySelector('.feed__erro')?.textContent).toContain('5 MB');
+      expect(el.querySelector('.feed__anexo-nome')).toBeNull();
+    });
+
+    it('publicar envia o arquivo primeiro e depois cria a postagem com arquivoId', async () => {
+      const el = await montarMembro();
+      digitar(el, 'veja o material');
+      escolher(el, arquivo('apostila.pdf', 'application/pdf'));
+      botaoPublicar(el).click();
+
+      const upload = httpMock.expectOne(URL_ARQUIVOS);
+      expect((upload.request.body as FormData).get('finalidade')).toBe('ANEXO_POSTAGEM');
+      expect(httpMock.match((r) => r.url === URL_FEED && r.method === 'POST').length).toBe(0);
+      upload.flush({ id: 9, nome: 'apostila.pdf', tipo: 'application/pdf', tamanho: 10 });
+
+      const req = httpMock.expectOne((r) => r.url === URL_FEED && r.method === 'POST');
+      expect(req.request.body).toEqual({ conteudo: 'veja o material', arquivoId: 9 });
+      req.flush({
+        ...post(2, 'veja o material'),
+        anexo: { id: 9, nome: 'apostila.pdf', tipo: 'application/pdf', tamanho: 10, url: 'https://s3.exemplo/9' },
+      });
+      fixture.detectChanges();
+      await fixture.whenStable();
+      fixture.detectChanges();
+
+      expect(el.querySelector('.feed__caixa .feed__anexo-nome')).toBeNull();
+      expect(el.querySelector('.feed__post a.feed__anexo-link')?.textContent).toContain('apostila.pdf');
+    });
+
+    it('erro no upload mantém o texto digitado e mostra o erro', async () => {
+      const el = await montarMembro();
+      digitar(el, 'meu texto');
+      escolher(el, arquivo('foto.png', 'image/png'));
+      botaoPublicar(el).click();
+
+      httpMock
+        .expectOne(URL_ARQUIVOS)
+        .flush(
+          { error: { code: 'ARQUIVO_INVALIDO', message: 'O conteúdo não é um PNG válido.' } },
+          { status: 422, statusText: 'Unprocessable Entity' },
+        );
+      fixture.detectChanges();
+
+      expect(el.querySelector('.feed__erro')?.textContent).toContain('O conteúdo não é um PNG válido.');
+      expect((el.querySelector('textarea') as HTMLTextAreaElement).value).toBe('meu texto');
+      expect(botaoPublicar(el).disabled).toBe(false);
+    });
+
+    it('400 no upload mostra o motivo do servidor', async () => {
+      const el = await montarMembro();
+      digitar(el, 'texto');
+      escolher(el, arquivo('foto.png', 'image/png'));
+      botaoPublicar(el).click();
+      httpMock
+        .expectOne(URL_ARQUIVOS)
+        .flush(
+          { error: { code: 'FORMATO_NAO_SUPORTADO', message: 'Formato não suportado.' } },
+          { status: 400, statusText: 'Bad Request' },
+        );
+      fixture.detectChanges();
+      expect(el.querySelector('.feed__erro')?.textContent).toContain('Formato não suportado.');
+    });
+
+    it('404 na criação mostra o motivo do servidor', async () => {
+      const el = await montarMembro();
+      digitar(el, 'texto');
+      escolher(el, arquivo('foto.png', 'image/png'));
+      botaoPublicar(el).click();
+      httpMock.expectOne(URL_ARQUIVOS).flush({ id: 4, nome: 'foto.png', tipo: 'image/png', tamanho: 10 });
+      httpMock
+        .expectOne((r) => r.url === URL_FEED && r.method === 'POST')
+        .flush(
+          { error: { code: 'ARQUIVO_NAO_ENCONTRADO', message: 'Arquivo não encontrado.' } },
+          { status: 404, statusText: 'Not Found' },
+        );
+      fixture.detectChanges();
+      expect(el.querySelector('.feed__erro')?.textContent).toContain('Arquivo não encontrado.');
+    });
+
+    it('409 na criação mostra o motivo e a nova tentativa reenvia o arquivo', async () => {
+      const el = await montarMembro();
+      digitar(el, 'texto');
+      escolher(el, arquivo('foto.png', 'image/png'));
+      botaoPublicar(el).click();
+      httpMock.expectOne(URL_ARQUIVOS).flush({ id: 4, nome: 'foto.png', tipo: 'image/png', tamanho: 10 });
+      httpMock
+        .expectOne((r) => r.url === URL_FEED && r.method === 'POST')
+        .flush(
+          { error: { code: 'ARQUIVO_EM_USO', message: 'Arquivo já em uso.' } },
+          { status: 409, statusText: 'Conflict' },
+        );
+      fixture.detectChanges();
+      expect(el.querySelector('.feed__erro')?.textContent).toContain('Arquivo já em uso.');
+      expect(el.querySelector('.feed__anexo-nome')?.textContent).toContain('foto.png');
+
+      botaoPublicar(el).click();
+      httpMock.expectOne(URL_ARQUIVOS).flush({ id: 7, nome: 'foto.png', tipo: 'image/png', tamanho: 10 });
+      const req = httpMock.expectOne((r) => r.url === URL_FEED && r.method === 'POST');
+      expect(req.request.body).toEqual({ conteudo: 'texto', arquivoId: 7 });
+    });
+
+    it('falha na criação após o upload mantém o arquivo e a nova tentativa não reenvia', async () => {
+      const el = await montarMembro();
+      digitar(el, 'texto');
+      escolher(el, arquivo('foto.png', 'image/png'));
+      botaoPublicar(el).click();
+      httpMock.expectOne(URL_ARQUIVOS).flush({ id: 4, nome: 'foto.png', tipo: 'image/png', tamanho: 10 });
+      httpMock.expectOne((r) => r.url === URL_FEED && r.method === 'POST').flush(null, { status: 500, statusText: 'x' });
+      fixture.detectChanges();
+
+      expect(el.querySelector('.feed__anexo-nome')?.textContent).toContain('foto.png');
+      botaoPublicar(el).click();
+      httpMock.expectNone(URL_ARQUIVOS);
+      const req = httpMock.expectOne((r) => r.url === URL_FEED && r.method === 'POST');
+      expect(req.request.body).toEqual({ conteudo: 'texto', arquivoId: 4 });
+      req.flush(post(3, 'texto'));
+    });
+
+    it('card: imagem vira <img> com alt igual ao nome; PDF vira link em nova aba', async () => {
+      const el = await montar({ souMembro: false });
+      requisicaoFeed().flush(
+        pagina([
+          { ...post(2, 'com foto'), anexo: { id: 1, nome: 'campus.png', tipo: 'image/png', tamanho: 5, url: 'https://s3.exemplo/1' } },
+          { ...post(1, 'com pdf'), anexo: { id: 2, nome: 'edital.pdf', tipo: 'application/pdf', tamanho: 5, url: 'https://s3.exemplo/2' } },
+        ]),
+      );
+      fixture.detectChanges();
+
+      const posts = el.querySelectorAll('.feed__post');
+      const img = posts[0].querySelector('img.feed__anexo-imagem') as HTMLImageElement;
+      expect(img.alt).toBe('campus.png');
+      expect(img.getAttribute('src')).toBe('https://s3.exemplo/1');
+      const link = posts[1].querySelector('a.feed__anexo-link') as HTMLAnchorElement;
+      expect(link.target).toBe('_blank');
+      expect(link.rel).toContain('noopener');
+      expect(link.textContent).toContain('edital.pdf');
+      expect(link.getAttribute('href')).toBe('https://s3.exemplo/2');
+    });
   });
 
   describe('Denunciar (Story 12.1)', () => {

@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -14,6 +15,10 @@ import static org.mockito.Mockito.when;
 import br.edu.unicatolica.pacext.compartilhado.erro.ApiException;
 import br.edu.unicatolica.pacext.identidade.DadosCadastrais;
 import br.edu.unicatolica.pacext.identidade.UsuarioCadastro;
+import br.edu.unicatolica.pacext.midia.ArquivoAnexado;
+import br.edu.unicatolica.pacext.midia.FinalidadeArquivo;
+import br.edu.unicatolica.pacext.midia.MidiaAssociacao;
+import br.edu.unicatolica.pacext.midia.MidiaConsulta;
 import br.edu.unicatolica.pacext.notificacoes.NotificacaoEmissor;
 import br.edu.unicatolica.pacext.notificacoes.TipoNotificacao;
 import br.edu.unicatolica.pacext.perfil.dominio.PerfilAcademico;
@@ -22,6 +27,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.IntStream;
 import org.junit.jupiter.api.BeforeEach;
@@ -34,12 +40,14 @@ class PerfilServiceTest {
     private static final Long USUARIO_ID = 42L;
     private static final Long CURSO_ID = 14L;
     private static final DadosCadastrais DADOS =
-            new DadosCadastrais(USUARIO_ID, "Ana Lima", CURSO_ID, "Engenharia de Software");
+            new DadosCadastrais(USUARIO_ID, "Ana Lima", CURSO_ID, "Engenharia de Software", null);
 
     private PerfilService service;
     private PerfilAcademicoRepository repository;
     private UsuarioCadastro usuarioCadastro;
     private NotificacaoEmissor notificacaoEmissor;
+    private MidiaAssociacao midiaAssociacao;
+    private MidiaConsulta midiaConsulta;
 
     @BeforeEach
     void setUp() {
@@ -50,6 +58,10 @@ class PerfilServiceTest {
         service.perfilRepository = repository;
         service.usuarioCadastro = usuarioCadastro;
         service.notificacaoEmissor = notificacaoEmissor;
+        midiaAssociacao = mock(MidiaAssociacao.class);
+        midiaConsulta = mock(MidiaConsulta.class);
+        service.midiaAssociacao = midiaAssociacao;
+        service.midiaConsulta = midiaConsulta;
 
         when(usuarioCadastro.buscar(USUARIO_ID)).thenReturn(Optional.of(DADOS));
         when(usuarioCadastro.atualizarNomeECurso(any(), any(), any())).thenReturn(DADOS);
@@ -183,6 +195,68 @@ class PerfilServiceTest {
         service.salvar(USUARIO_ID, "Ana Lima", CURSO_ID, 3, List.of());
 
         verify(notificacaoEmissor, never()).marcarComoLidaPorTipo(any(), any());
+    }
+
+    @Test
+    void definirFotoReivindicaGravaELiberaAAnterior() {
+        when(usuarioCadastro.atualizarFoto(USUARIO_ID, 9L)).thenReturn(5L);
+        when(usuarioCadastro.buscar(USUARIO_ID)).thenReturn(Optional.of(
+                new DadosCadastrais(USUARIO_ID, "Ana Lima", CURSO_ID, "Engenharia de Software", 9L)));
+        when(midiaConsulta.resolver(List.of(9L))).thenReturn(
+                Map.of(9L, new ArquivoAnexado(9L, "foto.png", "image/png", 64, "https://x/foto")));
+
+        PerfilCompleto perfil = service.definirFoto(USUARIO_ID, 9L);
+
+        verify(midiaAssociacao).reivindicar(9L, USUARIO_ID, FinalidadeArquivo.FOTO_PERFIL);
+        verify(usuarioCadastro).atualizarFoto(USUARIO_ID, 9L);
+        verify(midiaAssociacao).liberar(5L);
+        assertEquals("https://x/foto", perfil.fotoUrl());
+    }
+
+    @Test
+    void definirFotoSemFotoAnteriorNaoLibera() {
+        when(usuarioCadastro.atualizarFoto(USUARIO_ID, 9L)).thenReturn(null);
+
+        service.definirFoto(USUARIO_ID, 9L);
+
+        verify(midiaAssociacao, never()).liberar(any());
+    }
+
+    @Test
+    void definirFotoQueFalhaNaReivindicacaoNaoAlteraAFotoAtual() {
+        doThrow(ApiException.naoEncontrado("ARQUIVO_NAO_ENCONTRADO", "Arquivo não encontrado.", null))
+                .when(midiaAssociacao).reivindicar(9L, USUARIO_ID, FinalidadeArquivo.FOTO_PERFIL);
+
+        assertCodigo(404, "ARQUIVO_NAO_ENCONTRADO", () -> service.definirFoto(USUARIO_ID, 9L));
+
+        verify(usuarioCadastro, never()).atualizarFoto(any(), any());
+        verify(midiaAssociacao, never()).liberar(any());
+    }
+
+    @Test
+    void definirFotoSemArquivoIdDa422() {
+        assertCodigo(422, "CAMPO_OBRIGATORIO", () -> service.definirFoto(USUARIO_ID, null));
+
+        verify(midiaAssociacao, never()).reivindicar(any(), any(), any());
+    }
+
+    @Test
+    void removerFotoGravaNuloELiberaAAnterior() {
+        when(usuarioCadastro.atualizarFoto(USUARIO_ID, null)).thenReturn(5L);
+
+        PerfilCompleto perfil = service.removerFoto(USUARIO_ID);
+
+        verify(midiaAssociacao).liberar(5L);
+        assertNull(perfil.fotoUrl());
+    }
+
+    @Test
+    void removerFotoSemFotoAnteriorNaoLibera() {
+        when(usuarioCadastro.atualizarFoto(USUARIO_ID, null)).thenReturn(null);
+
+        service.removerFoto(USUARIO_ID);
+
+        verify(midiaAssociacao, never()).liberar(any());
     }
 
     private static PerfilAcademico perfil(short periodo, String... interesses) {
