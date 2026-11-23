@@ -368,7 +368,7 @@ describe('Shell', () => {
       const f = await montar(tokenComPerfis(['ALUNO']));
       abrirMenu(f);
 
-      expect(itensDoMenu(f).map((b) => (b.textContent ?? '').trim())).toEqual(['Perfil', 'Configurações', 'Sair']);
+      expect(itensDoMenu(f).map((b) => (b.textContent ?? '').trim())).toEqual(['Perfil', 'Configurações', 'Privacidade', 'Termos de uso', 'Sair']);
     });
 
     it('abre para cima', async () => {
@@ -547,7 +547,7 @@ describe('Shell', () => {
       expect(textos(f, '.abas__rotulo')).toEqual(['Início', 'Comunidades', 'Denúncias', 'Perfil']);
     });
 
-    it('o avatar da barra superior usa as iniciais da conta e abre Perfil, Configurações e Sair', async () => {
+    it('o avatar da barra superior usa as iniciais da conta e abre Perfil, Configurações, Privacidade, Termos de uso e Sair', async () => {
       const f = await montar(tokenComPerfis(['ALUNO']));
       expect(avatarBtn(f).getAttribute('aria-expanded')).toBe('false');
       expect(avatarBtn(f).querySelector('uc-avatar')?.textContent?.trim()).toBe('A');
@@ -558,6 +558,8 @@ describe('Shell', () => {
       expect(itensDoMenuTopo(f).map((b) => (b.textContent ?? '').trim())).toEqual([
         'Perfil',
         'Configurações',
+        'Privacidade',
+        'Termos de uso',
         'Sair',
       ]);
       expect(itensDoMenuTopo(f)[1].getAttribute('aria-disabled')).toBe('true');
@@ -569,7 +571,7 @@ describe('Shell', () => {
       const navSpy = vi.spyOn(TestBed.inject(Router), 'navigateByUrl').mockResolvedValue(true);
 
       abrirMenuTopo(f);
-      itensDoMenuTopo(f)[2].click();
+      itensDoMenuTopo(f)[4].click();
       f.detectChanges();
 
       expect(logoutSpy).toHaveBeenCalledTimes(1);

@@ -1,0 +1,39 @@
+:host {
+  display: block;
+}
+
+.legal {
+  max-width: calc(var(--uc-space-unit) * 180);
+  margin: 0 auto;
+  padding: var(--uc-space-page-margin);
+}
+
+.legal__voltar,
+.legal__outro a {
+  color: var(--uc-color-ink);
+}
+
+.legal__documento {
+  margin: calc(var(--uc-space-unit) * 5) 0;
+  padding: calc(var(--uc-space-unit) * 7);
+  background: var(--uc-color-surface);
+  border: 1px solid var(--uc-color-border);
+  border-radius: var(--uc-radius-lg);
+}
+
+.legal__versao {
+  margin: 0 0 calc(var(--uc-space-unit) * 4);
+  color: var(--uc-color-ink-soft);
+}
+
+.legal__secao {
+  margin-top: calc(var(--uc-space-unit) * 6);
+}
+
+.legal__secao h2 {
+  margin: 0 0 calc(var(--uc-space-unit) * 2);
+}
+
+.legal__secao p {
+  margin: 0 0 calc(var(--uc-space-unit) * 3);
+}

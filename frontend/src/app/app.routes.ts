@@ -16,6 +16,19 @@ export const routes: Routes = [
     loadComponent: () => import('./features/identidade/cadastro/cadastro').then((m) => m.Cadastro),
   },
   {
+    // Textos legais (KAN-130, RNF05): públicos, fora da casca autenticada.
+    path: 'privacidade',
+    title: 'Política de Privacidade',
+    data: { documento: 'privacidade' },
+    loadComponent: () => import('./features/legal/pagina-legal/pagina-legal').then((m) => m.PaginaLegal),
+  },
+  {
+    path: 'termos',
+    title: 'Termos de Uso',
+    data: { documento: 'termos' },
+    loadComponent: () => import('./features/legal/pagina-legal/pagina-legal').then((m) => m.PaginaLegal),
+  },
+  {
     path: 'confirmar-email',
     title: 'Confirmar e-mail',
     loadComponent: () => import('./features/identidade/confirmar-email/confirmar-email').then((m) => m.ConfirmarEmail),

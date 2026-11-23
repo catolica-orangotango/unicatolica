@@ -52,3 +52,15 @@
   border-radius: var(--uc-radius-lg);
   padding: calc(var(--uc-space-unit) * 7);
 }
+
+.auth-shell__legal {
+  display: flex;
+  justify-content: center;
+  gap: calc(var(--uc-space-unit) * 4);
+  margin-top: calc(var(--uc-space-unit) * 4);
+  font-size: var(--uc-font-size-meta);
+}
+
+.auth-shell__legal-link {
+  color: var(--uc-color-ink-soft);
+}

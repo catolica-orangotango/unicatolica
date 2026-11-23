@@ -1,0 +1,22 @@
+<main class="legal">
+  <a class="legal__voltar" routerLink="/login">Voltar para a UniCatólica</a>
+
+  <article class="legal__documento">
+    <h1 class="uc-text-title-lg">{{ documento().titulo }}</h1>
+    <p class="uc-text-meta legal__versao">Versão {{ versao }} (texto provisório, sujeito a revisão)</p>
+    <p class="uc-text-body">{{ documento().resumo }}</p>
+
+    @for (secao of documento().secoes; track secao.titulo) {
+      <section class="legal__secao">
+        <h2 class="uc-text-title">{{ secao.titulo }}</h2>
+        @for (paragrafo of secao.paragrafos; track paragrafo) {
+          <p class="uc-text-body">{{ paragrafo }}</p>
+        }
+      </section>
+    }
+  </article>
+
+  <p class="uc-text-small legal__outro">
+    Veja também: <a [routerLink]="outro().caminho">{{ outro().rotulo }}</a>
+  </p>
+</main>
