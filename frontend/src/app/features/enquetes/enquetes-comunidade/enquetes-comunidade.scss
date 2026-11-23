@@ -51,6 +51,31 @@
   color: var(--uc-color-ink);
 }
 
+.enquetes__resultado {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: var(--uc-space-unit) calc(var(--uc-space-unit) * 2);
+}
+
+.enquetes__resultado-valor {
+  font-size: var(--uc-font-size-meta);
+  color: var(--uc-color-ink-soft);
+}
+
+.enquetes__barra {
+  grid-column: 1 / -1;
+  display: flex;
+  overflow: hidden;
+  height: var(--uc-space-unit);
+  border-radius: var(--uc-radius-default);
+  background: var(--uc-color-border);
+}
+
+.enquetes__barra-preenchimento {
+  align-self: stretch;
+  background: var(--uc-color-maroon);
+}
+
 .enquetes__rotulo {
   display: flex;
   align-items: center;
