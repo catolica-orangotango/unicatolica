@@ -273,6 +273,16 @@ describe('Cadastro', () => {
     });
   });
 
+  describe('volta para o login', () => {
+    it('tem o link "Entrar" para /login', () => {
+      fixture.detectChanges();
+      const link = (fixture.nativeElement as HTMLElement).querySelector('.cadastro__rodape a');
+
+      expect(link?.textContent?.trim()).toBe('Entrar');
+      expect(link?.getAttribute('href')).toBe('/login');
+    });
+  });
+
   describe('Mostrar senhas (segurar o botão)', () => {
     function tiposDosCampos(el: HTMLElement): [string | null, string | null] {
       return [

@@ -208,3 +208,17 @@
   font-size: var(--uc-font-size-meta);
   color: var(--uc-color-green-ok);
 }
+
+// Caminho de volta para o login, no mesmo padrão do rodapé do login: ação secundária,
+// nunca preenchida (a primária é o "Cadastrar").
+.cadastro__rodape {
+  margin: calc(var(--uc-space-unit) * 6) 0 0;
+  font-size: var(--uc-font-size-meta);
+  color: var(--uc-color-ink-soft);
+}
+
+.cadastro__link {
+  color: var(--uc-color-ink);
+  font-weight: var(--uc-font-weight-semibold);
+  text-decoration: underline;
+}

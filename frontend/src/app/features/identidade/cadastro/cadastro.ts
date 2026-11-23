@@ -2,6 +2,7 @@ import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Component, computed, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { AbstractControl, FormBuilder, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { API_BASE_URL } from '../../../core/config/api.config';
 import { UcAuthShell } from '../../../layout/auth-shell/auth-shell';
 import { UcButton } from '../../../ui/button/button';
@@ -88,7 +89,7 @@ interface RequisitoSenha {
  */
 @Component({
   selector: 'app-cadastro',
-  imports: [ReactiveFormsModule, UcAuthShell, UcButton],
+  imports: [ReactiveFormsModule, RouterLink, UcAuthShell, UcButton],
   templateUrl: './cadastro.html',
   styleUrl: './cadastro.scss',
 })

@@ -138,6 +138,15 @@ test.describe('Cadastro', () => {
     expect(registroChamado).toBe(false);
   });
 
+  test('o link "Entrar" volta para a tela de login', async ({ page }) => {
+    await page.goto('/cadastro');
+
+    await page.getByRole('link', { name: 'Entrar' }).click();
+
+    await expect(page).toHaveURL(/\/login$/);
+    await expect(page.getByRole('heading', { name: 'Entrar' })).toBeVisible();
+  });
+
   test('senha vazia com confirmar senha preenchida não mostra "As senhas não conferem."', async ({
     page,
   }) => {
