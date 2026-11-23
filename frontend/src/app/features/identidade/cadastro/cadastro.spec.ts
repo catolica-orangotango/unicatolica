@@ -1,3 +1,4 @@
+import { provideRouter } from '@angular/router';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
@@ -16,7 +17,7 @@ describe('Cadastro', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [Cadastro],
-      providers: [provideHttpClient(), provideHttpClientTesting()],
+      providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([])],
     }).compileComponents();
 
     fixture = TestBed.createComponent(Cadastro);
@@ -441,7 +442,7 @@ describe('Cadastro sem a lista de cursos', () => {
   it('avisa quando GET /cursos falha', async () => {
     await TestBed.configureTestingModule({
       imports: [Cadastro],
-      providers: [provideHttpClient(), provideHttpClientTesting()],
+      providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([])],
     }).compileComponents();
     const fixture = TestBed.createComponent(Cadastro);
     const httpMock = TestBed.inject(HttpTestingController);
@@ -469,7 +470,7 @@ describe('Cadastro - Requisitos de senha', () => {
   async function montar(): Promise<{ fixture: ComponentFixture<Cadastro>; component: Cadastro; httpMock: HttpTestingController }> {
     await TestBed.configureTestingModule({
       imports: [Cadastro],
-      providers: [provideHttpClient(), provideHttpClientTesting()],
+      providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([])],
     }).compileComponents();
 
     const fixture = TestBed.createComponent(Cadastro);

@@ -65,6 +65,18 @@ for (const viewport of [VIEWPORT_DESKTOP, VIEWPORT_CELULAR]) {
         await expect(page.getByRole('heading', { name: 'E-mail confirmado!' })).toBeVisible();
         await esperarSemViolacoes(page);
       });
+
+      test('política de privacidade e termos de uso (KAN-130)', async ({ page }) => {
+        await page.goto('/privacidade');
+        await expect(page.getByRole('heading', { level: 1, name: 'Política de Privacidade' })).toBeVisible();
+        await expect(page).toHaveTitle('Política de Privacidade — UniCatólica');
+        await esperarSemViolacoes(page);
+
+        await page.goto('/termos');
+        await expect(page.getByRole('heading', { level: 1, name: 'Termos de Uso' })).toBeVisible();
+        await expect(page).toHaveTitle('Termos de Uso — UniCatólica');
+        await esperarSemViolacoes(page);
+      });
     });
 
     test.describe('Telas do aluno', () => {

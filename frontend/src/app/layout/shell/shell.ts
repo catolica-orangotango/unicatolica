@@ -70,6 +70,8 @@ const ITENS_EM_BREVE: readonly ItemEmBreve[] = [
 const ITENS_CONTA: readonly UcMenuItem[] = [
   { id: 'perfil', rotulo: 'Perfil' },
   { id: 'configuracoes', rotulo: 'Configurações', desabilitado: true },
+  { id: 'privacidade', rotulo: 'Privacidade' },
+  { id: 'termos', rotulo: 'Termos de uso' },
   { id: 'sair', rotulo: 'Sair' },
 ];
 
@@ -252,6 +254,9 @@ export class Shell {
   protected aoSelecionarConta(id: string): void {
     if (id === 'perfil') {
       this.abrirPerfil();
+    } else if (id === 'privacidade' || id === 'termos') {
+      this.fecharPaineis();
+      this.router.navigateByUrl(`/${id}`).catch(() => {});
     } else if (id === 'sair') {
       this.sair();
     }

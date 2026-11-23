@@ -44,7 +44,7 @@ for (const cenario of CENARIOS) {
 
       await expect(gatilho(page)).toHaveAttribute('aria-expanded', 'true');
       await expect(menu(page)).toBeVisible();
-      await expect(menu(page).getByRole('menuitem')).toHaveText(['Perfil', 'Configurações', 'Sair']);
+      await expect(menu(page).getByRole('menuitem')).toHaveText(['Perfil', 'Configurações', 'Privacidade', 'Termos de uso', 'Sair']);
     });
 
     test('Configurações é menuitem inerte (aria-disabled); Perfil não', async ({ page }) => {

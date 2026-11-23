@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
 import { UcAuthShell } from './auth-shell';
 
 @Component({
@@ -16,7 +17,7 @@ describe('UcAuthShell', () => {
   let elemento: HTMLElement;
 
   beforeEach(async () => {
-    await TestBed.configureTestingModule({ imports: [Hospedeiro] }).compileComponents();
+    await TestBed.configureTestingModule({ imports: [Hospedeiro], providers: [provideRouter([])] }).compileComponents();
     fixture = TestBed.createComponent(Hospedeiro);
     fixture.detectChanges();
     elemento = fixture.nativeElement as HTMLElement;
@@ -43,5 +44,11 @@ describe('UcAuthShell', () => {
   it('não declara nenhum heading próprio (o <h1> é sempre da tela consumidora)', () => {
     const shellTemplate = elemento.querySelector('.auth-shell__marca')!;
     expect(shellTemplate.querySelector('h1, h2, h3')).toBeNull();
+  });
+
+  it('mostra no rodapé os links da Política de Privacidade e dos Termos de Uso (KAN-130)', () => {
+    const links = Array.from(elemento.querySelectorAll('nav[aria-label="Informações legais"] a'));
+    expect(links.map((a) => a.textContent)).toEqual(['Privacidade', 'Termos de uso']);
+    expect(links.map((a) => a.getAttribute('href'))).toEqual(['/privacidade', '/termos']);
   });
 });
