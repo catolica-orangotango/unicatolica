@@ -8,10 +8,10 @@ import { plantarToken, semToken } from './support/seed';
  * Suíte 3 - menu da casca dirigido por papel (Story 14.3, redesenhado na KAN-91).
  *
  * Sem backend: um JWT não assinado com a claim `roles` é plantado no localStorage
- * antes da navegação. A composição segue `NAV_ITENS` e `ITENS_EM_BREVE` de
+ * antes da navegação. A composição segue `NAV_ITENS` de
  * `layout/shell/shell.ts`: menu principal (Início, Comunidades, Denúncias para
  * moderador e administrador, Notificações, Perfil, Administração só para
- * administrador), a seção "Suas comunidades" e a seção "Em breve" de itens inertes.
+ * administrador), e a seção "Suas comunidades".
  *
  * Desktop (1440) e tablet (1024) mostram o menu inteiro; no celular (360) o menu
  * vira a gaveta "Suas comunidades", aberta pelo botão da barra superior.
@@ -25,9 +25,6 @@ const MENU_ALUNO = ['Início', 'Comunidades', 'Criar enquete', 'Notificações',
 const MENU_MODERADOR = ['Início', 'Comunidades', 'Criar enquete', 'Denúncias', 'Notificações', 'Perfil'];
 const MENU_ADMINISTRADOR = [...MENU_MODERADOR, 'Administração'];
 
-const EM_BREVE_ALUNO = ['Busca', 'Mensagens'];
-const EM_BREVE_PRIVILEGIADO = [...EM_BREVE_ALUNO, 'Solicitações de fixação'];
-
 const COMUNIDADES = [
   { id: 1, nome: 'Engenharia de Software', tipo: 'CURSO' as const },
   { id: 2, nome: 'Clube de Xadrez', tipo: 'ABERTA' as const },
@@ -36,10 +33,6 @@ const COMUNIDADES = [
 /** Rótulos do menu principal; `toHaveText([...])` casa em ordem e faz auto-retry. */
 function itensDoMenu(page: Page) {
   return navPrincipal(page).locator('.shell__nav-list .shell__nav-rotulo');
-}
-
-function itensEmBreve(page: Page) {
-  return navPrincipal(page).locator('.shell__breve-item');
 }
 
 for (const viewport of [VIEWPORT_DESKTOP, VIEWPORT_TABLET]) {
@@ -51,18 +44,16 @@ for (const viewport of [VIEWPORT_DESKTOP, VIEWPORT_TABLET]) {
       await page.goto('/feed');
 
       await expect(itensDoMenu(page)).toHaveText(MENU_ALUNO);
-      await expect(itensEmBreve(page)).toHaveText(EM_BREVE_ALUNO);
       await expect(navPrincipal(page).getByText('Denúncias', { exact: true })).toHaveCount(0);
-      await expect(navPrincipal(page).getByText('Solicitações de fixação', { exact: true })).toHaveCount(0);
+      await expect(navPrincipal(page).getByText('Em breve')).toHaveCount(0);
       await expect(navPrincipal(page).getByText('Suas comunidades', { exact: true })).toBeVisible();
     });
 
-    test('MODERADOR vê Denúncias em quarto e "Solicitações de fixação" em "Em breve"', async ({ page }) => {
+    test('MODERADOR vê Denúncias em quarto', async ({ page }) => {
       await plantarToken(page, ['MODERADOR']);
       await page.goto('/feed');
 
       await expect(itensDoMenu(page)).toHaveText(MENU_MODERADOR);
-      await expect(itensEmBreve(page)).toHaveText(EM_BREVE_PRIVILEGIADO);
       await expect(navPrincipal(page).getByRole('link', { name: 'Administração' })).toHaveCount(0);
     });
 
@@ -71,7 +62,6 @@ for (const viewport of [VIEWPORT_DESKTOP, VIEWPORT_TABLET]) {
       await page.goto('/feed');
 
       await expect(itensDoMenu(page)).toHaveText(MENU_ADMINISTRADOR);
-      await expect(itensEmBreve(page)).toHaveText(EM_BREVE_PRIVILEGIADO);
       await expect(navPrincipal(page).getByRole('link', { name: 'Administração' })).toHaveAttribute('href', '/admin');
     });
 
@@ -99,19 +89,6 @@ test.describe('desktop (1440px)', () => {
 
     await expect(itensDoMenu(page)).toHaveText(MENU_ALUNO);
     expect(erros).toEqual([]);
-  });
-
-  test('item de "Em breve" é um <span> inerte, fora da ordem de tabulação, e não navega', async ({ page }) => {
-    await plantarToken(page, ['ALUNO']);
-    await page.goto('/feed');
-
-    const busca = navPrincipal(page).getByText('Busca', { exact: true });
-    await expect(busca).toHaveAttribute('aria-disabled', 'true');
-    expect(await busca.evaluate((el) => el.tagName)).toBe('SPAN');
-    expect(await busca.evaluate((el) => (el as HTMLElement).tabIndex)).toBe(-1);
-
-    await busca.click();
-    await expect(page).toHaveURL(/\/feed$/);
   });
 
   test('"Início" carrega aria-current="page" em /feed; "Comunidades" é link mas não ativo', async ({ page }) => {
@@ -201,7 +178,7 @@ test.describe('gaveta "Suas comunidades" no celular (360px)', () => {
 
     await expect(navPrincipal(page).getByRole('link')).toHaveText([/Engenharia de Software/, /Clube de Xadrez/]);
     await expect(navPrincipal(page).getByRole('button')).toHaveCount(0);
-    for (const item of [...MENU_MODERADOR, 'Busca']) {
+    for (const item of MENU_MODERADOR) {
       await expect(navPrincipal(page).getByText(item, { exact: true })).toBeHidden();
     }
   });
@@ -237,7 +214,7 @@ test.describe('gaveta "Suas comunidades" no celular (360px)', () => {
     await botaoGaveta(page).click();
     await expect(navPrincipal(page)).toBeVisible();
 
-    // Só os focáveis visíveis: menu, "Em breve" e cartão da conta estão em display: none.
+    // Só os focáveis visíveis: menu e cartão da conta estão em display: none.
     const focaveis = navPrincipal(page).locator('a, button').filter({ visible: true });
     await expect(focaveis).toHaveCount(COMUNIDADES.length);
 

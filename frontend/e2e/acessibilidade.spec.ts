@@ -357,12 +357,14 @@ for (const viewport of [VIEWPORT_DESKTOP, VIEWPORT_CELULAR]) {
       await esperarSemViolacoes(page);
     });
 
-    test('administrador: painel de administração', async ({ page }) => {
+    test('administrador: /admin abre em Cursos com as abas da administração', async ({ page }) => {
       await mockFeedOk(page);
+      await mockCursosAdmin(page, [{ id: 1, nome: 'Administração', ativo: true }]);
       await plantarToken(page, ['ADMINISTRADOR']);
       await page.goto('/admin');
-      await expect(page.getByRole('heading', { level: 1, name: 'Administração' })).toBeVisible();
-      await expect(page).toHaveTitle('Administração — UniCatólica');
+      await expect(page.getByRole('heading', { level: 1, name: 'Cursos' })).toBeVisible();
+      await expect(page.getByRole('navigation', { name: 'Áreas de administração' })).toBeVisible();
+      await expect(page).toHaveTitle('Cursos — UniCatólica');
       await esperarSemViolacoes(page);
     });
 

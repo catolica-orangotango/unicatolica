@@ -2,7 +2,7 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { Component, TemplateRef, viewChild } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { Router, provideRouter } from '@angular/router';
+import { Router, type Routes, provideRouter } from '@angular/router';
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -25,11 +25,6 @@ const MENU_MODERADOR = ['Início', 'Comunidades', 'Criar enquete', 'Denúncias',
 /** O administrador: o do moderador mais "Administração" no fim. */
 const MENU_ADMINISTRADOR = [...MENU_MODERADOR, 'Administração'];
 
-/** Seção "Em breve" (itens inertes) do aluno. */
-const EM_BREVE_ALUNO = ['Busca', 'Mensagens'];
-
-/** Moderador e administrador ainda veem "Solicitações de fixação". */
-const EM_BREVE_PRIVILEGIADO = [...EM_BREVE_ALUNO, 'Solicitações de fixação'];
 
 /** Base64url (sem padding) de uma string UTF-8. */
 function base64url(texto: string): string {
@@ -186,7 +181,6 @@ describe('Shell', () => {
       const f = await montar('isto-nao-e-um-jwt');
 
       expect(labelsDeNav(f)).toEqual(MENU_ALUNO);
-      expect(textos(f, '.shell__breve-item')).toEqual(EM_BREVE_ALUNO);
     });
 
     it('cada item do menu tem um ícone', async () => {
@@ -223,42 +217,13 @@ describe('Shell', () => {
     });
   });
 
-  describe('Em breve', () => {
-    it('aluno: Busca e Mensagens', async () => {
+  describe('seções da navegação', () => {
+    it('só "Suas comunidades" tem cabeçalho; não há mais seção "Em breve"', async () => {
       const f = await montar(tokenComPerfis(['ALUNO']));
 
-      expect(textos(f, '.shell__breve-item')).toEqual(EM_BREVE_ALUNO);
-    });
-
-    it('moderador e administrador também veem "Solicitações de fixação"', async () => {
-      for (const perfil of ['MODERADOR', 'ADMINISTRADOR']) {
-        TestBed.resetTestingModule();
-        const f = await montar(tokenComPerfis([perfil]));
-
-        expect(textos(f, '.shell__breve-item')).toEqual(EM_BREVE_PRIVILEGIADO);
-      }
-    });
-
-    it('item em breve é um <span aria-disabled> não focável e sem href', async () => {
-      const f = await montar(tokenComPerfis(['MODERADOR']));
-      const itens = [...f.nativeElement.querySelectorAll('.shell__breve-item')] as HTMLElement[];
-
-      expect(itens.length).toBe(EM_BREVE_PRIVILEGIADO.length);
-      for (const item of itens) {
-        expect(item.tagName).toBe('SPAN');
-        expect(item.getAttribute('aria-disabled')).toBe('true');
-        expect(item.hasAttribute('href')).toBe(false);
-        expect(item.tabIndex).toBeLessThan(0);
-      }
-    });
-
-    it('as seções têm cabeçalho visível que nomeia a lista', async () => {
-      const f = await montar(tokenComPerfis(['ALUNO']));
-
-      expect(textos(f, '.shell__secao')).toEqual(['Suas comunidades', 'Em breve']);
-      const listaBreve = f.nativeElement.querySelector('.shell__breve-lista') as HTMLElement;
-      const cabecalho = f.nativeElement.querySelector(`#${listaBreve.getAttribute('aria-labelledby')}`);
-      expect((cabecalho?.textContent ?? '').trim()).toBe('Em breve');
+      expect(textos(f, '.shell__secao')).toEqual(['Suas comunidades']);
+      expect(f.nativeElement.querySelector('.shell__breve-lista')).toBeNull();
+      expect(f.nativeElement.textContent).not.toContain('Em breve');
     });
   });
 
@@ -648,12 +613,24 @@ describe('Shell', () => {
       expect(f.nativeElement.classList).not.toContain('shell--larga');
     });
 
-    it('app.routes marca como largas só comunidades, admin, admin/cursos, admin/usuarios, admin/auditoria e moderacao/denuncias', () => {
+    it('app.routes marca como largas só comunidades, admin/cursos, admin/usuarios, admin/auditoria e moderacao/denuncias', () => {
       const casca = rotasDoApp.find((r) => r.children)!;
-      const largas = casca.children!.filter((r) => r.data?.['largo'] === true).map((r) => r.path);
+      const largas: string[] = [];
+      const percorrer = (rotas: Routes, prefixo: string): void => {
+        for (const rota of rotas) {
+          const caminho = [prefixo, rota.path].filter(Boolean).join('/');
+          if (rota.data?.['largo'] === true) {
+            largas.push(caminho);
+          }
+          if (rota.children) {
+            percorrer(rota.children, caminho);
+          }
+        }
+      };
+      percorrer(casca.children!, '');
 
       expect(largas.sort()).toEqual(
-        ['admin', 'admin/cursos', 'admin/usuarios', 'admin/auditoria', 'comunidades', 'moderacao/denuncias'].sort(),
+        ['admin/cursos', 'admin/usuarios', 'admin/auditoria', 'comunidades', 'moderacao/denuncias'].sort(),
       );
     });
   });
@@ -1282,10 +1259,10 @@ describe('shell.scss - contrato de estilo por token', () => {
     );
   });
 
-  it('até $uc-bp-mobile a gaveta mostra só "Suas comunidades" (marca, itens, "Em breve" e cartão somem)', () => {
+  it('até $uc-bp-mobile a gaveta mostra só "Suas comunidades" (marca, itens e cartão somem)', () => {
     const escondidos = regra(
       celular,
-      '.shell__brand,\n  .shell__nav-list,\n  .shell__secao--breve,\n  .shell__breve-lista,\n  .shell__conta-area',
+      '.shell__brand,\n  .shell__nav-list,\n  .shell__conta-area',
     );
     expect(escondidos).toMatch(/display:\s*none/);
   });

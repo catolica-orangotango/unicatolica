@@ -79,8 +79,7 @@
 }
 
 .shell__nav-list,
-.shell__comunidades-lista,
-.shell__breve-lista {
+.shell__comunidades-lista {
   margin: 0;
   padding: 0;
   list-style: none;
@@ -195,7 +194,7 @@
   cursor: default;
 }
 
-// -- Seções "Suas comunidades" e "Em breve" (.nh) -----------------------
+// -- Seção "Suas comunidades" (.nh) -----------------------
 .shell__secao {
   padding: calc(var(--uc-space-unit) * 5.5) var(--uc-space-3) calc(var(--uc-space-unit) * 1.5);
   color: var(--uc-color-ink-soft);
@@ -241,17 +240,6 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-// Item em breve (.soon): inerte, 36px, 14px em tinta suave.
-.shell__breve-item {
-  display: flex;
-  align-items: center;
-  height: calc(var(--uc-space-unit) * 9);
-  padding: 0 var(--uc-space-3);
-  color: var(--uc-color-ink-soft);
-  font-size: var(--uc-font-size-small);
-  cursor: default;
 }
 
 // -- Cartão da conta (.me), no rodapé do menu -----------------------------
@@ -394,8 +382,6 @@
   // menu da conta, e a de abas tem a navegação.
   .shell__brand,
   .shell__nav-list,
-  .shell__secao--breve,
-  .shell__breve-lista,
   .shell__conta-area {
     display: none;
   }

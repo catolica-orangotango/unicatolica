@@ -39,12 +39,6 @@ interface NavItem {
   abrePainelNotificacoes?: boolean;
 }
 
-/** Um item inerte da seção "Em breve": visível desde já, mas sem rota. */
-interface ItemEmBreve {
-  label: string;
-  privileged?: boolean;
-}
-
 /**
  * Menu principal do redesign (KAN-91, docs/design/kan-84/inicio-*.html), na
  * ordem aprovada: Início, Comunidades, Criar enquete (Story 8.1), Denúncias (moderador e administrador),
@@ -58,13 +52,6 @@ const NAV_ITENS: readonly NavItem[] = [
   { label: 'Notificações', icone: 'bell', path: null, abrePainelNotificacoes: true },
   { label: 'Perfil', icone: 'user', path: '/perfil' },
   { label: 'Administração', icone: 'shield', path: '/admin', somenteAdministrador: true },
-];
-
-/** Seção "Em breve": funcionalidades previstas, ainda sem tela (itens inertes). */
-const ITENS_EM_BREVE: readonly ItemEmBreve[] = [
-  { label: 'Busca' },
-  { label: 'Mensagens' },
-  { label: 'Solicitações de fixação', privileged: true },
 ];
 
 /** Itens do menu do cartão da conta (UcMenu, abre para cima). */
@@ -190,10 +177,6 @@ export class Shell {
 
   protected readonly ehAdministrador = computed(() => this.auth.possuiPerfil('ADMINISTRADOR'));
 
-  protected readonly itensEmBreve = computed(() =>
-    ITENS_EM_BREVE.filter((item) => !item.privileged || this.ehPrivilegiado()),
-  );
-
   /** Papel exibido no cartão da conta. */
   protected readonly papel = computed(() =>
     this.ehAdministrador() ? 'Administrador' : this.auth.possuiPerfil('MODERADOR') ? 'Moderador' : 'Aluno',
@@ -283,7 +266,7 @@ export class Shell {
    * primeiro vai ao último. Sem efeito acima do breakpoint: lá a gaveta nunca
    * abre (a barra superior fica `display: none`), então `navAberto()` só vira
    * `true` por um clique que, nesse layout, não existe. No celular a gaveta
-   * esconde por CSS os itens de navegação, "Em breve" e o cartão da conta; o
+   * esconde por CSS os itens de navegação e o cartão da conta; o
    * filtro por `checkVisibility()` deixa esses itens fora do ciclo de foco.
    */
   protected aoTeclarNaGaveta(evento: KeyboardEvent): void {
