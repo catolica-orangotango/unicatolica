@@ -6,10 +6,11 @@ import { iniciais, tempoRelativo } from '../../publicacoes/tempo-relativo';
 import { Enquete, EnquetesService } from '../enquetes.service';
 
 /**
- * Enquetes de uma comunidade (Stories 8.1 e 8.3), na "Home da comunidade": lista e voto. O membro que
+ * Enquetes de uma comunidade (Stories 8.1, 8.3 e 8.5), na "Home da comunidade": lista, voto e resultado. O membro que
  * ainda não votou escolhe a opção (uma em escolha única; até o limite em múltipla) e vota uma vez
- * (RF56, RF56.1); não membro vê as opções com o aviso (RF55.1). O resultado ainda não existe (8.5): depois
- * de votar a tela só confirma. Sem enquete, não ocupa espaço na tela.
+ * (RF56, RF56.1); não membro vê as opções com o aviso (RF55.1). Depois de votar, o resultado consolidado
+ * só aparece com o mínimo de votos (RF58.1); antes disso a tela diz "X de 5 necessários". Sem enquete, não
+ * ocupa espaço na tela.
  */
 @Component({
   selector: 'app-enquetes-comunidade',
@@ -45,10 +46,14 @@ export class EnquetesComunidade {
   }
 
   private carregar(comunidadeId: number): void {
-    this.erro.set(false);
     this.escolhas.set({});
     this.votadas.set(new Set());
     this.erros.set({});
+    this.buscar(comunidadeId);
+  }
+
+  private buscar(comunidadeId: number): void {
+    this.erro.set(false);
     this.enquetesService.listarDaComunidade(comunidadeId).subscribe({
       next: (pagina) => this.enquetes.set(pagina.content),
       error: () => {
@@ -62,6 +67,15 @@ export class EnquetesComunidade {
     return enquete.tipo === 'MULTIPLA'
       ? `Escolha múltipla, até ${enquete.limiteSelecao} opções`
       : 'Escolha única';
+  }
+
+  protected votosDaOpcao(enquete: Enquete, opcaoId: number): number {
+    return enquete.resultado?.opcoes.find((o) => o.opcaoId === opcaoId)?.votos ?? 0;
+  }
+
+  protected percentual(enquete: Enquete, opcaoId: number): number {
+    const total = enquete.resultado?.totalVotantes ?? 0;
+    return total === 0 ? 0 : Math.round((this.votosDaOpcao(enquete, opcaoId) / total) * 100);
   }
 
   protected jaVotou(enquete: Enquete): boolean {
@@ -110,6 +124,8 @@ export class EnquetesComunidade {
         this.terminarEnvio(enquete.id);
         this.votadas.update((ids) => new Set(ids).add(enquete.id));
         this.toastService.mostrar('Voto registrado');
+        // O resultado depende do total de votos, que só o servidor sabe: busca de novo, sem limpar a tela.
+        this.buscar(this.comunidadeId());
       },
       error: (erro: HttpErrorResponse) => {
         this.terminarEnvio(enquete.id);

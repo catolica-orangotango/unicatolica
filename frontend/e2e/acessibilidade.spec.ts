@@ -172,6 +172,7 @@ for (const viewport of [VIEWPORT_DESKTOP, VIEWPORT_CELULAR]) {
           opcoes: [{ id: 50, texto: 'Segunda' }, { id: 51, texto: 'Terça' }],
           situacao: 'ATIVA' as const,
           jaVotei: false,
+          resultado: null,
           criadaEm: new Date(Date.now() - 3_600_000).toISOString(),
         };
         await mockComunidadeComFeed(page, {
@@ -179,7 +180,7 @@ for (const viewport of [VIEWPORT_DESKTOP, VIEWPORT_CELULAR]) {
           nome: 'Xadrez',
           tipo: 'ABERTA',
           souMembro: true,
-          enquetes: [enquete, { ...enquete, id: 6, pergunta: 'Quais dias?', tipo: 'MULTIPLA', limiteSelecao: 2, jaVotei: true }],
+          enquetes: [enquete, { ...enquete, id: 6, pergunta: 'Quais dias?', tipo: 'MULTIPLA', limiteSelecao: 2, jaVotei: true, resultado: { totalVotantes: 5, votosNecessarios: 5, liberado: true, opcoes: enquete.opcoes.map((o, i) => ({ opcaoId: o.id, votos: i + 1 })) } }],
         });
         await page.goto('/comunidades/27');
         await expect(page.getByRole('radiogroup', { name: 'Melhor dia?' })).toBeVisible();

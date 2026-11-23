@@ -14,7 +14,18 @@ export interface OpcaoEnquete {
   texto: string;
 }
 
-/** Espelha `EnqueteResponse` do `openapi.yaml` (Story 8.1). */
+/** Espelha `EnqueteResultado` do `openapi.yaml` (Story 8.5). */
+export interface ResultadoEnquete {
+  /** Quantas pessoas votaram (em escolha múltipla, não soma as opções). */
+  totalVotantes: number;
+  /** Mínimo de votos para liberar a contagem numa enquete ativa (RF58.1). */
+  votosNecessarios: number;
+  /** Falso abaixo do mínimo: só o total aparece e `opcoes` vem vazio. */
+  liberado: boolean;
+  opcoes: { opcaoId: number; votos: number }[];
+}
+
+/** Espelha `EnqueteResponse` do `openapi.yaml` (Stories 8.1 e 8.5). */
 export interface Enquete {
   id: number;
   comunidadeId: number;
@@ -27,6 +38,8 @@ export interface Enquete {
   situacao: 'ATIVA' | 'ENCERRADA' | 'OCULTA';
   /** Se o usuário já votou (RF56.1) — só diz que votou, nunca em quem (RF57.1). */
   jaVotei: boolean;
+  /** Null enquanto o usuário não pode ver: ativa em que não votou, ou oculta (Story 8.5). */
+  resultado: ResultadoEnquete | null;
   criadaEm: string;
 }
 
