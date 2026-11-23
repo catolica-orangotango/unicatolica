@@ -25,7 +25,7 @@
       [attr.aria-expanded]="contaAberta() ? 'true' : 'false'"
       (click)="alternouConta.emit($event)"
     >
-      <uc-avatar tamanho="sm" [cor]="cor()" [iniciais]="iniciais()" />
+      <uc-avatar tamanho="sm" [cor]="cor()" [iniciais]="iniciais()" [fotoUrl]="fotoUrl()" />
     </button>
     <uc-menu
       id="shell-menu"

@@ -3,7 +3,8 @@ import { RouterLink } from '@angular/router';
 import { forkJoin } from 'rxjs';
 import { Comunidade, ComunidadesService } from '../comunidades/comunidades.service';
 import { Usuario, UsuarioService } from '../identidade/usuario.service';
-import { ToastService, UcBadge, UcButton, UcCard } from '../../ui';
+import { ToastService, UcAvatar, UcBadge, UcButton, UcCard } from '../../ui';
+import { PerfilService } from '../perfil/perfil.service';
 
 /** Prefixo da chave de localStorage que marca "já mostrei o toast de auto-join desta comunidade". */
 const CHAVE_TOAST_AUTOJOIN = 'pacext.autojoin-toast.';
@@ -23,7 +24,7 @@ const CHAVE_TOAST_AUTOJOIN = 'pacext.autojoin-toast.';
  */
 @Component({
   selector: 'app-feed',
-  imports: [RouterLink, UcBadge, UcButton, UcCard],
+  imports: [RouterLink, UcAvatar, UcBadge, UcButton, UcCard],
   templateUrl: './feed.html',
   styleUrl: './feed.scss',
 })
@@ -31,6 +32,9 @@ export class Feed {
   private readonly usuarioService = inject(UsuarioService);
   private readonly comunidadesService = inject(ComunidadesService);
   private readonly toastService = inject(ToastService);
+
+  /** Foto do perfil no avatar do topo; a casca lê o perfil e este signal acompanha. */
+  protected readonly fotoUrl = inject(PerfilService).fotoUrl;
 
   protected readonly carregando = signal(true);
   protected readonly erro = signal<string | null>(null);

@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
-import { Injectable, inject } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Injectable, inject, signal } from '@angular/core';
+import { Observable, tap } from 'rxjs';
 import { AuthService } from '../../core/auth/auth.service';
 import { API_BASE_URL } from '../../core/config/api.config';
 import type { Curso } from '../identidade/curso.service';
@@ -39,18 +39,30 @@ export class PerfilService {
   private readonly http = inject(HttpClient);
   private readonly authService = inject(AuthService);
 
+  private readonly fotoAtual = signal<string | null>(null);
+  /**
+   * Foto de perfil do usuário logado, para os avatares da casca e da Início. Atualiza sempre que
+   * o próprio perfil é lido ou salvo e quando a foto é trocada ou removida, então os avatares
+   * acompanham sem recarregar a página. `null` sem foto, ou até o perfil ser lido.
+   */
+  readonly fotoUrl = this.fotoAtual.asReadonly();
+
   /** `GET /perfil/me` (Story 4.2, RF20). */
   meu(): Observable<Perfil> {
-    return this.http.get<Perfil>(`${API_BASE_URL}/perfil/me`, {
-      headers: this.authService.obterCabecalhoAutorizacao(),
-    });
+    return this.http
+      .get<Perfil>(`${API_BASE_URL}/perfil/me`, {
+        headers: this.authService.obterCabecalhoAutorizacao(),
+      })
+      .pipe(tap((perfil) => this.fotoAtual.set(perfil.fotoUrl ?? null)));
   }
 
   /** `PUT /perfil/me` (Story 4.1, RF14–RF19) — cria na primeira vez, substitui nas seguintes. */
   salvar(perfil: PerfilRequest): Observable<Perfil> {
-    return this.http.put<Perfil>(`${API_BASE_URL}/perfil/me`, perfil, {
-      headers: this.authService.obterCabecalhoAutorizacao(),
-    });
+    return this.http
+      .put<Perfil>(`${API_BASE_URL}/perfil/me`, perfil, {
+        headers: this.authService.obterCabecalhoAutorizacao(),
+      })
+      .pipe(tap((salvo) => this.fotoAtual.set(salvo.fotoUrl ?? null)));
   }
 
   /** `GET /usuarios/{id}/perfil` (Story 4.4, RF20.2) — somente leitura. */
@@ -62,15 +74,19 @@ export class PerfilService {
 
   /** `PUT /perfil/me/foto` (KAN-128): usa um arquivo já enviado com finalidade `FOTO_PERFIL`. */
   definirFoto(arquivoId: number): Observable<Perfil> {
-    return this.http.put<Perfil>(`${API_BASE_URL}/perfil/me/foto`, { arquivoId }, {
-      headers: this.authService.obterCabecalhoAutorizacao(),
-    });
+    return this.http
+      .put<Perfil>(`${API_BASE_URL}/perfil/me/foto`, { arquivoId }, {
+        headers: this.authService.obterCabecalhoAutorizacao(),
+      })
+      .pipe(tap((atualizado) => this.fotoAtual.set(atualizado.fotoUrl ?? null)));
   }
 
   /** `DELETE /perfil/me/foto` (KAN-128). */
   removerFoto(): Observable<Perfil> {
-    return this.http.delete<Perfil>(`${API_BASE_URL}/perfil/me/foto`, {
-      headers: this.authService.obterCabecalhoAutorizacao(),
-    });
+    return this.http
+      .delete<Perfil>(`${API_BASE_URL}/perfil/me/foto`, {
+        headers: this.authService.obterCabecalhoAutorizacao(),
+      })
+      .pipe(tap((atualizado) => this.fotoAtual.set(atualizado.fotoUrl ?? null)));
   }
 }

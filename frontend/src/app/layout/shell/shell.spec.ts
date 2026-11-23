@@ -346,6 +346,27 @@ describe('Shell', () => {
       expect(cartao.querySelector('uc-avatar')?.classList).toContain('uc-avatar--marca-suave');
     });
 
+    it('com a foto de GET /perfil/me: mostra a imagem no cartão da conta e na barra superior', async () => {
+      const f = await montar(tokenComPerfis(['ALUNO'], '6'));
+      TestBed.inject(HttpTestingController)
+        .expectOne(`${API_BASE_URL}/perfil/me`)
+        .flush({ usuarioId: 6, nome: 'Rafael Souza', curso: null, periodo: null, interesses: [], fotoUrl: 'http://x/foto.png' });
+      f.detectChanges();
+
+      expect(cartaoConta(f).querySelector('uc-avatar img')?.getAttribute('src')).toBe('http://x/foto.png');
+      expect(f.nativeElement.querySelector('app-shell-topbar uc-avatar img')?.getAttribute('src')).toBe('http://x/foto.png');
+    });
+
+    it('sem foto (perfil sem fotoUrl): continuam as iniciais', async () => {
+      const f = await montar(tokenComPerfis(['ALUNO'], '6'));
+      TestBed.inject(HttpTestingController)
+        .expectOne(`${API_BASE_URL}/perfil/me`)
+        .flush({ usuarioId: 6, nome: 'Rafael Souza', curso: null, periodo: null, interesses: [], fotoUrl: null });
+      f.detectChanges();
+
+      expect(cartaoConta(f).querySelector('uc-avatar img')).toBeNull();
+    });
+
     it('falha ao buscar o nome: continua só com o papel, sem lançar', async () => {
       const f = await montar(tokenComPerfis(['ADMINISTRADOR']));
       TestBed.inject(HttpTestingController)

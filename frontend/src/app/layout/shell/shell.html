@@ -117,7 +117,7 @@
       [attr.aria-expanded]="contaAberta() ? 'true' : 'false'"
       (click)="alternarConta($event)"
     >
-      <uc-avatar tamanho="sm" [cor]="corDaConta()" [iniciais]="iniciaisDaConta()" />
+      <uc-avatar tamanho="sm" [cor]="corDaConta()" [iniciais]="iniciaisDaConta()" [fotoUrl]="fotoDaConta()" />
       <span class="shell__conta-texto">
         @if (nomeUsuario(); as nome) {
           <span class="shell__conta-nome">{{ nome }}</span>
@@ -149,6 +149,7 @@
   [(contaAberta)]="menuAberto"
   [iniciais]="iniciaisDaConta()"
   [cor]="corDaConta()"
+  [fotoUrl]="fotoDaConta()"
   [itens]="itensConta"
   (alternouGaveta)="alternarNav($event)"
   (alternouConta)="alternarMenu($event)"

@@ -11,7 +11,7 @@
           <span>{{ curso }}</span>
         }
       </div>
-      <div class="home__avatar" aria-hidden="true">{{ iniciais() }}</div>
+      <uc-avatar class="home__avatar" cor="marca" [iniciais]="iniciais()" [fotoUrl]="fotoUrl()" />
     </div>
 
     <uc-card class="home__aviso">
