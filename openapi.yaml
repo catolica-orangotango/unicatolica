@@ -61,7 +61,7 @@ paths:
                 $ref: '#/components/schemas/CadastroResponse'
         # 409: e-mail já possui conta (RF02). 422: domínio externo ao institucional
         # (RF01.3), formato de e-mail/senha fora da política (RF03/RF04), ou idade menor
-        # que 18 anos (RF01.1), ou cursoId inexistente/inativo (CURSO_INVALIDO) — o schema Erro.code compartilhado (ver ErroResponse no
+        # que 18 anos (RF01.1), termos não aceitos (TERMOS_NAO_ACEITOS, KAN-131), ou cursoId inexistente/inativo (CURSO_INVALIDO) — o schema Erro.code compartilhado (ver ErroResponse no
         # backend) distingue os cenários; o response object AD-5 é sempre o mesmo por status.
         '409':
           $ref: '#/components/responses/Conflito'
@@ -1715,6 +1715,7 @@ components:
         - senha
         - cursoId
         - dataNascimento
+        - aceiteTermos
       properties:
         nome:
           type: string
@@ -1734,6 +1735,13 @@ components:
         dataNascimento:
           type: string
           format: date
+        aceiteTermos:
+          type: boolean
+          description: >
+            Aceite dos Termos de Uso e da Política de Privacidade (KAN-131). Precisa ser
+            `true`; ausente ou `false` devolve 422 `TERMOS_NAO_ACEITOS`. O backend grava
+            o instante do aceite e a versão vigente dos textos (config
+            `identidade.termos.versao`, a mesma `VERSAO_TEXTOS_LEGAIS` do front).
 
     CadastroResponse:
       type: object
