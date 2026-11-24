@@ -121,6 +121,8 @@ export class Cadastro {
       confirmarSenha: ['', [Validators.required]],
       cursoId: this.formBuilder.control<number | null>(null, [Validators.required]),
       dataNascimento: ['', [Validators.required]],
+      // KAN-131: o backend recusa com 422 TERMOS_NAO_ACEITOS se não vier `true`.
+      aceiteTermos: [false, [Validators.requiredTrue]],
     },
     { validators: senhasConferemValidator },
   );
@@ -202,6 +204,7 @@ export class Cadastro {
       senha: valores.senha,
       cursoId: valores.cursoId,
       dataNascimento: valores.dataNascimento,
+      aceiteTermos: valores.aceiteTermos,
     };
 
     this.http.post<CadastroResponse>(`${API_BASE_URL}/auth/registro`, corpo).subscribe({

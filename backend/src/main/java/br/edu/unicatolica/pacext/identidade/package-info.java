@@ -28,6 +28,10 @@
  * <p><b>Dependências:</b> só {@code compartilhado} (módulo folha, verificado por
  * {@code ArquiteturaTest}).</p>
  *
+ * <p>O cadastro exige o aceite dos Termos de Uso e da Política de Privacidade (KAN-131):
+ * {@code usuario.termos_aceitos_em} e {@code usuario.termos_versao} guardam quando e qual versão
+ * (config {@code identidade.termos.versao}); sem aceite, 422 {@code TERMOS_NAO_ACEITOS}.</p>
+ *
  * <p>Implementa Story 1.2 (cadastro), Story 1.3 (confirmação de e-mail), Story 1.4
  * (login/emissão de JWT), Story 1.5 (bloqueio de acesso/restrição por perfil, via
  * {@code UsuarioAutenticado} + {@code /usuarios/me}/{@code /usuarios/{id}}) e Story 1.6

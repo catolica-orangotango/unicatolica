@@ -213,6 +213,34 @@
         <span class="campo-erro" role="alert" id="erro-dataNascimento">Informe sua data de nascimento.</span>
       }
 
+      <div class="cadastro__aceite">
+        <input
+          class="cadastro__aceite-caixa"
+          id="aceiteTermos"
+          type="checkbox"
+          formControlName="aceiteTermos"
+          [attr.aria-invalid]="
+            form.controls.aceiteTermos.touched && form.controls.aceiteTermos.invalid ? 'true' : null
+          "
+          [attr.aria-describedby]="
+            form.controls.aceiteTermos.touched && form.controls.aceiteTermos.invalid
+              ? 'erro-aceiteTermos'
+              : null
+          "
+        />
+        <label class="cadastro__aceite-texto" for="aceiteTermos">
+          Li e aceito os
+          <a routerLink="/termos" target="_blank" rel="noopener">Termos de Uso (abre em nova aba)</a>
+          e a
+          <a routerLink="/privacidade" target="_blank" rel="noopener">Política de Privacidade (abre em nova aba)</a>.
+        </label>
+      </div>
+      @if (form.controls.aceiteTermos.touched && form.controls.aceiteTermos.invalid) {
+        <span class="campo-erro" role="alert" id="erro-aceiteTermos">
+          Aceite os Termos de Uso e a Política de Privacidade para criar a conta.
+        </span>
+      }
+
       <button uc-button class="cadastro__enviar" type="submit" [disabled]="enviando()">
         {{ enviando() ? 'Enviando…' : 'Cadastrar' }}
       </button>

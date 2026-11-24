@@ -11,5 +11,7 @@ public record CadastroRequest(
         @NotBlank(message = "email é obrigatório") @Email(message = "formato de e-mail inválido") String email,
         @NotBlank(message = "senha é obrigatória") String senha,
         @NotNull(message = "cursoId é obrigatório") Long cursoId,
-        @NotNull(message = "dataNascimento é obrigatória") LocalDate dataNascimento) {
+        @NotNull(message = "dataNascimento é obrigatória") LocalDate dataNascimento,
+        // Sem @NotNull: ausente vira 422 TERMOS_NAO_ACEITOS no service, igual a false.
+        Boolean aceiteTermos) {
 }

@@ -36,7 +36,7 @@ public class UsuarioDeTeste {
 
         Integer id = given().contentType(JSON)
                 .body(Map.of("nome", "Aluno de Teste", "email", email, "senha", SENHA,
-                        "cursoId", idDoCurso(nomeDoCurso), "dataNascimento", "2000-01-01"))
+                        "cursoId", idDoCurso(nomeDoCurso), "dataNascimento", "2000-01-01", "aceiteTermos", true))
                 .when().post("/auth/registro")
                 .then().statusCode(201)
                 .extract().path("id");
