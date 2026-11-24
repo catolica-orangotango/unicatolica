@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Aceite dos Termos de Uso e da Política de Privacidade no cadastro (KAN-131): guarda o
+    instante e a versão dos textos aceitos. Contas anteriores ao KAN-131 ficam com os dois
+    campos nulos (não aceitaram nada registrado).
+-->
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="identidade-013-add-aceite-termos" author="pacext">
+        <addColumn tableName="usuario">
+            <column name="termos_aceitos_em" type="TIMESTAMP WITH TIME ZONE"/>
+            <column name="termos_versao" type="VARCHAR(50)"/>
+        </addColumn>
+    </changeSet>
+
+</databaseChangeLog>

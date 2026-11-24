@@ -72,6 +72,7 @@ class CadastroServiceTest {
         service.auditoriaService = auditoriaService;
         service.dominioInstitucional = "catolicasc.edu.br";
         service.senhaTamanhoMinimo = 8;
+        service.termosVersao = "0.1-teste";
         service.tokenValidadeHoras = 24;
         service.frontendUrl = "http://localhost:4200";
 
@@ -86,7 +87,7 @@ class CadastroServiceTest {
     @Test
     void cadastraComSucessoQuandoTodosOsDadosSaoValidos() {
         Usuario usuario = service.cadastrar("Ana Silva", EMAIL_INSTITUCIONAL, SENHA_VALIDA, CURSO_ID,
-                NASCIMENTO_MAIOR_IDADE);
+                NASCIMENTO_MAIOR_IDADE, true);
 
         assertEquals("ana silva", usuario.nome.toLowerCase()); // normalização não altera capitalização, só trim
         assertEquals(EMAIL_INSTITUCIONAL, usuario.email);
@@ -95,6 +96,8 @@ class CadastroServiceTest {
         assertNotNull(usuario.tokenConfirmacaoEmail);
         assertEquals(CURSO_ID, usuario.cursoId);
         assertEquals("Engenharia de Software", usuario.cursoNome);
+        assertEquals("0.1-teste", usuario.termosVersao); // KAN-131
+        assertEquals(usuario.criadoEm, usuario.termosAceitosEm);
 
         verify(usuarioCadastrado).fire(new UsuarioCadastrado(42L, CURSO_ID));
         verify(emailService).enviarConfirmacaoCadastro(eq(EMAIL_INSTITUCIONAL), anyString(), anyString());
@@ -103,9 +106,20 @@ class CadastroServiceTest {
     }
 
     @Test
+    void rejeitaCadastroSemAceiteDosTermos() {
+        ApiException erro = assertThrows(ApiException.class, () -> service.cadastrar("Ana Silva",
+                EMAIL_INSTITUCIONAL, SENHA_VALIDA, CURSO_ID, NASCIMENTO_MAIOR_IDADE, false));
+
+        assertEquals(422, erro.getStatus());
+        assertEquals("TERMOS_NAO_ACEITOS", erro.getCode());
+        verify(usuarioRepository, never()).persist(any(Usuario.class));
+        verify(emailService, never()).enviarConfirmacaoCadastro(anyString(), anyString(), anyString());
+    }
+
+    @Test
     void rejeitaEmailDeDominioExterno() {
         ApiException erro = assertThrows(ApiException.class, () -> service.cadastrar("Ana Silva",
-                "ana@gmail.com", SENHA_VALIDA, CURSO_ID, NASCIMENTO_MAIOR_IDADE));
+                "ana@gmail.com", SENHA_VALIDA, CURSO_ID, NASCIMENTO_MAIOR_IDADE, true));
 
         assertEquals(422, erro.getStatus());
         assertEquals("EMAIL_DOMINIO_EXTERNO", erro.getCode());
@@ -118,7 +132,7 @@ class CadastroServiceTest {
         when(usuarioRepository.existePorEmail(EMAIL_INSTITUCIONAL)).thenReturn(true);
 
         ApiException erro = assertThrows(ApiException.class, () -> service.cadastrar("Ana Silva",
-                EMAIL_INSTITUCIONAL, SENHA_VALIDA, CURSO_ID, NASCIMENTO_MAIOR_IDADE));
+                EMAIL_INSTITUCIONAL, SENHA_VALIDA, CURSO_ID, NASCIMENTO_MAIOR_IDADE, true));
 
         assertEquals(Response.Status.CONFLICT.getStatusCode(), erro.getStatus());
         assertEquals("EMAIL_JA_CADASTRADO", erro.getCode());
@@ -129,7 +143,7 @@ class CadastroServiceTest {
     @Test
     void rejeitaSenhaForaDaPolitica() {
         ApiException erro = assertThrows(ApiException.class, () -> service.cadastrar("Ana Silva",
-                EMAIL_INSTITUCIONAL, "123", CURSO_ID, NASCIMENTO_MAIOR_IDADE));
+                EMAIL_INSTITUCIONAL, "123", CURSO_ID, NASCIMENTO_MAIOR_IDADE, true));
 
         assertEquals(422, erro.getStatus());
         assertEquals("SENHA_POLITICA_INVALIDA", erro.getCode());
@@ -138,7 +152,7 @@ class CadastroServiceTest {
     @Test
     void rejeitaSenhaMenorQueOMinimo() {
         ApiException erro = assertThrows(ApiException.class, () -> service.cadastrar("Ana Silva",
-                EMAIL_INSTITUCIONAL, "Sen1!", CURSO_ID, NASCIMENTO_MAIOR_IDADE));
+                EMAIL_INSTITUCIONAL, "Sen1!", CURSO_ID, NASCIMENTO_MAIOR_IDADE, true));
 
         assertEquals("SENHA_POLITICA_INVALIDA", erro.getCode());
     }
@@ -146,7 +160,7 @@ class CadastroServiceTest {
     @Test
     void rejeitaSenhaSemLetraMaiuscula() {
         ApiException erro = assertThrows(ApiException.class, () -> service.cadastrar("Ana Silva",
-                EMAIL_INSTITUCIONAL, "senha123!", CURSO_ID, NASCIMENTO_MAIOR_IDADE));
+                EMAIL_INSTITUCIONAL, "senha123!", CURSO_ID, NASCIMENTO_MAIOR_IDADE, true));
 
         assertEquals("SENHA_POLITICA_INVALIDA", erro.getCode());
     }
@@ -154,7 +168,7 @@ class CadastroServiceTest {
     @Test
     void rejeitaSenhaSemNumero() {
         ApiException erro = assertThrows(ApiException.class, () -> service.cadastrar("Ana Silva",
-                EMAIL_INSTITUCIONAL, "SenhaForte!", CURSO_ID, NASCIMENTO_MAIOR_IDADE));
+                EMAIL_INSTITUCIONAL, "SenhaForte!", CURSO_ID, NASCIMENTO_MAIOR_IDADE, true));
 
         assertEquals("SENHA_POLITICA_INVALIDA", erro.getCode());
     }
@@ -162,7 +176,7 @@ class CadastroServiceTest {
     @Test
     void rejeitaSenhaSemCaractereEspecial() {
         ApiException erro = assertThrows(ApiException.class, () -> service.cadastrar("Ana Silva",
-                EMAIL_INSTITUCIONAL, "Senha1234", CURSO_ID, NASCIMENTO_MAIOR_IDADE));
+                EMAIL_INSTITUCIONAL, "Senha1234", CURSO_ID, NASCIMENTO_MAIOR_IDADE, true));
 
         assertEquals("SENHA_POLITICA_INVALIDA", erro.getCode());
     }
@@ -172,7 +186,7 @@ class CadastroServiceTest {
         LocalDate nascimentoMenorDeIdade = LocalDate.now().minusYears(17);
 
         ApiException erro = assertThrows(ApiException.class, () -> service.cadastrar("Ana Silva",
-                EMAIL_INSTITUCIONAL, SENHA_VALIDA, CURSO_ID, nascimentoMenorDeIdade));
+                EMAIL_INSTITUCIONAL, SENHA_VALIDA, CURSO_ID, nascimentoMenorDeIdade, true));
 
         assertEquals(422, erro.getStatus());
         assertEquals("IDADE_MINIMA_NAO_ATENDIDA", erro.getCode());
@@ -182,7 +196,7 @@ class CadastroServiceTest {
     @Test
     void rejeitaCursoInexistenteOuInativo() {
         ApiException erro = assertThrows(ApiException.class, () -> service.cadastrar("Ana Silva",
-                EMAIL_INSTITUCIONAL, SENHA_VALIDA, 999L, NASCIMENTO_MAIOR_IDADE));
+                EMAIL_INSTITUCIONAL, SENHA_VALIDA, 999L, NASCIMENTO_MAIOR_IDADE, true));
 
         assertEquals(422, erro.getStatus());
         assertEquals("CURSO_INVALIDO", erro.getCode());

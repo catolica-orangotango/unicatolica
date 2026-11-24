@@ -69,13 +69,19 @@ public class CadastroService {
     @ConfigProperty(name = "identidade.confirmacao-email.token-validade-horas")
     long tokenValidadeHoras;
 
+    /** Versão dos textos legais vigentes; manter igual a {@code VERSAO_TEXTOS_LEGAIS} do front. */
+    @ConfigProperty(name = "identidade.termos.versao")
+    String termosVersao;
+
     @ConfigProperty(name = "app.frontend-url")
     String frontendUrl;
 
     @Transactional
-    public Usuario cadastrar(String nome, String email, String senha, Long cursoId, LocalDate dataNascimento) {
+    public Usuario cadastrar(String nome, String email, String senha, Long cursoId, LocalDate dataNascimento,
+            boolean aceiteTermos) {
         String emailNormalizado = email.trim().toLowerCase();
 
+        validarAceiteTermos(aceiteTermos);
         validarDominioInstitucional(emailNormalizado);
         validarEmailDisponivel(emailNormalizado);
         validarPoliticaSenha(senha);
@@ -92,6 +98,8 @@ public class CadastroService {
         usuario.emailConfirmado = false;
         usuario.perfil = Perfis.ALUNO;
         usuario.criadoEm = Instant.now();
+        usuario.termosAceitosEm = usuario.criadoEm;
+        usuario.termosVersao = termosVersao;
         usuario.tokenConfirmacaoEmail = geradorTokenConfirmacao.gerar();
         usuario.tokenConfirmacaoExpiraEm = Instant.now().plus(tokenValidadeHoras, ChronoUnit.HOURS);
 
@@ -107,6 +115,13 @@ public class CadastroService {
         auditoriaService.registrar(usuario.id, "identidade", "CADASTRO_REALIZADO", "Usuario", usuario.id, null);
 
         return usuario;
+    }
+
+    private void validarAceiteTermos(boolean aceiteTermos) {
+        if (!aceiteTermos) {
+            throw ApiException.validacao("TERMOS_NAO_ACEITOS",
+                    "Aceite os Termos de Uso e a Política de Privacidade para se cadastrar.", null);
+        }
     }
 
     private void validarDominioInstitucional(String emailNormalizado) {
