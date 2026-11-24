@@ -17,7 +17,7 @@ describe('Feed', () => {
   let httpMock: HttpTestingController;
 
   /** Cria o componente e responde o carregamento inicial (forkJoin do constructor). */
-  async function montar(minhas: Comunidade[] = []): Promise<void> {
+  async function montar(minhas: Comunidade[] = [], publicacoes: unknown[] = []): Promise<void> {
     await TestBed.configureTestingModule({
       imports: [Feed],
       providers: [provideRouter([]), provideHttpClient(), provideHttpClientTesting()],
@@ -43,6 +43,25 @@ describe('Feed', () => {
       .expectOne((req) => req.url === `${API_BASE_URL}/comunidades`)
       .flush({ content: [], page: 0, size: 6, totalElements: 0, totalPages: 0 });
     fixture.detectChanges();
+    // O feed da comunidade (FeedComunidade) busca as publicações assim que aparece.
+    for (const requisicao of httpMock.match((req) => req.url.endsWith('/publicacoes'))) {
+      requisicao.flush({ content: publicacoes, page: 0, size: 20, totalElements: publicacoes.length, totalPages: 1 });
+    }
+    fixture.detectChanges();
+  }
+
+  function publicacao(id: number, conteudo: string, comunidadeId = 14): unknown {
+    return {
+      id,
+      comunidadeId,
+      autor: { id: 7, nome: 'Ana Beatriz Lima', curso: 'Engenharia de Software' },
+      conteudo,
+      criadoEm: '2026-11-23T10:00:00Z',
+    };
+  }
+
+  function comunidade(id: number, nome: string, tipo: 'CURSO' | 'ABERTA'): Comunidade {
+    return { id, nome, descricao: null, tipo, souMembro: true, souAdministrador: false, criadoEm: '2026-01-01T00:00:00Z' };
   }
 
   beforeEach(() => {
@@ -102,5 +121,72 @@ describe('Feed', () => {
     const toastService = TestBed.inject(ToastService);
 
     expect(toastService.toasts()).toEqual([]);
+  });
+
+  describe('publicações na Home (KAN-93)', () => {
+    it('mostra as publicações da comunidade do curso e a caixa de postar, sem o aviso "em breve"', async () => {
+      await montar([comunidade(14, 'Engenharia de Software', 'CURSO')], [publicacao(1, 'Bem-vindos ao semestre!')]);
+
+      const compiled = fixture.nativeElement as HTMLElement;
+      expect(compiled.textContent).toContain('Publicações de Engenharia de Software');
+      expect(compiled.textContent).toContain('Bem-vindos ao semestre!');
+      expect(compiled.querySelector('textarea')).toBeTruthy();
+      expect(compiled.textContent).not.toContain('chegam em breve');
+    });
+
+    it('prefere a comunidade de curso a uma aberta', async () => {
+      await montar(
+        [comunidade(30, 'Xadrez', 'ABERTA'), comunidade(14, 'Engenharia de Software', 'CURSO')],
+        [publicacao(1, 'Post do curso')],
+      );
+
+      expect((fixture.nativeElement as HTMLElement).textContent).toContain('Publicações de Engenharia de Software');
+    });
+
+    it('sem comunidade de curso, usa a primeira de que participa', async () => {
+      await montar([comunidade(30, 'Xadrez', 'ABERTA')], [publicacao(1, 'Post do xadrez', 30)]);
+
+      const compiled = fixture.nativeElement as HTMLElement;
+      expect(compiled.textContent).toContain('Publicações de Xadrez');
+      expect(compiled.textContent).toContain('Post do xadrez');
+    });
+
+    it('sem nenhuma comunidade, convida a participar de uma e não busca publicações', async () => {
+      await montar([]);
+
+      const compiled = fixture.nativeElement as HTMLElement;
+      expect(compiled.textContent).toContain('Você ainda não participa de nenhuma comunidade');
+      expect(compiled.querySelector('app-feed-comunidade')).toBeNull();
+    });
+
+    it('falha ao carregar as publicações mostra o erro só no feed e mantém a descoberta', async () => {
+      await TestBed.configureTestingModule({
+        imports: [Feed],
+        providers: [provideRouter([]), provideHttpClient(), provideHttpClientTesting()],
+      }).compileComponents();
+      httpMock = TestBed.inject(HttpTestingController);
+      fixture = TestBed.createComponent(Feed);
+      fixture.detectChanges();
+      httpMock.expectOne(`${API_BASE_URL}/usuarios/me`).flush({
+        id: 1,
+        nome: 'Julia Fontana',
+        email: 'julia@catolicasc.edu.br',
+        perfil: 'ALUNO',
+        curso: 'Engenharia de Software',
+      });
+      httpMock.expectOne(`${API_BASE_URL}/comunidades/minhas`).flush([comunidade(14, 'Engenharia de Software', 'CURSO')]);
+      httpMock
+        .expectOne((req) => req.url === `${API_BASE_URL}/comunidades`)
+        .flush({ content: [], page: 0, size: 6, totalElements: 0, totalPages: 0 });
+      fixture.detectChanges();
+      httpMock
+        .expectOne((req) => req.url.endsWith('/publicacoes'))
+        .flush({}, { status: 500, statusText: 'Server Error' });
+      fixture.detectChanges();
+
+      const compiled = fixture.nativeElement as HTMLElement;
+      expect(compiled.textContent).toContain('Não foi possível carregar as postagens agora');
+      expect(compiled.textContent).toContain('Descubra comunidades');
+    });
   });
 });
