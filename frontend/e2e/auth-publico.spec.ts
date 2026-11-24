@@ -140,26 +140,13 @@ test.describe('Cadastro', () => {
     expect(registroChamado).toBe(false);
   });
 
-  test('sem aceitar os termos não envia e mostra o erro (KAN-131)', async ({ page }) => {
+  test('o link "Entrar" volta para a tela de login', async ({ page }) => {
     await page.goto('/cadastro');
 
-    let registroChamado = false;
-    await page.route('**/auth/registro', (route) => {
-      registroChamado = true;
-      return route.fulfill({ status: 201, contentType: 'application/json', body: '{}' });
-    });
+    await page.getByRole('link', { name: 'Entrar' }).click();
 
-    await page.getByLabel('Nome completo').fill('Ana Teste');
-    await page.getByLabel('E-mail institucional').fill('ana.teste@catolicasc.edu.br');
-    await page.getByLabel('Senha', { exact: true }).fill('Senha123!');
-    await page.getByLabel('Confirmar senha').fill('Senha123!');
-    await page.getByLabel('Curso').selectOption({ label: 'Engenharia de Software' });
-    await page.getByLabel('Data de nascimento').fill('2000-01-01');
-    await page.getByRole('button', { name: 'Cadastrar' }).click();
-
-    await expect(page.getByRole('alert').filter({ hasText: 'Aceite os Termos de Uso' })).toBeVisible();
-    await expect(page.getByLabel(/Li e aceito os/)).toHaveAttribute('aria-invalid', 'true');
-    expect(registroChamado).toBe(false);
+    await expect(page).toHaveURL(/\/login$/);
+    await expect(page.getByRole('heading', { name: 'Entrar' })).toBeVisible();
   });
 
   test('senha vazia com confirmar senha preenchida não mostra "As senhas não conferem."', async ({

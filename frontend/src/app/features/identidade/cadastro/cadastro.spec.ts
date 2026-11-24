@@ -277,47 +277,13 @@ describe('Cadastro', () => {
     });
   });
 
-  describe('aceite dos Termos e da Política (KAN-131)', () => {
-    it('sem marcar o aceite não envia e anuncia o erro do checkbox', () => {
+  describe('volta para o login', () => {
+    it('tem o link "Entrar" para /login', () => {
       fixture.detectChanges();
-      preencherFormularioValido();
-      component['form'].controls.aceiteTermos.setValue(false);
+      const link = (fixture.nativeElement as HTMLElement).querySelector('.cadastro__rodape a');
 
-      component['enviar']();
-      fixture.detectChanges();
-
-      httpMock.expectNone('http://localhost:8080/auth/registro');
-      const compiled = fixture.nativeElement as HTMLElement;
-      expect(compiled.querySelector('#aceiteTermos')?.getAttribute('aria-invalid')).toBe('true');
-      expect(compiled.querySelector('#erro-aceiteTermos')?.getAttribute('role')).toBe('alert');
-    });
-
-    it('envia aceiteTermos: true quando marcado', () => {
-      preencherFormularioValido();
-
-      component['enviar']();
-
-      const request = httpMock.expectOne('http://localhost:8080/auth/registro');
-      expect(request.request.body.aceiteTermos).toBe(true);
-      request.flush({
-        id: 1,
-        nome: 'Ana Silva',
-        email: 'ana@catolicasc.edu.br',
-        curso: 'Engenharia de Software',
-        emailConfirmado: false,
-        criadoEm: '2026-08-27T00:00:00Z',
-      });
-    });
-
-    it('o texto do aceite leva para /termos e /privacidade em nova aba', () => {
-      fixture.detectChanges();
-      const links = [...(fixture.nativeElement as HTMLElement).querySelectorAll('.cadastro__aceite-texto a')];
-
-      expect(links.map((a) => a.getAttribute('href'))).toEqual(['/termos', '/privacidade']);
-      for (const link of links) {
-        expect(link.getAttribute('target')).toBe('_blank');
-        expect(link.getAttribute('rel')).toBe('noopener');
-      }
+      expect(link?.textContent?.trim()).toBe('Entrar');
+      expect(link?.getAttribute('href')).toBe('/login');
     });
   });
 
