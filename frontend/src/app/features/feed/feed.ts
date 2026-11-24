@@ -5,6 +5,7 @@ import { Comunidade, ComunidadesService } from '../comunidades/comunidades.servi
 import { Usuario, UsuarioService } from '../identidade/usuario.service';
 import { ToastService, UcAvatar, UcBadge, UcButton, UcCard } from '../../ui';
 import { PerfilService } from '../perfil/perfil.service';
+import { FeedComunidade } from '../publicacoes/feed-comunidade/feed-comunidade';
 
 /** Prefixo da chave de localStorage que marca "já mostrei o toast de auto-join desta comunidade". */
 const CHAVE_TOAST_AUTOJOIN = 'pacext.autojoin-toast.';
@@ -25,7 +26,7 @@ const CHAVE_TOAST_AUTOJOIN = 'pacext.autojoin-toast.';
  */
 @Component({
   selector: 'app-feed',
-  imports: [RouterLink, UcAvatar, UcBadge, UcButton, UcCard],
+  imports: [RouterLink, FeedComunidade, UcAvatar, UcBadge, UcButton, UcCard],
   templateUrl: './feed.html',
   styleUrl: './feed.scss',
 })
