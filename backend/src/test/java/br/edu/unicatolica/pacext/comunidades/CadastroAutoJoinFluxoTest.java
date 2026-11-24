@@ -73,7 +73,7 @@ class CadastroAutoJoinFluxoTest {
     void cursoForaDaListaDa422() {
         given().contentType(JSON)
                 .body(Map.of("nome", "Aluno Teste", "email", emailUnico(), "senha", "Senha123!",
-                        "cursoId", 999_999, "dataNascimento", "2000-01-01"))
+                        "cursoId", 999_999, "dataNascimento", "2000-01-01", "aceiteTermos", true))
                 .when().post("/auth/registro")
                 .then().statusCode(422)
                 .body("error.code", org.hamcrest.Matchers.equalTo("CURSO_INVALIDO"));
@@ -82,7 +82,7 @@ class CadastroAutoJoinFluxoTest {
     private static io.restassured.response.Response cadastrar(String email, String nomeDoCurso) {
         return given().contentType(JSON)
                 .body(Map.of("nome", "Aluno Teste", "email", email, "senha", "Senha123!",
-                        "cursoId", UsuarioDeTeste.idDoCurso(nomeDoCurso), "dataNascimento", "2000-01-01"))
+                        "cursoId", UsuarioDeTeste.idDoCurso(nomeDoCurso), "dataNascimento", "2000-01-01", "aceiteTermos", true))
                 .when().post("/auth/registro");
     }
 

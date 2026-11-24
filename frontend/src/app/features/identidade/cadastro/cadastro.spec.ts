@@ -39,6 +39,7 @@ describe('Cadastro', () => {
       confirmarSenha: 'Senha123!',
       cursoId: 14,
       dataNascimento: '2005-01-01',
+      aceiteTermos: true,
     });
   }
 
@@ -99,7 +100,7 @@ describe('Cadastro', () => {
   // -- Story 14.7: piso de acessibilidade (A-11) e Design System -----------
 
   describe('erros de campo anunciados (A-11)', () => {
-    const CAMPOS = ['nome', 'email', 'senha', 'confirmarSenha', 'cursoId', 'dataNascimento'] as const;
+    const CAMPOS = ['nome', 'email', 'senha', 'confirmarSenha', 'cursoId', 'dataNascimento', 'aceiteTermos'] as const;
 
     beforeEach(() => {
       fixture.detectChanges();
@@ -107,9 +108,9 @@ describe('Cadastro', () => {
       fixture.detectChanges();
     });
 
-    it('renderiza um .campo-erro com id para cada um dos seis campos', () => {
+    it('renderiza um .campo-erro com id para cada um dos sete campos', () => {
       const erros = [...(fixture.nativeElement as HTMLElement).querySelectorAll('.campo-erro')];
-      expect(erros).toHaveLength(6);
+      expect(erros).toHaveLength(7);
       expect(erros.map((el) => el.id)).toEqual(CAMPOS.map((campo) => `erro-${campo}`));
     });
 
@@ -163,6 +164,7 @@ describe('Cadastro', () => {
         confirmarSenha: 'OutraSenha456@',
         cursoId: 14,
         dataNascimento: '2005-01-01',
+        aceiteTermos: true,
       });
       component['form'].controls.confirmarSenha.markAsTouched();
       fixture.detectChanges();
@@ -218,6 +220,7 @@ describe('Cadastro', () => {
         confirmarSenha: 'senha123',
         cursoId: 14,
         dataNascimento: '2005-01-01',
+        aceiteTermos: true,
       });
       component['form'].controls.confirmarSenha.markAsTouched();
       fixture.detectChanges();
@@ -238,6 +241,7 @@ describe('Cadastro', () => {
         confirmarSenha: 'outraSenha',
         cursoId: 14,
         dataNascimento: '2005-01-01',
+        aceiteTermos: true,
       });
       component['form'].controls.confirmarSenha.markAsTouched();
       fixture.detectChanges();
@@ -260,7 +264,7 @@ describe('Cadastro', () => {
 
       const request = httpMock.expectOne('http://localhost:8080/auth/registro');
       expect(Object.keys(request.request.body).sort()).toEqual(
-        ['cursoId', 'dataNascimento', 'email', 'nome', 'senha'].sort(),
+        ['aceiteTermos', 'cursoId', 'dataNascimento', 'email', 'nome', 'senha'].sort(),
       );
       request.flush({
         id: 1,
@@ -270,6 +274,16 @@ describe('Cadastro', () => {
         emailConfirmado: false,
         criadoEm: '2026-08-27T00:00:00Z',
       });
+    });
+  });
+
+  describe('volta para o login', () => {
+    it('tem o link "Entrar" para /login', () => {
+      fixture.detectChanges();
+      const link = (fixture.nativeElement as HTMLElement).querySelector('.cadastro__rodape a');
+
+      expect(link?.textContent?.trim()).toBe('Entrar');
+      expect(link?.getAttribute('href')).toBe('/login');
     });
   });
 
@@ -570,6 +584,7 @@ describe('Cadastro - Requisitos de senha', () => {
       confirmarSenha: 'fraca',
       cursoId: 14,
       dataNascimento: '2005-01-01',
+      aceiteTermos: true,
     });
     component['form'].controls.senha.markAsTouched();
     fixture.detectChanges();

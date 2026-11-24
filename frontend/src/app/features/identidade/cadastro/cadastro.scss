@@ -63,6 +63,30 @@
   margin-bottom: 0;
 }
 
+// Aceite dos termos (KAN-131): caixa + texto na mesma linha; o texto é o <label>, então
+// clicar nele marca a caixa, mas os links dentro dele abrem os textos sem marcar.
+.cadastro__aceite {
+  display: flex;
+  align-items: flex-start;
+  gap: calc(var(--uc-space-unit) * 2);
+  margin-bottom: calc(var(--uc-space-unit) * 4);
+}
+
+.cadastro__aceite-caixa {
+  flex-shrink: 0;
+  margin: calc(var(--uc-space-unit) / 2) 0 0;
+  accent-color: var(--uc-color-maroon);
+}
+
+.cadastro__aceite-caixa[aria-invalid='true'] + .cadastro__aceite-texto {
+  color: var(--uc-color-error);
+}
+
+.cadastro__aceite-texto {
+  font-size: var(--uc-font-size-meta);
+  color: var(--uc-color-ink);
+}
+
 .campo-erro {
   margin-bottom: calc(var(--uc-space-unit) * 4);
   padding-top: var(--uc-space-unit);
@@ -207,4 +231,18 @@
   margin: var(--uc-space-section-gap) 0 0;
   font-size: var(--uc-font-size-meta);
   color: var(--uc-color-green-ok);
+}
+
+// Caminho de volta para o login, no mesmo padrão do rodapé do login: ação secundária,
+// nunca preenchida (a primária é o "Cadastrar").
+.cadastro__rodape {
+  margin: calc(var(--uc-space-unit) * 6) 0 0;
+  font-size: var(--uc-font-size-meta);
+  color: var(--uc-color-ink-soft);
+}
+
+.cadastro__link {
+  color: var(--uc-color-ink);
+  font-weight: var(--uc-font-weight-semibold);
+  text-decoration: underline;
 }

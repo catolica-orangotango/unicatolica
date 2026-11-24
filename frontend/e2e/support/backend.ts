@@ -37,7 +37,7 @@ export async function linkDeConfirmacao(email: string, timeoutMs = 15_000): Prom
 export async function cadastrarConfirmado(request: APIRequestContext, prefixo: string): Promise<string> {
   const email = emailUnico(prefixo);
   const cadastro = await request.post(`${API}/auth/registro`, {
-    data: { nome: 'Aluno E2E', email, senha: SENHA, cursoId: CURSO_ENG_SOFTWARE.id, dataNascimento: '2000-01-01' },
+    data: { nome: 'Aluno E2E', email, senha: SENHA, cursoId: CURSO_ENG_SOFTWARE.id, dataNascimento: '2000-01-01', aceiteTermos: true },
   });
   if (cadastro.status() !== 201) {
     throw new Error(`cadastro de ${email} respondeu ${cadastro.status()}: ${await cadastro.text()}`);
