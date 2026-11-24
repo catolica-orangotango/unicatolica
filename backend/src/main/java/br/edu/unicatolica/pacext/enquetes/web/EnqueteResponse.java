@@ -1,6 +1,7 @@
 package br.edu.unicatolica.pacext.enquetes.web;
 
 import br.edu.unicatolica.pacext.compartilhado.paginacao.PageResponse;
+import br.edu.unicatolica.pacext.enquetes.aplicacao.ResultadoEnquete;
 import br.edu.unicatolica.pacext.enquetes.dominio.Enquete;
 import br.edu.unicatolica.pacext.identidade.UsuarioConsulta;
 import br.edu.unicatolica.pacext.identidade.UsuarioResumo;
@@ -12,24 +13,25 @@ import java.util.Set;
 /** Schema {@code EnqueteResponse} do contrato. */
 public record EnqueteResponse(Long id, Long comunidadeId, AutorResumo autor, String pergunta, String tipo,
         Integer limiteSelecao, List<EnqueteOpcaoResponse> opcoes, String situacao, boolean jaVotei,
-        Instant criadaEm) {
+        EnqueteResultadoResponse resultado, Instant criadaEm) {
 
-    static EnqueteResponse de(Enquete enquete, UsuarioResumo autor, boolean jaVotei) {
+    static EnqueteResponse de(Enquete enquete, UsuarioResumo autor, boolean jaVotei, ResultadoEnquete resultado) {
         List<EnqueteOpcaoResponse> opcoes = enquete.opcoes.stream()
                 .map(o -> new EnqueteOpcaoResponse(o.id, o.texto))
                 .toList();
         return new EnqueteResponse(enquete.id, enquete.comunidadeId,
                 AutorResumo.de(enquete.autorUsuarioId, autor), enquete.pergunta, enquete.tipo.name(),
-                enquete.limiteSelecao, opcoes, enquete.situacao.name(), jaVotei, enquete.criadaEm);
+                enquete.limiteSelecao, opcoes, enquete.situacao.name(), jaVotei,
+                resultado == null ? null : EnqueteResultadoResponse.de(resultado), enquete.criadaEm);
     }
 
     /** Converte a página inteira buscando os autores em lote, sem N+1. */
     static PageResponse<EnqueteResponse> pagina(PageResponse<Enquete> resultado, UsuarioConsulta usuarioConsulta,
-            Set<Long> votadas) {
+            Set<Long> votadas, Map<Long, ResultadoEnquete> resultados) {
         List<Long> autorIds = resultado.content().stream().map(e -> e.autorUsuarioId).distinct().toList();
         Map<Long, UsuarioResumo> autores = usuarioConsulta.buscarResumos(autorIds);
         List<EnqueteResponse> conteudo = resultado.content().stream()
-                .map(e -> de(e, autores.get(e.autorUsuarioId), votadas.contains(e.id)))
+                .map(e -> de(e, autores.get(e.autorUsuarioId), votadas.contains(e.id), resultados.get(e.id)))
                 .toList();
         return new PageResponse<>(conteudo, resultado.page(), resultado.size(), resultado.totalElements(),
                 resultado.totalPages());

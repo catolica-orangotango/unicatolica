@@ -42,11 +42,38 @@
                 </button>
               </form>
             } @else {
-              <ul class="enquetes__opcoes">
-                @for (opcao of enquete.opcoes; track opcao.id) {
-                  <li class="enquetes__opcao">{{ opcao.texto }}</li>
+              @if (enquete.resultado?.liberado) {
+                <ul class="enquetes__opcoes" aria-label="Resultado da enquete">
+                  @for (opcao of enquete.opcoes; track opcao.id) {
+                    <li class="enquetes__opcao enquetes__resultado">
+                      <span class="enquetes__resultado-texto">{{ opcao.texto }}</span>
+                      <span class="enquetes__resultado-valor">
+                        {{ votosDaOpcao(enquete, opcao.id) }}
+                        {{ votosDaOpcao(enquete, opcao.id) === 1 ? 'voto' : 'votos' }}
+                        ({{ percentual(enquete, opcao.id) }}%)
+                      </span>
+                      <span class="enquetes__barra" aria-hidden="true">
+                        <span class="enquetes__barra-preenchimento" [style.inline-size.%]="percentual(enquete, opcao.id)"></span>
+                      </span>
+                    </li>
+                  }
+                </ul>
+              } @else {
+                <ul class="enquetes__opcoes">
+                  @for (opcao of enquete.opcoes; track opcao.id) {
+                    <li class="enquetes__opcao">{{ opcao.texto }}</li>
+                  }
+                </ul>
+              }
+              @if (enquete.resultado; as resultado) {
+                @if (resultado.liberado) {
+                  <p class="enquetes__estado">Total: {{ resultado.totalVotantes }} {{ resultado.totalVotantes === 1 ? 'voto' : 'votos' }}.</p>
+                } @else {
+                  <p class="enquetes__estado" role="status">
+                    {{ resultado.totalVotantes }} de {{ resultado.votosNecessarios }} votos necessários para mostrar o resultado.
+                  </p>
                 }
-              </ul>
+              }
               @if (jaVotou(enquete)) {
                 <p class="enquetes__estado" role="status">Você já votou nesta enquete.</p>
               } @else if (enquete.situacao !== 'ATIVA') {

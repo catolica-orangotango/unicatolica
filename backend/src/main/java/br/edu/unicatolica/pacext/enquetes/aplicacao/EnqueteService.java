@@ -19,9 +19,12 @@ import jakarta.transaction.Transactional;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 
 /** Regras de negócio das Stories 8.1 (criar enquete) e 8.3 (votar) do Epic 8, mais as listagens que a tela precisa. */
@@ -41,6 +44,9 @@ public class EnqueteService {
     static final int MAXIMO_ATIVAS_POR_COMUNIDADE = 2;
 
     static final int TAMANHO_MAXIMO_PAGINA = 100;
+
+    /** RF58.1 — votos mínimos para mostrar o resultado de uma enquete ativa. */
+    static final int MINIMO_VOTOS_PARA_RESULTADO = 5;
 
     @Inject
     EnqueteRepository enqueteRepository;
@@ -137,6 +143,40 @@ public class EnqueteService {
     /** Das enquetes dadas, as em que o usuário já votou — para o "jaVotei" da página (RF56.1). */
     public Set<Long> enquetesVotadas(Long usuarioId, Collection<Enquete> enquetes) {
         return participacaoRepository.enquetesVotadas(usuarioId, enquetes.stream().map(e -> e.id).toList());
+    }
+
+    /**
+     * Story 8.5 (RF57, RF58, RF58.1) — resultado das enquetes dadas, só das que o usuário pode ver:
+     * ativa em que ele já votou (com o mínimo de votos para liberar a contagem) e encerrada (todos veem,
+     * Story 8.6). Quem não votou numa ativa, ou enquete oculta, fica fora do mapa — nem o total sai.
+     */
+    public Map<Long, ResultadoEnquete> resultados(Collection<Enquete> enquetes, Set<Long> votadas) {
+        List<Enquete> visiveis = enquetes.stream().filter(e -> resultadoVisivel(e, votadas)).toList();
+        if (visiveis.isEmpty()) {
+            return Map.of();
+        }
+        Map<Long, Integer> totais = participacaoRepository.totalPorEnquete(visiveis.stream().map(e -> e.id).toList());
+        Map<Long, Integer> votos = votoRepository.contagemPorOpcao(
+                visiveis.stream().flatMap(e -> e.opcoes.stream()).map(o -> o.id).toList());
+        Map<Long, ResultadoEnquete> resultados = new HashMap<>();
+        for (Enquete enquete : visiveis) {
+            int total = totais.getOrDefault(enquete.id, 0);
+            boolean liberado = enquete.situacao == SituacaoEnquete.ENCERRADA || total >= MINIMO_VOTOS_PARA_RESULTADO;
+            Map<Long, Integer> porOpcao = new LinkedHashMap<>();
+            if (liberado) {
+                enquete.opcoes.forEach(o -> porOpcao.put(o.id, votos.getOrDefault(o.id, 0)));
+            }
+            resultados.put(enquete.id, new ResultadoEnquete(total, MINIMO_VOTOS_PARA_RESULTADO, liberado, porOpcao));
+        }
+        return resultados;
+    }
+
+    private static boolean resultadoVisivel(Enquete enquete, Set<Long> votadas) {
+        return switch (enquete.situacao) {
+            case ENCERRADA -> true;
+            case ATIVA -> votadas.contains(enquete.id);
+            case OCULTA -> false;
+        };
     }
 
     /**

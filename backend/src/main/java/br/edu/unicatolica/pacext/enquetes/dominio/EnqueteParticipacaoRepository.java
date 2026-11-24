@@ -4,6 +4,7 @@ import io.quarkus.hibernate.orm.panache.PanacheRepository;
 import jakarta.enterprise.context.ApplicationScoped;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -22,5 +23,18 @@ public class EnqueteParticipacaoRepository implements PanacheRepository<EnqueteP
         }
         List<EnqueteParticipacao> participacoes = list("usuarioId = ?1 and enqueteId in ?2", usuarioId, enqueteIds);
         return participacoes.stream().map(p -> p.enqueteId).collect(Collectors.toSet());
+    }
+
+    /** Quantas pessoas votaram em cada enquete dada — uma consulta para a página inteira. */
+    public Map<Long, Integer> totalPorEnquete(Collection<Long> enqueteIds) {
+        if (enqueteIds.isEmpty()) {
+            return Map.of();
+        }
+        List<Object[]> linhas = getEntityManager()
+                .createQuery("select p.enqueteId, count(p) from EnqueteParticipacao p where p.enqueteId in :ids group by p.enqueteId",
+                        Object[].class)
+                .setParameter("ids", enqueteIds)
+                .getResultList();
+        return linhas.stream().collect(Collectors.toMap(l -> (Long) l[0], l -> ((Long) l[1]).intValue()));
     }
 }
