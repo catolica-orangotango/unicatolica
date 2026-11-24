@@ -26,6 +26,7 @@ test.describe('backend real', { tag: '@backend' }, () => {
     await page.getByLabel('Confirmar senha').fill(SENHA);
     await page.getByLabel('Curso').selectOption({ label: CURSO_ENG_SOFTWARE.nome });
     await page.getByLabel('Data de nascimento').fill('2000-01-01');
+    await page.getByLabel(/Li e aceito os/).check();
     await page.getByRole('button', { name: 'Cadastrar' }).click();
     await expect(page.getByRole('heading', { name: 'Verifique seu e-mail' })).toBeVisible();
 

@@ -90,12 +90,13 @@ test.describe('Login, erro por campo (KAN-37)', () => {
 test.describe('Cadastro', () => {
   const CAMPOS = ['Nome completo', 'E-mail institucional', 'Senha', 'Confirmar senha', 'Curso', 'Data de nascimento'];
 
-  test('renderiza os seis campos com label associada e o botão Cadastrar', async ({ page }) => {
+  test('renderiza os seis campos e o aceite dos termos, com label associada, e o botão Cadastrar', async ({ page }) => {
     await page.goto('/cadastro');
 
     for (const rotulo of CAMPOS) {
       await expect(page.getByLabel(rotulo, { exact: true })).toBeVisible();
     }
+    await expect(page.getByLabel(/Li e aceito os/)).not.toBeChecked();
     await expect(page.getByRole('button', { name: 'Cadastrar' })).toBeVisible();
     // Nenhum erro antes de o usuário interagir (KAN-48: "Confirme sua senha." aparecia ao abrir).
     await expect(page.locator('.campo-erro')).toHaveCount(0);
@@ -105,7 +106,7 @@ test.describe('Cadastro', () => {
     await page.goto('/cadastro');
     await page.getByRole('button', { name: 'Cadastrar' }).click();
 
-    await expect(page.locator('.campo-erro')).toHaveCount(6);
+    await expect(page.locator('.campo-erro')).toHaveCount(7);
     await expect(page.getByText('Informe seu nome.')).toBeVisible();
     await expect(page).toHaveURL(/\/cadastro$/);
   });
@@ -133,9 +134,19 @@ test.describe('Cadastro', () => {
     await expect(page.getByLabel('Confirmar senha')).toHaveAttribute('aria-describedby', 'erro-confirmarSenha');
 
     await page.getByLabel('Data de nascimento').fill('2000-01-01');
+    await page.getByLabel(/Li e aceito os/).check();
     await page.getByRole('button', { name: 'Cadastrar' }).click();
     await expect(page).toHaveURL(/\/cadastro$/);
     expect(registroChamado).toBe(false);
+  });
+
+  test('o link "Entrar" volta para a tela de login', async ({ page }) => {
+    await page.goto('/cadastro');
+
+    await page.getByRole('link', { name: 'Entrar' }).click();
+
+    await expect(page).toHaveURL(/\/login$/);
+    await expect(page.getByRole('heading', { name: 'Entrar' })).toBeVisible();
   });
 
   test('senha vazia com confirmar senha preenchida não mostra "As senhas não conferem."', async ({

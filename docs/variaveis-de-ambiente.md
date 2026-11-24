@@ -106,6 +106,7 @@ Não estão no `.env.example`.
 | Variável | Situação | Valor para rodar local | O que é / produção |
 |---|---|---|---|
 | `EMAIL_DOMINIO_INSTITUCIONAL` | Tem padrão | `catolicasc.edu.br` | Domínio de e-mail aceito no cadastro. |
+| `TERMOS_VERSAO` | Tem padrão | `0.1-provisoria` | Versão dos Termos/Política gravada no aceite do cadastro (KAN-131). Manter igual a `VERSAO_TEXTOS_LEGAIS` do front. |
 | `SENHA_TAMANHO_MINIMO` | Tem padrão | `8` | Tamanho mínimo da senha. |
 | `CONFIRMACAO_TOKEN_VALIDADE_HORAS` | Tem padrão | `24` | Validade do link de confirmação, em horas. |
 
