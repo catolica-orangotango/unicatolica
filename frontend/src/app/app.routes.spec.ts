@@ -71,7 +71,7 @@ describe('app.routes - wiring do auth guard sobre a tabela real de rotas', () =>
     expect(shell.querySelector('app-feed')).toBeTruthy();
   });
 
-  it('/admin: ADMINISTRADOR abre o painel dentro da casca', async () => {
+  it('/admin: ADMINISTRADOR cai em Cursos, com as abas da administração, dentro da casca', async () => {
     auth.token = 'token-fake';
     auth.perfis = ['ADMINISTRADOR'];
     const harness = await RouterTestingHarness.create();
@@ -79,8 +79,8 @@ describe('app.routes - wiring do auth guard sobre a tabela real de rotas', () =>
     await harness.navigateByUrl('/admin');
     harness.detectChanges();
 
-    expect(TestBed.inject(Router).url).toBe('/admin');
-    expect(harness.fixture.nativeElement.querySelector('app-painel-admin')).toBeTruthy();
+    expect(TestBed.inject(Router).url).toBe('/admin/cursos');
+    expect(harness.fixture.nativeElement.querySelector('app-admin-layout')).toBeTruthy();
   });
 
   it('/admin/usuarios: ADMINISTRADOR abre a tela de usuários dentro da casca', async () => {

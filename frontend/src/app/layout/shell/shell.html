@@ -28,7 +28,7 @@
               class="shell__nav-item"
               [routerLink]="item.path"
               routerLinkActive="shell__nav-item--active"
-              [routerLinkActiveOptions]="{ exact: true }"
+              [routerLinkActiveOptions]="{ exact: item.path !== '/admin' }"
               #rla="routerLinkActive"
               [attr.aria-current]="rla.isActive ? 'page' : null"
             >
@@ -94,15 +94,6 @@
     } @empty {
       <li class="shell__comunidade-item shell__comunidade-item--vazio">
         Você ainda não faz parte de nenhuma
-      </li>
-    }
-  </ul>
-
-  <div class="shell__secao shell__secao--breve" id="shell-secao-breve">Em breve</div>
-  <ul class="shell__breve-lista" aria-labelledby="shell-secao-breve">
-    @for (item of itensEmBreve(); track item.label) {
-      <li>
-        <span class="shell__breve-item" aria-disabled="true">{{ item.label }}</span>
       </li>
     }
   </ul>

@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { mockCursosAdmin, mockFeedOk } from './support/mocks';
+import { mockAdminUsuarios, mockAuditoria, mockCursosAdmin, mockFeedOk } from './support/mocks';
 import { plantarToken, semToken } from './support/seed';
 
 /**
@@ -15,18 +15,44 @@ function nav(page: import('@playwright/test').Page) {
   return page.getByRole('navigation', { name: 'Navegação principal' });
 }
 
-test('administrador abre "Administração" pelo menu e vê o painel', async ({ page }) => {
+test('administrador abre "Administração" pelo menu e cai na aba Cursos', async ({ page }) => {
+  await mockCursosAdmin(page, []);
   await plantarToken(page, ['ADMINISTRADOR']);
   await page.goto('/feed');
 
   await nav(page).getByRole('link', { name: 'Administração' }).click();
 
-  await expect(page).toHaveURL(/\/admin$/);
-  await expect(page.getByRole('heading', { level: 1, name: 'Administração' })).toBeVisible();
+  await expect(page).toHaveURL(/\/admin\/cursos$/);
+  await expect(page.getByRole('heading', { level: 1, name: 'Cursos' })).toBeVisible();
+  const abas = page.getByRole('navigation', { name: 'Áreas de administração' });
+  await expect(abas.getByRole('link')).toHaveText(['Cursos', 'Usuários', 'Logs de auditoria']);
+  await expect(abas.getByRole('link', { name: 'Cursos' })).toHaveAttribute('aria-current', 'page');
   await expect(nav(page).getByRole('link', { name: 'Administração' })).toHaveAttribute(
     'aria-current',
     'page',
   );
+});
+
+test('as abas trocam entre Cursos, Usuários e Logs de auditoria', async ({ page }) => {
+  await mockCursosAdmin(page, []);
+  await mockAdminUsuarios(page, []);
+  await mockAuditoria(page, []);
+  await plantarToken(page, ['ADMINISTRADOR']);
+  await page.goto('/admin');
+  const abas = page.getByRole('navigation', { name: 'Áreas de administração' });
+
+  await abas.getByRole('link', { name: 'Usuários' }).click();
+  await expect(page).toHaveURL(/\/admin\/usuarios$/);
+  await expect(page.getByRole('heading', { level: 1, name: 'Usuários' })).toBeVisible();
+  await expect(abas.getByRole('link', { name: 'Usuários' })).toHaveAttribute('aria-current', 'page');
+
+  await abas.getByRole('link', { name: 'Logs de auditoria' }).click();
+  await expect(page).toHaveURL(/\/admin\/auditoria$/);
+  await expect(page.getByRole('heading', { level: 1, name: 'Logs de auditoria' })).toBeVisible();
+
+  await abas.getByRole('link', { name: 'Cursos' }).click();
+  await expect(page).toHaveURL(/\/admin\/cursos$/);
+  await expect(page.getByRole('heading', { level: 1, name: 'Cursos' })).toBeVisible();
 });
 
 test('aluno que digita /admin volta para o Início', async ({ page }) => {
@@ -61,12 +87,10 @@ test.describe('Cursos (KAN-44)', () => {
     { id: 2, nome: 'Direito', ativo: true },
   ];
 
-  test('pelo painel, administrador abre a tela de Cursos', async ({ page }) => {
+  test('/admin abre direto na aba Cursos', async ({ page }) => {
     await mockCursosAdmin(page, CURSOS);
     await plantarToken(page, ['ADMINISTRADOR']);
     await page.goto('/admin');
-
-    await page.getByRole('link', { name: 'Cursos' }).click();
 
     await expect(page).toHaveURL(/\/admin\/cursos$/);
     await expect(page.getByRole('heading', { level: 1, name: 'Cursos' })).toBeVisible();
