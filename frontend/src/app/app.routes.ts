@@ -69,37 +69,37 @@ export const routes: Routes = [
           import('./features/perfil/perfil-usuario/perfil-usuario').then((m) => m.PerfilUsuario),
       },
       {
+        // Área de administração: abas Cursos, Usuários e Logs de auditoria (AdminLayout).
+        // `/admin` abre em Cursos; o guard da rota-mãe vale para as três telas.
         path: 'admin',
-        data: { largo: true },
-        title: 'Administração',
         canActivate: [adminGuard],
         loadComponent: () =>
-          import('./features/admin/painel-admin/painel-admin').then((m) => m.PainelAdmin),
-      },
-      {
-        // Tela "Cursos" da administração (KAN-44): cadastrar, renomear e desativar cursos.
-        path: 'admin/cursos',
-        data: { largo: true },
-        title: 'Cursos',
-        canActivate: [adminGuard],
-        loadComponent: () =>
-          import('./features/admin/cursos-admin/cursos-admin').then((m) => m.CursosAdmin),
-      },
-      {
-        path: 'admin/usuarios',
-        data: { largo: true },
-        title: 'Usuários',
-        canActivate: [adminGuard],
-        loadComponent: () => import('./features/admin/usuarios/usuarios').then((m) => m.Usuarios),
-      },
-      {
-        // Consulta de logs de auditoria (KAN-90, RF83): só leitura, só ADMINISTRADOR.
-        path: 'admin/auditoria',
-        data: { largo: true },
-        title: 'Logs de auditoria',
-        canActivate: [adminGuard],
-        loadComponent: () =>
-          import('./features/admin/auditoria-admin/auditoria-admin').then((m) => m.AuditoriaAdmin),
+          import('./features/admin/admin-layout/admin-layout').then((m) => m.AdminLayout),
+        children: [
+          { path: '', pathMatch: 'full', redirectTo: 'cursos' },
+          {
+            // Tela "Cursos" da administração (KAN-44): cadastrar, renomear e desativar cursos.
+            path: 'cursos',
+            data: { largo: true },
+            title: 'Cursos',
+            loadComponent: () =>
+              import('./features/admin/cursos-admin/cursos-admin').then((m) => m.CursosAdmin),
+          },
+          {
+            path: 'usuarios',
+            data: { largo: true },
+            title: 'Usuários',
+            loadComponent: () => import('./features/admin/usuarios/usuarios').then((m) => m.Usuarios),
+          },
+          {
+            // Consulta de logs de auditoria (KAN-90, RF83): só leitura, só ADMINISTRADOR.
+            path: 'auditoria',
+            data: { largo: true },
+            title: 'Logs de auditoria',
+            loadComponent: () =>
+              import('./features/admin/auditoria-admin/auditoria-admin').then((m) => m.AuditoriaAdmin),
+          },
+        ],
       },
       {
         // Fila de denúncias do moderador (Stories 12.4/12.5) — URL do mockup key-denuncias.

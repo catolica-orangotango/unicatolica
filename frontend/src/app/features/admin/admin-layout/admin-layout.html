@@ -1,0 +1,19 @@
+<nav aria-label="Áreas de administração">
+  <ul class="abas">
+    @for (aba of abas; track aba.caminho) {
+      <li>
+        <a
+          class="abas__aba"
+          [routerLink]="aba.caminho"
+          routerLinkActive="abas__aba--ativa"
+          #rla="routerLinkActive"
+          [attr.aria-current]="rla.isActive ? 'page' : null"
+        >
+          {{ aba.rotulo }}
+        </a>
+      </li>
+    }
+  </ul>
+</nav>
+
+<router-outlet />

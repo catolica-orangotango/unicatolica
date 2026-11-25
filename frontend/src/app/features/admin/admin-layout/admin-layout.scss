@@ -1,0 +1,35 @@
+:host {
+  display: block;
+}
+
+.abas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: calc(var(--uc-space-unit) * 2);
+  margin: 0 0 var(--uc-space-section-gap);
+  padding: 0;
+  list-style: none;
+}
+
+// Aba ativa: bordô + peso, nunca só a cor (aria-current também anuncia para leitor de tela).
+.abas__aba {
+  display: inline-block;
+  padding: calc(var(--uc-space-unit) * 2) calc(var(--uc-space-unit) * 4);
+  border: 1px solid var(--uc-color-border);
+  border-radius: var(--uc-radius-full);
+  background: var(--uc-color-surface);
+  color: var(--uc-color-ink);
+  font-size: var(--uc-font-size-body);
+  font-weight: var(--uc-font-weight-semibold);
+  text-decoration: none;
+}
+
+.abas__aba:hover {
+  border-color: var(--uc-color-maroon);
+}
+
+.abas__aba--ativa {
+  border-color: var(--uc-color-maroon);
+  background: var(--uc-color-maroon-tint);
+  color: var(--uc-color-maroon);
+}
