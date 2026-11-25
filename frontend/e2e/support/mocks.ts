@@ -94,6 +94,13 @@ export async function mockFeedOk(page: Page): Promise<void> {
   await rota(page, (url) => ehApi(url) && url.pathname === '/comunidades', 200, JSON.stringify(paginaVazia));
   // A shell busca as notificações ao montar; sem mock, o ERR_CONNECTION_REFUSED vai para o console.
   await mockNotificacoes(page, []);
+  // E o perfil, para a foto dos avatares (sem foto aqui; `mockMeuPerfil` sobrescreve).
+  await rota(
+    page,
+    (url) => ehApi(url) && url.pathname === '/perfil/me',
+    200,
+    JSON.stringify({ usuarioId: 1, nome: usuario.nome, curso: null, periodo: null, interesses: [], fotoUrl: null }),
+  );
 }
 
 /** Comunidade no formato de `ComunidadeResponse` do `openapi.yaml`, como `GET /comunidades/minhas` devolve. */

@@ -23,6 +23,7 @@ export class ShellTopbar {
   readonly contaAberta = model(false);
   readonly iniciais = input.required<string>();
   readonly cor = input<UcAvatarCor>('neutro');
+  readonly fotoUrl = input<string | null>(null);
   readonly itens = input.required<readonly UcMenuItem[]>();
 
   readonly alternouGaveta = output<MouseEvent>();

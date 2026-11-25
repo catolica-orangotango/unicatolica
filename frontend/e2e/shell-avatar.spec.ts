@@ -6,7 +6,7 @@ import {
   cartaoDaConta,
   menuDaConta,
 } from './support/casca';
-import { mockFeedOk, mockLogoutOk, mockMeuPerfil } from './support/mocks';
+import { FOTO_PIXEL, mockFeedOk, mockLogoutOk, mockMeuPerfil } from './support/mocks';
 import { plantarToken, tokenAtual } from './support/seed';
 
 /**
@@ -133,4 +133,33 @@ test('desktop: o cartão da conta mostra o nome de GET /usuarios/me e o papel', 
   await expect(cartaoDaConta(page)).toContainText('Usuário Teste');
   await expect(cartaoDaConta(page)).toContainText('Aluno');
   await expect(avatarDaConta(page)).toBeHidden();
+});
+
+test.describe('foto de perfil nos avatares', () => {
+  test.beforeEach(async ({ page }) => {
+    await mockFeedOk(page);
+    await plantarToken(page, ['ALUNO']);
+  });
+
+  test('a foto aparece no cartão da conta e no avatar do topo da Início', async ({ page }) => {
+    await mockMeuPerfil(page, {
+      usuarioId: 1,
+      nome: 'Usuário Teste',
+      curso: null,
+      periodo: null,
+      interesses: [],
+      fotoUrl: FOTO_PIXEL,
+    });
+    await page.goto('/feed');
+
+    await expect(cartaoDaConta(page).locator('img')).toHaveAttribute('src', FOTO_PIXEL);
+    await expect(page.locator('app-feed uc-avatar img')).toHaveAttribute('src', FOTO_PIXEL);
+  });
+
+  test('sem foto, ficam as iniciais', async ({ page }) => {
+    await page.goto('/feed');
+
+    await expect(cartaoDaConta(page)).toBeVisible();
+    await expect(cartaoDaConta(page).locator('img')).toHaveCount(0);
+  });
 });

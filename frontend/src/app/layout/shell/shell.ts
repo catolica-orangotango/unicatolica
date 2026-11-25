@@ -15,6 +15,7 @@ import { SessaoAtividadeService } from '../../core/auth/sessao-atividade.service
 import { ComunidadesService } from '../../features/comunidades/comunidades.service';
 import { ContadorDenuncias } from '../../features/moderacao/contador-denuncias/contador-denuncias';
 import { UsuarioService } from '../../features/identidade/usuario.service';
+import { PerfilService } from '../../features/perfil/perfil.service';
 import { NotificacoesService } from '../../features/notificacoes/notificacoes.service';
 import { iniciais } from '../../features/publicacoes/tempo-relativo';
 import { UcAvatar, UcBadge, UcIcon, UcMenu, corDoAvatar, type UcAvatarCor, type UcIconName, type UcMenuItem } from '../../ui';
@@ -207,6 +208,9 @@ export class Shell {
   /** Bordô claro (o `.av.a1` do mockup): vale para o cartão da conta e o avatar da barra superior. */
   protected readonly corDaConta = computed<UcAvatarCor>(() => 'marca-suave');
 
+  /** Foto do perfil no cartão da conta e na barra superior; sem foto, ficam as iniciais. */
+  protected readonly fotoDaConta = inject(PerfilService).fotoUrl;
+
   constructor() {
     // Best-effort: a sidebar não é o lugar de mostrar erro de rede — em caso de
     // falha a cache simplesmente fica vazia, sem travar o resto da navegação.
@@ -216,6 +220,8 @@ export class Shell {
     inject(UsuarioService)
       .me()
       .subscribe({ next: (usuario) => this.nomeUsuario.set(usuario.nome), error: () => undefined });
+    // A foto vem do perfil (o `/usuarios/me` não a traz); 404 sem perfil ou falha de rede deixa as iniciais.
+    inject(PerfilService).meu().subscribe({ error: () => undefined });
 
     this.larga.set(rotaAtualELarga(this.router));
     this.router.events
