@@ -21,6 +21,33 @@ const REGRAS_SENHA: ReadonlyArray<{ chave: string; texto: string; cumprida: (val
   { chave: 'especial', texto: 'Pelo menos um caractere especial', cumprida: (valor) => /[^A-Za-z0-9]/.test(valor) },
 ];
 
+const DOMINIO_INSTITUCIONAL = '@catolicasc.edu.br';
+const IDADE_MINIMA = 18;
+
+/** Mesma regra do backend (`identidade.email.dominio-institucional`), antes de chamar a API. */
+function emailInstitucionalValidator(control: AbstractControl): ValidationErrors | null {
+  const valor = String(control.value ?? '').trim().toLowerCase();
+  return valor && !valor.endsWith(DOMINIO_INSTITUCIONAL) ? { dominioInvalido: true } : null;
+}
+
+/** Idade mínima de 18 anos completos na data de hoje; data futura também é recusada. */
+function maioridadeValidator(control: AbstractControl): ValidationErrors | null {
+  const valor = String(control.value ?? '');
+  if (!valor) {
+    return null;
+  }
+  const nascimento = new Date(`${valor}T00:00:00`);
+  const hoje = new Date();
+  let idade = hoje.getFullYear() - nascimento.getFullYear();
+  const antesDoAniversario =
+    hoje.getMonth() < nascimento.getMonth() ||
+    (hoje.getMonth() === nascimento.getMonth() && hoje.getDate() < nascimento.getDate());
+  if (antesDoAniversario) {
+    idade--;
+  }
+  return Number.isNaN(idade) || idade < IDADE_MINIMA ? { menorDeIdade: true } : null;
+}
+
 function senhaForteValidator(control: AbstractControl): ValidationErrors | null {
   const valor = (control.value as string | null) ?? '';
   const erros: ValidationErrors = {};
@@ -116,11 +143,11 @@ export class Cadastro {
   protected readonly form = this.formBuilder.nonNullable.group(
     {
       nome: ['', [Validators.required]],
-      email: ['', [Validators.required, Validators.email]],
+      email: ['', [Validators.required, Validators.email, emailInstitucionalValidator]],
       senha: ['', [Validators.required, senhaForteValidator]],
       confirmarSenha: ['', [Validators.required]],
       cursoId: this.formBuilder.control<number | null>(null, [Validators.required]),
-      dataNascimento: ['', [Validators.required]],
+      dataNascimento: ['', [Validators.required, maioridadeValidator]],
       // KAN-131: o backend recusa com 422 TERMOS_NAO_ACEITOS se não vier `true`.
       aceiteTermos: [false, [Validators.requiredTrue]],
     },
@@ -185,9 +212,25 @@ export class Cadastro {
     return partes.length > 0 ? partes.join(' ') : null;
   }
 
+  protected mensagemErroEmail(): string {
+    const email = this.form.controls.email;
+    // Formato inválido vem antes: "abc" não é e-mail de nenhum domínio.
+    return email.hasError('dominioInvalido') && !email.hasError('email')
+      ? 'Use seu e-mail institucional (@catolicasc.edu.br).'
+      : 'Informe um e-mail institucional válido.';
+  }
+
+  protected mensagemErroNascimento(): string {
+    return this.form.controls.dataNascimento.hasError('menorDeIdade')
+      ? 'É preciso ter 18 anos ou mais para criar a conta.'
+      : 'Informe sua data de nascimento.';
+  }
+
   protected enviar(): void {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
+      // aria-invalid só chega ao DOM depois da próxima detecção de mudanças.
+      setTimeout(() => document.querySelector<HTMLElement>('form [aria-invalid="true"]')?.focus());
       return;
     }
 

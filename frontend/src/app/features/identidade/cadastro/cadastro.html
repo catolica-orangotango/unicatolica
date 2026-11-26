@@ -79,7 +79,7 @@
         "
       />
       @if (form.controls.email.touched && form.controls.email.invalid) {
-        <span class="campo-erro" role="alert" id="erro-email">Informe um e-mail institucional válido.</span>
+        <span class="campo-erro" role="alert" id="erro-email">{{ mensagemErroEmail() }}</span>
       }
 
       <label class="cadastro__label" for="senha">Senha</label>
@@ -210,7 +210,7 @@
         "
       />
       @if (form.controls.dataNascimento.touched && form.controls.dataNascimento.invalid) {
-        <span class="campo-erro" role="alert" id="erro-dataNascimento">Informe sua data de nascimento.</span>
+        <span class="campo-erro" role="alert" id="erro-dataNascimento">{{ mensagemErroNascimento() }}</span>
       }
 
       <div class="cadastro__aceite">

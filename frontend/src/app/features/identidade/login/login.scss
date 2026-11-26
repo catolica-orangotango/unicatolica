@@ -111,3 +111,28 @@
   font-weight: var(--uc-font-weight-semibold);
   text-decoration: underline;
 }
+
+.login__aviso-texto {
+  margin: 0 0 calc(var(--uc-space-unit) * 2);
+}
+
+// Ação secundária do aviso: texto sublinhado, sem competir com o "Entrar" (única ação primária).
+.login__reenviar {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--uc-color-ink);
+  font: inherit;
+  font-weight: var(--uc-font-weight-semibold);
+  text-decoration: underline;
+  cursor: pointer;
+
+  &:disabled {
+    color: var(--uc-color-ink-soft);
+    cursor: default;
+  }
+}
+
+.login__form + .login__aviso {
+  margin: calc(var(--uc-space-unit) * 4) 0 0;
+}

@@ -1,3 +1,5 @@
+@use '../../../styles/breakpoints' as bp;
+
 // Casca das telas públicas (Story 14.7).
 //
 // Todo valor é um token --uc-* da Story 14.1. A marca repete o idioma do
@@ -14,6 +16,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: calc(var(--uc-space-unit) * 16);
   min-height: 100vh; // layout-literal: fallback de viewport para navegadores sem dvh
   min-height: 100dvh; // layout-literal: altura de viewport dinamica, nao e um espacamento de design
   padding: var(--uc-space-page-margin);
@@ -24,6 +27,55 @@
   // Cresce até o teto; sem `width` fixa, então nada de literal de layout aqui.
   flex: 1;
   max-width: calc(var(--uc-space-unit) * 100);
+}
+
+// Coluna do produto (KAN-92): marca, chamada e apoio. Some em telas estreitas, onde
+// só a marca fica acima do card.
+.auth-shell__produto {
+  flex: 1;
+  max-width: calc(var(--uc-space-unit) * 100);
+}
+
+.auth-shell__chamada {
+  margin: 0 0 calc(var(--uc-space-unit) * 3);
+  font-size: var(--uc-font-size-greeting);
+  font-weight: var(--uc-font-weight-semibold);
+  letter-spacing: var(--uc-letter-spacing-greeting);
+  color: var(--uc-color-ink);
+}
+
+.auth-shell__apoio {
+  margin: 0;
+  font-size: var(--uc-font-size-body);
+  color: var(--uc-color-ink-soft);
+}
+
+@media (max-width: bp.$uc-bp-tablet) {
+  .auth-shell {
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: stretch;
+    gap: calc(var(--uc-space-unit) * 6);
+  }
+
+  .auth-shell__produto,
+  .auth-shell__conteudo {
+    flex: none;
+    max-width: none;
+  }
+
+  .auth-shell__apoio {
+    display: none;
+  }
+
+  .auth-shell__chamada {
+    margin: 0;
+    font-size: var(--uc-font-size-body);
+  }
+
+  .auth-shell__marca {
+    margin-bottom: calc(var(--uc-space-unit) * 2);
+  }
 }
 
 .auth-shell__marca {
