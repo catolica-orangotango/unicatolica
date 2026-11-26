@@ -43,6 +43,15 @@
     <button uc-button class="login__enviar" type="submit" [disabled]="enviando()">Entrar</button>
   </form>
 
+  @if (emailNaoConfirmado()) {
+    <div class="login__aviso" role="alert">
+      <p class="login__aviso-texto">Confirme seu e-mail para entrar. O link foi enviado quando você criou a conta.</p>
+      <button type="button" class="login__reenviar" [disabled]="reenviando()" (click)="reenviarConfirmacao()">
+        Reenviar confirmação
+      </button>
+    </div>
+  }
+
   @if (mensagemErro()) {
     <p class="login__erro" role="alert">{{ mensagemErro() }}</p>
   }

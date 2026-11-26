@@ -50,6 +50,36 @@ describe('Cadastro', () => {
     expect(component['form'].touched).toBe(true);
   });
 
+  it('e-mail fora do domínio institucional é recusado no campo, sem chamar a API (KAN-92)', () => {
+    preencherFormularioValido();
+    component['form'].controls.email.setValue('ana@gmail.com');
+
+    component['enviar']();
+
+    httpMock.expectNone('http://localhost:8080/auth/registro');
+    expect(component['form'].controls.email.hasError('dominioInvalido')).toBe(true);
+    expect(component['mensagemErroEmail']()).toContain('@catolicasc.edu.br');
+  });
+
+  it('menor de 18 anos é recusado no campo, sem chamar a API (KAN-92)', () => {
+    preencherFormularioValido();
+    const ano = new Date().getFullYear() - 10;
+    component['form'].controls.dataNascimento.setValue(`${ano}-01-01`);
+
+    component['enviar']();
+
+    httpMock.expectNone('http://localhost:8080/auth/registro');
+    expect(component['form'].controls.dataNascimento.hasError('menorDeIdade')).toBe(true);
+    expect(component['mensagemErroNascimento']()).toContain('18 anos');
+  });
+
+  it('quem faz 18 anos hoje pode se cadastrar', () => {
+    const hoje = new Date();
+    const dezoito = `${hoje.getFullYear() - 18}-${String(hoje.getMonth() + 1).padStart(2, '0')}-${String(hoje.getDate()).padStart(2, '0')}`;
+    component['form'].controls.dataNascimento.setValue(dezoito);
+    expect(component['form'].controls.dataNascimento.hasError('menorDeIdade')).toBe(false);
+  });
+
   it('envia o cadastro e exibe os dados retornados em caso de sucesso', () => {
     preencherFormularioValido();
 

@@ -50,6 +50,32 @@ test.describe('Login', () => {
     await expect(page.locator('.login__erro')).toHaveCount(0);
   });
 
+  test('e-mail não confirmado mostra o aviso e reenvia a confirmação (KAN-92)', async ({ page }) => {
+    await page.route('**/auth/login', (route) =>
+      route.fulfill({
+        status: 401,
+        contentType: 'application/json',
+        body: JSON.stringify({ error: { code: 'EMAIL_NAO_CONFIRMADO', message: 'E-mail ainda não confirmado.', details: null } }),
+      }),
+    );
+    let corpoReenvio: unknown = null;
+    await page.route('**/auth/confirmacao-email/reenvio', (route) => {
+      corpoReenvio = route.request().postDataJSON();
+      return route.fulfill({ status: 202 });
+    });
+
+    await page.goto('/login');
+    await page.getByLabel('E-mail').fill('aluno@catolicasc.edu.br');
+    await page.getByLabel('Senha').fill('Senha123!');
+    await page.getByRole('button', { name: 'Entrar' }).click();
+
+    await expect(page.getByText('Confirme seu e-mail para entrar')).toBeVisible();
+    await page.getByRole('button', { name: 'Reenviar confirmação' }).click();
+
+    await expect(page.getByText('Enviamos um novo link de confirmação')).toBeVisible();
+    expect(corpoReenvio).toEqual({ email: 'aluno@catolicasc.edu.br' });
+  });
+
   test('foco de teclado percorre e-mail, senha, Entrar com indicador visível', async ({ page }) => {
     await page.goto('/login');
     await page.getByLabel('E-mail').focus();

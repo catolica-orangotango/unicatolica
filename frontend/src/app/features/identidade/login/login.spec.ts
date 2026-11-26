@@ -6,6 +6,7 @@ import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { vi } from 'vitest';
+import { ToastService } from '../../../ui/toast/toast.service';
 import { Login } from './login';
 
 describe('Login', () => {
@@ -159,6 +160,73 @@ describe('Login', () => {
 
     expect(compiled.querySelector('[role="alert"]')?.textContent).toContain('Sua conta está desativada.');
     expect(compiled.textContent).not.toContain('E-mail ou senha inválidos.');
+  });
+
+  function preencherEEnviar(senha: string): HTMLElement {
+    const compiled = fixture.nativeElement as HTMLElement;
+    const emailInput = compiled.querySelector('input[type="email"]') as HTMLInputElement;
+    const senhaInput = compiled.querySelector('input[type="password"]') as HTMLInputElement;
+    emailInput.value = 'aluno@catolicasc.edu.br';
+    emailInput.dispatchEvent(new Event('input'));
+    senhaInput.value = senha;
+    senhaInput.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+    (compiled.querySelector('button[type="submit"]') as HTMLButtonElement).click();
+    return compiled;
+  }
+
+  it('e-mail não confirmado mostra o aviso e "Reenviar confirmação" (KAN-92)', () => {
+    const compiled = preencherEEnviar('Senha123!');
+    httpMock.expectOne('http://localhost:8080/auth/login').flush(
+      { error: { code: 'EMAIL_NAO_CONFIRMADO', message: 'E-mail ainda não confirmado.', details: null } },
+      { status: 401, statusText: 'Unauthorized' },
+    );
+    fixture.detectChanges();
+
+    expect(compiled.querySelector('.login__aviso')?.textContent).toContain('Confirme seu e-mail');
+    expect(compiled.querySelector('.login__reenviar')?.textContent).toContain('Reenviar confirmação');
+    expect(compiled.textContent).not.toContain('E-mail ou senha inválidos.');
+  });
+
+  it('reenviar confirmação chama a API com o e-mail digitado e mostra toast de sucesso', () => {
+    const compiled = preencherEEnviar('Senha123!');
+    httpMock.expectOne('http://localhost:8080/auth/login').flush(
+      { error: { code: 'EMAIL_NAO_CONFIRMADO', message: 'x', details: null } },
+      { status: 401, statusText: 'Unauthorized' },
+    );
+    fixture.detectChanges();
+
+    (compiled.querySelector('.login__reenviar') as HTMLButtonElement).click();
+    const req = httpMock.expectOne('http://localhost:8080/auth/confirmacao-email/reenvio');
+    expect(req.request.body).toEqual({ email: 'aluno@catolicasc.edu.br' });
+    req.flush(null, { status: 202, statusText: 'Accepted' });
+
+    const toasts = TestBed.inject(ToastService).toasts();
+    expect(toasts.at(-1)?.mensagem).toContain('novo link de confirmação');
+  });
+
+  it('falha no reenvio mostra toast de erro com "Tentar de novo"', () => {
+    const compiled = preencherEEnviar('Senha123!');
+    httpMock.expectOne('http://localhost:8080/auth/login').flush(
+      { error: { code: 'EMAIL_NAO_CONFIRMADO', message: 'x', details: null } },
+      { status: 401, statusText: 'Unauthorized' },
+    );
+    fixture.detectChanges();
+
+    (compiled.querySelector('.login__reenviar') as HTMLButtonElement).click();
+    httpMock.expectOne('http://localhost:8080/auth/confirmacao-email/reenvio').flush('x', { status: 500, statusText: 'Err' });
+
+    const ultimo = TestBed.inject(ToastService).toasts().at(-1);
+    expect(ultimo?.tipo).toBe('erro');
+    expect(ultimo?.acao?.rotulo).toBe('Tentar de novo');
+  });
+
+  it('enviar vazio leva o foco ao primeiro campo inválido', () => {
+    const compiled = fixture.nativeElement as HTMLElement;
+    document.body.appendChild(compiled);
+    (compiled.querySelector('button[type="submit"]') as HTMLButtonElement).click();
+    expect(document.activeElement?.id).toBe('email');
+    compiled.remove();
   });
 
   it('mostra mensagem de erro quando as credenciais são inválidas', () => {
