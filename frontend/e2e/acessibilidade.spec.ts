@@ -302,7 +302,7 @@ for (const viewport of [VIEWPORT_DESKTOP, VIEWPORT_CELULAR]) {
         await esperarSemViolacoes(page);
       });
 
-      test('detalhe da comunidade com a confirmação de exclusão da própria postagem aberta (KAN-137)', async ({ page }) => {
+      test('detalhe da comunidade com o modal de exclusão da própria postagem aberto (KAN-137, KAN-139)', async ({ page }) => {
         await plantarToken(page, ['ALUNO'], '1'); // o autor da postagem do mock é o usuário 1
         await mockComunidadeComFeed(page, {
           id: 27,
@@ -321,7 +321,7 @@ for (const viewport of [VIEWPORT_DESKTOP, VIEWPORT_CELULAR]) {
         });
         await page.goto('/comunidades/27');
         await page.getByRole('button', { name: 'Excluir postagem' }).click();
-        await expect(page.getByText('Excluir esta postagem? Não dá para desfazer.')).toBeVisible();
+        await expect(page.getByRole('dialog', { name: 'Excluir esta postagem?' })).toBeVisible();
         await esperarSemViolacoes(page);
       });
 

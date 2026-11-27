@@ -135,13 +135,32 @@ test('autor exclui a própria postagem: confirma na linha e ela some do feed (KA
   await expect(page.getByRole('button', { name: 'Excluir postagem' })).toHaveCount(1);
   await expect(posts.nth(1).getByRole('button', { name: 'Denunciar' })).toBeVisible();
 
-  await page.getByRole('button', { name: 'Excluir postagem' }).click();
-  await expect(page.getByText('Excluir esta postagem? Não dá para desfazer.')).toBeVisible();
-  await page.getByRole('button', { name: 'Cancelar' }).click();
+  const dialogo = page.getByRole('dialog', { name: 'Excluir esta postagem?' });
+  const excluir = page.getByRole('button', { name: 'Excluir postagem' });
+
+  // O modal abre em destaque, com o trecho da postagem e o foco em "Cancelar".
+  await excluir.click();
+  await expect(dialogo).toBeVisible();
+  await expect(dialogo).toContainText('não dá para desfazer');
+  await expect(dialogo).toContainText('Publiquei sem querer');
+  await expect(dialogo.getByRole('button', { name: 'Cancelar' })).toBeFocused();
+
+  // Escape, clique no fundo e Cancelar fecham sem excluir e devolvem o foco ao "Excluir".
+  await page.keyboard.press('Escape');
+  await expect(dialogo).toHaveCount(0);
+  await expect(excluir).toBeFocused();
+  await excluir.click();
+  await expect(dialogo).toBeVisible();
+  await page.mouse.click(5, 5); // fundo escurecido, fora do modal
+  await expect(dialogo).toHaveCount(0);
+  await excluir.click();
+  await expect(dialogo).toBeVisible();
+  await dialogo.getByRole('button', { name: 'Cancelar' }).click();
+  await expect(dialogo).toHaveCount(0);
   await expect(posts).toHaveCount(2);
 
-  await page.getByRole('button', { name: 'Excluir postagem' }).click();
-  await page.getByRole('group', { name: 'Confirmar exclusão da postagem' }).getByRole('button', { name: 'Excluir' }).click();
+  await excluir.click();
+  await dialogo.getByRole('button', { name: 'Excluir' }).click();
 
   await expect(posts).toHaveCount(1);
   await expect(page.getByText('Publiquei sem querer')).toHaveCount(0);

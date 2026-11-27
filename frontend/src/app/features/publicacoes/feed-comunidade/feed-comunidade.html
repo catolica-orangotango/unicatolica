@@ -109,40 +109,17 @@
               }
             }
             @if (publicacao.autor.id === usuarioId) {
-              @if (excluindoId() === publicacao.id) {
-                <div class="feed__exclusao" role="group" aria-label="Confirmar exclusão da postagem">
-                  <p class="feed__exclusao-texto">Excluir esta postagem? Não dá para desfazer.</p>
-                  <div class="feed__rodape-caixa">
-                    <button
-                      type="button"
-                      class="uc-text-meta feed__acao"
-                      data-cancelar
-                      [disabled]="excluindoEmAndamento()"
-                      (click)="cancelarExclusao()"
-                    >
-                      Cancelar
-                    </button>
-                    <button type="button" uc-button variant="danger" [disabled]="excluindoEmAndamento()" (click)="confirmarExclusao()">
-                      {{ excluindoEmAndamento() ? 'Excluindo…' : 'Excluir' }}
-                    </button>
-                  </div>
-                  @if (erroExclusao(); as mensagem) {
-                    <p class="feed__erro" role="alert">{{ mensagem }}</p>
-                  }
-                </div>
-              } @else {
-                <div class="feed__rodape-post">
-                  <button
-                    type="button"
-                    class="uc-text-meta feed__acao"
-                    aria-label="Excluir postagem"
-                    [attr.data-excluir]="publicacao.id"
-                    (click)="abrirExclusao(publicacao.id)"
-                  >
-                    Excluir
-                  </button>
-                </div>
-              }
+              <div class="feed__rodape-post">
+                <button
+                  type="button"
+                  class="uc-text-meta feed__acao"
+                  aria-label="Excluir postagem"
+                  [attr.data-excluir]="publicacao.id"
+                  (click)="abrirExclusao(publicacao.id)"
+                >
+                  Excluir
+                </button>
+              </div>
             } @else {
               @if (denunciandoId() === publicacao.id) {
                 <form class="feed__denuncia" (ngSubmit)="enviarDenuncia()">
@@ -197,3 +174,35 @@
     }
   }
 </section>
+
+@if (excluindoId() !== null) {
+  <dialog
+    #dialogoExclusao
+    class="feed__dialogo"
+    aria-labelledby="dialogo-exclusao-titulo"
+    aria-describedby="dialogo-exclusao-texto"
+    (cancel)="aoCancelarDialogo($event)"
+    (click)="aoClicarNoDialogo($event)"
+  >
+    <div class="feed__dialogo-corpo">
+      <h2 class="feed__dialogo-titulo" id="dialogo-exclusao-titulo">Excluir esta postagem?</h2>
+      <p class="feed__dialogo-texto" id="dialogo-exclusao-texto">
+        Ela some do feed e não dá para desfazer.
+      </p>
+      @if (trechoDaExclusao(); as trecho) {
+        <blockquote class="feed__dialogo-trecho">{{ trecho }}</blockquote>
+      }
+      @if (erroExclusao(); as mensagem) {
+        <p class="feed__erro" role="alert">{{ mensagem }}</p>
+      }
+      <div class="feed__dialogo-acoes">
+        <button type="button" uc-button variant="secondary" [disabled]="excluindoEmAndamento()" (click)="cancelarExclusao()">
+          Cancelar
+        </button>
+        <button type="button" uc-button variant="danger" [disabled]="excluindoEmAndamento()" (click)="confirmarExclusao()">
+          {{ excluindoEmAndamento() ? 'Excluindo…' : 'Excluir' }}
+        </button>
+      </div>
+    </div>
+  </dialog>
+}

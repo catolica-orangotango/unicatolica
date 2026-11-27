@@ -87,6 +87,21 @@ export class FeedComunidade {
       const id = this.comunidadeId();
       untracked(() => this.carregar(id));
     });
+
+    // O <dialog> só existe enquanto há uma exclusão pendente; ao aparecer, abre como modal
+    // (fundo escurecido, foco preso, Escape nativo). O foco inicial vai para "Cancelar", o
+    // primeiro botão: o padrão seguro numa ação que não dá para desfazer.
+    effect(() => {
+      const dialogo = this.dialogoExclusao()?.nativeElement;
+      if (dialogo && !dialogo.open) {
+        // jsdom (Vitest) não implementa showModal.
+        if (typeof dialogo.showModal === 'function') {
+          dialogo.showModal();
+        } else {
+          dialogo.setAttribute('open', '');
+        }
+      }
+    });
   }
 
   private carregar(id: number): void {
@@ -196,11 +211,32 @@ export class FeedComunidade {
     );
   }
 
+  /** Trecho da postagem que está sendo excluída, para o modal mostrar do que se trata. */
+  protected readonly trechoDaExclusao = computed(() => {
+    const texto = this.publicacoes().find((p) => p.id === this.excluindoId())?.conteudo ?? '';
+    return texto.length > 140 ? `${texto.slice(0, 140).trimEnd()}…` : texto;
+  });
+
+  private readonly dialogoExclusao = viewChild<ElementRef<HTMLDialogElement>>('dialogoExclusao');
+
   protected abrirExclusao(publicacaoId: number): void {
     this.excluindoId.set(publicacaoId);
     this.erroExclusao.set(null);
-    // O foco vai para "Cancelar": o padrão seguro numa ação que não dá para desfazer.
-    setTimeout(() => document.querySelector<HTMLElement>('.feed__exclusao [data-cancelar]')?.focus());
+  }
+
+  /** Clique no fundo escurecido (o próprio <dialog>, fora do conteúdo) cancela. */
+  protected aoClicarNoDialogo(evento: MouseEvent): void {
+    if (evento.target === evento.currentTarget && !this.excluindoEmAndamento()) {
+      this.cancelarExclusao();
+    }
+  }
+
+  /** Escape: o <dialog> se fecha sozinho; o signal precisa acompanhar. */
+  protected aoCancelarDialogo(evento: Event): void {
+    evento.preventDefault();
+    if (!this.excluindoEmAndamento()) {
+      this.cancelarExclusao();
+    }
   }
 
   protected cancelarExclusao(): void {
