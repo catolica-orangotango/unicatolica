@@ -55,8 +55,8 @@ flowchart LR
 | PR | Conteúdo | Lacuna | Estado |
 |---|---|---|---|
 | T0 | Esta decisão; regra acima no checklist de `como-funciona.md` e no `AGENTS.md`; exemplo de `@QuarkusTest` corrigido para `AutenticacaoFluxoTest` | 8 | Concluído (#32) |
-| T1 | `@QuarkusTest` de `/comunidades` | 1 | Em andamento |
-| T2 | `@QuarkusTest` da confirmação de e-mail e do fluxo cadastro → login | 2 | Pendente |
+| T1 | `@QuarkusTest` de `/comunidades` | 1 | Concluído (`ComunidadeFluxoTest`, KAN-66) |
+| T2 | `@QuarkusTest` da confirmação de e-mail e do fluxo cadastro → login | 2 | Concluído (`ConfirmacaoEmailFluxoTest`, KAN-67) |
 | T3 | Job E2E no CI (mockado) e job E2E com backend real | 3 | Concluído (#61) |
 | T4 | Validação de toda resposta dos `@QuarkusTest` contra o `openapi.yaml` | 4 | Pendente |
 | T5 | JaCoCo e coverage do Vitest, com gate que não deixa a cobertura cair | 5 | Pendente |
@@ -87,11 +87,13 @@ Uma classe `ConfirmacaoEmailFluxoTest` usa o `MockMailbox` do Quarkus para ler o
 - Cadastro → e-mail na caixa simulada → `POST /auth/confirmacao-email/{token}` 200 → login 200. É o fluxo completo que falta hoje.
 - Login antes de confirmar → erro de e-mail não confirmado.
 - Token inexistente → 404 `TOKEN_CONFIRMACAO_INVALIDO`.
-- Token expirado (a expiração é ajustada pelo repositório) → 400 `TOKEN_CONFIRMACAO_EXPIRADO`.
+- Token expirado (a expiração é ajustada pelo repositório) → 422 `TOKEN_CONFIRMACAO_EXPIRADO` (o erro de validação do envelope é 422, não 400).
 - Confirmar duas vezes → idempotente.
-- `/reenvio` → novo e-mail na caixa, e o token antigo deixa de valer (se for a regra; o teste documenta o comportamento atual).
+- `/reenvio` → novo e-mail na caixa com token novo, e o token antigo deixa de valer (404 `TOKEN_CONFIRMACAO_INVALIDO`). Para e-mail desconhecido ou conta já confirmada responde 202 igual e não envia nada (não revela se a conta existe).
 
 O envio por SMTP real (DT-4) fica fora, porque depende de um provedor externo. É a exceção prevista na regra.
+
+O teste usa `@TestProfile(CaixaSimuladaProfile.class)`, que força `app.email.transporte=smtp` e `quarkus.mailer.mock=true`. Sem isso, um `.env` local com `EMAIL_TRANSPORTE=brevo-api` faria o cadastro do teste tentar enviar e-mail de verdade pela Brevo e a caixa simulada ficaria vazia.
 
 ### T3. E2E no CI
 
