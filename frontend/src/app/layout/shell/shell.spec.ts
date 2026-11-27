@@ -1314,13 +1314,6 @@ describe('shell.scss - contrato de estilo por token', () => {
     );
   });
 
-  it('o conteúdo tem teto de leitura (--uc-layout-feed) e, no modo largo, --uc-layout-wide, centralizado', () => {
-    const conteudo = regra(semMedia, '.shell__conteudo');
-    expect(conteudo).toMatch(/max-width:\s*var\(--uc-layout-feed\)/);
-    expect(conteudo).toMatch(/margin-inline:\s*auto/);
-    expect(regra(semMedia, ':host(.shell--larga) .shell__conteudo')).toMatch(/max-width:\s*var\(--uc-layout-wide\)/);
-  });
-
   it('coluna de conteúdo com filete de 1px dos dois lados; no modo largo só à esquerda', () => {
     const main = regra(semMedia, '.shell__main');
     expect(main).toMatch(/border-left:\s*1px solid var\(--uc-color-border\)/);

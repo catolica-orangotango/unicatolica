@@ -3,10 +3,6 @@
   display: block;
 }
 
-.perfil {
-  // layout-literal: coluna de leitura, igual a do feed.
-  max-width: 720px;
-}
 
 .perfil__estado {
   padding: calc(var(--uc-space-unit) * 12) calc(var(--uc-space-unit) * 6);

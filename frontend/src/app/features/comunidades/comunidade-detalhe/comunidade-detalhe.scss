@@ -20,8 +20,6 @@
 }
 
 .detalhe {
-  // layout-literal: coluna de leitura da comunidade, igual a do feed.
-  max-width: 720px;
   // Header sangra até a borda da coluna do <main> do Shell: a margem negativa
   // cancela o padding lateral do Shell (--uc-space-page-margin, que muda no
   // celular), nos dois lados. Mesmo efeito "banner cheio" do mockup home-comunidade.html.

@@ -1,9 +1,9 @@
 // Casca de navegação global (Story 14.3, redesenhada na KAN-91).
 //
-// Três colunas centradas como um bloco (docs/design/kan-84/base.css, regras
-// .app, nav.side, .col e aside): menu --uc-layout-nav, conteúdo
-// --uc-layout-feed e lateral --uc-layout-aside. Telas de trabalho
-// (.shell--larga, rota com data.largo) usam menu + --uc-layout-wide.
+// Três colunas na largura da tela (KAN-136/KAN-138): menu --uc-layout-nav à
+// esquerda, lateral --uc-layout-aside à direita e o conteúdo ocupando toda a
+// coluna do meio. Telas de trabalho (.shell--larga, rota com data.largo) não
+// têm a lateral: menu + conteúdo.
 //
 // Só tokens var(--uc-*). As dimensões estruturais que não têm token levam o
 // marcador `// layout-literal: <motivo>` reconhecido pelo
@@ -387,17 +387,6 @@
 
 :host(.shell--larga) .shell__main {
   border-right: 0;
-}
-
-
-// Largura de leitura: o conteúdo da tela fica centralizado na coluna, sem passar do teto.
-.shell__conteudo {
-  max-width: var(--uc-layout-feed);
-  margin-inline: auto;
-}
-
-:host(.shell--larga) .shell__conteudo {
-  max-width: var(--uc-layout-wide);
 }
 
 // -- Coluna lateral (aside) --------------------------------------------
