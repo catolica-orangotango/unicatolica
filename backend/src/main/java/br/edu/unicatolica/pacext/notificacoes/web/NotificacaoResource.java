@@ -5,6 +5,8 @@ import br.edu.unicatolica.pacext.compartilhado.seguranca.UsuarioAutenticado;
 import br.edu.unicatolica.pacext.notificacoes.aplicacao.NotificacaoService;
 import br.edu.unicatolica.pacext.notificacoes.dominio.Notificacao;
 import jakarta.inject.Inject;
+import jakarta.ws.rs.DELETE;
+import jakarta.ws.rs.DefaultValue;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
@@ -14,7 +16,7 @@ import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
-/** Story 10.1 — sininho de notificações da shell (RF20.1). */
+/** Story 10.1/10.2 — sininho de notificações da shell (RF20.1, RF68, RF69, RF84). */
 @Path("/notificacoes")
 public class NotificacaoResource {
 
@@ -27,18 +29,39 @@ public class NotificacaoResource {
     @GET
     @Path("/me")
     @Produces(MediaType.APPLICATION_JSON)
-    public PageResponse<NotificacaoResponse> minhas(
-            @QueryParam("pagina") @jakarta.ws.rs.DefaultValue("0") int pagina,
-            @QueryParam("tamanho") @jakarta.ws.rs.DefaultValue("20") int tamanho) {
+    public NotificacaoPageResponse minhas(
+            @QueryParam("pagina") @DefaultValue("0") int pagina,
+            @QueryParam("tamanho") @DefaultValue("20") int tamanho) {
         PageResponse<Notificacao> pagina1 = notificacaoService.listar(usuarioAutenticado.id(), pagina, tamanho);
-        return new PageResponse<>(pagina1.content().stream().map(NotificacaoResponse::de).toList(), pagina1.page(),
-                pagina1.size(), pagina1.totalElements(), pagina1.totalPages());
+        long totalNaoLidas = notificacaoService.contarNaoLidas(usuarioAutenticado.id());
+        return NotificacaoPageResponse.de(pagina1, totalNaoLidas);
+    }
+
+    @GET
+    @Path("/me/resumo")
+    @Produces(MediaType.APPLICATION_JSON)
+    public NotificacaoResumoResponse resumo() {
+        return NotificacaoResumoResponse.de(notificacaoService.resumo(usuarioAutenticado.id()));
     }
 
     @POST
     @Path("/{id}/lida")
     public Response marcarComoLida(@PathParam("id") Long id) {
         notificacaoService.marcarComoLida(usuarioAutenticado.id(), id);
+        return Response.noContent().build();
+    }
+
+    @POST
+    @Path("/me/lidas")
+    public Response marcarTodasComoLidas() {
+        notificacaoService.marcarTodasComoLidas(usuarioAutenticado.id());
+        return Response.noContent().build();
+    }
+
+    @DELETE
+    @Path("/{id}")
+    public Response excluir(@PathParam("id") Long id) {
+        notificacaoService.excluir(usuarioAutenticado.id(), id);
         return Response.noContent().build();
     }
 }

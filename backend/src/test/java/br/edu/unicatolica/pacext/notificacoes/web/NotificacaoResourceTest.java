@@ -9,6 +9,7 @@ import br.edu.unicatolica.pacext.compartilhado.paginacao.PageResponse;
 import br.edu.unicatolica.pacext.compartilhado.seguranca.UsuarioAutenticado;
 import br.edu.unicatolica.pacext.notificacoes.TipoNotificacao;
 import br.edu.unicatolica.pacext.notificacoes.aplicacao.NotificacaoService;
+import br.edu.unicatolica.pacext.notificacoes.aplicacao.ResumoNotificacoes;
 import br.edu.unicatolica.pacext.notificacoes.dominio.Notificacao;
 import jakarta.ws.rs.core.Response;
 import java.time.Instant;
@@ -32,7 +33,7 @@ class NotificacaoResourceTest {
     }
 
     @Test
-    void minhasDevolveAPaginaConvertidaParaNotificacaoResponse() {
+    void minhasDevolveAPaginaConvertidaParaNotificacaoResponseComTotalNaoLidas() {
         Notificacao notificacao = new Notificacao();
         notificacao.id = 1L;
         notificacao.tipo = TipoNotificacao.ONBOARDING_PERFIL;
@@ -41,12 +42,24 @@ class NotificacaoResourceTest {
         notificacao.lida = false;
         notificacao.criadoEm = Instant.parse("2026-09-30T12:00:00Z");
         when(notificacaoService.listar(42L, 0, 20)).thenReturn(PageResponse.de(List.of(notificacao), 0, 20, 1));
+        when(notificacaoService.contarNaoLidas(42L)).thenReturn(1L);
 
-        PageResponse<NotificacaoResponse> pagina = resource.minhas(0, 20);
+        NotificacaoPageResponse pagina = resource.minhas(0, 20);
 
         assertEquals(1, pagina.content().size());
         assertEquals("ONBOARDING_PERFIL", pagina.content().get(0).tipo());
         assertEquals(1L, pagina.totalElements());
+        assertEquals(1L, pagina.totalNaoLidas());
+    }
+
+    @Test
+    void resumoDevolveTotalNaoLidasEUltimaNotificacaoIdDoServico() {
+        when(notificacaoService.resumo(42L)).thenReturn(new ResumoNotificacoes(3L, 9L));
+
+        NotificacaoResumoResponse resumo = resource.resumo();
+
+        assertEquals(3L, resumo.totalNaoLidas());
+        assertEquals(9L, resumo.ultimaNotificacaoId());
     }
 
     @Test
@@ -55,5 +68,21 @@ class NotificacaoResourceTest {
 
         assertEquals(204, response.getStatus());
         verify(notificacaoService).marcarComoLida(42L, 7L);
+    }
+
+    @Test
+    void marcarTodasComoLidasChamaOServicoComOUsuarioAutenticadoEDevolve204() {
+        Response response = resource.marcarTodasComoLidas();
+
+        assertEquals(204, response.getStatus());
+        verify(notificacaoService).marcarTodasComoLidas(42L);
+    }
+
+    @Test
+    void excluirChamaOServicoComOUsuarioAutenticadoEDevolve204() {
+        Response response = resource.excluir(7L);
+
+        assertEquals(204, response.getStatus());
+        verify(notificacaoService).excluir(42L, 7L);
     }
 }
