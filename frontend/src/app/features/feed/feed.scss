@@ -119,3 +119,32 @@
   color: var(--uc-color-ink-soft);
   text-decoration: none;
 }
+
+// Bloco "Esta semana" (Story 13.2): linhas entre filetes, como as publicações do feed.
+.home__avisos {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.home__aviso-item {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--uc-space-unit) / 2);
+  padding: calc(var(--uc-space-unit) * 3) 0;
+  border-top: 1px solid var(--uc-color-border);
+}
+
+.home__aviso-titulo {
+  font-weight: var(--uc-font-weight-semibold);
+  color: var(--uc-color-ink);
+}
+
+.home__aviso-mensagem {
+  color: var(--uc-color-ink);
+}
+
+.home__aviso-meta {
+  font-size: var(--uc-font-size-meta);
+  color: var(--uc-color-ink-soft);
+}

@@ -14,6 +14,23 @@
       <uc-avatar class="home__avatar" cor="marca" [iniciais]="iniciais()" [fotoUrl]="fotoUrl()" />
     </div>
 
+    @if (avisos().length > 0) {
+      <section class="home__secao" aria-labelledby="titulo-avisos-home">
+        <h2 id="titulo-avisos-home">Esta semana</h2>
+        <ul class="home__avisos">
+          @for (aviso of avisos(); track aviso.id) {
+            <li class="home__aviso-item">
+              <span class="home__aviso-titulo">{{ aviso.titulo }}</span>
+              <span class="home__aviso-mensagem">{{ aviso.mensagem }}</span>
+              <span class="home__aviso-meta">
+                {{ paraQuem(aviso) }} · {{ aviso.dataDestaque ? (aviso.dataDestaque | date: 'dd/MM') : (aviso.criadoEm | date: 'dd/MM') }}
+              </span>
+            </li>
+          }
+        </ul>
+      </section>
+    }
+
     @if (comunidadeDoFeed(); as comunidade) {
       <section class="home__secao" aria-labelledby="titulo-feed-home">
         <h2 id="titulo-feed-home">Publicações de {{ comunidade.nome }}</h2>

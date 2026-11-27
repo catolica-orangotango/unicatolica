@@ -60,6 +60,11 @@ public class UsuarioService implements UsuarioConsulta, SessaoConsulta {
     }
 
     @Override
+    public Optional<Long> cursoId(Long usuarioId) {
+        return Optional.ofNullable(usuarioRepository.findById(usuarioId)).map(u -> u.cursoId);
+    }
+
+    @Override
     public Optional<Instant> sessaoValidaDesde(Long usuarioId) {
         return Optional.ofNullable(usuarioRepository.findById(usuarioId)).map(u -> u.sessaoValidaDesde);
     }

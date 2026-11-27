@@ -127,4 +127,63 @@ class AvisoAdminFluxoTest {
                 .body("error.code", equalTo("CAMPO_OBRIGATORIO"))
                 .body("error.details", equalTo("titulo"));
     }
+
+    @Test
+    void inicioDoAlunoTrazOsGeraisEOsDoCursoDeleMasNaoOsDeOutroCurso() {
+        String sufixo = String.valueOf(System.nanoTime());
+        Integer direito = UsuarioDeTeste.idDoCurso("Direito");
+        Integer design = UsuarioDeTeste.idDoCurso("Design");
+        UsuarioDeTeste.Sessao alunoDireito = usuarioDeTeste.novo("Direito");
+        UsuarioDeTeste.Sessao alunoDesign = usuarioDeTeste.novo("Design");
+
+        admin.autenticado().contentType(JSON).body(corpo("Geral " + sufixo, "GERAL", null))
+                .when().post("/admin/avisos").then().statusCode(201);
+        admin.autenticado().contentType(JSON).body(corpo("Direito " + sufixo, "CURSO", direito))
+                .when().post("/admin/avisos").then().statusCode(201);
+        admin.autenticado().contentType(JSON).body(corpo("Design " + sufixo, "CURSO", design))
+                .when().post("/admin/avisos").then().statusCode(201);
+
+        alunoDireito.autenticado().when().get("/avisos")
+                .then().statusCode(200)
+                .body("titulo", org.hamcrest.Matchers.hasItems("Geral " + sufixo, "Direito " + sufixo))
+                .body("titulo", org.hamcrest.Matchers.not(org.hamcrest.Matchers.hasItem("Design " + sufixo)))
+                .body("find { it.titulo == 'Direito " + sufixo + "' }.cursoNome", equalTo("Direito"));
+        alunoDesign.autenticado().when().get("/avisos")
+                .then().statusCode(200)
+                .body("titulo", org.hamcrest.Matchers.hasItems("Geral " + sufixo, "Design " + sufixo))
+                .body("titulo", org.hamcrest.Matchers.not(org.hamcrest.Matchers.hasItem("Direito " + sufixo)));
+    }
+
+    @Test
+    void inicioDeQuemNaoTemCursoVeSoOsGerais() {
+        String sufixo = String.valueOf(System.nanoTime());
+        Integer direito = UsuarioDeTeste.idDoCurso("Direito");
+        UsuarioDeTeste.Sessao moderador = usuarioDeTeste.comPerfil("MODERADOR");
+        admin.autenticado().contentType(JSON).body(corpo("Geral " + sufixo, "GERAL", null))
+                .when().post("/admin/avisos").then().statusCode(201);
+        admin.autenticado().contentType(JSON).body(corpo("Direito " + sufixo, "CURSO", direito))
+                .when().post("/admin/avisos").then().statusCode(201);
+
+        moderador.autenticado().when().get("/avisos")
+                .then().statusCode(200)
+                .body("titulo", org.hamcrest.Matchers.hasItem("Geral " + sufixo))
+                .body("titulo", org.hamcrest.Matchers.not(org.hamcrest.Matchers.hasItem("Direito " + sufixo)));
+    }
+
+    @Test
+    void avisoComDataEmDestaqueJaPassadaSaiDoInicio() {
+        String titulo = "Ontem " + System.nanoTime();
+        Map<String, Object> corpo = corpo(titulo, "GERAL", null);
+        corpo.put("dataDestaque", java.time.LocalDate.now().minusDays(1).toString());
+        admin.autenticado().contentType(JSON).body(corpo).when().post("/admin/avisos").then().statusCode(201);
+
+        admin.autenticado().when().get("/avisos")
+                .then().statusCode(200)
+                .body("titulo", org.hamcrest.Matchers.not(org.hamcrest.Matchers.hasItem(titulo)));
+    }
+
+    @Test
+    void avisosDoInicioSemTokenDa401() {
+        given().when().get("/avisos").then().statusCode(401).body("error.code", notNullValue());
+    }
 }

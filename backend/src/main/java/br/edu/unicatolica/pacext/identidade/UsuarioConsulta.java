@@ -2,6 +2,7 @@ package br.edu.unicatolica.pacext.identidade;
 
 import java.util.Collection;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * Leitura de usuários por outros módulos (API pública de Identidade). Os outros módulos
@@ -15,4 +16,7 @@ public interface UsuarioConsulta {
      * @return resumo de cada id encontrado, indexado pelo id; ids inexistentes ficam de fora.
      */
     Map<Long, UsuarioResumo> buscarResumos(Collection<Long> ids);
+
+    /** @return id do curso do usuário, ou vazio se ele não tem curso (ou não existe). */
+    Optional<Long> cursoId(Long usuarioId);
 }
