@@ -521,4 +521,86 @@ describe('FeedComunidade', () => {
       expect(botaoComTexto(posts[1] as HTMLElement, 'Denunciar')).toBeTruthy();
     });
   });
+
+  describe('Excluir a própria postagem (KAN-137)', () => {
+    function botaoComTexto(el: HTMLElement, texto: string): HTMLButtonElement | undefined {
+      return [...el.querySelectorAll('button')].find((b) => b.textContent?.trim() === texto);
+    }
+
+    /** post(1) é do usuário 101 (o logado); post(2), de outra pessoa. */
+    async function montarComDuasPostagens(): Promise<HTMLElement> {
+      localStorage.setItem('pacext.token', tokenDoUsuario(101));
+      const el = await montar({ souMembro: true });
+      requisicaoFeed().flush(pagina([post(1, 'minha'), post(2, 'de outra pessoa')]));
+      fixture.detectChanges();
+      return el;
+    }
+
+    it('só a própria postagem mostra "Excluir"', async () => {
+      const el = await montarComDuasPostagens();
+
+      const posts = el.querySelectorAll('.feed__post');
+      expect(botaoComTexto(posts[0] as HTMLElement, 'Excluir')).toBeTruthy();
+      expect(botaoComTexto(posts[1] as HTMLElement, 'Excluir')).toBeUndefined();
+    });
+
+    it('pede confirmação na própria linha e "Cancelar" não exclui nada', async () => {
+      const el = await montarComDuasPostagens();
+      botaoComTexto(el, 'Excluir')?.click();
+      fixture.detectChanges();
+
+      expect(el.querySelector('.feed__exclusao-texto')?.textContent).toContain('Não dá para desfazer');
+      botaoComTexto(el, 'Cancelar')?.click();
+      fixture.detectChanges();
+
+      expect(el.querySelector('.feed__exclusao')).toBeNull();
+      expect(el.querySelectorAll('.feed__post').length).toBe(2);
+      httpMock.expectNone(`${API_BASE_URL}/publicacoes/1`);
+    });
+
+    it('confirmar chama DELETE, tira a postagem da lista e avisa com toast', async () => {
+      const el = await montarComDuasPostagens();
+      botaoComTexto(el, 'Excluir')?.click();
+      fixture.detectChanges();
+      // No card aberto há "Cancelar" e o "Excluir" de confirmação.
+      botaoComTexto(el.querySelector('.feed__exclusao') as HTMLElement, 'Excluir')?.click();
+
+      const req = httpMock.expectOne(`${API_BASE_URL}/publicacoes/1`);
+      expect(req.request.method).toBe('DELETE');
+      req.flush(null, { status: 204, statusText: 'No Content' });
+      fixture.detectChanges();
+
+      expect(el.querySelectorAll('.feed__post').length).toBe(1);
+      expect(el.textContent).not.toContain('minha');
+      expect(toasts).toEqual(['Postagem excluída']);
+    });
+
+    it('postagem que já não existe (404) também sai da lista', async () => {
+      const el = await montarComDuasPostagens();
+      botaoComTexto(el, 'Excluir')?.click();
+      fixture.detectChanges();
+      botaoComTexto(el.querySelector('.feed__exclusao') as HTMLElement, 'Excluir')?.click();
+
+      httpMock
+        .expectOne(`${API_BASE_URL}/publicacoes/1`)
+        .flush({ error: { code: 'PUBLICACAO_NAO_ENCONTRADA', message: 'Postagem não encontrada.' } }, { status: 404, statusText: 'Not Found' });
+      fixture.detectChanges();
+
+      expect(el.querySelectorAll('.feed__post').length).toBe(1);
+    });
+
+    it('erro do servidor mantém a postagem e mostra a mensagem na confirmação', async () => {
+      const el = await montarComDuasPostagens();
+      botaoComTexto(el, 'Excluir')?.click();
+      fixture.detectChanges();
+      botaoComTexto(el.querySelector('.feed__exclusao') as HTMLElement, 'Excluir')?.click();
+
+      httpMock.expectOne(`${API_BASE_URL}/publicacoes/1`).flush('x', { status: 500, statusText: 'Server Error' });
+      fixture.detectChanges();
+
+      expect(el.querySelectorAll('.feed__post').length).toBe(2);
+      expect(el.querySelector('.feed__exclusao [role="alert"]')?.textContent).toContain('Não foi possível excluir');
+      expect(toasts).toEqual([]);
+    });
+  });
 });

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Situação EXCLUIDA (KAN-137): o autor exclui a própria postagem. A exclusão é lógica, para
+    que denúncias já abertas e a auditoria continuem válidas; a postagem sai do feed e a
+    Moderação passa a tratá-la como inexistente (publicacoes.PublicacaoModeracao).
+-->
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="publicacoes-003-situacao-excluida" author="pacext">
+        <sql>ALTER TABLE publicacao DROP CONSTRAINT ck_publicacao_situacao</sql>
+        <sql>ALTER TABLE publicacao ADD CONSTRAINT ck_publicacao_situacao CHECK (situacao IN ('VISIVEL', 'OCULTA', 'EXCLUIDA'))</sql>
+        <rollback>
+            <sql>DELETE FROM publicacao WHERE situacao = 'EXCLUIDA'</sql>
+            <sql>ALTER TABLE publicacao DROP CONSTRAINT ck_publicacao_situacao</sql>
+            <sql>ALTER TABLE publicacao ADD CONSTRAINT ck_publicacao_situacao CHECK (situacao IN ('VISIVEL', 'OCULTA'))</sql>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

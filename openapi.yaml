@@ -885,6 +885,36 @@ paths:
         '404':
           $ref: '#/components/responses/NaoEncontrado'
 
+  /publicacoes/{id}:
+    delete:
+      operationId: excluirPublicacao
+      summary: Exclui a própria postagem (KAN-137)
+      tags: [Publicacoes]
+      description: >
+        Só o autor exclui a própria postagem; remoção por moderador é a Story 12.6. A exclusão
+        é lógica: a postagem sai do feed e de totalElements, mas o registro é preservado para
+        denúncias já abertas e para a auditoria. Postagem excluída não pode ser ocultada,
+        restaurada nem denunciada — para a Moderação ela deixa de existir.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Id da postagem.
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '204':
+          description: Postagem excluída.
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        # 403 NAO_E_AUTOR: a postagem é de outra pessoa.
+        # 404 PUBLICACAO_NAO_ENCONTRADA: não existe ou já foi excluída.
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+
   /comunidades/{id}/enquetes:
     post:
       operationId: criarEnquete

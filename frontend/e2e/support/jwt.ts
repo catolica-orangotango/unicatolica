@@ -28,8 +28,8 @@ function base64url(valor: unknown): string {
  * @param perfis lista de perfis globais (ex.: `['ALUNO']`, `['MODERADOR']`).
  *               Passe `[]` para um token válido de usuário sem perfil.
  */
-export function jwtNaoAssinado(perfis: string[]): string {
+export function jwtNaoAssinado(perfis: string[], usuarioId: string = 'e2e-user'): string {
   const header = base64url({ alg: 'none', typ: 'JWT' });
-  const payload = base64url({ sub: 'e2e-user', [CLAIM_PERFIS]: perfis });
+  const payload = base64url({ sub: usuarioId, [CLAIM_PERFIS]: perfis });
   return `${header}.${payload}.assinatura-ignorada`;
 }

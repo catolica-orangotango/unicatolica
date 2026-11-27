@@ -224,6 +224,69 @@ class PublicacaoFluxoTest {
         }
     }
 
+    @Test
+    void autorExcluiAPostagemESomeDoFeedEDaContagem() {
+        Integer id = publicar("para excluir");
+        publicar("fica");
+
+        given().header("Authorization", "Bearer " + token)
+                .when().delete("/publicacoes/{id}", id)
+                .then().statusCode(204);
+
+        given().header("Authorization", "Bearer " + token)
+                .when().get("/comunidades/{id}/publicacoes", comunidadeMembro)
+                .then().statusCode(200)
+                .body("totalElements", equalTo(1))
+                .body("content.size()", equalTo(1))
+                .body("content[0].conteudo", equalTo("fica"));
+    }
+
+    @Test
+    void excluirDeNovoOuPostagemInexistenteDa404() {
+        Integer id = publicar("uma vez só");
+        given().header("Authorization", "Bearer " + token).when().delete("/publicacoes/{id}", id).then().statusCode(204);
+
+        given().header("Authorization", "Bearer " + token)
+                .when().delete("/publicacoes/{id}", id)
+                .then().statusCode(404)
+                .body("error.code", equalTo("PUBLICACAO_NAO_ENCONTRADA"));
+        given().header("Authorization", "Bearer " + token)
+                .when().delete("/publicacoes/{id}", 999_999L)
+                .then().statusCode(404)
+                .body("error.code", equalTo("PUBLICACAO_NAO_ENCONTRADA"));
+    }
+
+    @Test
+    void naoAutorNaoExcluiDa403ESemTokenDa401() {
+        Integer id = publicar("não é sua");
+        String tokenOutro = given().contentType(JSON)
+                .body(Map.of("email", "moderador.teste@catolicasc.edu.br", "senha", SENHA))
+                .when().post("/auth/login")
+                .then().statusCode(200)
+                .extract().path("token");
+
+        given().header("Authorization", "Bearer " + tokenOutro)
+                .when().delete("/publicacoes/{id}", id)
+                .then().statusCode(403)
+                .body("error.code", equalTo("NAO_E_AUTOR"));
+        given().when().delete("/publicacoes/{id}", id)
+                .then().statusCode(401)
+                .body("error.code", notNullValue());
+
+        given().header("Authorization", "Bearer " + token)
+                .when().get("/comunidades/{id}/publicacoes", comunidadeMembro)
+                .then().statusCode(200)
+                .body("totalElements", equalTo(1));
+    }
+
+    private Integer publicar(String conteudo) {
+        return given().header("Authorization", "Bearer " + token).contentType(JSON)
+                .body(Map.of("conteudo", conteudo))
+                .when().post("/comunidades/{id}/publicacoes", comunidadeMembro)
+                .then().statusCode(201)
+                .extract().path("id");
+    }
+
     private static Integer enviarPng(String bearer) {
         return enviarPng(bearer, "ANEXO_POSTAGEM");
     }

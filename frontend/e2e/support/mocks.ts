@@ -244,6 +244,26 @@ export async function mockComunidadeComFeed(
       );
     },
   );
+  // KAN-137: o autor exclui a própria postagem; some do feed mockado, como no backend.
+  await page.route(
+    (url) => ehApi(url) && /^\/publicacoes\/\d+$/.test(url.pathname),
+    (route) => {
+      const request = route.request();
+      if (request.method() === 'OPTIONS') {
+        return route.fulfill({ status: 204, headers: CORS });
+      }
+      if (request.method() !== 'DELETE') {
+        return route.fallback();
+      }
+      const id = Number(new URL(request.url()).pathname.split('/').pop());
+      const indice = publicacoes.findIndex((p) => p.id === id);
+      if (indice < 0) {
+        return route.fulfill(json(404, { error: { code: 'PUBLICACAO_NAO_ENCONTRADA', message: 'Postagem não encontrada.', details: null } }));
+      }
+      publicacoes.splice(indice, 1);
+      return route.fulfill({ status: 204, headers: CORS });
+    },
+  );
   await page.route(
     (url) => ehApi(url) && url.pathname === `/comunidades/${opcoes.id}/publicacoes`,
     (route) => {
