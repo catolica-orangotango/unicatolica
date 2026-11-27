@@ -378,7 +378,8 @@
   grid-row: 1;
   // Sem min-height: o item de grid estica até a altura da linha (>= 100dvh do host).
   min-width: 0;
-  padding: calc(var(--uc-space-unit) * 7) var(--uc-space-page-margin);
+  // Topo reservado para o sino e o cartão da conta (.shell__conta-area), que ficam sobre o canto direito.
+  padding: calc(var(--uc-space-unit) * 18) var(--uc-space-page-margin) calc(var(--uc-space-unit) * 7);
   border-left: 1px solid var(--uc-color-border);
   border-right: 1px solid var(--uc-color-border);
   background: var(--uc-color-bg);
@@ -388,10 +389,6 @@
   border-right: 0;
 }
 
-// Sem coluna lateral o cartão da conta cai sobre a coluna principal: reserva o topo.
-:host(.shell--larga) .shell__main {
-  padding-top: calc(var(--uc-space-unit) * 18);
-}
 
 // -- Coluna lateral (aside) --------------------------------------------
 // Sem grid-column explícito: cai na próxima célula livre, a 3ª coluna.
@@ -424,10 +421,6 @@
   .shell__lateral {
     display: none;
   }
-
-  .shell__main {
-    padding-top: calc(var(--uc-space-unit) * 18);
-  }
 }
 
 // -- Até $uc-bp-mobile: uma coluna e gaveta (Story 14.4) -----------------
@@ -448,10 +441,6 @@
     padding-bottom: calc(var(--uc-space-unit) * 16 + var(--uc-space-page-margin));
     border-left: 0;
     border-right: 0;
-  }
-
-  :host(.shell--larga) .shell__main {
-    padding-top: calc(var(--uc-space-unit) * 7);
   }
 
   // A gaveta "Suas comunidades": overlay fixo entre a barra superior (14
