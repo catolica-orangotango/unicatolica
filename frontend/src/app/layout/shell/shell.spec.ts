@@ -1223,7 +1223,8 @@ describe('Shell - painel de notificações (Story 10.1)', () => {
       expect(paineis[0].closest('#shell-sidebar-nav')).toBeNull();
       expect(paineis[0].textContent).toContain('Complete seu perfil');
       expect(sininhoTopo(f).getAttribute('aria-expanded')).toBe('true');
-      expect(sininhoBtn(f).getAttribute('aria-expanded')).toBe('true');
+      // O sino lateral não abriu este painel - só o que o abriu reflete aria-expanded.
+      expect(sininhoBtn(f).getAttribute('aria-expanded')).toBe('false');
     });
 
     it('mostra o mesmo total de não lidas do sino lateral (um único NotificacoesService)', async () => {

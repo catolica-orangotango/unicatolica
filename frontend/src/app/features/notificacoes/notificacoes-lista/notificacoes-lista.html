@@ -36,7 +36,7 @@
               <span class="lista__texto">
                 {{ notificacao.texto }}
                 @if (!notificacao.lida) {
-                  <span class="uc-sr-only"> (não lida)</span>
+                  <span class="lista__sr-only"> (não lida)</span>
                 }
               </span>
               <time class="lista__data" [attr.datetime]="notificacao.criadoEm">{{ quando(notificacao.criadoEm) }}</time>

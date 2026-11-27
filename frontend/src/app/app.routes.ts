@@ -58,7 +58,6 @@ export const routes: Routes = [
       {
         // Lista completa de notificações (Story 10.2), aberta pelo "Ver todas" do painel do sino.
         path: 'notificacoes',
-        data: { largo: true },
         title: 'Notificações',
         loadComponent: () =>
           import('./features/notificacoes/notificacoes-lista/notificacoes-lista').then((m) => m.NotificacoesLista),

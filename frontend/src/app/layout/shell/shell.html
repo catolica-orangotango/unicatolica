@@ -147,7 +147,7 @@
 <app-shell-tabbar [privilegiado]="ehPrivilegiado()" />
 
 <!-- Região viva da casca (Story 10.2, RN26): anuncia 1x quando as não lidas aumentam, sem mudar o foco. -->
-<div class="uc-sr-only" role="status" aria-live="polite">{{ anuncioNotificacoes() }}</div>
+<div class="shell__sr-only" role="status" aria-live="polite">{{ anuncioNotificacoes() }}</div>
 
 <!--
   Painel de notificações (Story 10.1/10.2), um só: desenhado junto do sino que o
@@ -177,7 +177,7 @@
             >
               {{ notificacao.texto }}
               @if (!notificacao.lida) {
-                <span class="uc-sr-only"> (não lida)</span>
+                <span class="shell__sr-only"> (não lida)</span>
               }
             </button>
             <button

@@ -94,6 +94,7 @@ describe('NotificacoesLista', () => {
   it('erro de rede mostra "Tentar de novo", que refaz a consulta', async () => {
     await abrir();
     httpMock.expectOne(ehLista).flush(null, { status: 500, statusText: 'Erro' });
+    harness.detectChanges();
 
     expect(html.textContent).toContain('Não foi possível carregar as notificações agora.');
 
