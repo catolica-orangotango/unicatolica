@@ -18,8 +18,8 @@
 
 :host {
   display: grid;
-  grid-template-columns: var(--uc-layout-nav) minmax(0, var(--uc-layout-feed)) var(--uc-layout-aside);
-  justify-content: center;
+  // Menu à esquerda, lateral à direita e o conteúdo acompanha a largura da tela (KAN-136).
+  grid-template-columns: var(--uc-layout-nav) minmax(0, 1fr) var(--uc-layout-aside);
   column-gap: var(--uc-layout-gap);
   padding: 0 var(--uc-space-page-margin);
   min-height: 100vh; // layout-literal: fallback de viewport para navegadores sem dvh
@@ -35,7 +35,7 @@
 }
 
 :host(.shell--larga) {
-  grid-template-columns: var(--uc-layout-nav) minmax(0, var(--uc-layout-wide));
+  grid-template-columns: var(--uc-layout-nav) minmax(0, 1fr);
 }
 
 // -- Menu: o próprio landmark <nav> --------------------------------------
@@ -314,7 +314,7 @@
 // Sino de notificações imediatamente à esquerda do cartão (Story 10.2, RN17):
 // uma linha, o cartão ocupa o resto da largura. Item de grid sobre a última
 // coluna (grid-column 1 / -1 + justify-self: end), por cima da lateral, que
-// reserva o espaço no topo; sem lateral, a coluna principal reserva (abaixo).
+// reserva o espaço no topo, e a coluna principal também (padding-top).
 .shell__conta-area {
   grid-column: 1 / -1;
   grid-row: 1;
@@ -390,6 +390,16 @@
 }
 
 
+// Largura de leitura: o conteúdo da tela fica centralizado na coluna, sem passar do teto.
+.shell__conteudo {
+  max-width: var(--uc-layout-feed);
+  margin-inline: auto;
+}
+
+:host(.shell--larga) .shell__conteudo {
+  max-width: var(--uc-layout-wide);
+}
+
 // -- Coluna lateral (aside) --------------------------------------------
 // Sem grid-column explícito: cai na próxima célula livre, a 3ª coluna.
 .shell__lateral {
@@ -411,10 +421,6 @@
 // -- Até $uc-bp-tablet: menu + conteúdo ---------------------------------
 @media (max-width: bp.$uc-bp-tablet) {
   :host {
-    grid-template-columns: var(--uc-layout-nav) minmax(0, var(--uc-layout-feed));
-  }
-
-  :host(.shell--larga) {
     grid-template-columns: var(--uc-layout-nav) minmax(0, 1fr);
   }
 
