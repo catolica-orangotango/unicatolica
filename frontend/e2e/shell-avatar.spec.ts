@@ -13,13 +13,13 @@ import { plantarToken, tokenAtual } from './support/seed';
  * Suíte 4 - menu da conta (Story 14.3, redesenhado na KAN-91).
  * Abre/fecha, foco de volta no gatilho, itens inertes e Sair -> logout + /login.
  *
- * O gatilho muda com a largura: no desktop é o cartão da conta no rodapé do menu
+ * O gatilho muda com a largura: no desktop é o cartão da conta no canto superior direito
  * (nome de `GET /usuarios/me` e papel); no celular é o avatar "Menu da conta" da
  * barra superior. As mesmas regras valem para os dois.
  */
 
 const CENARIOS: { nome: string; viewport: { width: number; height: number }; gatilho: (page: Page) => Locator }[] = [
-  { nome: 'desktop (1440px), cartão da conta no rodapé do menu', viewport: VIEWPORT_DESKTOP, gatilho: cartaoDaConta },
+  { nome: 'desktop (1440px), cartão da conta no canto superior direito', viewport: VIEWPORT_DESKTOP, gatilho: cartaoDaConta },
   { nome: 'celular (360px), avatar da barra superior', viewport: VIEWPORT_CELULAR, gatilho: avatarDaConta },
 ];
 
