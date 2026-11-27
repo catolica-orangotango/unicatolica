@@ -292,6 +292,29 @@ for (const viewport of [VIEWPORT_DESKTOP, VIEWPORT_CELULAR]) {
         await esperarSemViolacoes(page);
       });
 
+      test('detalhe da comunidade com a confirmação de exclusão da própria postagem aberta (KAN-137)', async ({ page }) => {
+        await plantarToken(page, ['ALUNO'], '1'); // o autor da postagem do mock é o usuário 1
+        await mockComunidadeComFeed(page, {
+          id: 27,
+          nome: 'Xadrez',
+          tipo: 'ABERTA',
+          souMembro: true,
+          publicacoes: [
+            {
+              id: 1,
+              comunidadeId: 27,
+              autor: { id: 1, nome: 'Usuário Teste', curso: null },
+              conteudo: 'Minha postagem',
+              criadoEm: new Date().toISOString(),
+            },
+          ],
+        });
+        await page.goto('/comunidades/27');
+        await page.getByRole('button', { name: 'Excluir postagem' }).click();
+        await expect(page.getByText('Excluir esta postagem? Não dá para desfazer.')).toBeVisible();
+        await esperarSemViolacoes(page);
+      });
+
       test('meu perfil, editando e salvo', async ({ page }) => {
         await mockMeuPerfil(page, {
           usuarioId: 1,

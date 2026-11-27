@@ -6,8 +6,8 @@ import { CHAVE_TOKEN, jwtNaoAssinado } from './jwt';
  * qualquer navegação da página. Use para entrar na shell autenticada sem
  * backend (o guard só checa presença do token).
  */
-export async function plantarToken(page: Page, perfis: string[]): Promise<void> {
-  const token = jwtNaoAssinado(perfis);
+export async function plantarToken(page: Page, perfis: string[], usuarioId?: string): Promise<void> {
+  const token = jwtNaoAssinado(perfis, usuarioId);
   await page.addInitScript(([chave, valor]) => window.localStorage.setItem(chave, valor), [
     CHAVE_TOKEN,
     token,

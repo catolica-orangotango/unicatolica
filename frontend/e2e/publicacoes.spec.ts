@@ -114,3 +114,40 @@ test('imagem anexada aparece como <img> com o nome em alt; formato inválido mos
 
   await expect(page.locator('.feed__post img.feed__anexo-imagem')).toHaveAttribute('alt', 'tabuleiro.png');
 });
+
+test('autor exclui a própria postagem: confirma na linha e ela some do feed (KAN-137)', async ({ page }) => {
+  await plantarToken(page, ['ALUNO'], '1'); // o autor das postagens do mock é o usuário 1
+  await mockComunidadeComFeed(page, {
+    id: 27,
+    nome: 'Clube de Xadrez',
+    tipo: 'ABERTA',
+    souMembro: true,
+    publicacoes: [
+      { ...POSTAGEM_EXISTENTE, id: 2, autor: { id: 1, nome: 'Usuário Teste', curso: null }, conteudo: 'Publiquei sem querer' },
+      POSTAGEM_EXISTENTE,
+    ],
+  });
+  await page.goto('/comunidades/27');
+
+  const posts = page.locator('.feed__post');
+  await expect(posts).toHaveCount(2);
+  // Só a própria postagem tem "Excluir"; a de Ana Lima tem "Denunciar".
+  await expect(page.getByRole('button', { name: 'Excluir postagem' })).toHaveCount(1);
+  await expect(posts.nth(1).getByRole('button', { name: 'Denunciar' })).toBeVisible();
+
+  await page.getByRole('button', { name: 'Excluir postagem' }).click();
+  await expect(page.getByText('Excluir esta postagem? Não dá para desfazer.')).toBeVisible();
+  await page.getByRole('button', { name: 'Cancelar' }).click();
+  await expect(posts).toHaveCount(2);
+
+  await page.getByRole('button', { name: 'Excluir postagem' }).click();
+  await page.getByRole('group', { name: 'Confirmar exclusão da postagem' }).getByRole('button', { name: 'Excluir' }).click();
+
+  await expect(posts).toHaveCount(1);
+  await expect(page.getByText('Publiquei sem querer')).toHaveCount(0);
+  await expect(page.getByText('Postagem excluída')).toBeVisible();
+
+  // Recarregar busca do "backend" de novo: a postagem excluída não volta.
+  await page.reload();
+  await expect(posts).toHaveCount(1);
+});

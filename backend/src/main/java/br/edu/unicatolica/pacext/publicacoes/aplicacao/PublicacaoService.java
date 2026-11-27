@@ -1,12 +1,14 @@
 package br.edu.unicatolica.pacext.publicacoes.aplicacao;
 
 import br.edu.unicatolica.pacext.comunidades.ComunidadeConsulta;
+import br.edu.unicatolica.pacext.compartilhado.auditoria.AuditoriaService;
 import br.edu.unicatolica.pacext.compartilhado.erro.ApiException;
 import br.edu.unicatolica.pacext.compartilhado.paginacao.PageResponse;
 import br.edu.unicatolica.pacext.midia.FinalidadeArquivo;
 import br.edu.unicatolica.pacext.midia.MidiaAssociacao;
 import br.edu.unicatolica.pacext.publicacoes.dominio.Publicacao;
 import br.edu.unicatolica.pacext.publicacoes.dominio.PublicacaoRepository;
+import br.edu.unicatolica.pacext.publicacoes.dominio.SituacaoPublicacao;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
@@ -30,6 +32,9 @@ public class PublicacaoService {
 
     @Inject
     MidiaAssociacao midiaAssociacao;
+
+    @Inject
+    AuditoriaService auditoriaService;
 
     /**
      * Story 3.1 (RF32–RF35) — autor é sempre quem está autenticado; só membro publica (RF27.1).
@@ -69,6 +74,27 @@ public class PublicacaoService {
         List<Publicacao> conteudo = publicacaoRepository.listarPorComunidade(comunidadeId, paginaValida, tamanhoValido);
         long total = publicacaoRepository.contarPorComunidade(comunidadeId);
         return PageResponse.de(conteudo, paginaValida, tamanhoValido, total);
+    }
+
+    /**
+     * KAN-137 — só o autor exclui a própria postagem. Exclusão lógica: a postagem sai do feed
+     * (situação EXCLUIDA) e o registro é preservado para denúncias abertas e auditoria. Postagem
+     * inexistente ou já excluída dá 404; a de outra pessoa, 403 (a existência dela não é segredo:
+     * o feed é aberto a qualquer autenticado).
+     */
+    @Transactional
+    public void excluir(Long usuarioId, Long publicacaoId) {
+        Publicacao publicacao = publicacaoRepository.findByIdOptional(publicacaoId)
+                .filter(p -> p.situacao != SituacaoPublicacao.EXCLUIDA)
+                .orElseThrow(() -> ApiException.naoEncontrado("PUBLICACAO_NAO_ENCONTRADA",
+                        "Postagem não encontrada.", null));
+        if (!publicacao.autorUsuarioId.equals(usuarioId)) {
+            throw ApiException.semPermissao("NAO_E_AUTOR", "Só o autor pode excluir a postagem.", null);
+        }
+        publicacao.situacao = SituacaoPublicacao.EXCLUIDA;
+        publicacao.atualizadoEm = Instant.now();
+        auditoriaService.registrar(usuarioId, "publicacoes", "POSTAGEM_EXCLUIDA", "Publicacao", publicacaoId,
+                "Postagem excluída pelo autor.");
     }
 
     private String validarConteudo(String conteudo) {

@@ -53,4 +53,11 @@ export class PublicacoesService {
       { headers: this.authService.obterCabecalhoAutorizacao() },
     );
   }
+
+  /** `DELETE /publicacoes/{id}` (KAN-137) — só o autor; 403 `NAO_E_AUTOR`, 404 se não existe ou já foi excluída. */
+  excluir(publicacaoId: number): Observable<void> {
+    return this.http.delete<void>(`${API_BASE_URL}/publicacoes/${publicacaoId}`, {
+      headers: this.authService.obterCabecalhoAutorizacao(),
+    });
+  }
 }
