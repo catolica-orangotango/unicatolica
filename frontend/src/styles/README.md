@@ -242,9 +242,7 @@ vermelho).
 | `--uc-space-section-gap` | `20px` | separacao entre blocos verticais |
 | `--uc-space-page-margin` | `24px` | margem da pagina (16px abaixo de 760px, sobrescrita em `@media` no `_tokens.scss`) |
 | `--uc-layout-nav` | `248px` | largura do menu lateral |
-| `--uc-layout-feed` | `720px` | largura máxima de leitura do conteúdo, centralizado na coluna do meio |
 | `--uc-layout-aside` | `340px` | largura da coluna lateral |
-| `--uc-layout-wide` | `1040px` | largura de telas largas |
 | `--uc-layout-gap` | `32px` | espaco entre colunas |
 | `--uc-touch-target` | `44px` | alvo de toque minimo no celular |
 

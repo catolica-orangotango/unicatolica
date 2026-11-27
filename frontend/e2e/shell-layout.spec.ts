@@ -14,7 +14,7 @@ import { plantarToken, tokenAtual } from './support/seed';
 /**
  * Layout da casca do redesign (KAN-91), medido no navegador: `layout/shell/shell.scss`
  * monta três colunas na largura da tela (menu 248 à esquerda, lateral 340 à direita, conteúdo
- * fluido no meio com teto de leitura de 720, `--uc-layout-gap` entre elas, KAN-136); telas de trabalho (`data.largo`) usam menu + até 1040;
+ * fluido no meio, que o conteúdo ocupa por inteiro, `--uc-layout-gap` entre elas, KAN-136/KAN-138); telas de trabalho (`data.largo`) usam menu + conteúdo;
  * até 1180px a lateral some; até 760px ficam a barra superior e a barra de abas.
  */
 
@@ -45,7 +45,7 @@ async function caixa(page: Page, seletor: string) {
 test.describe('desktop (1440px)', () => {
   test.use({ viewport: VIEWPORT_DESKTOP });
 
-  test('menu 248 à esquerda, lateral 340 à direita e o conteúdo (até 720) centralizado na coluna do meio', async ({ page }) => {
+  test('menu 248 à esquerda, lateral 340 à direita e o conteúdo ocupa toda a coluna do meio', async ({ page }) => {
     await plantarToken(page, ['ALUNO']);
     await page.goto('/feed');
     await expect(navPrincipal(page)).toBeVisible();
@@ -53,7 +53,6 @@ test.describe('desktop (1440px)', () => {
     const larguraDaTela = await page.evaluate(() => document.documentElement.clientWidth);
     const menu = await caixa(page, 'nav[aria-label="Navegação principal"]');
     const coluna = await caixa(page, 'main');
-    const conteudo = await caixa(page, '.shell__conteudo');
     expect(Math.abs(menu.width - 248)).toBeLessThanOrEqual(TOLERANCIA);
 
     // A faixa da lateral existe mesmo vazia: a lateral encosta na direita, o menu na esquerda.
@@ -65,29 +64,25 @@ test.describe('desktop (1440px)', () => {
       TOLERANCIA,
     );
 
-    // A coluna do meio ocupa o que sobra; o conteúdo tem teto de 720 e fica no centro dela.
+    // A coluna do meio ocupa tudo o que sobra entre o menu e a lateral.
+    expect(Math.abs(coluna.width - faixas[1])).toBeLessThanOrEqual(TOLERANCIA);
     expect(coluna.width).toBeGreaterThan(720);
-    expect(conteudo.width).toBeLessThanOrEqual(720 + TOLERANCIA);
-    const sobraEsquerda = conteudo.x - coluna.x;
-    const sobraDireita = coluna.x + coluna.width - (conteudo.x + conteudo.width);
-    expect(Math.abs(sobraEsquerda - sobraDireita)).toBeLessThanOrEqual(TOLERANCIA + 2);
 
     await expect(page.locator('aside.shell__lateral')).toHaveCount(0);
   });
 
-  test('modo largo (/comunidades): menu à esquerda e conteúdo de até 1040, sem lateral', async ({ page }) => {
+  test('modo largo (/comunidades): menu à esquerda e conteúdo na largura toda, sem lateral', async ({ page }) => {
     await plantarToken(page, ['ALUNO']);
     await page.goto('/comunidades');
     await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
 
     const menu = await caixa(page, 'nav[aria-label="Navegação principal"]');
-    const conteudo = await caixa(page, '.shell__conteudo');
     expect(Math.abs(menu.width - 248)).toBeLessThanOrEqual(TOLERANCIA);
-    expect(conteudo.width).toBeLessThanOrEqual(1040 + TOLERANCIA);
-    expect(conteudo.width).toBeGreaterThan(720 + TOLERANCIA);
 
     const { faixas } = await gridDaCasca(page);
     expect(faixas).toHaveLength(2);
+    const coluna = await caixa(page, 'main');
+    expect(Math.abs(coluna.width - faixas[1])).toBeLessThanOrEqual(TOLERANCIA);
     await expect(page.locator('aside.shell__lateral')).toHaveCount(0);
   });
 });

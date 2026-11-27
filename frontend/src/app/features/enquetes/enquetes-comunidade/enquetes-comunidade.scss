@@ -27,14 +27,14 @@
 }
 
 .enquetes__pergunta {
-  margin: 0 0 var(--uc-space-unit);
+  margin: 0 0 calc(var(--uc-space-unit) * 1.5);
   font-weight: var(--uc-font-weight-semibold);
   color: var(--uc-color-ink);
 }
 
 .enquetes__tipo,
 .enquetes__meta {
-  margin: 0 0 calc(var(--uc-space-unit) * 2);
+  margin: 0 0 calc(var(--uc-space-unit) * 3);
   font-size: var(--uc-font-size-meta);
   color: var(--uc-color-ink-soft);
 }
@@ -44,7 +44,7 @@
 }
 
 .enquetes__opcao {
-  margin-bottom: var(--uc-space-unit);
+  margin-bottom: calc(var(--uc-space-unit) * 2.5);
   padding: calc(var(--uc-space-unit) * 2) calc(var(--uc-space-unit) * 3);
   border: 1px solid var(--uc-color-border);
   border-radius: var(--uc-radius-default);
@@ -99,4 +99,10 @@
   margin: 0 0 var(--uc-space-section-gap);
   color: var(--uc-color-error);
   font-size: var(--uc-font-size-meta);
+}
+
+// Respiro entre o botão "Votar" e as opções acima e a linha do autor abaixo.
+.enquetes__card button[uc-button] {
+  margin-top: var(--uc-space-unit);
+  margin-bottom: calc(var(--uc-space-unit) * 3);
 }
