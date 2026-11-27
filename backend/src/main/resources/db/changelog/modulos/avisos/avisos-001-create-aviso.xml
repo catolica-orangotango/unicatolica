@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Tabela aviso — módulo Avisos (Epic 13, RF81/RF82, Story 13.1).
+    curso_id e autor_usuario_id são só ids, sem FK: curso e usuario são de Identidade (AD-3).
+    O escopo GERAL não tem curso; o escopo CURSO exige um.
+-->
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="avisos-001-create-aviso" author="pacext">
+        <createTable tableName="aviso">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="titulo" type="VARCHAR(120)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="mensagem" type="TEXT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="escopo" type="VARCHAR(10)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="curso_id" type="BIGINT"/>
+            <column name="data_destaque" type="DATE"/>
+            <column name="autor_usuario_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="criado_em" type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <sql>ALTER TABLE aviso ADD CONSTRAINT ck_aviso_escopo CHECK (
+            (escopo = 'GERAL' AND curso_id IS NULL) OR (escopo = 'CURSO' AND curso_id IS NOT NULL))</sql>
+        <createIndex tableName="aviso" indexName="ix_aviso_criado_em">
+            <column name="criado_em"/>
+        </createIndex>
+        <rollback>
+            <dropTable tableName="aviso"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

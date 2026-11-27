@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { mockAdminUsuarios, mockAuditoria, mockCursosAdmin, mockFeedOk } from './support/mocks';
+import { mockAdminUsuarios, mockAuditoria, mockAvisosAdmin, mockCursosAdmin, mockFeedOk } from './support/mocks';
 import { plantarToken, semToken } from './support/seed';
 
 /**
@@ -94,7 +94,7 @@ test.describe('Cursos (KAN-44)', () => {
 
     await expect(page).toHaveURL(/\/admin\/cursos$/);
     await expect(page.getByRole('heading', { level: 1, name: 'Cursos' })).toBeVisible();
-    await expect(page.getByText('Direito', { exact: true })).toBeVisible();
+    await expect(page.locator('.cursos__nome', { hasText: 'Direito' })).toBeVisible();
   });
 
   test('cadastra um curso e ele aparece no cadastro de aluno', async ({ page }) => {
@@ -152,5 +152,56 @@ test.describe('Cursos (KAN-44)', () => {
     await page.goto('/admin/cursos');
 
     await expect(page).toHaveURL(/\/feed$/);
+  });
+});
+
+test.describe('Publicar aviso (Story 13.1)', () => {
+  const CURSOS = [
+    { id: 1, nome: 'Administração', ativo: true },
+    { id: 2, nome: 'Direito', ativo: true },
+  ];
+
+  test('a Administração mostra "Publicar aviso" ao lado dos cursos', async ({ page }) => {
+    await mockCursosAdmin(page, CURSOS);
+    await plantarToken(page, ['ADMINISTRADOR']);
+    await page.goto('/admin');
+
+    await expect(page.getByRole('heading', { name: 'Publicar aviso' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Enviados recentemente' })).toBeVisible();
+    await expect(page.getByText('Nenhum aviso enviado ainda.')).toBeVisible();
+    await expect(page.getByLabel('Para quem').locator('option')).toHaveText(['Todos os cursos', 'Administração', 'Direito']);
+  });
+
+  test('publica um aviso para um curso e ele entra em "Enviados recentemente"', async ({ page }) => {
+    await mockCursosAdmin(page, CURSOS);
+    const recebidos = await mockAvisosAdmin(page);
+    await plantarToken(page, ['ADMINISTRADOR']);
+    await page.goto('/admin/cursos');
+
+    await page.getByLabel('Título').fill('Palestra de carreira');
+    await page.getByLabel('Mensagem').fill('Auditório 2, quarta às 19h.');
+    await page.getByLabel('Para quem').selectOption({ label: 'Direito' });
+    await page.getByRole('button', { name: 'Publicar aviso' }).click();
+
+    await expect(page.getByText('Aviso publicado')).toBeVisible();
+    await expect(page.locator('.avisos__item')).toContainText('Palestra de carreira');
+    await expect(page.locator('.avisos__item')).toContainText('Direito');
+    expect(recebidos).toEqual([
+      { titulo: 'Palestra de carreira', mensagem: 'Auditório 2, quarta às 19h.', escopo: 'CURSO', cursoId: 2, dataDestaque: null },
+    ]);
+    await expect(page.getByLabel('Título')).toHaveValue('');
+  });
+
+  test('enviar vazio mostra os erros dos campos e não chama a API', async ({ page }) => {
+    await mockCursosAdmin(page, CURSOS);
+    const recebidos = await mockAvisosAdmin(page);
+    await plantarToken(page, ['ADMINISTRADOR']);
+    await page.goto('/admin/cursos');
+
+    await page.getByRole('button', { name: 'Publicar aviso' }).click();
+
+    await expect(page.getByText('Informe o título do aviso.')).toBeVisible();
+    await expect(page.getByText('Escreva a mensagem do aviso.')).toBeVisible();
+    expect(recebidos).toEqual([]);
   });
 });

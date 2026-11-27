@@ -4,6 +4,7 @@ import br.edu.unicatolica.pacext.compartilhado.auditoria.AuditoriaService;
 import br.edu.unicatolica.pacext.compartilhado.erro.ApiException;
 import br.edu.unicatolica.pacext.compartilhado.seguranca.UsuarioAutenticado;
 import br.edu.unicatolica.pacext.identidade.CursoCadastrado;
+import br.edu.unicatolica.pacext.identidade.CursoConsulta;
 import br.edu.unicatolica.pacext.identidade.CursoRenomeado;
 import br.edu.unicatolica.pacext.identidade.dominio.Curso;
 import br.edu.unicatolica.pacext.identidade.dominio.CursoRepository;
@@ -12,14 +13,18 @@ import jakarta.enterprise.event.Event;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import java.time.Instant;
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * Lista de cursos (decisão de 2026-09-30), lida pelo cadastro e pelo perfil, e a
  * manutenção dela pelo administrador (KAN-44): cadastrar, renomear, ativar e desativar.
  */
 @ApplicationScoped
-public class CursoService {
+public class CursoService implements CursoConsulta {
 
     /** Limite da coluna {@code curso.nome} e do contrato. */
     static final int TAMANHO_MAXIMO_NOME = 150;
@@ -45,6 +50,21 @@ public class CursoService {
 
     @Inject
     Event<CursoRenomeado> cursoRenomeado;
+
+    /** {@link CursoConsulta}: nome do curso para outros módulos, ativo ou não. */
+    @Override
+    public Optional<String> nome(Long cursoId) {
+        return cursoRepository.findByIdOptional(cursoId).map(curso -> curso.nome);
+    }
+
+    @Override
+    public Map<Long, String> nomes(Collection<Long> cursoIds) {
+        if (cursoIds.isEmpty()) {
+            return Map.of();
+        }
+        return cursoRepository.list("id in ?1", cursoIds).stream()
+                .collect(Collectors.toMap(curso -> curso.id, curso -> curso.nome));
+    }
 
     /** {@code GET /cursos} — só ativos, em ordem alfabética. */
     public List<Curso> listarAtivos() {

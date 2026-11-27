@@ -233,6 +233,73 @@ paths:
         '403':
           $ref: '#/components/responses/SemPermissao'
 
+  /admin/avisos:
+    post:
+      operationId: publicarAviso
+      summary: Publica um aviso institucional, só ADMINISTRADOR (Story 13.1, RF81)
+      tags: [Administracao]
+      description: >
+        O escopo é obrigatório: `GERAL` (toda a universidade) ou `CURSO` (só alunos do curso
+        de `cursoId`). Moderador não publica aviso. `dataDestaque` é opcional: o dia a que o
+        aviso se refere (a exibição no Início é a Story 13.2).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AvisoRequest'
+      responses:
+        '201':
+          description: Aviso publicado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AvisoResponse'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        # 403 ACESSO_NEGADO: não é ADMINISTRADOR.
+        # 404 CURSO_NAO_ENCONTRADO: escopo CURSO com cursoId inexistente.
+        # 422: CAMPO_OBRIGATORIO (titulo, mensagem), CAMPO_MUITO_LONGO, ESCOPO_OBRIGATORIO
+        # (ausente ou fora de GERAL/CURSO), CURSO_OBRIGATORIO (escopo CURSO sem cursoId).
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '422':
+          $ref: '#/components/responses/ErroValidacao'
+    get:
+      operationId: listarAvisosAdmin
+      summary: Lista os avisos publicados, mais recente primeiro, só ADMINISTRADOR (Story 13.1)
+      tags: [Administracao]
+      description: Base do bloco "Enviados recentemente" da Administração. Ordem por criadoEm decrescente.
+      parameters:
+        - name: pagina
+          in: query
+          schema:
+            type: integer
+            format: int32
+            minimum: 0
+            default: 0
+        - name: tamanho
+          in: query
+          schema:
+            type: integer
+            format: int32
+            minimum: 1
+            maximum: 100
+            default: 20
+      responses:
+        '200':
+          description: Página de avisos.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AvisoPageResponse'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/SemPermissao'
+
   /admin/usuarios:
     get:
       operationId: listarUsuariosAdmin
@@ -1673,6 +1740,64 @@ components:
         ativo:
           type: boolean
           description: Falso quando o administrador desativou a conta.
+
+    AvisoRequest:
+      type: object
+      required: [titulo, mensagem, escopo]
+      properties:
+        titulo:
+          type: string
+          maxLength: 120
+        mensagem:
+          type: string
+          maxLength: 2000
+        escopo:
+          type: string
+          enum: [GERAL, CURSO]
+        cursoId:
+          type: [integer, 'null']
+          format: int64
+          description: Obrigatório quando o escopo é CURSO; ignorado quando é GERAL.
+        dataDestaque:
+          type: [string, 'null']
+          format: date
+
+    AvisoResponse:
+      type: object
+      required: [id, titulo, mensagem, escopo, criadoEm]
+      properties:
+        id:
+          type: integer
+          format: int64
+        titulo:
+          type: string
+        mensagem:
+          type: string
+        escopo:
+          type: string
+          enum: [GERAL, CURSO]
+        cursoId:
+          type: [integer, 'null']
+          format: int64
+        cursoNome:
+          type: [string, 'null']
+          description: Nome do curso do escopo CURSO; nulo no escopo GERAL.
+        dataDestaque:
+          type: [string, 'null']
+          format: date
+        criadoEm:
+          type: string
+          format: date-time
+
+    AvisoPageResponse:
+      allOf:
+        - $ref: '#/components/schemas/PageResponse'
+        - type: object
+          properties:
+            content:
+              type: array
+              items:
+                $ref: '#/components/schemas/AvisoResponse'
 
     UsuarioAdminPageResponse:
       allOf:

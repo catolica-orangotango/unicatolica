@@ -4,7 +4,7 @@ import { DomSanitizer, type SafeHtml } from '@angular/platform-browser';
 export type UcIconName =
   | 'home' | 'users' | 'bell' | 'user' | 'search' | 'dots' | 'flag' | 'eyeoff' | 'check'
   | 'x' | 'alert' | 'info' | 'down' | 'trash' | 'plus' | 'lock' | 'shield' | 'edit'
-  | 'paperclip' | 'file';
+  | 'paperclip' | 'file' | 'megaphone';
 
 // Markup interno dos <symbol> de docs/design/kan-84/componentes.html (KAN-84).
 // Constantes do próprio código: nunca vêm de entrada do usuário.
@@ -28,6 +28,7 @@ const CAMINHOS: Record<UcIconName, string> = {
   shield: '<path d="M12 3 4.5 6v6c0 4.5 3.2 7.8 7.5 9 4.3-1.2 7.5-4.5 7.5-9V6z"/>',
   edit: '<path d="M4 20h4L19 9l-4-4L4 16z"/>',
   paperclip: '<path d="m20 11.5-8.2 8.2a5 5 0 0 1-7.1-7.1l8.5-8.5a3.3 3.3 0 0 1 4.7 4.7l-8.5 8.5a1.7 1.7 0 0 1-2.4-2.4l7.8-7.8"/>',
+  megaphone: '<path d="M3 10v4a1 1 0 0 0 1 1h3l7 4V5L7 9H4a1 1 0 0 0-1 1z"/><path d="M17.5 9.5a3.5 3.5 0 0 1 0 5"/>',
   file: '<path d="M14 3H7a1 1 0 0 0-1 1v16a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1V7z"/><path d="M14 3v4h4M9 13h6M9 17h6"/>',
 };
 

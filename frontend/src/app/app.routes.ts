@@ -85,12 +85,13 @@ export const routes: Routes = [
         children: [
           { path: '', pathMatch: 'full', redirectTo: 'cursos' },
           {
-            // Tela "Cursos" da administração (KAN-44): cadastrar, renomear e desativar cursos.
+            // Tela "Cursos" da administração (KAN-44): cadastrar, renomear e desativar cursos,
+            // ao lado do card "Publicar aviso" (Story 13.1).
             path: 'cursos',
             data: { largo: true },
             title: 'Cursos',
             loadComponent: () =>
-              import('./features/admin/cursos-admin/cursos-admin').then((m) => m.CursosAdmin),
+              import('./features/admin/cursos-e-avisos/cursos-e-avisos').then((m) => m.CursosEAvisos),
           },
           {
             path: 'usuarios',
