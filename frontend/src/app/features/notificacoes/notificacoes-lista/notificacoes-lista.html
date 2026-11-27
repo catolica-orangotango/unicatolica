@@ -1,0 +1,81 @@
+<div class="lista" #raiz>
+  <div class="lista__cabecalho">
+    <h1 #titulo class="uc-text-greeting lista__titulo" tabindex="-1">Notificações</h1>
+    @if (temNaoLidas()) {
+      <button type="button" uc-button variant="secondary" (click)="marcarTodasComoLidas()">
+        <uc-icon name="check" size="sm" />
+        Marcar todas como lidas
+      </button>
+    }
+  </div>
+
+  @if (carregando()) {
+    <div class="lista__esqueleto" aria-busy="true" role="status" aria-label="Carregando notificações">
+      @for (linha of [1, 2, 3, 4, 5]; track linha) {
+        <uc-skeleton class="lista__esqueleto-linha" />
+      }
+    </div>
+  } @else if (erro(); as mensagem) {
+    <div class="lista__erro" role="alert">
+      <p>{{ mensagem }}</p>
+      <button type="button" uc-button variant="secondary" (click)="tentarDeNovo()">Tentar de novo</button>
+    </div>
+  } @else if (pagina(); as resultado) {
+    @if (resultado.content.length === 0) {
+      <uc-empty-state titulo="Sem notificações por enquanto." />
+    } @else {
+      <ul class="lista__itens">
+        @for (notificacao of resultado.content; track notificacao.id) {
+          <li class="lista__linha" [attr.data-notificacao-id]="notificacao.id">
+            <button
+              type="button"
+              class="lista__item"
+              [class.lista__item--nao-lida]="!notificacao.lida"
+              (click)="aoClicar(notificacao)"
+            >
+              <span class="lista__texto">
+                {{ notificacao.texto }}
+                @if (!notificacao.lida) {
+                  <span class="lista__sr-only"> (não lida)</span>
+                }
+              </span>
+              <time class="lista__data" [attr.datetime]="notificacao.criadoEm">{{ quando(notificacao.criadoEm) }}</time>
+            </button>
+            <button
+              type="button"
+              class="lista__excluir"
+              [attr.aria-label]="'Excluir notificação: ' + notificacao.texto"
+              (click)="excluir($event, notificacao)"
+            >
+              <uc-icon name="trash" size="sm" />
+            </button>
+          </li>
+        }
+      </ul>
+
+      @if (resultado.totalPages > 1) {
+        <nav class="lista__paginacao" aria-label="Paginação das notificações">
+          <button
+            type="button"
+            uc-button
+            variant="secondary"
+            [disabled]="resultado.page === 0"
+            (click)="irParaPagina(resultado.page - 1)"
+          >
+            &larr; Anterior
+          </button>
+          <span class="uc-text-body">Página {{ resultado.page + 1 }} de {{ resultado.totalPages }}</span>
+          <button
+            type="button"
+            uc-button
+            variant="secondary"
+            [disabled]="resultado.page + 1 >= resultado.totalPages"
+            (click)="irParaPagina(resultado.page + 1)"
+          >
+            Próxima &rarr;
+          </button>
+        </nav>
+      }
+    }
+  }
+</div>

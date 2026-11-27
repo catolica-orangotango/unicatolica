@@ -172,17 +172,18 @@ test.describe('celular (360px)', () => {
     await expect(inicio).not.toHaveAttribute('aria-current', 'page');
   });
 
-  test('aluno: a terceira aba é o botão Notificações', async ({ page }) => {
+  test('aluno: a terceira aba é o link Criar enquete', async ({ page }) => {
     await plantarToken(page, ['ALUNO']);
     await page.goto('/feed');
 
     const abas = barraDeAbas(page).locator('.abas__item');
-    await expect(abas).toHaveText(['Início', 'Comunidades', 'Notificações', 'Perfil']);
-    await expect(abas.nth(2)).toHaveRole('button');
+    await expect(abas).toHaveText(['Início', 'Comunidades', 'Criar enquete', 'Perfil']);
+    await expect(abas.nth(2)).toHaveRole('link');
+    await expect(abas.nth(2)).toHaveAttribute('href', '/enquetes/nova');
     await expect(barraDeAbas(page).getByText('Denúncias', { exact: true })).toHaveCount(0);
   });
 
-  test('moderador: a terceira aba é o link Denúncias, no lugar de Notificações', async ({ page }) => {
+  test('moderador: a terceira aba é o link Denúncias, no lugar de Criar enquete', async ({ page }) => {
     await mockModeracao(page, []);
     await plantarToken(page, ['MODERADOR']);
     await page.goto('/feed');
@@ -191,7 +192,7 @@ test.describe('celular (360px)', () => {
     await expect(abas).toHaveText(['Início', 'Comunidades', 'Denúncias', 'Perfil']);
     await expect(abas.nth(2)).toHaveRole('link');
     await expect(abas.nth(2)).toHaveAttribute('href', '/moderacao/denuncias');
-    await expect(barraDeAbas(page).getByText('Notificações', { exact: true })).toHaveCount(0);
+    await expect(barraDeAbas(page).getByText('Criar enquete', { exact: true })).toHaveCount(0);
   });
 
   test('"Sair" é alcançável pelo menu do avatar da barra superior', async ({ page }) => {

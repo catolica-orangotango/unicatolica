@@ -1,4 +1,4 @@
-import { Component, signal, viewChild } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Router, provideRouter } from '@angular/router';
 import { readFileSync } from 'node:fs';
@@ -15,19 +15,10 @@ class TelaVazia {}
 
 @Component({
   imports: [ShellTabbar],
-  template: `<app-shell-tabbar
-    [privilegiado]="privilegiado()"
-    [notificacoesAbertas]="notificacoesAbertas()"
-    [naoLidas]="naoLidas()"
-    (alternouNotificacoes)="cliques = cliques + 1"
-  />`,
+  template: `<app-shell-tabbar [privilegiado]="privilegiado()" />`,
 })
 class Host {
-  readonly tabbar = viewChild.required(ShellTabbar);
   readonly privilegiado = signal(false);
-  readonly notificacoesAbertas = signal(false);
-  readonly naoLidas = signal(0);
-  cliques = 0;
 }
 
 describe('ShellTabbar - barra de abas do celular (KAN-91)', () => {
@@ -70,9 +61,9 @@ describe('ShellTabbar - barra de abas do celular (KAN-91)', () => {
     expect(nav().classList).toContain('abas');
   });
 
-  it('aluno: Início, Comunidades, Notificações e Perfil, nessa ordem', async () => {
+  it('aluno: Início, Comunidades, Criar enquete e Perfil, nessa ordem', async () => {
     await montar(false);
-    expect(rotulos()).toEqual(['Início', 'Comunidades', 'Notificações', 'Perfil']);
+    expect(rotulos()).toEqual(['Início', 'Comunidades', 'Criar enquete', 'Perfil']);
   });
 
   it('moderador e administrador: Início, Comunidades, Denúncias e Perfil, nessa ordem', async () => {
@@ -80,61 +71,25 @@ describe('ShellTabbar - barra de abas do celular (KAN-91)', () => {
     expect(rotulos()).toEqual(['Início', 'Comunidades', 'Denúncias', 'Perfil']);
   });
 
-  it('cada aba tem ícone, e as de rota são links para /feed, /comunidades, /moderacao/denuncias e /perfil', async () => {
-    await montar(true);
+  it('cada aba tem ícone, e todas são links para /feed, /comunidades, /enquetes/nova e /perfil', async () => {
+    await montar(false);
     expect(abas().every((a) => a.querySelector('uc-icon'))).toBe(true);
-    expect(abas().map((a) => a.getAttribute('href'))).toEqual([
-      '/feed',
-      '/comunidades',
-      '/moderacao/denuncias',
-      '/perfil',
-    ]);
+    expect(abas().map((a) => a.getAttribute('href'))).toEqual(['/feed', '/comunidades', '/enquetes/nova', '/perfil']);
+  });
+
+  it('privilegiado: a terceira aba é um link para /moderacao/denuncias', async () => {
+    await montar(true);
+    expect(abas().map((a) => a.getAttribute('href'))).toEqual(['/feed', '/comunidades', '/moderacao/denuncias', '/perfil']);
   });
 
   it('a aba da rota atual tem aria-current="page" e a classe ativa; as outras não', async () => {
     await montar(false, '/comunidades');
     expect(aba('Comunidades').getAttribute('aria-current')).toBe('page');
     expect(aba('Comunidades').classList).toContain('abas__item--ativa');
-    for (const outro of ['Início', 'Notificações', 'Perfil']) {
+    for (const outro of ['Início', 'Criar enquete', 'Perfil']) {
       expect(aba(outro).hasAttribute('aria-current'), outro).toBe(false);
       expect(aba(outro).classList, outro).not.toContain('abas__item--ativa');
     }
-  });
-
-  it('Notificações é um botão que controla o painel, com aria-expanded pelo estado', async () => {
-    await montar(false);
-    const botao = aba('Notificações');
-    expect(botao.tagName).toBe('BUTTON');
-    expect(botao.getAttribute('type')).toBe('button');
-    expect(botao.getAttribute('aria-haspopup')).toBe('menu');
-    expect(botao.getAttribute('aria-controls')).toBe('shell-notificacoes');
-    expect(botao.getAttribute('aria-expanded')).toBe('false');
-
-    f.componentInstance.notificacoesAbertas.set(true);
-    f.detectChanges();
-    expect(botao.getAttribute('aria-expanded')).toBe('true');
-  });
-
-  it('clicar em Notificações emite alternouNotificacoes', async () => {
-    await montar(false);
-    aba('Notificações').click();
-    expect(f.componentInstance.cliques).toBe(1);
-  });
-
-  it('sem não lidas: sem contador e nome acessível "Notificações"', async () => {
-    await montar(false);
-    expect(aba('Notificações').querySelector('uc-badge')).toBeNull();
-    expect(aba('Notificações').getAttribute('aria-label')).toBe('Notificações');
-  });
-
-  it('com não lidas: contador visual (aria-hidden) e a contagem no nome acessível', async () => {
-    await montar(false);
-    f.componentInstance.naoLidas.set(3);
-    f.detectChanges();
-    const badge = aba('Notificações').querySelector('uc-badge.uc-badge--counter') as HTMLElement;
-    expect(badge.textContent?.trim()).toBe('3');
-    expect(badge.getAttribute('aria-hidden')).toBe('true');
-    expect(aba('Notificações').getAttribute('aria-label')).toBe('Notificações (3 não lidas)');
   });
 
   it('Denúncias mostra o total de pendentes do ModeracaoService, sem buscar de novo', async () => {
@@ -148,11 +103,6 @@ describe('ShellTabbar - barra de abas do celular (KAN-91)', () => {
     expect(aba('Denúncias').getAttribute('aria-label')).toBe('Denúncias (4 pendentes)');
   });
 
-  it('focarNotificacoes() move o foco para a aba Notificações', async () => {
-    await montar(false);
-    f.componentInstance.tabbar().focarNotificacoes();
-    expect(document.activeElement).toBe(aba('Notificações'));
-  });
 });
 
 describe('shell-tabbar.scss - contrato de estilo', () => {

@@ -16,9 +16,10 @@ import { ComunidadesService } from '../../features/comunidades/comunidades.servi
 import { ContadorDenuncias } from '../../features/moderacao/contador-denuncias/contador-denuncias';
 import { UsuarioService } from '../../features/identidade/usuario.service';
 import { PerfilService } from '../../features/perfil/perfil.service';
-import { NotificacoesService } from '../../features/notificacoes/notificacoes.service';
+import { Notificacao, NotificacoesService } from '../../features/notificacoes/notificacoes.service';
 import { iniciais } from '../../features/publicacoes/tempo-relativo';
-import { UcAvatar, UcBadge, UcIcon, UcMenu, corDoAvatar, type UcAvatarCor, type UcIconName, type UcMenuItem } from '../../ui';
+import { UcAvatar, UcIcon, UcMenu, corDoAvatar, type UcAvatarCor, type UcIconName, type UcMenuItem } from '../../ui';
+import { NotificacoesSininho } from './notificacoes-sininho/notificacoes-sininho';
 import { ShellLateralService } from './shell-lateral.service';
 import { ShellTabbar } from './shell-tabbar/shell-tabbar';
 import { ShellTopbar } from './shell-topbar/shell-topbar';
@@ -27,29 +28,26 @@ import { ShellTopbar } from './shell-topbar/shell-topbar';
 interface NavItem {
   label: string;
   icone: UcIconName;
-  /** Rota do item; `null` só em "Notificações", que abre o painel em vez de navegar. */
-  path: string | null;
+  path: string;
   /** Só aparece para MODERADOR / ADMINISTRADOR. */
   privileged?: boolean;
   /** Só aparece para ADMINISTRADOR. */
   somenteAdministrador?: boolean;
   /** Só true em "Denúncias": mostra o contador de pendentes (UJ-2, passo 1). */
   contaDenuncias?: boolean;
-  /** Só true em "Notificações": abre o painel (ver {@link Shell.alternarNotificacoes}) em vez de navegar. */
-  abrePainelNotificacoes?: boolean;
 }
 
 /**
  * Menu principal do redesign (KAN-91, docs/design/kan-84/inicio-*.html), na
- * ordem aprovada: Início, Comunidades, Criar enquete (Story 8.1), Denúncias (moderador e administrador),
- * Notificações, Perfil e Administração (só administrador).
+ * ordem aprovada: Início, Comunidades, Criar enquete (Story 8.1), Denúncias (moderador e
+ * administrador), Perfil e Administração (só administrador). Notificações não é mais item
+ * de menu (Story 10.2, RN16): o sininho mora no cartão da conta, ver {@link sininhoLateral}.
  */
 const NAV_ITENS: readonly NavItem[] = [
   { label: 'Início', icone: 'home', path: '/feed' },
   { label: 'Comunidades', icone: 'users', path: '/comunidades' },
   { label: 'Criar enquete', icone: 'plus', path: '/enquetes/nova' },
   { label: 'Denúncias', icone: 'flag', path: '/moderacao/denuncias', privileged: true, contaDenuncias: true },
-  { label: 'Notificações', icone: 'bell', path: null, abrePainelNotificacoes: true },
   { label: 'Perfil', icone: 'user', path: '/perfil' },
   { label: 'Administração', icone: 'shield', path: '/admin', somenteAdministrador: true },
 ];
@@ -92,13 +90,13 @@ function rotaAtualELarga(router: Router): boolean {
   imports: [
     ContadorDenuncias,
     NgTemplateOutlet,
+    NotificacoesSininho,
     RouterOutlet,
     RouterLink,
     RouterLinkActive,
     ShellTabbar,
     ShellTopbar,
     UcAvatar,
-    UcBadge,
     UcIcon,
     UcMenu,
   ],
@@ -118,9 +116,10 @@ export class Shell {
 
   private readonly topbar = viewChild(ShellTopbar);
   private readonly tabbar = viewChild(ShellTabbar);
-  private readonly sininho = viewChild<ElementRef<HTMLButtonElement>>('sininho');
+  private readonly sininhoLateral = viewChild(NotificacoesSininho);
   private readonly sidebarNav = viewChild<ElementRef<HTMLElement>>('sidebarNav');
   private readonly cartaoConta = viewChild<ElementRef<HTMLButtonElement>>('cartaoConta');
+  private readonly painelNotificacoesEl = viewChild<ElementRef<HTMLElement>>('painelNotificacoesEl');
 
   protected readonly navItens = NAV_ITENS;
   protected readonly itensConta = ITENS_CONTA;
@@ -141,10 +140,10 @@ export class Shell {
   protected readonly nomeUsuario = signal<string | null>(null);
   protected readonly notificacoesAbertas = signal(false);
   /**
-   * Quem abriu o painel de notificações: o item do menu lateral ou a aba do
-   * celular. Decide onde o painel (um só) é desenhado e para onde o foco volta.
+   * Quem abriu o painel de notificações: o sino do rodapé da sidebar (desktop) ou o da
+   * barra superior (celular). Decide onde o painel (um só) é desenhado e para onde o foco volta.
    */
-  protected readonly origemNotificacoes = signal<'lateral' | 'abas'>('lateral');
+  protected readonly origemNotificacoes = signal<'lateral' | 'topo'>('lateral');
   /**
    * Gaveta "Suas comunidades" do celular (Story 14.4, KAN-91) - sem efeito acima
    * do breakpoint, onde a sidebar já é visível.
@@ -157,14 +156,14 @@ export class Shell {
    */
   protected readonly minhasComunidades = this.comunidadesService.minhasComunidades;
 
-  /** Painel de notificações (Story 10.1) — mesma cache compartilhada do `NotificacoesService`. */
+  /** Painel de notificações (Story 10.1/10.2) — mesma cache compartilhada do `NotificacoesService`. */
   protected readonly notificacoes = this.notificacoesService.notificacoes;
-  protected readonly notificacoesNaoLidas = this.notificacoesService.naoLidas;
-  /** Nome acessível do botão de notificações — o badge visual é `aria-hidden`, então a contagem precisa estar aqui. */
-  protected readonly rotuloNotificacoes = computed(() => {
-    const naoLidas = this.notificacoesNaoLidas();
-    return naoLidas > 0 ? `Notificações (${naoLidas} não lidas)` : 'Notificações';
-  });
+  /** Total de não lidas calculado pelo backend (RN04) — nunca contado sobre a página carregada. */
+  protected readonly notificacoesNaoLidas = this.notificacoesService.totalNaoLidas;
+  /** Mostra "Marcar todas como lidas" só quando há não lida (RF68.2, RN07). */
+  protected readonly temNaoLidas = computed(() => this.notificacoesNaoLidas() > 0);
+  /** Região `aria-live` da casca (RN26) — anuncia quando o total de não lidas aumenta. */
+  protected readonly anuncioNotificacoes = this.notificacoesService.anuncioAcessivel;
 
   /**
    * Derivado uma única vez (não é um método re-executado por item do `@for`).
@@ -199,6 +198,21 @@ export class Shell {
     // falha a cache simplesmente fica vazia, sem travar o resto da navegação.
     this.comunidadesService.carregarMinhas().subscribe({ error: () => undefined });
     this.notificacoesService.carregar().subscribe({ error: () => undefined });
+
+    // Consulta periódica (Story 10.2, RF69.4): começa com a casca autenticada e para
+    // com ela (logout, 401, destruição do componente) - nunca sobrevive à sessão.
+    this.notificacoesService.iniciarConsultaPeriodica();
+    inject(DestroyRef).onDestroy(() => this.notificacoesService.pararConsultaPeriodica());
+
+    // RN20: um id mais recente diferente do conhecido recarrega a lista só se o
+    // painel estiver aberto nesse momento - sem isso, só o badge (já atualizado
+    // pelo próprio serviço) muda.
+    this.notificacoesService.notificacaoNova$.pipe(takeUntilDestroyed()).subscribe(() => {
+      if (this.notificacoesAbertas()) {
+        this.notificacoesService.carregar().subscribe({ error: () => undefined });
+      }
+    });
+
     // Mesmo padrão para o nome do cartão da conta: o JWT só traz id e papéis.
     inject(UsuarioService)
       .me()
@@ -295,7 +309,7 @@ export class Shell {
    * Story 10.1: abre/fecha o painel de notificações; recarrega ao abrir.
    * `origem` é o botão que o abriu: o item do menu lateral ou a aba do celular.
    */
-  protected alternarNotificacoes(evento: Event, origem: 'lateral' | 'abas' = 'lateral'): void {
+  protected alternarNotificacoes(evento: Event, origem: 'lateral' | 'topo' = 'lateral'): void {
     evento.stopPropagation();
     this.menuAberto.set(false);
     this.contaAberta.set(false);
@@ -324,10 +338,10 @@ export class Shell {
     }
     if (this.notificacoesAbertas()) {
       this.notificacoesAbertas.set(false);
-      if (this.origemNotificacoes() === 'abas') {
-        this.tabbar()?.focarNotificacoes();
+      if (this.origemNotificacoes() === 'topo') {
+        this.topbar()?.focarNotificacoes();
       } else {
-        this.sininho()?.nativeElement.focus();
+        this.sininhoLateral()?.focar();
       }
     }
     if (this.navAberto()) {
@@ -362,6 +376,28 @@ export class Shell {
     if (notificacao.link) {
       this.router.navigateByUrl(notificacao.link).catch(() => {});
     }
+  }
+
+  /** "Marcar todas como lidas" do painel (RF68.2, RN07) — best-effort, a UI já zera o badge. */
+  protected marcarTodasComoLidas(): void {
+    this.notificacoesService.marcarTodasComoLidas().subscribe({ error: () => undefined });
+  }
+
+  /**
+   * Excluir do painel (RF84, RN08): o clique não abre o item (stopPropagation). O foco vai
+   * para o próximo item, o anterior, ou - sem nenhum sobrando - o botão "Marcar todas"/"Ver
+   * todas" mais próximo, nunca perdido no corpo da página.
+   */
+  protected excluirNotificacao(evento: Event, notificacao: Notificacao): void {
+    evento.stopPropagation();
+    const painel = this.painelNotificacoesEl()?.nativeElement;
+    const itens = painel ? [...painel.querySelectorAll<HTMLElement>('[data-notificacao-id]')] : [];
+    const indice = itens.findIndex((el) => el.dataset['notificacaoId'] === String(notificacao.id));
+    const proximoFoco = itens[indice + 1] ?? itens[indice - 1] ?? painel?.querySelector<HTMLElement>('a, button');
+    this.notificacoesService.excluir(notificacao.id).subscribe({
+      next: () => proximoFoco?.focus(),
+      error: () => undefined,
+    });
   }
 
   /** Próprio perfil (Stories 4.1/4.2). */

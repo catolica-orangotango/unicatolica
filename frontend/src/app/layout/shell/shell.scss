@@ -101,6 +101,17 @@
   text-decoration: none;
 }
 
+// Esconde visualmente mas mantém no leitor de tela: a região `aria-live` da
+// casca e o "(não lida)" de cada item (RN12/RN26).
+.shell__sr-only {
+  position: absolute; // layout-literal: técnica padrão de texto só para leitor de tela
+  width: 1px; // layout-literal: técnica padrão de texto só para leitor de tela
+  height: 1px; // layout-literal: técnica padrão de texto só para leitor de tela
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
 // Hover comum dos itens clicáveis do menu e dos painéis.
 .shell__nav-item:hover,
 .shell__comunidade-item:hover,
@@ -124,18 +135,12 @@
   color: inherit;
 }
 
-.shell__nav-contador,
-.shell__nav-badge {
+.shell__nav-contador {
   margin-left: auto;
 }
 
-// -- Notificações: item do menu + painel (Story 10.1) ------------------
-.shell__nav-item-wrapper {
-  position: relative;
-}
-
+// -- Notificações: sino do cartão da conta + painel (Story 10.1/10.2) ---
 // Reset comum dos botões da casca (fundo transparente, largura do contêiner).
-.shell__nav-item--button,
 .shell__notificacao-item,
 .shell__conta {
   // layout-literal: ocupa a largura do contêiner, nao e uma dimensao de design
@@ -146,15 +151,16 @@
   cursor: pointer;
 }
 
-// No fluxo do menu, logo abaixo do item: empurra os itens seguintes em vez de
-// cobri-los. Sobreposto (position: absolute), o painel deixava só uma faixa de
-// 7px do item Perfil clicável, e o axe acusava target-size (WCAG 2.5.8).
+// Logo abaixo do sino, com a largura do cartão da conta (RF69.1) - a mesma
+// garantia da DEFEITO 1 (Teste 08/10): nunca ultrapassa a sidebar, porque usa
+// a largura do próprio `.shell__conta-area` (`position: relative`), não um
+// valor fixo em px.
 .shell__notificacoes-painel {
-  position: relative;
+  position: absolute;
+  top: 100%; // layout-literal: encosta na base do cartão da conta, nao e um espacamento de design
+  left: 0;
+  right: 0;
   margin-top: var(--uc-space-unit);
-  // 100% do wrapper, não largura fixa: o menu tem overflow-y: auto (e por isso
-  // overflow-x computado), então o que for mais largo que ele seria cortado.
-  width: 100%; // layout-literal: preenche o wrapper que o contém, não é dimensão de design
   max-height: 360px; // layout-literal: limite de altura antes de rolar - sem token de "altura de lista"
   overflow-y: auto;
   padding: calc(var(--uc-space-unit) / 2);
@@ -162,23 +168,36 @@
   border: 1px solid var(--uc-color-border);
   border-radius: var(--uc-radius-md);
   box-shadow: var(--uc-shadow-overlay);
-  z-index: 1; // acima do resto do menu
+  z-index: 3; // acima do resto do menu e da gaveta (2)
 }
 
-// Aberto pela aba do celular: fixo logo acima da barra de abas (16 unidades).
-.shell__notificacoes-painel--abas {
+// Aberto pelo sino da barra superior do celular: fixo logo abaixo dela, largura
+// da tela (RF69.1, "em 360px ocupa a largura da tela abaixo da barra").
+.shell__notificacoes-painel--topo {
   position: fixed;
-  top: auto;
-  margin-top: 0;
-  bottom: calc(var(--uc-space-unit) * 16 + var(--uc-space-2));
+  top: calc(var(--uc-space-unit) * 14 + var(--uc-space-2));
   left: var(--uc-space-4);
   right: var(--uc-space-4);
   width: auto;
-  z-index: 3; // acima da gaveta (2) e das barras (1)
+  max-height: calc(100vh - var(--uc-space-unit) * 30); // layout-literal: cabe entre as duas barras
+}
+
+.shell__notificacoes-lista {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.shell__notificacao-linha {
+  display: flex;
+  align-items: stretch;
+  gap: calc(var(--uc-space-unit) / 2);
 }
 
 .shell__notificacao-item {
   display: block;
+  flex: 1;
+  min-width: 0;
   padding: calc(var(--uc-space-unit) * 2) calc(var(--uc-space-unit) * 3);
   border-radius: var(--uc-radius-sm);
   color: var(--uc-color-ink);
@@ -190,8 +209,57 @@
 }
 
 .shell__notificacao-item--vazio {
+  padding: calc(var(--uc-space-unit) * 2) calc(var(--uc-space-unit) * 3);
   color: var(--uc-color-ink-faint);
   cursor: default;
+}
+
+// Excluir (RF84.1): alvo de toque de 24px mínimo (RNF06), sempre visível (não
+// depende de hover - teclado e toque precisam dele direto).
+.shell__notificacao-excluir {
+  display: grid;
+  place-items: center;
+  width: var(--uc-space-6); // layout-literal: alvo de toque mínimo de 24px (WCAG 2.5.8)
+  flex-shrink: 0;
+  border: 0;
+  border-radius: var(--uc-radius-sm);
+  background: transparent;
+  color: var(--uc-color-ink-soft);
+  cursor: pointer;
+}
+
+.shell__notificacao-excluir:hover {
+  background: var(--uc-color-surface-muted);
+  color: var(--uc-color-error);
+}
+
+.shell__notificacoes-rodape {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--uc-space-2);
+  margin-top: calc(var(--uc-space-unit) / 2);
+  padding: var(--uc-space-2) var(--uc-space-3) calc(var(--uc-space-unit) / 2);
+  border-top: 1px solid var(--uc-color-border);
+}
+
+// Alvo de toque de 24px mínimo (RNF06, WCAG 2.5.8) via padding vertical.
+.shell__notificacoes-acao {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--uc-space-1);
+  padding: var(--uc-space-2) 0;
+  border: 0;
+  background: transparent;
+  color: var(--uc-color-maroon);
+  font-size: var(--uc-font-size-meta);
+  font-weight: var(--uc-font-weight-semibold);
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.shell__notificacoes-acao:hover {
+  text-decoration: underline;
 }
 
 // -- Seção "Suas comunidades" (.nh) -----------------------
@@ -243,14 +311,23 @@
 }
 
 // -- Cartão da conta (.me), no rodapé do menu -----------------------------
+// Sino de notificações imediatamente à esquerda do cartão (Story 10.2, RN17):
+// uma linha, o cartão ocupa o resto da largura.
 .shell__conta-area {
   position: relative;
+  display: flex;
+  align-items: center;
+  gap: calc(var(--uc-space-unit) / 2);
   margin-top: auto;
   padding-top: var(--uc-space-4);
 }
 
 .shell__conta {
   display: flex;
+  flex: 1;
+  // layout-literal: ocupa o resto da linha ao lado do sino, nao e uma dimensao de design
+  width: auto;
+  min-width: 0;
   align-items: center;
   gap: calc(var(--uc-space-unit) * 2.5);
   padding: calc(var(--uc-space-unit) * 2.5) var(--uc-space-3);

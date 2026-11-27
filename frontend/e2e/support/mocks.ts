@@ -406,41 +406,79 @@ export interface NotificacaoMock {
 }
 
 /**
- * `GET /notificacoes/me` e `POST /notificacoes/{id}/lida` (Story 10.1) com estado em
- * memória — a mesma lista alimenta o badge e o painel da sidebar, e uma notificação
- * marcada como lida (pelo painel ou como efeito colateral de outra rota — ver o
- * `marcarLida` opcional em {@link mockMeuPerfil}) reflete no próximo `GET`. Registrar
- * depois de `mockFeedOk`.
+ * `GET /notificacoes/me`, `GET /notificacoes/me/resumo`, `POST /notificacoes/{id}/lida`,
+ * `POST /notificacoes/me/lidas` e `DELETE /notificacoes/{id}` (Story 10.1/10.2) com estado
+ * em memória — a mesma lista alimenta o badge, o painel do sino e a página `/notificacoes`.
+ * Registrar depois de `mockFeedOk` (que já registra isto com uma lista vazia - a consulta
+ * periódica de 10s da casca, Story 10.2, depende de `/resumo` estar sempre mockado).
  */
 export async function mockNotificacoes(page: Page, iniciais: NotificacaoMock[]): Promise<NotificacaoMock[]> {
   const notificacoes = iniciais.map((n) => ({ ...n }));
+  const naoLidas = () => notificacoes.filter((n) => !n.lida).length;
+  const maisRecenteId = () =>
+    notificacoes.length === 0 ? null : Math.max(...notificacoes.map((n) => n.id));
+  const ordenadas = () =>
+    [...notificacoes].sort((a, b) => (a.criadoEm < b.criadoEm ? 1 : a.criadoEm > b.criadoEm ? -1 : b.id - a.id));
+
   await page.route(
     (url) => ehApi(url) && /^\/notificacoes(\/|$)/.test(url.pathname),
     (route) => {
       const request = route.request();
+      const url = new URL(request.url());
       if (request.method() === 'OPTIONS') {
         return route.fulfill({
           status: 204,
-          headers: { ...CORS, 'access-control-allow-methods': 'GET,POST,OPTIONS' },
+          headers: { ...CORS, 'access-control-allow-methods': 'GET,POST,DELETE,OPTIONS' },
         });
       }
-      const alvo = /^\/notificacoes\/(\d+)\/lida$/.exec(new URL(request.url()).pathname);
-      if (request.method() === 'POST' && alvo) {
-        const notificacao = notificacoes.find((n) => n.id === Number(alvo[1]));
+
+      const marcarLida = /^\/notificacoes\/(\d+)\/lida$/.exec(url.pathname);
+      if (request.method() === 'POST' && marcarLida) {
+        const notificacao = notificacoes.find((n) => n.id === Number(marcarLida[1]));
         if (notificacao) {
           notificacao.lida = true;
         }
         return route.fulfill({ status: 204, headers: CORS });
       }
-      return route.fulfill(
-        json(200, {
-          content: notificacoes,
-          page: 0,
-          size: 20,
-          totalElements: notificacoes.length,
-          totalPages: notificacoes.length > 0 ? 1 : 0,
-        }),
-      );
+
+      if (request.method() === 'POST' && url.pathname === '/notificacoes/me/lidas') {
+        for (const n of notificacoes) n.lida = true;
+        return route.fulfill({ status: 204, headers: CORS });
+      }
+
+      const excluir = /^\/notificacoes\/(\d+)$/.exec(url.pathname);
+      if (request.method() === 'DELETE' && excluir) {
+        const indice = notificacoes.findIndex((n) => n.id === Number(excluir[1]));
+        if (indice === -1) {
+          return route.fulfill(json(404, { error: { code: 'NOTIFICACAO_NAO_ENCONTRADA', message: 'Notificação não encontrada.', details: null } }));
+        }
+        notificacoes.splice(indice, 1);
+        return route.fulfill({ status: 204, headers: CORS });
+      }
+
+      if (request.method() === 'GET' && url.pathname === '/notificacoes/me/resumo') {
+        return route.fulfill(json(200, { totalNaoLidas: naoLidas(), ultimaNotificacaoId: maisRecenteId() }));
+      }
+
+      if (request.method() === 'GET' && url.pathname === '/notificacoes/me') {
+        const pagina = Number(url.searchParams.get('pagina') ?? '0');
+        const tamanho = Math.max(1, Math.min(20, Number(url.searchParams.get('tamanho') ?? '20')));
+        const todas = ordenadas();
+        const content = todas.slice(pagina * tamanho, pagina * tamanho + tamanho);
+        const totalPages = Math.max(1, Math.ceil(todas.length / tamanho));
+        return route.fulfill(
+          json(200, {
+            content,
+            page: pagina,
+            size: tamanho,
+            totalElements: todas.length,
+            totalPages: todas.length > 0 ? totalPages : 0,
+            totalNaoLidas: naoLidas(),
+          }),
+        );
+      }
+
+      return route.fulfill({ status: 404, headers: CORS });
     },
   );
   return notificacoes;

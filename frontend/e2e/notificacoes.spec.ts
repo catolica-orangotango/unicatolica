@@ -73,7 +73,7 @@ test('salvar o perfil atualiza o badge de notificações sem precisar reabrir o 
   await plantarToken(page, ['ALUNO']);
   await page.goto('/feed');
 
-  const badge = page.locator('.shell__nav-badge');
+  const badge = page.locator('.shell__conta-area .sininho__badge');
   await expect(badge).toHaveText('1');
 
   await cartaoDaConta(page).click();

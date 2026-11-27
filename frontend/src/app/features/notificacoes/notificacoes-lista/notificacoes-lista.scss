@@ -1,0 +1,117 @@
+// Página /notificacoes (Story 10.2, RF69.2). Só tokens var(--uc-*).
+
+.lista__cabecalho {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--uc-space-3);
+  margin-bottom: var(--uc-space-5);
+}
+
+.lista__titulo {
+  margin: 0;
+}
+
+.lista__esqueleto {
+  display: flex;
+  flex-direction: column;
+  gap: var(--uc-space-2);
+}
+
+.lista__esqueleto-linha {
+  height: var(--uc-space-8); // layout-literal: altura de uma linha de lista, sem token dedicado
+}
+
+.lista__erro {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--uc-space-3);
+  padding: var(--uc-space-5);
+  color: var(--uc-color-ink-soft);
+}
+
+.lista__itens {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--uc-color-border);
+}
+
+.lista__linha {
+  display: flex;
+  align-items: stretch;
+  gap: var(--uc-space-2);
+  border-bottom: 1px solid var(--uc-color-border);
+}
+
+.lista__item {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--uc-space-3);
+  padding: var(--uc-space-3);
+  border: 0;
+  background: transparent;
+  color: var(--uc-color-ink);
+  font-size: var(--uc-font-size-body);
+  text-align: left;
+  cursor: pointer;
+}
+
+.lista__item:hover {
+  background: var(--uc-color-surface-muted);
+}
+
+.lista__item--nao-lida {
+  font-weight: var(--uc-font-weight-semibold);
+}
+
+.lista__texto {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+// Esconde visualmente mas mantém no leitor de tela (RN12).
+.lista__sr-only {
+  position: absolute; // layout-literal: técnica padrão de texto só para leitor de tela
+  width: 1px; // layout-literal: técnica padrão de texto só para leitor de tela
+  height: 1px; // layout-literal: técnica padrão de texto só para leitor de tela
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.lista__data {
+  flex-shrink: 0;
+  color: var(--uc-color-ink-soft);
+  font-size: var(--uc-font-size-meta);
+  font-weight: var(--uc-font-weight-regular);
+}
+
+// Excluir: alvo de toque mínimo de 24px (RNF06, WCAG 2.5.8), sempre visível.
+.lista__excluir {
+  display: grid;
+  place-items: center;
+  width: var(--uc-space-8);
+  flex-shrink: 0;
+  border: 0;
+  background: transparent;
+  color: var(--uc-color-ink-soft);
+  cursor: pointer;
+}
+
+.lista__excluir:hover {
+  background: var(--uc-color-surface-muted);
+  color: var(--uc-color-error);
+}
+
+.lista__paginacao {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--uc-space-4);
+  margin-top: var(--uc-space-5);
+}

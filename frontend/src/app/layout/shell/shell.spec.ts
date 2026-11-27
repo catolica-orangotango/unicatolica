@@ -16,11 +16,11 @@ import { ShellLateralService } from './shell-lateral.service';
 
 const TOKEN_KEY = 'pacext.token';
 
-/** Menu principal do aluno (KAN-91), na ordem do mockup aprovado. */
-const MENU_ALUNO = ['Início', 'Comunidades', 'Criar enquete', 'Notificações', 'Perfil'];
+/** Menu principal do aluno (KAN-91), na ordem do mockup aprovado. Notificações não é mais item (Story 10.2, RN16). */
+const MENU_ALUNO = ['Início', 'Comunidades', 'Criar enquete', 'Perfil'];
 
 /** O moderador ganha "Denúncias" logo depois de "Comunidades". */
-const MENU_MODERADOR = ['Início', 'Comunidades', 'Criar enquete', 'Denúncias', 'Notificações', 'Perfil'];
+const MENU_MODERADOR = ['Início', 'Comunidades', 'Criar enquete', 'Denúncias', 'Perfil'];
 
 /** O administrador: o do moderador mais "Administração" no fim. */
 const MENU_ADMINISTRADOR = [...MENU_MODERADOR, 'Administração'];
@@ -124,6 +124,11 @@ describe('Shell', () => {
     return f.nativeElement.querySelector('.shell__conta') as HTMLButtonElement;
   }
 
+  /** Sino do rodapé da sidebar (desktop) - Story 10.2, RN17. */
+  function sininhoLateralBtn(f: ComponentFixture<Shell>): HTMLButtonElement {
+    return f.nativeElement.querySelector('.shell__conta-area .sininho') as HTMLButtonElement;
+  }
+
   function abrirMenu(f: ComponentFixture<Shell>): void {
     cartaoConta(f).click();
     f.detectChanges();
@@ -150,7 +155,7 @@ describe('Shell', () => {
   });
 
   describe('menu principal (KAN-91)', () => {
-    it('aluno: Início, Comunidades, Notificações e Perfil, nessa ordem', async () => {
+    it('aluno: Início, Comunidades, Criar enquete e Perfil, nessa ordem', async () => {
       const f = await montar(tokenComPerfis(['ALUNO']));
 
       expect(labelsDeNav(f)).toEqual(MENU_ALUNO);
@@ -199,7 +204,6 @@ describe('Shell', () => {
       expect(itemDeNav(f, 'Denúncias').getAttribute('href')).toBe('/moderacao/denuncias');
       expect(itemDeNav(f, 'Perfil').getAttribute('href')).toBe('/perfil');
       expect(itemDeNav(f, 'Administração').getAttribute('href')).toBe('/admin');
-      expect(itemDeNav(f, 'Notificações').tagName).toBe('BUTTON');
     });
 
     it('a rota ativa recebe aria-current="page" e a classe de item ativo', async () => {
@@ -480,7 +484,7 @@ describe('Shell', () => {
 
     it('abrir o cartão da conta fecha o painel de notificações', async () => {
       const f = await montar(tokenComPerfis(['ALUNO']));
-      (itemDeNav(f, 'Notificações') as HTMLButtonElement).click();
+      sininhoLateralBtn(f).click();
       f.detectChanges();
       expect(f.nativeElement.querySelector('#shell-notificacoes')).toBeTruthy();
 
@@ -518,9 +522,9 @@ describe('Shell', () => {
       expect(f.nativeElement.querySelector('.shell__menu-toggle')).toBeNull();
     });
 
-    it('aluno: abas Início, Comunidades, Notificações e Perfil; moderador troca Notificações por Denúncias', async () => {
+    it('aluno: abas Início, Comunidades, Criar enquete e Perfil; moderador troca Criar enquete por Denúncias', async () => {
       const aluno = await montar(tokenComPerfis(['ALUNO']));
-      expect(textos(aluno, '.abas__rotulo')).toEqual(['Início', 'Comunidades', 'Notificações', 'Perfil']);
+      expect(textos(aluno, '.abas__rotulo')).toEqual(['Início', 'Comunidades', 'Criar enquete', 'Perfil']);
       aluno.nativeElement.remove();
       TestBed.resetTestingModule();
 
@@ -742,6 +746,11 @@ describe('Shell - gaveta de navegação mobile (Story 14.4)', () => {
     return f.nativeElement.querySelector('app-shell-topbar .topo__avatar') as HTMLButtonElement;
   }
 
+  /** Sino da barra superior do celular (Story 10.2, RN17). */
+  function sininhoTopoBtn(f: ComponentFixture<Shell>): HTMLButtonElement {
+    return f.nativeElement.querySelector('app-shell-topbar .sininho') as HTMLButtonElement;
+  }
+
   function sidebarNav(f: ComponentFixture<Shell>): HTMLElement {
     return f.nativeElement.querySelector('.shell__sidebar') as HTMLElement;
   }
@@ -842,7 +851,7 @@ describe('Shell - gaveta de navegação mobile (Story 14.4)', () => {
     expect(f.nativeElement.querySelector('#shell-menu-conta [role="menu"]')).toBeNull();
 
     abrirNav(f);
-    (f.nativeElement.querySelector('app-shell-tabbar button.abas__item') as HTMLButtonElement).click();
+    sininhoTopoBtn(f).click();
     f.detectChanges();
     expect(f.nativeElement.querySelector('#shell-notificacoes')).toBeTruthy();
     abrirNav(f);
@@ -861,11 +870,11 @@ describe('Shell - gaveta de navegação mobile (Story 14.4)', () => {
     expect(f.nativeElement.querySelector('#shell-menu [role="menu"]')).toBeTruthy();
   });
 
-  it('abrir o painel de notificações pela barra de abas fecha a gaveta', async () => {
+  it('abrir o painel de notificações pelo sino da barra superior fecha a gaveta', async () => {
     const f = await montar();
     abrirNav(f);
 
-    (f.nativeElement.querySelector('app-shell-tabbar button.abas__item') as HTMLButtonElement).click();
+    sininhoTopoBtn(f).click();
     f.detectChanges();
 
     expect(botaoNav(f).getAttribute('aria-expanded')).toBe('false');
@@ -984,15 +993,19 @@ describe('Shell - painel de notificações (Story 10.1)', () => {
   }
 
   function sininhoBtn(f: ComponentFixture<Shell>): HTMLButtonElement {
-    return f.nativeElement.querySelector('.shell__nav-item--button') as HTMLButtonElement;
+    return f.nativeElement.querySelector('.shell__conta-area .sininho') as HTMLButtonElement;
   }
 
+  type NotificacaoMock = { id: number; tipo: string; texto: string; link: string | null; lida: boolean; criadoEm: string };
+
+  /** `GET /notificacoes/me` do painel (tamanho 5, RF69.1) - a `totalNaoLidas` é a do backend (RN04). */
   function flushNotificacoes(
     httpMock: HttpTestingController,
-    notificacoes: { id: number; tipo: string; texto: string; link: string | null; lida: boolean; criadoEm: string }[] = [],
+    notificacoes: NotificacaoMock[] = [],
+    totalNaoLidas = notificacoes.filter((n) => !n.lida).length,
   ): void {
-    for (const req of httpMock.match(`${API_BASE_URL}/notificacoes/me?pagina=0&tamanho=20`)) {
-      req.flush({ content: notificacoes, page: 0, size: 20, totalElements: notificacoes.length, totalPages: 1 });
+    for (const req of httpMock.match((r) => r.url === `${API_BASE_URL}/notificacoes/me` && r.params.get('tamanho') === '5')) {
+      req.flush({ content: notificacoes, page: 0, size: 5, totalElements: notificacoes.length, totalPages: 1, totalNaoLidas });
     }
   }
 
@@ -1009,11 +1022,11 @@ describe('Shell - painel de notificações (Story 10.1)', () => {
     f.detectChanges();
 
     const botao = sininhoBtn(f);
-    expect(botao.querySelector('.shell__nav-badge')).toBeNull();
+    expect(botao.querySelector('.sininho__badge')).toBeNull();
     expect(botao.getAttribute('aria-label')).toBe('Notificações');
   });
 
-  it('com não lidas: mostra o badge e o aria-label inclui a contagem', async () => {
+  it('com 1 não lida: mostra o badge e o aria-label no singular', async () => {
     const { f, httpMock } = await montar();
     flushNotificacoes(httpMock, [
       { id: 1, tipo: 'ONBOARDING_PERFIL', texto: 'Complete seu perfil', link: '/perfil', lida: false, criadoEm: '2026-09-30T12:00:00Z' },
@@ -1021,8 +1034,22 @@ describe('Shell - painel de notificações (Story 10.1)', () => {
     f.detectChanges();
 
     const botao = sininhoBtn(f);
-    expect(botao.querySelector('.shell__nav-badge')?.textContent?.trim()).toBe('1');
-    expect(botao.getAttribute('aria-label')).toBe('Notificações (1 não lidas)');
+    expect(botao.querySelector('.sininho__badge')?.textContent?.trim()).toBe('1');
+    expect(botao.getAttribute('aria-label')).toBe('Notificações, 1 não lida');
+  });
+
+  it('com mais de 1 não lida: aria-label no plural, e o badge vem do total do backend (RN04)', async () => {
+    const { f, httpMock } = await montar();
+    flushNotificacoes(
+      httpMock,
+      [{ id: 1, tipo: 'ONBOARDING_PERFIL', texto: 'Complete seu perfil', link: '/perfil', lida: false, criadoEm: '2026-09-30T12:00:00Z' }],
+      42,
+    );
+    f.detectChanges();
+
+    const botao = sininhoBtn(f);
+    expect(botao.querySelector('.sininho__badge')?.textContent?.trim()).toBe('42');
+    expect(botao.getAttribute('aria-label')).toBe('Notificações, 42 não lidas');
   });
 
   it('clicar no sininho abre o painel, recarrega e marca aria-expanded="true"', async () => {
@@ -1059,8 +1086,6 @@ describe('Shell - painel de notificações (Story 10.1)', () => {
 
     const vazio = f.nativeElement.querySelector('.shell__notificacao-item--vazio') as HTMLElement;
     expect(vazio.textContent?.trim()).toBe('Sem notificações por enquanto.');
-    expect(vazio.getAttribute('role')).toBe('menuitem');
-    expect(vazio.getAttribute('aria-disabled')).toBe('true');
   });
 
   it('clicar numa notificação não lida marca como lida, fecha o painel e navega para o link', async () => {
@@ -1087,6 +1112,63 @@ describe('Shell - painel de notificações (Story 10.1)', () => {
     expect(navSpy).toHaveBeenCalledWith('/perfil');
   });
 
+  it('"Marcar todas como lidas" só aparece com não lida, e some depois do clique', async () => {
+    const { f, httpMock } = await montar();
+    flushNotificacoes(httpMock, [
+      { id: 1, tipo: 'ONBOARDING_PERFIL', texto: 'Complete seu perfil', link: '/perfil', lida: false, criadoEm: '2026-09-30T12:00:00Z' },
+    ]);
+    f.detectChanges();
+
+    sininhoBtn(f).click();
+    f.detectChanges();
+    flushNotificacoes(httpMock, [
+      { id: 1, tipo: 'ONBOARDING_PERFIL', texto: 'Complete seu perfil', link: '/perfil', lida: false, criadoEm: '2026-09-30T12:00:00Z' },
+    ]);
+    f.detectChanges();
+
+    const marcarTodas = [...f.nativeElement.querySelectorAll('.shell__notificacoes-acao')].find(
+      (el) => (el.textContent ?? '').includes('Marcar todas'),
+    ) as HTMLButtonElement;
+    expect(marcarTodas).toBeTruthy();
+    marcarTodas.click();
+    f.detectChanges();
+
+    httpMock.expectOne(`${API_BASE_URL}/notificacoes/me/lidas`).flush(null);
+    f.detectChanges();
+
+    expect(
+      [...f.nativeElement.querySelectorAll('.shell__notificacoes-acao')].some((el) =>
+        (el.textContent ?? '').includes('Marcar todas'),
+      ),
+    ).toBe(false);
+    expect(sininhoBtn(f).querySelector('.sininho__badge')).toBeNull();
+  });
+
+  it('excluir uma notificação do painel chama o DELETE e remove o item', async () => {
+    const { f, httpMock } = await montar();
+    flushNotificacoes(httpMock, [
+      { id: 9, tipo: 'ONBOARDING_PERFIL', texto: 'Complete seu perfil', link: '/perfil', lida: false, criadoEm: '2026-09-30T12:00:00Z' },
+    ]);
+    f.detectChanges();
+
+    sininhoBtn(f).click();
+    f.detectChanges();
+    flushNotificacoes(httpMock, [
+      { id: 9, tipo: 'ONBOARDING_PERFIL', texto: 'Complete seu perfil', link: '/perfil', lida: false, criadoEm: '2026-09-30T12:00:00Z' },
+    ]);
+    f.detectChanges();
+
+    const excluir = f.nativeElement.querySelector('.shell__notificacao-excluir') as HTMLButtonElement;
+    expect(excluir.getAttribute('aria-label')).toBe('Excluir notificação: Complete seu perfil');
+    excluir.click();
+    f.detectChanges();
+
+    httpMock.expectOne(`${API_BASE_URL}/notificacoes/9`).flush(null);
+    f.detectChanges();
+
+    expect(f.nativeElement.querySelector('.shell__notificacao-linha')).toBeNull();
+  });
+
   it('abrir o painel de notificações fecha o menu da barra superior', async () => {
     const { f, httpMock } = await montar();
     flushNotificacoes(httpMock);
@@ -1101,13 +1183,11 @@ describe('Shell - painel de notificações (Story 10.1)', () => {
     flushNotificacoes(httpMock);
     f.detectChanges();
 
-    // #shell-menu (menu da conta da barra superior), não [role="menu"] genérico - o
-    // painel de notificações também usa role="menu" e continua aberto aqui de propósito.
     expect(f.nativeElement.querySelector('#shell-menu [role="menu"]')).toBeNull();
     expect(f.nativeElement.querySelector('#shell-notificacoes')).toBeTruthy();
   });
 
-  it('Escape fecha o painel aberto pelo menu lateral e devolve o foco ao botão do menu', async () => {
+  it('Escape fecha o painel aberto pelo sino lateral e devolve o foco a ele', async () => {
     const { f, httpMock } = await montar();
     flushNotificacoes(httpMock);
     sininhoBtn(f).click();
@@ -1120,17 +1200,17 @@ describe('Shell - painel de notificações (Story 10.1)', () => {
     expect(document.activeElement).toBe(sininhoBtn(f));
   });
 
-  describe('pela barra de abas do celular', () => {
-    function abaNotificacoes(f: ComponentFixture<Shell>): HTMLButtonElement {
-      return f.nativeElement.querySelector('app-shell-tabbar button.abas__item') as HTMLButtonElement;
+  describe('pelo sino da barra superior do celular (Story 10.2, RN17)', () => {
+    function sininhoTopo(f: ComponentFixture<Shell>): HTMLButtonElement {
+      return f.nativeElement.querySelector('app-shell-topbar .sininho') as HTMLButtonElement;
     }
 
-    it('a aba abre o mesmo painel (um só #shell-notificacoes), fora da <nav> principal', async () => {
+    it('o sino da barra superior abre o mesmo painel (um só #shell-notificacoes), fixo abaixo da barra', async () => {
       const { f, httpMock } = await montar();
       flushNotificacoes(httpMock);
       f.detectChanges();
 
-      abaNotificacoes(f).click();
+      sininhoTopo(f).click();
       f.detectChanges();
       flushNotificacoes(httpMock, [
         { id: 1, tipo: 'ONBOARDING_PERFIL', texto: 'Complete seu perfil', link: '/perfil', lida: false, criadoEm: '2026-09-30T12:00:00Z' },
@@ -1139,46 +1219,46 @@ describe('Shell - painel de notificações (Story 10.1)', () => {
 
       const paineis = f.nativeElement.querySelectorAll('#shell-notificacoes');
       expect(paineis.length).toBe(1);
-      expect(paineis[0].getAttribute('role')).toBe('menu');
-      expect(paineis[0].classList).toContain('shell__notificacoes-painel--abas');
+      expect(paineis[0].classList).toContain('shell__notificacoes-painel--topo');
       expect(paineis[0].closest('#shell-sidebar-nav')).toBeNull();
       expect(paineis[0].textContent).toContain('Complete seu perfil');
-      expect(abaNotificacoes(f).getAttribute('aria-expanded')).toBe('true');
-      expect(sininhoBtn(f).getAttribute('aria-expanded')).toBe('true');
+      expect(sininhoTopo(f).getAttribute('aria-expanded')).toBe('true');
+      // O sino lateral não abriu este painel - só o que o abriu reflete aria-expanded.
+      expect(sininhoBtn(f).getAttribute('aria-expanded')).toBe('false');
     });
 
-    it('a aba mostra o contador de não lidas e a contagem no nome acessível', async () => {
+    it('mostra o mesmo total de não lidas do sino lateral (um único NotificacoesService)', async () => {
       const { f, httpMock } = await montar();
       flushNotificacoes(httpMock, [
         { id: 1, tipo: 'ONBOARDING_PERFIL', texto: 'Complete seu perfil', link: '/perfil', lida: false, criadoEm: '2026-09-30T12:00:00Z' },
       ]);
       f.detectChanges();
 
-      expect(abaNotificacoes(f).querySelector('uc-badge')?.textContent?.trim()).toBe('1');
-      expect(abaNotificacoes(f).getAttribute('aria-label')).toBe('Notificações (1 não lidas)');
+      expect(sininhoTopo(f).querySelector('.sininho__badge')?.textContent?.trim()).toBe('1');
+      expect(sininhoTopo(f).getAttribute('aria-label')).toBe('Notificações, 1 não lida');
     });
 
-    it('Escape fecha o painel e devolve o foco à aba que o abriu', async () => {
+    it('Escape fecha o painel e devolve o foco ao sino que o abriu', async () => {
       const { f, httpMock } = await montar();
       flushNotificacoes(httpMock);
-      abaNotificacoes(f).click();
+      sininhoTopo(f).click();
       f.detectChanges();
 
       document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
       f.detectChanges();
 
       expect(f.nativeElement.querySelector('#shell-notificacoes')).toBeNull();
-      expect(abaNotificacoes(f).getAttribute('aria-expanded')).toBe('false');
-      expect(document.activeElement).toBe(abaNotificacoes(f));
+      expect(sininhoTopo(f).getAttribute('aria-expanded')).toBe('false');
+      expect(document.activeElement).toBe(sininhoTopo(f));
     });
 
-    it('clicar de novo na aba fecha o painel', async () => {
+    it('clicar de novo no sino fecha o painel', async () => {
       const { f, httpMock } = await montar();
       flushNotificacoes(httpMock);
-      abaNotificacoes(f).click();
+      sininhoTopo(f).click();
       f.detectChanges();
 
-      abaNotificacoes(f).click();
+      sininhoTopo(f).click();
       f.detectChanges();
 
       expect(f.nativeElement.querySelector('#shell-notificacoes')).toBeNull();
@@ -1273,10 +1353,10 @@ describe('shell.scss - contrato de estilo por token', () => {
     );
   });
 
-  it('o painel aberto pela aba fica fixo logo acima da barra de abas', () => {
-    const painel = regra(semMedia, '.shell__notificacoes-painel--abas');
+  it('o painel aberto pelo sino da barra superior fica fixo logo abaixo dela', () => {
+    const painel = regra(semMedia, '.shell__notificacoes-painel--topo');
     expect(painel).toMatch(/position:\s*fixed/);
-    expect(painel).toMatch(/bottom:\s*calc\(var\(--uc-space-unit\) \* 16 \+ var\(--uc-space-2\)\)/);
+    expect(painel).toMatch(/top:\s*calc\(var\(--uc-space-unit\) \* 14 \+ var\(--uc-space-2\)\)/);
   });
 
   it('sem os estilos da barra superior interina', () => {

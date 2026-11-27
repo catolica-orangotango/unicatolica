@@ -9,9 +9,10 @@ import { plantarToken, semToken } from './support/seed';
  *
  * Sem backend: um JWT não assinado com a claim `roles` é plantado no localStorage
  * antes da navegação. A composição segue `NAV_ITENS` de
- * `layout/shell/shell.ts`: menu principal (Início, Comunidades, Denúncias para
- * moderador e administrador, Notificações, Perfil, Administração só para
- * administrador), e a seção "Suas comunidades".
+ * `layout/shell/shell.ts`: menu principal (Início, Comunidades, Criar enquete,
+ * Denúncias para moderador e administrador, Perfil, Administração só para
+ * administrador), e a seção "Suas comunidades". O sino de notificações (Story
+ * 10.2) não é mais item de menu - mora no cartão da conta, fora dessa lista.
  *
  * Desktop (1440) e tablet (1024) mostram o menu inteiro; no celular (360) o menu
  * vira a gaveta "Suas comunidades", aberta pelo botão da barra superior.
@@ -21,8 +22,8 @@ test.beforeEach(async ({ page }) => {
   await mockFeedOk(page);
 });
 
-const MENU_ALUNO = ['Início', 'Comunidades', 'Criar enquete', 'Notificações', 'Perfil'];
-const MENU_MODERADOR = ['Início', 'Comunidades', 'Criar enquete', 'Denúncias', 'Notificações', 'Perfil'];
+const MENU_ALUNO = ['Início', 'Comunidades', 'Criar enquete', 'Perfil'];
+const MENU_MODERADOR = ['Início', 'Comunidades', 'Criar enquete', 'Denúncias', 'Perfil'];
 const MENU_ADMINISTRADOR = [...MENU_MODERADOR, 'Administração'];
 
 const COMUNIDADES = [
@@ -39,7 +40,7 @@ for (const viewport of [VIEWPORT_DESKTOP, VIEWPORT_TABLET]) {
   test.describe(`menu completo em ${viewport.width}px`, () => {
     test.use({ viewport });
 
-    test('aluno vê Início, Comunidades, Criar enquete, Notificações e Perfil, sem os itens de moderação', async ({ page }) => {
+    test('aluno vê Início, Comunidades, Criar enquete e Perfil, sem os itens de moderação', async ({ page }) => {
       await plantarToken(page, ['ALUNO']);
       await page.goto('/feed');
 
