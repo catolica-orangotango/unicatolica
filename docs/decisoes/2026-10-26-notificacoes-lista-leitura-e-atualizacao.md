@@ -1,7 +1,7 @@
 # Decisão: lista, leitura, exclusão e atualização automática das notificações
 
 - **Data:** 2026-10-26
-- **Estado:** proposta (aguarda o aceite de João Pedro, responsável pelo módulo Notificações)
+- **Estado:** aceita (2026-11-27, por João Pedro, responsável pelo módulo Notificações)
 - **Ticket:** KAN-46 (Story 10.2, RF68 e RF69), com regras de negócio, requisitos e critérios de aceite na descrição do ticket
 - **Requisito novo:** RF84 "Excluir notificação" (estende a numeração do `prd.md`, depois do RF83 do KAN-90)
 - **Altera:** a parte de frontend de [`2026-09-30-notificacoes-e-onboarding.md`](2026-09-30-notificacoes-e-onboarding.md) (sininho como item da sidebar com dropdown)

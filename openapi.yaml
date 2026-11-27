@@ -1491,7 +1491,7 @@ paths:
   /notificacoes/me:
     get:
       operationId: listarMinhasNotificacoes
-      summary: Notificações do usuário autenticado, mais recentes primeiro (Story 10.1, RF20.1)
+      summary: Notificações do usuário autenticado, mais recentes primeiro (Story 10.1/10.2, RF20.1, RF69)
       tags: [Notificacoes]
       parameters:
         - name: pagina
@@ -1501,9 +1501,13 @@ paths:
             default: 0
         - name: tamanho
           in: query
+          description: >-
+            Tamanho da página (Story 10.2, RN03): acima de 20 vira 20, abaixo de 1 vira 1.
           schema:
             type: integer
             default: 20
+            minimum: 1
+            maximum: 20
       responses:
         '200':
           description: Página de notificações do usuário autenticado.
@@ -1511,6 +1515,27 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/NotificacaoPageResponse'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+
+  /notificacoes/me/resumo:
+    get:
+      operationId: resumoMinhasNotificacoes
+      summary: >-
+        Contagem de não lidas e id mais recente, para consulta periódica (Story 10.2, RF69.4,
+        RN13, RN19)
+      description: >-
+        Endpoint leve para a consulta a cada 10 s da casca autenticada (RN19): nunca devolve a
+        lista inteira, só o suficiente para o front decidir se precisa atualizar o badge ou
+        recarregar a lista.
+      tags: [Notificacoes]
+      responses:
+        '200':
+          description: Resumo das notificações do usuário autenticado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificacaoResumoResponse'
         '401':
           $ref: '#/components/responses/NaoAutenticado'
 
@@ -1529,6 +1554,43 @@ paths:
       responses:
         '204':
           description: Marcada como lida.
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+
+  /notificacoes/me/lidas:
+    post:
+      operationId: marcarTodasNotificacoesComoLidas
+      summary: Marca como lidas todas as não lidas do usuário autenticado (Story 10.2, RF68.2, RN07)
+      description: >-
+        Marca as não lidas criadas até o momento da chamada (RN07) — uma notificação criada
+        depois continua não lida.
+      tags: [Notificacoes]
+      responses:
+        '204':
+          description: Marcadas como lidas.
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+
+  /notificacoes/{id}:
+    delete:
+      operationId: excluirNotificacao
+      summary: Exclui uma notificação do usuário autenticado (Story 10.2, RF84)
+      description: >-
+        Exclusão física, sem confirmação (RN08) — vale para notificações lidas e não lidas e
+        não pode ser desfeita.
+      tags: [Notificacoes]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '204':
+          description: Excluída.
         '401':
           $ref: '#/components/responses/NaoAutenticado'
         '404':
@@ -2177,11 +2239,33 @@ components:
       allOf:
         - $ref: '#/components/schemas/PageResponse'
         - type: object
+          required: [totalNaoLidas]
           properties:
             content:
               type: array
               items:
                 $ref: '#/components/schemas/NotificacaoResponse'
+            totalNaoLidas:
+              type: integer
+              description: >-
+                Total de não lidas calculado pelo backend (Story 10.2, RN04) — nunca a
+                contagem da página carregada.
+
+    NotificacaoResumoResponse:
+      type: object
+      required: [totalNaoLidas, ultimaNotificacaoId]
+      properties:
+        totalNaoLidas:
+          type: integer
+          description: >-
+            Total de não lidas do usuário autenticado. Acima de 99, o front mostra "99+"
+            (RN04).
+        ultimaNotificacaoId:
+          type: [integer, 'null']
+          format: int64
+          description: >-
+            Id da notificação mais recente, ou null sem nenhuma. O front compara com o id já
+            conhecido para decidir se recarrega a lista (RN20).
 
     Curso:
       type: object
