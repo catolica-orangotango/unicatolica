@@ -1,0 +1,80 @@
+<section class="avisos" aria-labelledby="avisos-titulo">
+  <div class="avisos__cabecalho">
+    <span class="avisos__icone" aria-hidden="true"><uc-icon name="megaphone" /></span>
+    <h2 class="avisos__titulo" id="avisos-titulo">Publicar aviso</h2>
+  </div>
+  <p class="avisos__ajuda">Aparece em “Esta semana” no Início de quem você escolher.</p>
+
+  <form class="avisos__form" [formGroup]="form" (ngSubmit)="publicar()" novalidate>
+    <label class="avisos__label" for="aviso-titulo">Título</label>
+    <input
+      id="aviso-titulo"
+      class="avisos__campo"
+      type="text"
+      formControlName="titulo"
+      [attr.maxlength]="limiteTitulo"
+      [attr.aria-invalid]="form.controls.titulo.touched && form.controls.titulo.invalid ? 'true' : null"
+      [attr.aria-describedby]="form.controls.titulo.touched && form.controls.titulo.invalid ? 'erro-aviso-titulo' : null"
+    />
+    @if (form.controls.titulo.touched && form.controls.titulo.invalid) {
+      <span class="avisos__erro-campo" id="erro-aviso-titulo">Informe o título do aviso.</span>
+    }
+
+    <label class="avisos__label" for="aviso-mensagem">Mensagem</label>
+    <textarea
+      id="aviso-mensagem"
+      class="avisos__campo avisos__campo--texto"
+      rows="3"
+      formControlName="mensagem"
+      [attr.maxlength]="limiteMensagem"
+      [attr.aria-invalid]="form.controls.mensagem.touched && form.controls.mensagem.invalid ? 'true' : null"
+      [attr.aria-describedby]="form.controls.mensagem.touched && form.controls.mensagem.invalid ? 'erro-aviso-mensagem' : null"
+    ></textarea>
+    @if (form.controls.mensagem.touched && form.controls.mensagem.invalid) {
+      <span class="avisos__erro-campo" id="erro-aviso-mensagem">Escreva a mensagem do aviso.</span>
+    }
+
+    <div class="avisos__linha">
+      <div class="avisos__coluna">
+        <label class="avisos__label" for="aviso-destino">Para quem</label>
+        <select id="aviso-destino" class="avisos__campo" formControlName="destino">
+          <option value="">Todos os cursos</option>
+          @for (curso of cursos(); track curso.id) {
+            <option [value]="curso.id">{{ curso.nome }}</option>
+          }
+        </select>
+      </div>
+      <div class="avisos__coluna">
+        <label class="avisos__label" for="aviso-data">Data em destaque</label>
+        <input id="aviso-data" class="avisos__campo" type="date" formControlName="dataDestaque" />
+      </div>
+    </div>
+
+    @if (erro(); as mensagem) {
+      <p class="avisos__erro" role="alert">{{ mensagem }}</p>
+    }
+
+    <div class="avisos__acoes">
+      <button type="submit" uc-button [disabled]="publicando()">
+        {{ publicando() ? 'Publicando…' : 'Publicar aviso' }}
+      </button>
+    </div>
+  </form>
+
+  <h3 class="avisos__subtitulo" id="avisos-recentes">Enviados recentemente</h3>
+  @if (erroRecentes(); as mensagem) {
+    <p class="avisos__erro" role="alert">{{ mensagem }}</p>
+  }
+  <ul class="avisos__lista" aria-labelledby="avisos-recentes">
+    @for (aviso of recentes(); track aviso.id) {
+      <li class="avisos__item">
+        <span class="avisos__item-titulo">{{ aviso.titulo }}</span>
+        <span class="avisos__item-meta">{{ paraQuem(aviso) }} · {{ aviso.criadoEm | date: 'dd/MM' }}</span>
+      </li>
+    } @empty {
+      @if (!erroRecentes()) {
+        <li class="avisos__vazio">Nenhum aviso enviado ainda.</li>
+      }
+    }
+  </ul>
+</section>

@@ -994,6 +994,56 @@ export interface CursoAdminMock {
   ativo: boolean;
 }
 
+export interface AvisoMock {
+  id: number;
+  titulo: string;
+  mensagem: string;
+  escopo: 'GERAL' | 'CURSO';
+  cursoId: number | null;
+  cursoNome: string | null;
+  dataDestaque: string | null;
+  criadoEm: string;
+}
+
+/**
+ * `GET`/`POST /admin/avisos` (Story 13.1) com estado em memória: o `POST` entra no topo da lista,
+ * como no backend. Devolve os corpos recebidos no `POST`. A tela Cursos da Administração carrega os
+ * avisos, então `mockCursosAdmin` já registra um mock vazio; registre este depois para sobrepô-lo.
+ */
+export async function mockAvisosAdmin(page: Page, inicial: AvisoMock[] = []): Promise<unknown[]> {
+  const recebidos: unknown[] = [];
+  const avisos = [...inicial];
+  await page.route(
+    (url) => ehApi(url) && url.pathname === '/admin/avisos',
+    (route) => {
+      const request = route.request();
+      if (request.method() === 'OPTIONS') {
+        return route.fulfill({ status: 204, headers: { ...CORS, 'access-control-allow-methods': 'GET,POST,OPTIONS' } });
+      }
+      if (request.method() === 'POST') {
+        const corpo = request.postDataJSON() as Record<string, unknown>;
+        recebidos.push(corpo);
+        const novo: AvisoMock = {
+          id: 100 + avisos.length,
+          titulo: String(corpo['titulo']),
+          mensagem: String(corpo['mensagem']),
+          escopo: corpo['escopo'] as 'GERAL' | 'CURSO',
+          cursoId: (corpo['cursoId'] as number | null) ?? null,
+          cursoNome: corpo['cursoId'] ? 'Direito' : null,
+          dataDestaque: (corpo['dataDestaque'] as string | null) ?? null,
+          criadoEm: new Date().toISOString(),
+        };
+        avisos.unshift(novo);
+        return route.fulfill(json(201, novo));
+      }
+      return route.fulfill(
+        json(200, { content: avisos, page: 0, size: 5, totalElements: avisos.length, totalPages: 1 }),
+      );
+    },
+  );
+  return recebidos;
+}
+
 /**
  * Administração de cursos (KAN-44) com estado em memória: `GET /admin/cursos` (todos),
  * `POST /cursos`, `PUT /cursos/{id}` e `GET /cursos` (só os ativos, como o backend; é o que o
@@ -1005,6 +1055,7 @@ export async function mockCursosAdmin(
   inicial: CursoAdminMock[],
 ): Promise<{ metodo: string; caminho: string; corpo: unknown }[]> {
   const chamadas: { metodo: string; caminho: string; corpo: unknown }[] = [];
+  await mockAvisosAdmin(page); // a tela Cursos também carrega o card "Publicar aviso"
   const cursos = inicial.map((c) => ({ ...c }));
   let proximoId = Math.max(0, ...cursos.map((c) => c.id)) + 1;
   const ordenados = () => [...cursos].sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
