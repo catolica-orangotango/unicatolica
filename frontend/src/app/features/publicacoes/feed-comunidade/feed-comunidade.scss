@@ -179,6 +179,17 @@
   color: var(--uc-color-ink-faint);
 }
 
+.feed__exclusao {
+  margin-top: calc(var(--uc-space-unit) * 3);
+  padding-top: calc(var(--uc-space-unit) * 3);
+  border-top: 1px solid var(--uc-color-border);
+}
+
+.feed__exclusao-texto {
+  margin: 0 0 calc(var(--uc-space-unit) * 2);
+  color: var(--uc-color-ink);
+}
+
 .feed__denuncia {
   margin-top: calc(var(--uc-space-unit) * 3);
   padding-top: calc(var(--uc-space-unit) * 3);

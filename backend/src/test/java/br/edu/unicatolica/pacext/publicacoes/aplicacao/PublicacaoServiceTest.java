@@ -20,7 +20,10 @@ import br.edu.unicatolica.pacext.compartilhado.paginacao.PageResponse;
 import br.edu.unicatolica.pacext.midia.FinalidadeArquivo;
 import br.edu.unicatolica.pacext.midia.MidiaAssociacao;
 import br.edu.unicatolica.pacext.publicacoes.dominio.Publicacao;
+import br.edu.unicatolica.pacext.compartilhado.auditoria.AuditoriaService;
 import br.edu.unicatolica.pacext.publicacoes.dominio.PublicacaoRepository;
+import br.edu.unicatolica.pacext.publicacoes.dominio.SituacaoPublicacao;
+import java.util.Optional;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -35,6 +38,7 @@ class PublicacaoServiceTest {
     private PublicacaoRepository repository;
     private ComunidadeConsulta comunidadeConsulta;
     private MidiaAssociacao midiaAssociacao;
+    private AuditoriaService auditoriaService;
 
     @BeforeEach
     void setUp() {
@@ -45,6 +49,8 @@ class PublicacaoServiceTest {
         service.comunidadeConsulta = comunidadeConsulta;
         midiaAssociacao = mock(MidiaAssociacao.class);
         service.midiaAssociacao = midiaAssociacao;
+        auditoriaService = mock(AuditoriaService.class);
+        service.auditoriaService = auditoriaService;
 
         when(comunidadeConsulta.existe(COMUNIDADE_ID)).thenReturn(true);
         when(comunidadeConsulta.ehMembro(COMUNIDADE_ID, USUARIO_ID)).thenReturn(true);
@@ -173,6 +179,61 @@ class PublicacaoServiceTest {
         when(comunidadeConsulta.existe(COMUNIDADE_ID)).thenReturn(false);
 
         assertCodigo(404, "COMUNIDADE_NAO_ENCONTRADA", () -> service.listar(COMUNIDADE_ID, 0, 20));
+    }
+
+    private Publicacao postagemDe(Long autorId, SituacaoPublicacao situacao) {
+        Publicacao publicacao = new Publicacao();
+        publicacao.id = 5L;
+        publicacao.autorUsuarioId = autorId;
+        publicacao.situacao = situacao;
+        when(repository.findByIdOptional(5L)).thenReturn(Optional.of(publicacao));
+        return publicacao;
+    }
+
+    @Test
+    void autorExcluiAPropriaPostagemDeFormaLogicaEAudita() {
+        Publicacao publicacao = postagemDe(USUARIO_ID, SituacaoPublicacao.VISIVEL);
+
+        service.excluir(USUARIO_ID, 5L);
+
+        assertEquals(SituacaoPublicacao.EXCLUIDA, publicacao.situacao);
+        assertNotNull(publicacao.atualizadoEm);
+        verify(auditoriaService).registrar(USUARIO_ID, "publicacoes", "POSTAGEM_EXCLUIDA", "Publicacao", 5L,
+                "Postagem excluída pelo autor.");
+    }
+
+    @Test
+    void autorExcluiPostagemOcultaPelaModeracao() {
+        Publicacao publicacao = postagemDe(USUARIO_ID, SituacaoPublicacao.OCULTA);
+
+        service.excluir(USUARIO_ID, 5L);
+
+        assertEquals(SituacaoPublicacao.EXCLUIDA, publicacao.situacao);
+    }
+
+    @Test
+    void naoAutorDa403NaoEAutorESemMudar() {
+        Publicacao publicacao = postagemDe(99L, SituacaoPublicacao.VISIVEL);
+
+        assertCodigo(403, "NAO_E_AUTOR", () -> service.excluir(USUARIO_ID, 5L));
+
+        assertEquals(SituacaoPublicacao.VISIVEL, publicacao.situacao);
+        verifyNoInteractions(auditoriaService);
+    }
+
+    @Test
+    void postagemInexistenteDa404() {
+        when(repository.findByIdOptional(5L)).thenReturn(Optional.empty());
+
+        assertCodigo(404, "PUBLICACAO_NAO_ENCONTRADA", () -> service.excluir(USUARIO_ID, 5L));
+    }
+
+    @Test
+    void postagemJaExcluidaDa404() {
+        postagemDe(USUARIO_ID, SituacaoPublicacao.EXCLUIDA);
+
+        assertCodigo(404, "PUBLICACAO_NAO_ENCONTRADA", () -> service.excluir(USUARIO_ID, 5L));
+        verifyNoInteractions(auditoriaService);
     }
 
     private static void assertCodigo(int status, String code, Runnable acao) {

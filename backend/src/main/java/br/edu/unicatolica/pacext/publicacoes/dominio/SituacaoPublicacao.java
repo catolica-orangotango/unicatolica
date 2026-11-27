@@ -5,5 +5,8 @@ public enum SituacaoPublicacao {
     /** Aparece no feed. */
     VISIVEL,
     /** Ocultada por moderador (RF78): fora do feed, preservada e restaurável (RF78.1). */
-    OCULTA
+    OCULTA,
+
+    /** Excluída pelo autor (KAN-137): fora do feed e invisível à Moderação; o registro é preservado. */
+    EXCLUIDA
 }

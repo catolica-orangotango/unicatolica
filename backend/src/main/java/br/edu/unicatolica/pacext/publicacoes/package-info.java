@@ -10,7 +10,9 @@
  * {@code GET /comunidades/{id}/publicacoes}); existência da comunidade e "só membro publica"
  * (RF27.1) vêm de {@code comunidades.ComunidadeConsulta}. Publica {@link PublicacaoModeracao}:
  * a Moderação lê a postagem denunciada e a oculta/restaura (Story 12.5, RF78/RF78.1) pela
- * coluna {@code situacao}; postagem oculta sai do feed.</p>
+ * coluna {@code situacao}; postagem oculta sai do feed. O autor exclui a própria postagem
+ * ({@code DELETE /publicacoes/{id}}, KAN-137): exclusão lógica (situação {@code EXCLUIDA}), fora do
+ * feed e invisível à Moderação.</p>
  *
  * <p>Anexo opcional da postagem: coluna {@code arquivo_id} (nullable), só o id do arquivo, sem
  * FK nem relação JPA. Depende da API pública do módulo {@code midia}: reivindica o arquivo com

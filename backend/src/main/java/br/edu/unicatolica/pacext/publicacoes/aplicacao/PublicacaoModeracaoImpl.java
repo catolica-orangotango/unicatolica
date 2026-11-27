@@ -23,7 +23,9 @@ class PublicacaoModeracaoImpl implements PublicacaoModeracao {
 
     @Override
     public Optional<PublicacaoModeravel> buscar(Long publicacaoId) {
-        return publicacaoRepository.findByIdOptional(publicacaoId).map(PublicacaoModeracaoImpl::moderavel);
+        return publicacaoRepository.findByIdOptional(publicacaoId)
+                .filter(PublicacaoModeracaoImpl::existeParaModeracao)
+                .map(PublicacaoModeracaoImpl::moderavel);
     }
 
     @Override
@@ -32,6 +34,7 @@ class PublicacaoModeracaoImpl implements PublicacaoModeracao {
             return Map.of();
         }
         return publicacaoRepository.buscarPorIds(publicacaoIds).stream()
+                .filter(PublicacaoModeracaoImpl::existeParaModeracao)
                 .map(PublicacaoModeracaoImpl::moderavel)
                 .collect(Collectors.toMap(PublicacaoModeravel::id, Function.identity()));
     }
@@ -49,7 +52,14 @@ class PublicacaoModeracaoImpl implements PublicacaoModeracao {
     }
 
     private void mudarSituacao(Long publicacaoId, SituacaoPublicacao situacao) {
-        publicacaoRepository.findByIdOptional(publicacaoId).ifPresent(p -> p.situacao = situacao);
+        publicacaoRepository.findByIdOptional(publicacaoId)
+                .filter(PublicacaoModeracaoImpl::existeParaModeracao)
+                .ifPresent(p -> p.situacao = situacao);
+    }
+
+    /** Postagem excluída pelo autor (KAN-137) deixou de existir para a Moderação. */
+    private static boolean existeParaModeracao(Publicacao p) {
+        return p.situacao != SituacaoPublicacao.EXCLUIDA;
     }
 
     private static PublicacaoModeravel moderavel(Publicacao p) {

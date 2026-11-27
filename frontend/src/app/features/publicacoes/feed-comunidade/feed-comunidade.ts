@@ -62,6 +62,11 @@ export class FeedComunidade {
   /** Quem está logado — a própria postagem não mostra "Denunciar" (o backend daria 403). */
   protected readonly usuarioId = this.authService.usuarioId();
   protected readonly limiteMotivo = TAMANHO_MAXIMO_MOTIVO;
+  /** Postagem própria com a confirmação de exclusão aberta (KAN-137). */
+  protected readonly excluindoId = signal<number | null>(null);
+  protected readonly excluindoEmAndamento = signal(false);
+  protected readonly erroExclusao = signal<string | null>(null);
+
   protected readonly denunciandoId = signal<number | null>(null);
   protected readonly motivoDenuncia = signal('');
   protected readonly enviandoDenuncia = signal(false);
@@ -189,6 +194,49 @@ export class FeedComunidade {
         return of(enviado.id);
       }),
     );
+  }
+
+  protected abrirExclusao(publicacaoId: number): void {
+    this.excluindoId.set(publicacaoId);
+    this.erroExclusao.set(null);
+    // O foco vai para "Cancelar": o padrão seguro numa ação que não dá para desfazer.
+    setTimeout(() => document.querySelector<HTMLElement>('.feed__exclusao [data-cancelar]')?.focus());
+  }
+
+  protected cancelarExclusao(): void {
+    const id = this.excluindoId();
+    this.excluindoId.set(null);
+    setTimeout(() => document.querySelector<HTMLElement>(`[data-excluir="${id}"]`)?.focus());
+  }
+
+  /** KAN-137 — a postagem sai da lista na hora; o foco vai para o título do feed (o item sumiu). */
+  protected confirmarExclusao(): void {
+    const id = this.excluindoId();
+    if (id === null || this.excluindoEmAndamento()) {
+      return;
+    }
+    this.excluindoEmAndamento.set(true);
+    this.erroExclusao.set(null);
+    this.publicacoesService.excluir(id).subscribe({
+      next: () => this.aposExcluir(id),
+      error: (erro: HttpErrorResponse) => {
+        // 404: já não existe (excluída em outra aba): o resultado é o mesmo que o usuário queria.
+        if (erro.status === 404) {
+          this.aposExcluir(id);
+          return;
+        }
+        this.excluindoEmAndamento.set(false);
+        this.erroExclusao.set(mensagemDoServidor(erro, 'Não foi possível excluir agora. Tente novamente.'));
+      },
+    });
+  }
+
+  private aposExcluir(id: number): void {
+    this.excluindoEmAndamento.set(false);
+    this.excluindoId.set(null);
+    this.publicacoes.update((atuais) => atuais.filter((p) => p.id !== id));
+    this.toastService.mostrar('Postagem excluída');
+    setTimeout(() => document.getElementById('feed-titulo')?.focus());
   }
 
   protected abrirDenuncia(publicacaoId: number): void {
