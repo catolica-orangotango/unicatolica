@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { mockComunidadeComFeed, mockFeedOk, mockMinhasComunidades } from './support/mocks';
+import { mockAvisosInicio, mockComunidadeComFeed, mockFeedOk, mockMinhasComunidades } from './support/mocks';
 import { plantarToken } from './support/seed';
 
 /**
@@ -50,4 +50,26 @@ test('sem nenhuma comunidade, convida a participar de uma', async ({ page }) => 
 
   await expect(page.getByText('Você ainda não participa de nenhuma comunidade.')).toBeVisible();
   await expect(page.getByLabel('Escreva uma postagem')).toHaveCount(0);
+});
+
+test('mostra "Esta semana" com os avisos que valem para o aluno (Story 13.2)', async ({ page }) => {
+  await mockAvisosInicio(page, [
+    { id: 2, titulo: 'Palestra de carreira', mensagem: 'Auditório 2, quarta às 19h.', escopo: 'CURSO', cursoId: 14, cursoNome: 'Engenharia de Software', dataDestaque: '2026-12-09', criadoEm: '2026-11-25T12:00:00Z' },
+    { id: 1, titulo: 'Feriado na segunda', mensagem: 'Sem aula.', escopo: 'GERAL', cursoId: null, cursoNome: null, dataDestaque: null, criadoEm: '2026-11-24T12:00:00Z' },
+  ]);
+  await page.goto('/feed');
+
+  await expect(page.getByRole('heading', { name: 'Esta semana' })).toBeVisible();
+  const itens = page.locator('.home__aviso-item');
+  await expect(itens).toHaveCount(2);
+  await expect(itens.first()).toContainText('Palestra de carreira');
+  await expect(itens.first()).toContainText('Engenharia de Software · 09/12');
+  await expect(itens.nth(1)).toContainText('Todos os cursos · 24/11');
+});
+
+test('sem avisos o Início não mostra "Esta semana"', async ({ page }) => {
+  await page.goto('/feed');
+
+  await expect(page.getByRole('heading', { name: 'Descubra comunidades' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Esta semana' })).toHaveCount(0);
 });

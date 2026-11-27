@@ -233,6 +233,29 @@ paths:
         '403':
           $ref: '#/components/responses/SemPermissao'
 
+  /avisos:
+    get:
+      operationId: listarAvisosDoInicio
+      summary: Avisos institucionais do bloco "Esta semana" do Início (Story 13.2, RF82)
+      tags: [Avisos]
+      description: >
+        Qualquer usuário autenticado. Traz os avisos gerais e os do curso do usuário, nunca os
+        de outro curso (quem não tem curso, como moderador sem curso, vê só os gerais). Um
+        aviso com `dataDestaque` aparece até o fim desse dia; sem data, aparece por 7 dias
+        depois de publicado. No máximo 10, mais recente primeiro. Lista vazia quando não há
+        nenhum — nunca erro.
+      responses:
+        '200':
+          description: Avisos que valem para o usuário agora.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AvisoResponse'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+
   /admin/avisos:
     post:
       operationId: publicarAviso

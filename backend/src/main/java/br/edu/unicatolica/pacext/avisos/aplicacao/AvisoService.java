@@ -8,9 +8,11 @@ import br.edu.unicatolica.pacext.compartilhado.erro.ApiException;
 import br.edu.unicatolica.pacext.compartilhado.paginacao.PageResponse;
 import br.edu.unicatolica.pacext.compartilhado.seguranca.UsuarioAutenticado;
 import br.edu.unicatolica.pacext.identidade.CursoConsulta;
+import br.edu.unicatolica.pacext.identidade.UsuarioConsulta;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
@@ -24,11 +26,18 @@ public class AvisoService {
     static final int TAMANHO_MAXIMO_MENSAGEM = 2000;
     static final int TAMANHO_MAXIMO_PAGINA = 100;
 
+    /** Quantos avisos o Início mostra e por quantos dias um aviso sem data em destaque continua nele. */
+    static final int MAXIMO_NO_INICIO = 10;
+    static final Duration VIGENCIA_SEM_DATA = Duration.ofDays(7);
+
     @Inject
     AvisoRepository avisoRepository;
 
     @Inject
     CursoConsulta cursoConsulta;
+
+    @Inject
+    UsuarioConsulta usuarioConsulta;
 
     @Inject
     UsuarioAutenticado usuarioAutenticado;
@@ -77,6 +86,16 @@ public class AvisoService {
         int tamanhoValido = Math.clamp(tamanho, 1, TAMANHO_MAXIMO_PAGINA);
         List<Aviso> conteudo = avisoRepository.listarRecentes(paginaValida, tamanhoValido);
         return PageResponse.de(conteudo, paginaValida, tamanhoValido, avisoRepository.count());
+    }
+
+    /**
+     * Story 13.2 (RF82) — qualquer autenticado: os avisos gerais e os do curso do usuário, nunca os
+     * de outro curso. Sem curso, só os gerais. Lista vazia quando não há nenhum.
+     */
+    public List<Aviso> listarDoInicio() {
+        Long cursoId = usuarioConsulta.cursoId(usuarioAutenticado.id()).orElse(null);
+        return avisoRepository.listarVisiveis(cursoId, LocalDate.now(), Instant.now().minus(VIGENCIA_SEM_DATA),
+                MAXIMO_NO_INICIO);
     }
 
     private static String texto(String valor, String campo, String mensagemObrigatorio, int limite) {

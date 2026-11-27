@@ -92,6 +92,8 @@ export async function mockFeedOk(page: Page): Promise<void> {
   // `ehApi`: `/comunidades` também é rota do Angular (lista de descoberta).
   await rota(page, (url) => ehApi(url) && url.pathname === '/comunidades/minhas', 200, JSON.stringify([]));
   await rota(page, (url) => ehApi(url) && url.pathname === '/comunidades', 200, JSON.stringify(paginaVazia));
+  // O bloco "Esta semana" do Início (Story 13.2); `mockAvisosInicio` sobrescreve.
+  await rota(page, (url) => ehApi(url) && url.pathname === '/avisos', 200, JSON.stringify([]));
   // A shell busca as notificações ao montar; sem mock, o ERR_CONNECTION_REFUSED vai para o console.
   await mockNotificacoes(page, []);
   // E o perfil, para a foto dos avatares (sem foto aqui; `mockMeuPerfil` sobrescreve).
@@ -992,6 +994,11 @@ export interface CursoAdminMock {
   id: number;
   nome: string;
   ativo: boolean;
+}
+
+/** `GET /avisos` (Story 13.2): os avisos que valem para o usuário no Início. Registrar depois de `mockFeedOk`. */
+export function mockAvisosInicio(page: Page, avisos: AvisoMock[]): Promise<void> {
+  return rota(page, (url) => ehApi(url) && url.pathname === '/avisos', 200, JSON.stringify(avisos));
 }
 
 export interface AvisoMock {

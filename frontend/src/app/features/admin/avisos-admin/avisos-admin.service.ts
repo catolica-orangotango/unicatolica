@@ -4,20 +4,9 @@ import { Observable } from 'rxjs';
 import { AuthService } from '../../../core/auth/auth.service';
 import { API_BASE_URL } from '../../../core/config/api.config';
 import type { Pagina } from '../../comunidades/comunidades.service';
+import type { Aviso, EscopoAviso } from '../../avisos/avisos.service';
 
-export type EscopoAviso = 'GERAL' | 'CURSO';
-
-/** Espelha `AvisoResponse` do `openapi.yaml` (Story 13.1). */
-export interface Aviso {
-  id: number;
-  titulo: string;
-  mensagem: string;
-  escopo: EscopoAviso;
-  cursoId: number | null;
-  cursoNome: string | null;
-  dataDestaque: string | null;
-  criadoEm: string;
-}
+export type { Aviso, EscopoAviso };
 
 /** Espelha `AvisoRequest`: `cursoId` só no escopo CURSO. */
 export interface AvisoNovo {

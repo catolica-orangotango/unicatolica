@@ -2,6 +2,7 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
+import { Aviso } from '../avisos/avisos.service';
 import { Comunidade } from '../comunidades/comunidades.service';
 import { API_BASE_URL } from '../../core/config/api.config';
 import { ToastService } from '../../ui';
@@ -17,7 +18,7 @@ describe('Feed', () => {
   let httpMock: HttpTestingController;
 
   /** Cria o componente e responde o carregamento inicial (forkJoin do constructor). */
-  async function montar(minhas: Comunidade[] = [], publicacoes: unknown[] = []): Promise<void> {
+  async function montar(minhas: Comunidade[] = [], publicacoes: unknown[] = [], avisos: Aviso[] = []): Promise<void> {
     await TestBed.configureTestingModule({
       imports: [Feed],
       providers: [provideRouter([]), provideHttpClient(), provideHttpClientTesting()],
@@ -36,6 +37,7 @@ describe('Feed', () => {
       curso: 'Engenharia de Software',
     });
     httpMock.expectOne(`${API_BASE_URL}/comunidades/minhas`).flush(minhas);
+    httpMock.expectOne(`${API_BASE_URL}/avisos`).flush(avisos);
     // `expectOne(string)` casa contra a URL COM query string (urlWithParams) — esta
     // chamada sempre leva `?tipo=...&pagina=...&tamanho=...`, então precisa de um
     // predicado checando só `req.url` (sem params), não a forma de string solta.
@@ -175,6 +177,7 @@ describe('Feed', () => {
         curso: 'Engenharia de Software',
       });
       httpMock.expectOne(`${API_BASE_URL}/comunidades/minhas`).flush([comunidade(14, 'Engenharia de Software', 'CURSO')]);
+      httpMock.expectOne(`${API_BASE_URL}/avisos`).flush([]);
       httpMock
         .expectOne((req) => req.url === `${API_BASE_URL}/comunidades`)
         .flush({ content: [], page: 0, size: 6, totalElements: 0, totalPages: 0 });
@@ -186,6 +189,68 @@ describe('Feed', () => {
 
       const compiled = fixture.nativeElement as HTMLElement;
       expect(compiled.textContent).toContain('Não foi possível carregar as postagens agora');
+      expect(compiled.textContent).toContain('Descubra comunidades');
+    });
+  });
+
+  describe('Esta semana: avisos institucionais (Story 13.2)', () => {
+    function aviso(id: number, titulo: string, extra: Partial<Aviso> = {}): Aviso {
+      return {
+        id,
+        titulo,
+        mensagem: `Mensagem de ${titulo}`,
+        escopo: 'GERAL',
+        cursoId: null,
+        cursoNome: null,
+        dataDestaque: null,
+        criadoEm: '2026-11-23T10:00:00Z',
+        ...extra,
+      };
+    }
+
+    it('mostra os avisos com o escopo e a data', async () => {
+      await montar([], [], [
+        aviso(1, 'Feriado'),
+        aviso(2, 'Palestra', { escopo: 'CURSO', cursoId: 3, cursoNome: 'Engenharia de Software', dataDestaque: '2026-12-07' }),
+      ]);
+
+      const compiled = fixture.nativeElement as HTMLElement;
+      expect(compiled.querySelector('#titulo-avisos-home')?.textContent).toBe('Esta semana');
+      const itens = [...compiled.querySelectorAll('.home__aviso-item')].map((i) => i.textContent?.replace(/\s+/g, ' ').trim());
+      expect(itens[0]).toContain('Feriado');
+      expect(itens[0]).toContain('Todos os cursos · 23/11');
+      expect(itens[1]).toContain('Palestra');
+      expect(itens[1]).toContain('Engenharia de Software · 07/12');
+    });
+
+    it('sem avisos o bloco não aparece nem ocupa espaço', async () => {
+      await montar([], [], []);
+
+      const compiled = fixture.nativeElement as HTMLElement;
+      expect(compiled.querySelector('#titulo-avisos-home')).toBeNull();
+      expect(compiled.querySelector('.home__avisos')).toBeNull();
+    });
+
+    it('erro ao carregar os avisos esconde só o bloco e mantém a Home', async () => {
+      await TestBed.configureTestingModule({
+        imports: [Feed],
+        providers: [provideRouter([]), provideHttpClient(), provideHttpClientTesting()],
+      }).compileComponents();
+      httpMock = TestBed.inject(HttpTestingController);
+      fixture = TestBed.createComponent(Feed);
+      fixture.detectChanges();
+      httpMock.expectOne(`${API_BASE_URL}/avisos`).flush({}, { status: 500, statusText: 'Server Error' });
+      httpMock.expectOne(`${API_BASE_URL}/usuarios/me`).flush({
+        id: 1, nome: 'Julia Fontana', email: 'julia@catolicasc.edu.br', perfil: 'ALUNO', curso: null,
+      });
+      httpMock.expectOne(`${API_BASE_URL}/comunidades/minhas`).flush([]);
+      httpMock
+        .expectOne((req) => req.url === `${API_BASE_URL}/comunidades`)
+        .flush({ content: [], page: 0, size: 6, totalElements: 0, totalPages: 0 });
+      fixture.detectChanges();
+
+      const compiled = fixture.nativeElement as HTMLElement;
+      expect(compiled.querySelector('#titulo-avisos-home')).toBeNull();
       expect(compiled.textContent).toContain('Descubra comunidades');
     });
   });

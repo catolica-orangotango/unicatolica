@@ -1,6 +1,8 @@
+import { DatePipe } from '@angular/common';
 import { Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { forkJoin } from 'rxjs';
+import { Aviso, AvisosService } from '../avisos/avisos.service';
 import { Comunidade, ComunidadesService } from '../comunidades/comunidades.service';
 import { Usuario, UsuarioService } from '../identidade/usuario.service';
 import { ToastService, UcAvatar, UcBadge, UcButton, UcCard } from '../../ui';
@@ -26,7 +28,7 @@ const CHAVE_TOAST_AUTOJOIN = 'pacext.autojoin-toast.';
  */
 @Component({
   selector: 'app-feed',
-  imports: [RouterLink, FeedComunidade, UcAvatar, UcBadge, UcButton, UcCard],
+  imports: [DatePipe, RouterLink, FeedComunidade, UcAvatar, UcBadge, UcButton, UcCard],
   templateUrl: './feed.html',
   styleUrl: './feed.scss',
 })
@@ -34,6 +36,7 @@ export class Feed {
   private readonly usuarioService = inject(UsuarioService);
   private readonly comunidadesService = inject(ComunidadesService);
   private readonly toastService = inject(ToastService);
+  private readonly avisosService = inject(AvisosService);
 
   /** Foto do perfil no avatar do topo; a casca lê o perfil e este signal acompanha. */
   protected readonly fotoUrl = inject(PerfilService).fotoUrl;
@@ -45,6 +48,8 @@ export class Feed {
   /** Comunidade cujas publicações abrem a Home: a do curso, ou a primeira de que participo. */
   protected readonly comunidadeDoFeed = signal<Comunidade | null>(null);
   protected readonly ingressandoId = signal<number | null>(null);
+  /** Bloco "Esta semana" (Story 13.2): fica fora do `carregando` para um erro aqui não derrubar a Home. */
+  protected readonly avisos = signal<Aviso[]>([]);
 
   protected readonly iniciais = computed(() => {
     const nome = this.usuario()?.nome ?? '';
@@ -58,6 +63,15 @@ export class Feed {
 
   constructor() {
     this.carregar();
+    this.avisosService.doInicio().subscribe({
+      next: (avisos) => this.avisos.set(avisos),
+      error: () => this.avisos.set([]),
+    });
+  }
+
+  /** "Todos os cursos" ou o nome do curso do aviso. */
+  protected paraQuem(aviso: Aviso): string {
+    return aviso.escopo === 'GERAL' ? 'Todos os cursos' : (aviso.cursoNome ?? 'Seu curso');
   }
 
   private carregar(): void {

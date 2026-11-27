@@ -4,6 +4,7 @@ import { VIEWPORT_CELULAR, VIEWPORT_DESKTOP, gatilhoDaConta, menuDaConta } from 
 import {
   mockAdminUsuarios,
   mockAuditoria,
+  mockAvisosInicio,
   mockComunidadeComFeed,
   mockConfirmacaoOk,
   mockCursosOk,
@@ -93,6 +94,15 @@ for (const viewport of [VIEWPORT_DESKTOP, VIEWPORT_CELULAR]) {
 
         await gatilhoDaConta(page).click();
         await expect(menuDaConta(page)).toBeVisible();
+        await esperarSemViolacoes(page);
+      });
+
+      test('início com o bloco "Esta semana" (Story 13.2)', async ({ page }) => {
+        await mockAvisosInicio(page, [
+          { id: 1, titulo: 'Feriado na segunda', mensagem: 'Sem aula.', escopo: 'GERAL', cursoId: null, cursoNome: null, dataDestaque: null, criadoEm: '2026-11-24T12:00:00Z' },
+        ]);
+        await page.goto('/feed');
+        await expect(page.getByRole('heading', { name: 'Esta semana' })).toBeVisible();
         await esperarSemViolacoes(page);
       });
 

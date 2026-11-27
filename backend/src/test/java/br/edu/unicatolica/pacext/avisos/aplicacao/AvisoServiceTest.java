@@ -19,6 +19,12 @@ import br.edu.unicatolica.pacext.compartilhado.auditoria.AuditoriaService;
 import br.edu.unicatolica.pacext.compartilhado.erro.ApiException;
 import br.edu.unicatolica.pacext.compartilhado.seguranca.UsuarioAutenticado;
 import br.edu.unicatolica.pacext.identidade.CursoConsulta;
+import br.edu.unicatolica.pacext.identidade.UsuarioConsulta;
+import java.time.Instant;
+import java.util.List;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import java.time.LocalDate;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
@@ -35,6 +41,7 @@ class AvisoServiceTest {
     private CursoConsulta cursoConsulta;
     private UsuarioAutenticado usuarioAutenticado;
     private AuditoriaService auditoriaService;
+    private UsuarioConsulta usuarioConsulta;
 
     @BeforeEach
     void setUp() {
@@ -47,6 +54,8 @@ class AvisoServiceTest {
         service.cursoConsulta = cursoConsulta;
         service.usuarioAutenticado = usuarioAutenticado;
         service.auditoriaService = auditoriaService;
+        usuarioConsulta = mock(UsuarioConsulta.class);
+        service.usuarioConsulta = usuarioConsulta;
 
         when(usuarioAutenticado.id()).thenReturn(ADMIN_ID);
         when(cursoConsulta.nome(CURSO_ID)).thenReturn(Optional.of("Engenharia de Software"));
@@ -134,6 +143,30 @@ class AvisoServiceTest {
         assertEquals(0, pagina.page());
         assertEquals(AvisoService.TAMANHO_MAXIMO_PAGINA, pagina.size());
         verify(repository).listarRecentes(0, AvisoService.TAMANHO_MAXIMO_PAGINA);
+    }
+
+    @Test
+    void inicioDoAlunoUsaOCursoDele() {
+        when(usuarioConsulta.cursoId(ADMIN_ID)).thenReturn(Optional.of(CURSO_ID));
+        Aviso aviso = new Aviso();
+        when(repository.listarVisiveis(eq(CURSO_ID), any(LocalDate.class), any(Instant.class), anyInt()))
+                .thenReturn(List.of(aviso));
+
+        assertEquals(List.of(aviso), service.listarDoInicio());
+
+        verify(usuarioAutenticado, never()).exigirAdministrador();
+        verify(repository).listarVisiveis(eq(CURSO_ID), any(LocalDate.class), any(Instant.class),
+                eq(AvisoService.MAXIMO_NO_INICIO));
+    }
+
+    @Test
+    void inicioDeQuemNaoTemCursoTrazSoOsGerais() {
+        when(usuarioConsulta.cursoId(ADMIN_ID)).thenReturn(Optional.empty());
+
+        service.listarDoInicio();
+
+        verify(repository).listarVisiveis(isNull(), any(LocalDate.class), any(Instant.class),
+                eq(AvisoService.MAXIMO_NO_INICIO));
     }
 
     private static void assertCodigo(int status, String code, Runnable acao) {
