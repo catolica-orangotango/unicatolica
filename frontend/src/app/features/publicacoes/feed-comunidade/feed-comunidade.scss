@@ -179,15 +179,52 @@
   color: var(--uc-color-ink-faint);
 }
 
-.feed__exclusao {
-  margin-top: calc(var(--uc-space-unit) * 3);
-  padding-top: calc(var(--uc-space-unit) * 3);
-  border-top: 1px solid var(--uc-color-border);
+.feed__dialogo {
+  // O <dialog> aberto com showModal() fica no topo da página, centralizado pelo navegador.
+  width: calc(var(--uc-space-unit) * 110);
+  max-width: calc(100vw - var(--uc-space-unit) * 8); // layout-literal: cabe em telas estreitas com margem
+  padding: 0;
+  border: 1px solid var(--uc-color-border);
+  border-radius: var(--uc-radius-lg);
+  background: var(--uc-color-surface);
+  color: var(--uc-color-ink);
+  box-shadow: var(--uc-shadow-overlay);
 }
 
-.feed__exclusao-texto {
+.feed__dialogo::backdrop {
+  background: var(--uc-color-ink);
+  opacity: 0.45; // layout-literal: escurece o fundo; sem token de opacidade de camada
+}
+
+.feed__dialogo-corpo {
+  padding: calc(var(--uc-space-unit) * 6);
+}
+
+.feed__dialogo-titulo {
   margin: 0 0 calc(var(--uc-space-unit) * 2);
+  font-size: var(--uc-font-size-greeting);
+  font-weight: var(--uc-font-weight-semibold);
   color: var(--uc-color-ink);
+}
+
+.feed__dialogo-texto {
+  margin: 0 0 calc(var(--uc-space-unit) * 4);
+  color: var(--uc-color-ink-soft);
+}
+
+.feed__dialogo-trecho {
+  margin: 0 0 calc(var(--uc-space-unit) * 5);
+  padding: calc(var(--uc-space-unit) * 3);
+  border-left: 3px solid var(--uc-color-border); // layout-literal: filete de citação, sem token de 3px
+  background: var(--uc-color-bg);
+  color: var(--uc-color-ink);
+  overflow-wrap: anywhere;
+}
+
+.feed__dialogo-acoes {
+  display: flex;
+  justify-content: flex-end;
+  gap: calc(var(--uc-space-unit) * 3);
 }
 
 .feed__denuncia {

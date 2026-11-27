@@ -544,16 +544,19 @@ describe('FeedComunidade', () => {
       expect(botaoComTexto(posts[1] as HTMLElement, 'Excluir')).toBeUndefined();
     });
 
-    it('pede confirmação na própria linha e "Cancelar" não exclui nada', async () => {
+    it('abre um modal com o título, o trecho da postagem e "Cancelar" não exclui nada', async () => {
       const el = await montarComDuasPostagens();
       botaoComTexto(el, 'Excluir')?.click();
       fixture.detectChanges();
 
-      expect(el.querySelector('.feed__exclusao-texto')?.textContent).toContain('Não dá para desfazer');
+      expect(el.querySelector('.feed__dialogo-texto')?.textContent).toContain('não dá para desfazer');
+      expect(el.querySelector('#dialogo-exclusao-titulo')?.textContent).toContain('Excluir esta postagem?');
+      expect(el.querySelector('.feed__dialogo-trecho')?.textContent).toContain('minha');
+      expect(el.querySelector('dialog')?.getAttribute('aria-labelledby')).toBe('dialogo-exclusao-titulo');
       botaoComTexto(el, 'Cancelar')?.click();
       fixture.detectChanges();
 
-      expect(el.querySelector('.feed__exclusao')).toBeNull();
+      expect(el.querySelector('.feed__dialogo')).toBeNull();
       expect(el.querySelectorAll('.feed__post').length).toBe(2);
       httpMock.expectNone(`${API_BASE_URL}/publicacoes/1`);
     });
@@ -563,7 +566,7 @@ describe('FeedComunidade', () => {
       botaoComTexto(el, 'Excluir')?.click();
       fixture.detectChanges();
       // No card aberto há "Cancelar" e o "Excluir" de confirmação.
-      botaoComTexto(el.querySelector('.feed__exclusao') as HTMLElement, 'Excluir')?.click();
+      botaoComTexto(el.querySelector('.feed__dialogo') as HTMLElement, 'Excluir')?.click();
 
       const req = httpMock.expectOne(`${API_BASE_URL}/publicacoes/1`);
       expect(req.request.method).toBe('DELETE');
@@ -579,7 +582,7 @@ describe('FeedComunidade', () => {
       const el = await montarComDuasPostagens();
       botaoComTexto(el, 'Excluir')?.click();
       fixture.detectChanges();
-      botaoComTexto(el.querySelector('.feed__exclusao') as HTMLElement, 'Excluir')?.click();
+      botaoComTexto(el.querySelector('.feed__dialogo') as HTMLElement, 'Excluir')?.click();
 
       httpMock
         .expectOne(`${API_BASE_URL}/publicacoes/1`)
@@ -593,13 +596,13 @@ describe('FeedComunidade', () => {
       const el = await montarComDuasPostagens();
       botaoComTexto(el, 'Excluir')?.click();
       fixture.detectChanges();
-      botaoComTexto(el.querySelector('.feed__exclusao') as HTMLElement, 'Excluir')?.click();
+      botaoComTexto(el.querySelector('.feed__dialogo') as HTMLElement, 'Excluir')?.click();
 
       httpMock.expectOne(`${API_BASE_URL}/publicacoes/1`).flush('x', { status: 500, statusText: 'Server Error' });
       fixture.detectChanges();
 
       expect(el.querySelectorAll('.feed__post').length).toBe(2);
-      expect(el.querySelector('.feed__exclusao [role="alert"]')?.textContent).toContain('Não foi possível excluir');
+      expect(el.querySelector('.feed__dialogo [role="alert"]')?.textContent).toContain('Não foi possível excluir');
       expect(toasts).toEqual([]);
     });
   });
