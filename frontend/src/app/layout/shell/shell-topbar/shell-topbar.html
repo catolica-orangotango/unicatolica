@@ -15,6 +15,11 @@
   </button>
 
   <div class="topo__conta">
+    <app-notificacoes-sininho
+      [totalNaoLidas]="notificacoesTotalNaoLidas()"
+      [aberta]="notificacoesAbertas()"
+      (alternou)="alternouNotificacoes.emit($event)"
+    />
     <button
       #avatar
       type="button"

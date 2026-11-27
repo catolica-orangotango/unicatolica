@@ -1,0 +1,16 @@
+<button
+  #botao
+  type="button"
+  class="sininho"
+  [attr.aria-label]="rotulo()"
+  aria-controls="shell-notificacoes"
+  [attr.aria-expanded]="aberta() ? 'true' : 'false'"
+  (click)="alternou.emit($event)"
+>
+  <uc-icon name="bell" />
+  @if (totalNaoLidas() > 0) {
+    <uc-badge variant="counter" class="sininho__badge" aria-hidden="true">
+      {{ totalNaoLidas() > 99 ? '99+' : totalNaoLidas() }}
+    </uc-badge>
+  }
+</button>

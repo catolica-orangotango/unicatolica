@@ -50,8 +50,12 @@
   margin-left: auto;
 }
 
+// Sino de notificações (Story 10.2, RN17) imediatamente à esquerda do avatar.
 .topo__conta {
   position: relative;
+  display: flex;
+  align-items: center;
+  gap: calc(var(--uc-space-unit) / 2);
 }
 
 // Âncora de tamanho zero no canto inferior direito do avatar: o painel do

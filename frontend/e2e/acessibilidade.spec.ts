@@ -155,7 +155,7 @@ for (const viewport of [VIEWPORT_DESKTOP, VIEWPORT_CELULAR]) {
         await mockNotificacoes(page);
         await page.reload();
         await page.getByRole('button', { name: /Notificações/ }).click();
-        await expect(page.getByRole('menuitem', { name: /Complete seu perfil/ })).toBeVisible();
+        await expect(page.getByRole('button', { name: /^Complete seu perfil/ })).toBeVisible();
         await esperarSemViolacoes(page);
       });
 
@@ -497,6 +497,7 @@ async function mockNotificacoes(page: Page): Promise<void> {
     size: 20,
     totalElements: 1,
     totalPages: 1,
+    totalNaoLidas: 1,
   };
   await page.route(
     (url) => url.port === '8080' && url.pathname === '/notificacoes/me',

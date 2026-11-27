@@ -1,0 +1,35 @@
+// Sino de notificações (Story 10.2, RN16/RN17): sempre à esquerda do avatar,
+// nunca item de menu. Só tokens var(--uc-*).
+
+:host {
+  position: relative;
+  display: inline-flex;
+}
+
+// Alvo de toque de 44px, mesmo vocabulário de .topo__botao (shell-topbar.scss).
+.sininho {
+  display: grid;
+  place-items: center;
+  width: var(--uc-touch-target);
+  height: var(--uc-touch-target);
+  padding: 0;
+  border: 0;
+  border-radius: var(--uc-radius-full);
+  background: transparent;
+  color: var(--uc-color-ink-nav);
+  cursor: pointer;
+}
+
+.sininho:hover {
+  background: var(--uc-color-surface-muted);
+}
+
+// Contador sobre o canto do ícone - mesmo vocabulário de .abas__contador (shell-tabbar.scss).
+.sininho__badge {
+  position: absolute;
+  top: calc(var(--uc-space-unit) * 1.5); // layout-literal: canto do ícone, como no mockup
+  left: calc(50% + var(--uc-space-unit)); // layout-literal: logo à direita do centro do ícone
+  min-width: calc(var(--uc-space-unit) * 4.5); // layout-literal: contador de 18px do mockup
+  height: calc(var(--uc-space-unit) * 4.5); // layout-literal: contador de 18px do mockup
+  padding: 0 calc(var(--uc-space-unit) * 1.25);
+}

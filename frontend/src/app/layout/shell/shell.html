@@ -23,47 +23,20 @@
         (!item.privileged || ehPrivilegiado()) && (!item.somenteAdministrador || ehAdministrador())
       ) {
         <li>
-          @if (item.path) {
-            <a
-              class="shell__nav-item"
-              [routerLink]="item.path"
-              routerLinkActive="shell__nav-item--active"
-              [routerLinkActiveOptions]="{ exact: item.path !== '/admin' }"
-              #rla="routerLinkActive"
-              [attr.aria-current]="rla.isActive ? 'page' : null"
-            >
-              <uc-icon [name]="item.icone" />
-              <span class="shell__nav-rotulo">{{ item.label }}</span>
-              @if (item.contaDenuncias) {
-                <app-contador-denuncias class="shell__nav-contador" />
-              }
-            </a>
-          } @else if (item.abrePainelNotificacoes) {
-            <div class="shell__nav-item-wrapper">
-              <button
-                #sininho
-                type="button"
-                class="shell__nav-item shell__nav-item--button"
-                [attr.aria-label]="rotuloNotificacoes()"
-                aria-haspopup="menu"
-                aria-controls="shell-notificacoes"
-                [attr.aria-expanded]="notificacoesAbertas() ? 'true' : 'false'"
-                (click)="alternarNotificacoes($event, 'lateral')"
-              >
-                <uc-icon [name]="item.icone" />
-                <span class="shell__nav-rotulo">{{ item.label }}</span>
-                @if (notificacoesNaoLidas() > 0) {
-                  <uc-badge variant="counter" class="shell__nav-badge" aria-hidden="true">{{
-                    notificacoesNaoLidas()
-                  }}</uc-badge>
-                }
-              </button>
-
-              @if (notificacoesAbertas() && origemNotificacoes() === 'lateral') {
-                <ng-container [ngTemplateOutlet]="painelNotificacoes" />
-              }
-            </div>
-          }
+          <a
+            class="shell__nav-item"
+            [routerLink]="item.path"
+            routerLinkActive="shell__nav-item--active"
+            [routerLinkActiveOptions]="{ exact: item.path !== '/admin' }"
+            #rla="routerLinkActive"
+            [attr.aria-current]="rla.isActive ? 'page' : null"
+          >
+            <uc-icon [name]="item.icone" />
+            <span class="shell__nav-rotulo">{{ item.label }}</span>
+            @if (item.contaDenuncias) {
+              <app-contador-denuncias class="shell__nav-contador" />
+            }
+          </a>
         </li>
       }
     }
@@ -99,6 +72,14 @@
   </ul>
 
   <div class="shell__conta-area">
+    <app-notificacoes-sininho
+      [totalNaoLidas]="notificacoesNaoLidas()"
+      [aberta]="notificacoesAbertas() && origemNotificacoes() === 'lateral'"
+      (alternou)="alternarNotificacoes($event, 'lateral')"
+    />
+    @if (notificacoesAbertas() && origemNotificacoes() === 'lateral') {
+      <ng-container [ngTemplateOutlet]="painelNotificacoes" />
+    }
     <button
       #cartaoConta
       type="button"
@@ -132,8 +113,8 @@
 
 <!--
   Barras do celular (KAN-91): só aparecem até $uc-bp-mobile. A superior abre a
-  gaveta "Suas comunidades" (a <nav> acima) e o menu da conta; a de abas abre o
-  mesmo painel de notificações do menu lateral.
+  gaveta "Suas comunidades" (a <nav> acima), o sino de notificações (Story
+  10.2, à esquerda do avatar) e o menu da conta; a de abas só navega.
 -->
 <app-shell-topbar
   [gavetaAberta]="navAberto()"
@@ -142,10 +123,16 @@
   [cor]="corDaConta()"
   [fotoUrl]="fotoDaConta()"
   [itens]="itensConta"
+  [notificacoesTotalNaoLidas]="notificacoesNaoLidas()"
+  [notificacoesAbertas]="notificacoesAbertas() && origemNotificacoes() === 'topo'"
   (alternouGaveta)="alternarNav($event)"
   (alternouConta)="alternarMenu($event)"
+  (alternouNotificacoes)="alternarNotificacoes($event, 'topo')"
   (selecionou)="aoSelecionarConta($event)"
 />
+@if (notificacoesAbertas() && origemNotificacoes() === 'topo') {
+  <ng-container [ngTemplateOutlet]="painelNotificacoes" />
+}
 
 <main class="shell__main">
   <router-outlet />
@@ -157,49 +144,65 @@
   </aside>
 }
 
-<app-shell-tabbar
-  [privilegiado]="ehPrivilegiado()"
-  [notificacoesAbertas]="notificacoesAbertas()"
-  [naoLidas]="notificacoesNaoLidas()"
-  (alternouNotificacoes)="alternarNotificacoes($event, 'abas')"
-/>
-@if (notificacoesAbertas() && origemNotificacoes() === 'abas') {
-  <ng-container [ngTemplateOutlet]="painelNotificacoes" />
-}
+<app-shell-tabbar [privilegiado]="ehPrivilegiado()" />
+
+<!-- Região viva da casca (Story 10.2, RN26): anuncia 1x quando as não lidas aumentam, sem mudar o foco. -->
+<div class="uc-sr-only" role="status" aria-live="polite">{{ anuncioNotificacoes() }}</div>
 
 <!--
-  Painel de notificações (Story 10.1), um só: desenhado junto do botão que o
-  abriu (item do menu lateral ou aba do celular, acima da barra de abas).
+  Painel de notificações (Story 10.1/10.2), um só: desenhado junto do sino que o
+  abriu (rodapé da sidebar no desktop, barra superior no celular).
 -->
 <ng-template #painelNotificacoes>
   <div
+    #painelNotificacoesEl
     id="shell-notificacoes"
     class="shell__notificacoes-painel"
-    [class.shell__notificacoes-painel--abas]="origemNotificacoes() === 'abas'"
-    role="menu"
+    [class.shell__notificacoes-painel--topo]="origemNotificacoes() === 'topo'"
     aria-label="Notificações"
     (click)="$event.stopPropagation()"
     (focusout)="aoSairFocoNotificacoes($event)"
   >
-    @for (notificacao of notificacoes(); track notificacao.id) {
-      <button
-        type="button"
-        class="shell__notificacao-item"
-        [class.shell__notificacao-item--nao-lida]="!notificacao.lida"
-        role="menuitem"
-        (click)="aoClicarNotificacao(notificacao)"
-      >
-        {{ notificacao.texto }}
-      </button>
-    } @empty {
-      <!-- role="menu" exige ao menos um menuitem, mesmo vazio (axe aria-required-children) -->
-      <p
-        class="shell__notificacao-item shell__notificacao-item--vazio"
-        role="menuitem"
-        aria-disabled="true"
-      >
-        Sem notificações por enquanto.
-      </p>
+    @if (notificacoes().length === 0) {
+      <p class="shell__notificacao-item shell__notificacao-item--vazio">Sem notificações por enquanto.</p>
+    } @else {
+      <ul class="shell__notificacoes-lista">
+        @for (notificacao of notificacoes(); track notificacao.id) {
+          <li class="shell__notificacao-linha" [attr.data-notificacao-id]="notificacao.id">
+            <button
+              type="button"
+              class="shell__notificacao-item"
+              [class.shell__notificacao-item--nao-lida]="!notificacao.lida"
+              (click)="aoClicarNotificacao(notificacao)"
+            >
+              {{ notificacao.texto }}
+              @if (!notificacao.lida) {
+                <span class="uc-sr-only"> (não lida)</span>
+              }
+            </button>
+            <button
+              type="button"
+              class="shell__notificacao-excluir"
+              [attr.aria-label]="'Excluir notificação: ' + notificacao.texto"
+              (click)="excluirNotificacao($event, notificacao)"
+            >
+              <uc-icon name="trash" size="sm" />
+            </button>
+          </li>
+        }
+      </ul>
     }
+
+    <div class="shell__notificacoes-rodape">
+      @if (temNaoLidas()) {
+        <button type="button" class="shell__notificacoes-acao" (click)="marcarTodasComoLidas()">
+          <uc-icon name="check" size="sm" />
+          Marcar todas como lidas
+        </button>
+      }
+      <a class="shell__notificacoes-acao" routerLink="/notificacoes" (click)="notificacoesAbertas.set(false)">
+        Ver todas
+      </a>
+    </div>
   </div>
 </ng-template>

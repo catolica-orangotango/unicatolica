@@ -118,7 +118,7 @@ describe('MeuPerfil', () => {
     // incluída - casa pelo path só via função de match.
     httpMock
       .expectOne((req) => req.url === `${API_BASE_URL}/notificacoes/me`)
-      .flush({ content: [], page: 0, size: 20, totalElements: 0, totalPages: 0 });
+      .flush({ content: [], page: 0, size: 5, totalElements: 0, totalPages: 0, totalNaoLidas: 0 });
     fixture.detectChanges();
 
     expect(el.querySelector('form')).toBeNull();
@@ -130,11 +130,9 @@ describe('MeuPerfil', () => {
     const el = await montar(COM_PERFIL);
     const notificacoesService = TestBed.inject(NotificacoesService);
     // Simula o estado real do bug: o painel já tinha sido aberto antes, com a
-    // notificação ainda não lida no cache compartilhado (signal) do serviço.
-    notificacoesService['_notificacoes'].set([
-      { id: 1, tipo: 'PERFIL_INCOMPLETO', texto: 'Complete seu perfil', link: null, lida: false, criadoEm: '2026-10-08T00:00:00Z' },
-    ]);
-    expect(notificacoesService.naoLidas()).toBe(1);
+    // notificação ainda não lida - o total vem do backend (RN04), não do cache.
+    notificacoesService['_totalNaoLidas'].set(1);
+    expect(notificacoesService.totalNaoLidas()).toBe(1);
 
     (el.querySelector('.meu-perfil__editar') as HTMLButtonElement).click();
     fixture.detectChanges();
@@ -148,12 +146,13 @@ describe('MeuPerfil', () => {
         { id: 1, tipo: 'PERFIL_INCOMPLETO', texto: 'Complete seu perfil', link: null, lida: true, criadoEm: '2026-10-08T00:00:00Z' },
       ],
       page: 0,
-      size: 20,
+      size: 5,
       totalElements: 1,
       totalPages: 1,
+      totalNaoLidas: 0,
     });
 
-    expect(notificacoesService.naoLidas()).toBe(0);
+    expect(notificacoesService.totalNaoLidas()).toBe(0);
   });
 
   it('campos obrigatórios vazios não enviam e anunciam o erro de cada um', async () => {
