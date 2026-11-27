@@ -1298,20 +1298,27 @@ describe('shell.scss - contrato de estilo por token', () => {
   const tablet = blocos(semComentarios, '@media (max-width: bp.$uc-bp-tablet)').join('\n');
   const celular = blocos(semComentarios, '@media (max-width: bp.$uc-bp-mobile)').join('\n');
 
-  it('três colunas centradas: menu, conteúdo e lateral pelos tokens --uc-layout-*', () => {
+  it('três colunas na largura da tela: menu, conteúdo fluido e lateral pelos tokens --uc-layout-*', () => {
     const host = regra(semMedia, ':host');
     expect(host).toMatch(
-      /grid-template-columns:\s*var\(--uc-layout-nav\)\s+minmax\(0,\s*var\(--uc-layout-feed\)\)\s+var\(--uc-layout-aside\)/,
+      /grid-template-columns:\s*var\(--uc-layout-nav\)\s+minmax\(0,\s*1fr\)\s+var\(--uc-layout-aside\)/,
     );
-    expect(host).toMatch(/justify-content:\s*center/);
+    expect(host).not.toMatch(/justify-content:\s*center/);
     expect(host).toMatch(/column-gap:\s*var\(--uc-layout-gap\)/);
     expect(host).toMatch(/padding:\s*0\s+var\(--uc-space-page-margin\)/);
   });
 
-  it('modo largo: menu + var(--uc-layout-wide), sem coluna lateral', () => {
+  it('modo largo: menu + coluna fluida, sem coluna lateral', () => {
     expect(regra(semMedia, ':host(.shell--larga)')).toMatch(
-      /grid-template-columns:\s*var\(--uc-layout-nav\)\s+minmax\(0,\s*var\(--uc-layout-wide\)\)\s*;/,
+      /grid-template-columns:\s*var\(--uc-layout-nav\)\s+minmax\(0,\s*1fr\)\s*;/,
     );
+  });
+
+  it('o conteúdo tem teto de leitura (--uc-layout-feed) e, no modo largo, --uc-layout-wide, centralizado', () => {
+    const conteudo = regra(semMedia, '.shell__conteudo');
+    expect(conteudo).toMatch(/max-width:\s*var\(--uc-layout-feed\)/);
+    expect(conteudo).toMatch(/margin-inline:\s*auto/);
+    expect(regra(semMedia, ':host(.shell--larga) .shell__conteudo')).toMatch(/max-width:\s*var\(--uc-layout-wide\)/);
   });
 
   it('coluna de conteúdo com filete de 1px dos dois lados; no modo largo só à esquerda', () => {
@@ -1329,7 +1336,7 @@ describe('shell.scss - contrato de estilo por token', () => {
 
   it(`até $uc-bp-tablet a coluna lateral some e o grid fica com duas colunas`, () => {
     expect(regra(tablet, '.shell__lateral')).toMatch(/display:\s*none/);
-    expect(regra(tablet, ':host')).toMatch(/grid-template-columns:\s*var\(--uc-layout-nav\)\s+minmax\(0,\s*var\(--uc-layout-feed\)\)\s*;/);
+    expect(regra(tablet, ':host')).toMatch(/grid-template-columns:\s*var\(--uc-layout-nav\)\s+minmax\(0,\s*1fr\)\s*;/);
   });
 
   it('até $uc-bp-mobile a gaveta é um overlay fixo entre a barra superior (56px) e a de abas (64px)', () => {

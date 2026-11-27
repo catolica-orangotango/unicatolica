@@ -89,7 +89,7 @@ spacing:
   touch-target: "44px"
 layout:
   nav: "248px"
-  feed: "600px"
+  feed: "720px"
   aside: "340px"
   wide: "1040px"
   gap: "32px"
@@ -346,7 +346,7 @@ Cada papel tem uma classe utilitária `.uc-text-*` em `frontend/src/styles/_typo
 
 ## Layout
 
-**Casca autenticada** (`frontend/src/app/layout/shell/`): três colunas centradas como um único bloco, não encostadas à esquerda. Menu lateral de 248px (`layout-nav`), conteúdo de 600px (`layout-feed`) e coluna lateral de 340px (`layout-aside`), com 32px entre elas (`layout-gap`) e 24px de margem de página (`page-margin`, 16px abaixo de 760px). O menu é fixo no topo da janela com rolagem própria; a coluna de conteúdo tem filete de 1px à esquerda e à direita. A coluna lateral só existe quando a tela ativa registra conteúdo nela pelo `ShellLateralService`.
+**Casca autenticada** (`frontend/src/app/layout/shell/`): três colunas que ocupam a largura da tela: menu lateral de 248px (`layout-nav`) encostado à esquerda, coluna lateral de 340px (`layout-aside`) encostada à direita e, no meio, a coluna de conteúdo, que acompanha a largura restante; o conteúdo dela tem teto de leitura de 720px (`layout-feed`, 1040px nas telas largas, `layout-wide`) e fica centralizado. Há 32px entre as colunas (`layout-gap`) e 24px de margem de página (`page-margin`, 16px abaixo de 760px). O menu é fixo no topo da janela com rolagem própria; a coluna de conteúdo tem filete de 1px à esquerda e à direita. A coluna lateral só existe quando a tela ativa registra conteúdo nela pelo `ShellLateralService`.
 
 **Modo largo:** telas de trabalho (descobrir comunidades, fila de denúncias, admin) marcam `data: { largo: true }` na rota e usam menu + 1040px (`layout-wide`), sem coluna lateral.
 
