@@ -105,9 +105,10 @@ test.describe('desktop (1440px)', () => {
     await expect(comunidades).toHaveAttribute('href', '/comunidades');
     await expect(comunidades).not.toHaveAttribute('aria-current', 'page');
 
-    // Notificações é botão (abre o painel); sem comunidades, os links são Início, Comunidades, Criar enquete e Perfil.
+    // Sem comunidades, os links do menu são Início, Comunidades, Criar enquete e Perfil.
+    // O sino fica no canto superior direito, fora da <nav>.
     await expect(navPrincipal(page).getByRole('link')).toHaveCount(4);
-    await expect(navPrincipal(page).getByRole('button', { name: 'Notificações' })).toBeVisible();
+    await expect(page.locator('.shell__conta-area').getByRole('button', { name: 'Notificações' })).toBeVisible();
   });
 
   test('a comunidade aberta fica destacada em "Suas comunidades", com aria-current="page" (KAN-89)', async ({

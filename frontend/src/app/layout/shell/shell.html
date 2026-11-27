@@ -70,46 +70,50 @@
       </li>
     }
   </ul>
-
-  <div class="shell__conta-area">
-    <app-notificacoes-sininho
-      [totalNaoLidas]="notificacoesNaoLidas()"
-      [aberta]="notificacoesAbertas() && origemNotificacoes() === 'lateral'"
-      (alternou)="alternarNotificacoes($event, 'lateral')"
-    />
-    @if (notificacoesAbertas() && origemNotificacoes() === 'lateral') {
-      <ng-container [ngTemplateOutlet]="painelNotificacoes" />
-    }
-    <button
-      #cartaoConta
-      type="button"
-      class="shell__conta"
-      aria-haspopup="menu"
-      aria-controls="shell-menu-conta"
-      [attr.aria-expanded]="contaAberta() ? 'true' : 'false'"
-      (click)="alternarConta($event)"
-    >
-      <uc-avatar tamanho="sm" [cor]="corDaConta()" [iniciais]="iniciaisDaConta()" [fotoUrl]="fotoDaConta()" />
-      <span class="shell__conta-texto">
-        @if (nomeUsuario(); as nome) {
-          <span class="shell__conta-nome">{{ nome }}</span>
-        }
-        <span class="shell__conta-papel">{{ papel() }}</span>
-      </span>
-      <uc-icon class="shell__conta-icone" name="dots" size="sm" />
-    </button>
-    <uc-menu
-      id="shell-menu-conta"
-      class="shell__conta-menu"
-      rotulo="Conta"
-      direcao="acima"
-      [itens]="itensConta"
-      [(aberto)]="contaAberta"
-      [gatilho]="cartaoConta"
-      (selecionou)="aoSelecionarConta($event)"
-    />
-  </div>
 </nav>
+
+<!--
+  Sino de notificações e cartão da conta no canto superior direito do bloco (desktop).
+  No celular a barra superior assume os dois e este bloco some.
+-->
+<div class="shell__conta-area">
+  <app-notificacoes-sininho
+    [totalNaoLidas]="notificacoesNaoLidas()"
+    [aberta]="notificacoesAbertas() && origemNotificacoes() === 'lateral'"
+    (alternou)="alternarNotificacoes($event, 'lateral')"
+  />
+  @if (notificacoesAbertas() && origemNotificacoes() === 'lateral') {
+    <ng-container [ngTemplateOutlet]="painelNotificacoes" />
+  }
+  <button
+    #cartaoConta
+    type="button"
+    class="shell__conta"
+    aria-haspopup="menu"
+    aria-controls="shell-menu-conta"
+    [attr.aria-expanded]="contaAberta() ? 'true' : 'false'"
+    (click)="alternarConta($event)"
+  >
+    <uc-avatar tamanho="sm" [cor]="corDaConta()" [iniciais]="iniciaisDaConta()" [fotoUrl]="fotoDaConta()" />
+    <span class="shell__conta-texto">
+      @if (nomeUsuario(); as nome) {
+        <span class="shell__conta-nome">{{ nome }}</span>
+      }
+      <span class="shell__conta-papel">{{ papel() }}</span>
+    </span>
+    <uc-icon class="shell__conta-icone" name="dots" size="sm" />
+  </button>
+  <uc-menu
+    id="shell-menu-conta"
+    class="shell__conta-menu"
+    rotulo="Conta"
+    direcao="abaixo"
+    [itens]="itensConta"
+    [(aberto)]="contaAberta"
+    [gatilho]="cartaoConta"
+    (selecionou)="aoSelecionarConta($event)"
+  />
+</div>
 
 <!--
   Barras do celular (KAN-91): só aparecem até $uc-bp-mobile. A superior abre a

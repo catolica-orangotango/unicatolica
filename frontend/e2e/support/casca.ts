@@ -29,7 +29,7 @@ export function barraDeAbas(page: Page): Locator {
  * responde com "Usuário Teste") e papel.
  */
 export function cartaoDaConta(page: Page): Locator {
-  return navPrincipal(page).getByRole('button', { name: /Usuário Teste/ });
+  return page.locator('.shell__conta-area').getByRole('button', { name: /Usuário Teste/ });
 }
 
 /** Avatar "Menu da conta" da barra superior do celular. */
@@ -39,7 +39,7 @@ export function avatarDaConta(page: Page): Locator {
 
 /**
  * O gatilho do menu da conta visível no viewport atual: até 760px o avatar da
- * barra superior, acima dele o cartão do rodapé do menu.
+ * barra superior, acima dele o cartão no canto superior direito.
  */
 export function gatilhoDaConta(page: Page): Locator {
   const largura = page.viewportSize()?.width ?? VIEWPORT_DESKTOP.width;

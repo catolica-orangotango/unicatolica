@@ -310,15 +310,22 @@
   white-space: nowrap;
 }
 
-// -- Cartão da conta (.me), no rodapé do menu -----------------------------
+// -- Cartão da conta (.me), no canto superior direito do bloco ------------
 // Sino de notificações imediatamente à esquerda do cartão (Story 10.2, RN17):
-// uma linha, o cartão ocupa o resto da largura.
+// uma linha, o cartão ocupa o resto da largura. Item de grid sobre a última
+// coluna (grid-column 1 / -1 + justify-self: end), por cima da lateral, que
+// reserva o espaço no topo; sem lateral, a coluna principal reserva (abaixo).
 .shell__conta-area {
+  grid-column: 1 / -1;
+  grid-row: 1;
+  justify-self: end;
+  align-self: start;
   position: relative;
+  z-index: 3; // acima do conteúdo; o painel de notificações vive dentro deste contexto
   display: flex;
   align-items: center;
   gap: calc(var(--uc-space-unit) / 2);
-  margin-top: auto;
+  width: calc(var(--uc-space-unit) * 64);
   padding-top: var(--uc-space-4);
 }
 
@@ -357,11 +364,11 @@
   color: var(--uc-color-ink-soft);
 }
 
-// Âncora de tamanho zero no canto superior direito do cartão: o painel do
-// UcMenu (direcao 'acima') abre logo acima dele, alinhado à direita.
+// Âncora de tamanho zero no canto inferior direito do cartão: o painel do
+// UcMenu (direcao 'abaixo') abre logo abaixo dele, alinhado à direita.
 .shell__conta-menu {
   position: absolute;
-  inset-block-start: 0;
+  inset-block-end: 0;
   inset-inline-end: 0;
 }
 
@@ -381,6 +388,11 @@
   border-right: 0;
 }
 
+// Sem coluna lateral o cartão da conta cai sobre a coluna principal: reserva o topo.
+:host(.shell--larga) .shell__main {
+  padding-top: calc(var(--uc-space-unit) * 18);
+}
+
 // -- Coluna lateral (aside) --------------------------------------------
 // Sem grid-column explícito: cai na próxima célula livre, a 3ª coluna.
 .shell__lateral {
@@ -390,7 +402,8 @@
   display: flex;
   flex-direction: column;
   gap: var(--uc-space-4);
-  padding: var(--uc-space-5) 0;
+  // Espaço no topo para o sino e o cartão da conta (.shell__conta-area).
+  padding: calc(var(--uc-space-unit) * 18) 0 var(--uc-space-5);
 }
 
 // Telas largas não têm coluna lateral, mesmo que uma tela tenha deixado um template.
@@ -411,6 +424,10 @@
   .shell__lateral {
     display: none;
   }
+
+  .shell__main {
+    padding-top: calc(var(--uc-space-unit) * 18);
+  }
 }
 
 // -- Até $uc-bp-mobile: uma coluna e gaveta (Story 14.4) -----------------
@@ -427,9 +444,14 @@
   .shell__main {
     grid-column: 1;
     grid-row: 2;
+    padding-top: calc(var(--uc-space-unit) * 7);
     padding-bottom: calc(var(--uc-space-unit) * 16 + var(--uc-space-page-margin));
     border-left: 0;
     border-right: 0;
+  }
+
+  :host(.shell--larga) .shell__main {
+    padding-top: calc(var(--uc-space-unit) * 7);
   }
 
   // A gaveta "Suas comunidades": overlay fixo entre a barra superior (14

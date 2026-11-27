@@ -347,10 +347,11 @@ describe('Shell', () => {
       expect(cartaoConta(f).querySelector('.shell__conta-nome')).toBeNull();
     });
 
-    it('fica dentro da <nav>, com o ícone "dots"', async () => {
+    it('fica no canto superior direito (fora da <nav>), com o ícone "dots"', async () => {
       const f = await montar(tokenComPerfis(['ALUNO']));
 
-      expect(cartaoConta(f).closest('nav.shell__sidebar')).toBeTruthy();
+      expect(cartaoConta(f).closest('nav.shell__sidebar')).toBeNull();
+      expect(cartaoConta(f).closest('.shell__conta-area')?.parentElement).toBe(f.nativeElement);
       expect(cartaoConta(f).querySelector('uc-icon')).toBeTruthy();
     });
 
@@ -361,10 +362,10 @@ describe('Shell', () => {
       expect(itensDoMenu(f).map((b) => (b.textContent ?? '').trim())).toEqual(['Perfil', 'Configurações', 'Privacidade', 'Termos de uso', 'Sair']);
     });
 
-    it('abre para cima', async () => {
+    it('abre para baixo', async () => {
       const f = await montar(tokenComPerfis(['ALUNO']));
 
-      expect(f.nativeElement.querySelector('#shell-menu-conta')?.classList).toContain('uc-menu--acima');
+      expect(f.nativeElement.querySelector('#shell-menu-conta')?.classList).toContain('uc-menu--abaixo');
     });
 
     it('clicar no cartão abre o menu e marca aria-expanded="true"', async () => {

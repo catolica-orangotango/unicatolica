@@ -35,17 +35,21 @@ test('o painel de notificações não é cortado pela sidebar, mesmo com texto l
   const painel = page.locator('#shell-notificacoes');
   await expect(painel).toBeVisible();
 
-  const sidebar = page.locator('.shell__sidebar');
+  // O painel vive no canto superior direito: não pode passar da área do sino/cartão nem da janela.
+  const area = page.locator('.shell__conta-area');
   const painelCaixa = await painel.boundingBox();
-  const sidebarCaixa = await sidebar.boundingBox();
+  const areaCaixa = await area.boundingBox();
+  const largura = page.viewportSize()!.width;
   expect(painelCaixa).not.toBeNull();
-  expect(sidebarCaixa).not.toBeNull();
+  expect(areaCaixa).not.toBeNull();
+  expect(painelCaixa!.x).toBeGreaterThanOrEqual(areaCaixa!.x - 1);
+  expect(painelCaixa!.x + painelCaixa!.width).toBeLessThanOrEqual(areaCaixa!.x + areaCaixa!.width + 1);
+  expect(painelCaixa!.x + painelCaixa!.width).toBeLessThanOrEqual(largura);
 
-  // O painel não pode ultrapassar a borda direita da sidebar (o que causava o corte).
-  expect(painelCaixa!.x + painelCaixa!.width).toBeLessThanOrEqual(sidebarCaixa!.x + sidebarCaixa!.width + 1);
-
-  // A sidebar não pode precisar de scroll horizontal pra mostrar o painel inteiro.
-  const temScrollHorizontal = await sidebar.evaluate((el) => el.scrollWidth > el.clientWidth);
+  // Nada de rolagem horizontal na página para mostrar o painel inteiro.
+  const temScrollHorizontal = await page.evaluate(
+    () => document.documentElement.scrollWidth > document.documentElement.clientWidth,
+  );
   expect(temScrollHorizontal).toBe(false);
 
   await expect(page.getByText('Complete seu perfil para que seus interesses')).toBeVisible();
